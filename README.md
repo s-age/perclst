@@ -53,12 +53,12 @@ Sessions are stored in `.cloader/sessions/` by default.
 2. `~/.cloader/config.json` (global)
 3. Default values
 
-**Example config** (`.cloader/config.json`):
+**Example config** (`config.json`):
 
 ```json
 {
-  "sessions_dir": ".cloader/sessions",
-  "logs_dir": ".cloader/logs",
+  "sessions_dir": "sessions",
+  "logs_dir": "logs",
   "model": "claude-sonnet-4-5",
   "max_tokens": 8000,
   "temperature": 0.7

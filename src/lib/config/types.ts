@@ -8,8 +8,8 @@ export interface Config {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  sessions_dir: '.cloader/sessions',
-  logs_dir: '.cloader/logs',
+  sessions_dir: 'sessions',
+  logs_dir: 'logs',
   model: 'claude-sonnet-4-5',
   max_tokens: 8000,
   temperature: 0.7,

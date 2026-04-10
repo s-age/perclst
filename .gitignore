@@ -2,6 +2,10 @@ node_modules/
 dist/
 *.log
 
+# Sessions and logs
+sessions/*.json
+logs/
+
 # Development
 .DS_Store
 .vscode/

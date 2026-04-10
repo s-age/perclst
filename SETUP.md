@@ -35,12 +35,12 @@ echo 'export ANTHROPIC_API_KEY="your-api-key"' >> ~/.zshrc
 
 ### 2. Project Configuration (Optional)
 
-Create `.cloader/config.json` in your project:
+Create `config.json` in your project:
 
 ```json
 {
-  "sessions_dir": ".cloader/sessions",
-  "logs_dir": ".cloader/logs",
+  "sessions_dir": "sessions",
+  "logs_dir": "logs",
   "model": "claude-sonnet-4-5",
   "max_tokens": 8000,
   "temperature": 0.7
@@ -149,14 +149,13 @@ cloader delete abc123
 
 ```
 your-project/
-├── .cloader/              # Created automatically
-│   ├── config.json       # Project config (optional)
-│   ├── sessions/         # Session JSONs
-│   │   ├── abc123.json
-│   │   └── def456.json
-│   └── logs/            # Execution logs
-│       ├── abc123.log
-│       └── def456.log
+├── sessions/             # Session JSONs
+│   ├── abc123.json
+│   └── def456.json
+├── logs/                 # Execution logs
+│   ├── abc123.log
+│   └── def456.log
+├── config.json          # Project config (optional)
 ├── src/
 └── ...
 ```
@@ -166,8 +165,8 @@ your-project/
 ### 1. Add to .gitignore
 
 ```gitignore
-.cloader/sessions/
-.cloader/logs/
+sessions/*.json
+logs/
 ```
 
 ### 2. Use Procedures
@@ -209,8 +208,8 @@ echo $ANTHROPIC_API_KEY
 Check where sessions are stored:
 
 ```bash
-# Default: .cloader/sessions in current directory
-ls .cloader/sessions
+# Default: sessions/ in current directory
+ls sessions
 ```
 
 ### Build Errors
