@@ -1,0 +1,66 @@
+import { existsSync, readFileSync } from 'fs'
+import { join } from 'path'
+import { homedir } from 'os'
+import { Config, DEFAULT_CONFIG } from './types.js'
+
+export class ConfigResolver {
+  /**
+   * Load configuration with priority:
+   * 1. ./.cloader/config.json (current directory)
+   * 2. ~/.cloader/config.json (home directory)
+   * 3. Default values
+   */
+  static load(): Config {
+    const localConfig = this.loadFromPath('./.cloader/config.json')
+    const globalConfig = this.loadFromPath(join(homedir(), '.cloader/config.json'))
+
+    return {
+      ...DEFAULT_CONFIG,
+      ...globalConfig,
+      ...localConfig
+    }
+  }
+
+  /**
+   * Resolve sessions directory path
+   */
+  static resolveSessionsDir(config: Config): string {
+    return this.resolvePath(config.sessions_dir || DEFAULT_CONFIG.sessions_dir!)
+  }
+
+  /**
+   * Resolve logs directory path
+   */
+  static resolveLogsDir(config: Config): string {
+    return this.resolvePath(config.logs_dir || DEFAULT_CONFIG.logs_dir!)
+  }
+
+  private static resolvePath(path: string): string {
+    // Absolute path
+    if (path.startsWith('/')) {
+      return path
+    }
+
+    // Home directory
+    if (path.startsWith('~')) {
+      return path.replace('~', homedir())
+    }
+
+    // Relative path (from current working directory)
+    return join(process.cwd(), path)
+  }
+
+  private static loadFromPath(path: string): Partial<Config> {
+    if (!existsSync(path)) {
+      return {}
+    }
+
+    try {
+      const content = readFileSync(path, 'utf-8')
+      return JSON.parse(content)
+    } catch (error) {
+      console.warn(`Failed to load config from ${path}:`, error)
+      return {}
+    }
+  }
+}
