@@ -25,7 +25,7 @@ export async function resumeCommand(sessionId: string, instruction: string, opti
       console.log(`Output: ${lastTurn.usage.output_tokens}`)
     }
 
-    console.log(`\nSession ID: ${sessionId}`)
+    console.log(`\nTo resume: cloader resume ${sessionId} "<instruction>"`)
   } catch (error) {
     logger.error('Failed to resume session', error as Error)
     process.exit(1)
