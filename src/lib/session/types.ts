@@ -1,3 +1,5 @@
+import { ThinkingBlock, ToolUseRecord } from '../agent/types.js'
+
 export interface Session {
   id: string
   created_at: string
@@ -23,7 +25,11 @@ export interface Turn {
   usage?: {
     input_tokens: number
     output_tokens: number
+    cache_read_input_tokens?: number
+    cache_creation_input_tokens?: number
   }
+  thoughts?: ThinkingBlock[]
+  tool_history?: ToolUseRecord[]
 }
 
 export interface CreateSessionParams {
