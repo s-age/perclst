@@ -35,7 +35,7 @@ export async function startCommand(task: string, options: StartOptions) {
     const lastTurn = updatedSession.turns[updatedSession.turns.length - 1]
     printTurn(lastTurn, options, updatedSession)
 
-    console.log(`\nTo resume: cloader resume ${session.id} "<instruction>"`)
+    console.log(`\nTo resume: perclst resume ${session.id} "<instruction>"`)
   } catch (error) {
     logger.error('Failed to start session', error as Error)
     process.exit(1)

@@ -5,18 +5,18 @@
 ### Development
 
 ```bash
-cd cloader
+cd perclst
 npm install
 npm run build
 npm link
 ```
 
-Now `cloader` command is available globally.
+Now `perclst` command is available globally.
 
 ### Global Installation (after publishing)
 
 ```bash
-npm install -g cloader
+npm install -g perclst
 ```
 
 ## Configuration
@@ -49,11 +49,11 @@ Create `config.json` in your project:
 
 ### 3. Global Configuration (Optional)
 
-Create `~/.cloader/config.json`:
+Create `~/.perclst/config.json`:
 
 ```json
 {
-  "sessions_dir": "~/cloader-sessions",
+  "sessions_dir": "~/perclst-sessions",
   "model": "claude-opus-4",
   "max_tokens": 16000
 }
@@ -66,15 +66,15 @@ To use TypeScript analysis tools in Claude Code, add to `~/.claude/settings.json
 ```json
 {
   "mcpServers": {
-    "cloader": {
+    "perclst": {
       "command": "node",
-      "args": ["/path/to/cloader/dist/mcp/server.js"]
+      "args": ["/path/to/perclst/dist/mcp/server.js"]
     }
   }
 }
 ```
 
-Replace `/path/to/cloader` with the actual path.
+Replace `/path/to/perclst` with the actual path.
 
 ## Usage Examples
 
@@ -82,7 +82,7 @@ Replace `/path/to/cloader` with the actual path.
 
 ```bash
 # Start a new session
-cloader start "Analyze the Button component"
+perclst start "Analyze the Button component"
 
 # Output:
 # Session created: abc123-def456-...
@@ -97,23 +97,23 @@ cloader start "Analyze the Button component"
 
 ```bash
 # Use conductor procedure for complex tasks
-cloader start "Refactor authentication logic" --procedure conductor
+perclst start "Refactor authentication logic" --procedure conductor
 
 # Use analyzer procedure for code analysis
-cloader start "Document the API endpoints" --procedure analyzer
+perclst start "Document the API endpoints" --procedure analyzer
 ```
 
 ### Resume Session
 
 ```bash
 # Continue a session
-cloader resume abc123 "Now add TypeScript types"
+perclst resume abc123 "Now add TypeScript types"
 ```
 
 ### List Sessions
 
 ```bash
-cloader list
+perclst list
 
 # Output:
 # Found 3 session(s):
@@ -133,16 +133,16 @@ cloader list
 
 ```bash
 # Text format (default)
-cloader show abc123
+perclst show abc123
 
 # JSON format
-cloader show abc123 --format json
+perclst show abc123 --format json
 ```
 
 ### Delete Session
 
 ```bash
-cloader delete abc123
+perclst delete abc123
 ```
 
 ## Project Structure
@@ -193,7 +193,7 @@ When using the `analyzer` procedure, the agent has access to TypeScript analysis
 
 ### Command not found
 
-Run `npm link` again in the cloader directory.
+Run `npm link` again in the perclst directory.
 
 ### API Key Error
 

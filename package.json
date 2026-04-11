@@ -1,10 +1,10 @@
 {
-  "name": "cloader",
+  "name": "perclst",
   "version": "0.1.0",
   "description": "CLI tool for managing Claude Code sub-agents",
   "type": "module",
   "bin": {
-    "cloader": "./bin/cloader.js"
+    "perclst": "./bin/perclst.js"
   },
   "files": [
     "dist/**/*",
@@ -17,7 +17,7 @@
     "clean": "rm -rf dist",
     "prepublish": "npm run build",
     "link": "npm link",
-    "unlink": "npm unlink -g cloader"
+    "unlink": "npm unlink -g perclst"
   },
   "keywords": [
     "claude",

@@ -15,7 +15,7 @@ const MCP_SERVER_PATH = resolve(__dirname, '../../mcp/server.js')
 function buildMcpConfig(): string {
   return JSON.stringify({
     mcpServers: {
-      cloader: {
+      perclst: {
         command: 'node',
         args: [MCP_SERVER_PATH],
       },
@@ -174,14 +174,14 @@ export class ClaudeCLI {
       args.push('--allowedTools', ...request.config.allowedTools)
     }
 
-    // Always attach the cloader permission MCP server so the user is prompted
+    // Always attach the perclst permission MCP server so the user is prompted
     // before any tool use that isn't pre-approved via --allowedTools.
     // In non-interactive environments (no /dev/tty) the server auto-denies.
-    const mcpConfigPath = join(tmpdir(), `cloader-mcp-${process.pid}.json`)
+    const mcpConfigPath = join(tmpdir(), `perclst-mcp-${process.pid}.json`)
     writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
     args.push('--mcp-config', mcpConfigPath)
     // Claude Code prefixes MCP tool names as mcp__<server>__<tool>
-    args.push('--permission-prompt-tool', 'mcp__cloader__ask_permission')
+    args.push('--permission-prompt-tool', 'mcp__perclst__ask_permission')
 
     logger.debug('Executing claude command', { model: request.config.model, args })
 

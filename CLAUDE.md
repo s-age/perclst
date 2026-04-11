@@ -1,55 +1,55 @@
-# cloader
+# perclst
 
 CLI tool for managing Claude Code sub-agents with session persistence.
 
 ## Overview
 
-**cloader** spawns Claude sub-agents via `claude -p` command and manages their sessions locally. No API key required - uses Claude Code's existing authentication.
+**perclst** spawns Claude sub-agents via `claude -p` command and manages their sessions locally. No API key required - uses Claude Code's existing authentication.
 
 ## Quick Start
 
 ```bash
 # Start a new agent session
-cloader start "task description"
+perclst start "task description"
 
 # Start with specific tools pre-approved (no permission prompt)
-cloader start "task description" --allowed-tools WebFetch Bash
+perclst start "task description" --allowed-tools WebFetch Bash
 
 # Start with a specific model
-cloader start "task description" --model haiku
+perclst start "task description" --model haiku
 
 # Resume a session
-cloader resume <session-id> "additional instruction"
+perclst resume <session-id> "additional instruction"
 
 # Resume with a different model
-cloader resume <session-id> "additional instruction" --model opus
+perclst resume <session-id> "additional instruction" --model opus
 
 # List all sessions
-cloader list
+perclst list
 
 # Show session details (text)
-cloader show <session-id>
+perclst show <session-id>
 
 # Show session details (JSON — includes thoughts and tool_history)
-cloader show <session-id> --format json
+perclst show <session-id> --format json
 
 # Delete a session
-cloader delete <session-id>
+perclst delete <session-id>
 ```
 
-> **For agents**: Always use `--output-only` when invoking cloader from within an agent.
+> **For agents**: Always use `--output-only` when invoking perclst from within an agent.
 > Without it, thoughts, tool call details, and token usage are included in the output,
 > which wastes tokens and degrades efficiency.
 >
 > ```bash
-> cloader start "task description" --output-only
-> cloader resume <session-id> "instruction" --output-only
+> perclst start "task description" --output-only
+> perclst resume <session-id> "instruction" --output-only
 > ```
 
 ## Architecture
 
 ```
-cloader
+perclst
 ├── CLI Commands (src/cli/)
 │   └── Wraps claude -p with session management
 ├── Session Storage (sessions/)
@@ -69,7 +69,7 @@ cloader
 
 ## Configuration
 
-**Priority**: `./.cloader/config.json` > `~/.cloader/config.json` > defaults
+**Priority**: `./.perclst/config.json` > `~/.perclst/config.json` > defaults
 
 ```json
 {
@@ -88,8 +88,8 @@ cloader
 The `--model` flag on `start` / `resume` overrides the config for that invocation only:
 
 ```bash
-cloader start "heavy task" --model opus
-cloader resume <session-id> "quick follow-up" --model haiku
+perclst start "heavy task" --model opus
+perclst resume <session-id> "quick follow-up" --model haiku
 ```
 
 **`display.header_color`**: Any `#RRGGBB` hex color. Set `no_color: true` or `NO_COLOR=1` (env) to disable colors entirely.
@@ -112,7 +112,7 @@ npm run build
 npm link
 
 # Run after changes
-npm run build && cloader start "test"
+npm run build && perclst start "test"
 ```
 
 ## Files to Note
@@ -155,7 +155,7 @@ npm run build && cloader start "test"
 
 **Add a new procedure**:
 1. Create `procedures/<name>.md`
-2. Use with `cloader start "task" --procedure <name>`
+2. Use with `perclst start "task" --procedure <name>`
 
 **Change default model**:
 Edit `src/lib/config/types.ts` → `DEFAULT_CONFIG.model`

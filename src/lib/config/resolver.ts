@@ -6,13 +6,13 @@ import { Config, DEFAULT_CONFIG } from './types.js'
 export class ConfigResolver {
   /**
    * Load configuration with priority:
-   * 1. ./.cloader/config.json (current directory)
-   * 2. ~/.cloader/config.json (home directory)
+   * 1. ./.perclst/config.json (current directory)
+   * 2. ~/.perclst/config.json (home directory)
    * 3. Default values
    */
   static load(): Config {
-    const localConfig = this.loadFromPath('./.cloader/config.json')
-    const globalConfig = this.loadFromPath(join(homedir(), '.cloader/config.json'))
+    const localConfig = this.loadFromPath('./.perclst/config.json')
+    const globalConfig = this.loadFromPath(join(homedir(), '.perclst/config.json'))
 
     return {
       ...DEFAULT_CONFIG,

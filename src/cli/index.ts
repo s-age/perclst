@@ -10,7 +10,7 @@ import { deleteCommand } from './commands/delete.js'
 const program = new Command()
 
 program
-  .name('cloader')
+  .name('perclst')
   .description('CLI tool for managing Claude Code sub-agents')
   .version('0.1.0')
 

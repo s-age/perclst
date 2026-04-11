@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * cloader MCP server — JSON-RPC 2.0 over stdio
+ * perclst MCP server — JSON-RPC 2.0 over stdio
  *
  * Tools:
  *   ask_permission     — permission-prompt-tool for claude -p sessions
@@ -171,7 +171,7 @@ async function handleRequest(req: JSONRPCRequest): Promise<void> {
         result: {
           protocolVersion: '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'cloader', version: '1.0.0' },
+          serverInfo: { name: 'perclst', version: '1.0.0' },
         },
       })
       break

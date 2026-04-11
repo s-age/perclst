@@ -1,4 +1,4 @@
-# cloader
+# perclst
 
 > **Note**: This project has been tested to a reasonable extent but is still under active development. Use with care.
 
@@ -14,8 +14,8 @@ CLI tool for managing Claude Code sub-agents.
 ## Installation
 
 ```bash
-git clone https://github.com/s-age/cloader.git
-cd cloader
+git clone https://github.com/s-age/perclst.git
+cd perclst
 npm install
 npm run build
 npm link
@@ -27,28 +27,28 @@ npm link
 
 ```bash
 # Start a new agent session
-cloader start "Implement feature X" --procedure conductor
+perclst start "Implement feature X" --procedure conductor
 
 # Resume existing session
-cloader resume <session-id> "Continue the task"
+perclst resume <session-id> "Continue the task"
 
 # List sessions
-cloader list
+perclst list
 
 # Show session details
-cloader show <session-id>
+perclst show <session-id>
 
 # Delete session
-cloader delete <session-id>
+perclst delete <session-id>
 ```
 
 ### Configuration
 
-Sessions are stored in `.cloader/sessions/` by default.
+Sessions are stored in `.perclst/sessions/` by default.
 
 **Priority**:
-1. `./.cloader/config.json` (project-local)
-2. `~/.cloader/config.json` (global)
+1. `./.perclst/config.json` (project-local)
+2. `~/.perclst/config.json` (global)
 3. Default values
 
 **Example config** (`config.json`):
@@ -72,9 +72,9 @@ Add to `~/.claude/settings.json`:
 ```json
 {
   "mcpServers": {
-    "cloader": {
+    "perclst": {
       "command": "node",
-      "args": ["/path/to/cloader/dist/mcp/server.js"]
+      "args": ["/path/to/perclst/dist/mcp/server.js"]
     }
   }
 }
