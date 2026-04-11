@@ -61,7 +61,10 @@ export async function analyzeCommand(sessionId: string, options: AnalyzeOptions)
             assistant_response: summary.turnsBreakdown.assistantResponse,
             total: summary.turnsBreakdown.total,
           },
-          tool_uses: summary.toolUses.map(t => formatToolInput(t.name, t.input)),
+          tool_uses: summary.toolUses.map(t => ({
+            label: formatToolInput(t.name, t.input),
+            is_error: t.isError,
+          })),
           tokens: {
             input_total: summary.tokens.totalInput,
             output_total: summary.tokens.totalOutput,
@@ -93,7 +96,8 @@ export async function analyzeCommand(sessionId: string, options: AnalyzeOptions)
       console.log(`    (none)`)
     } else {
       for (const t of toolUses) {
-        console.log(`    ${formatToolInput(t.name, t.input)}`)
+        const mark = t.isError ? '✗' : '✓'
+        console.log(`    ${mark}  ${formatToolInput(t.name, t.input)}`)
       }
     }
 

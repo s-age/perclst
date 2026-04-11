@@ -6,6 +6,7 @@ export interface ToolCall {
   name: string
   input: Record<string, unknown>
   result: string | null  // null for tool_reference type (ToolSearch)
+  isError: boolean
 }
 
 export interface ClaudeCodeTurn {
@@ -29,7 +30,7 @@ export interface AnalysisSummary {
     assistantResponse: number
     total: number
   }
-  toolUses: Array<{ name: string; input: Record<string, unknown> }>
+  toolUses: Array<{ name: string; input: Record<string, unknown>; isError: boolean }>
   tokens: {
     /** Sum of input_tokens across all API calls (matches printResponse) */
     totalInput: number
@@ -67,7 +68,7 @@ type RawContentBlock =
   | { type: 'text'; text: string }
   | { type: 'thinking'; thinking: string }
   | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
-  | { type: 'tool_result'; tool_use_id: string; content: string | RawContentBlock[] }
+  | { type: 'tool_result'; tool_use_id: string; content: string | RawContentBlock[]; is_error?: boolean }
   | { type: 'tool_reference'; id: string }
 
 type RawEntry = RawUserEntry | RawAssistantEntry | { type: string }
@@ -120,8 +121,8 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
 
   const turns: ClaudeCodeTurn[] = []
 
-  // Build a map from tool_use id → result from user entries
-  const toolResultMap = new Map<string, string | null>()
+  // Build a map from tool_use id → { text, isError } from user entries
+  const toolResultMap = new Map<string, { text: string | null; isError: boolean }>()
   for (const entry of entries) {
     if (entry.type !== 'user') continue
     const userEntry = entry as RawUserEntry
@@ -129,7 +130,10 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
     if (!Array.isArray(content)) continue
     for (const block of content) {
       if (block.type === 'tool_result') {
-        toolResultMap.set(block.tool_use_id, extractToolResultText(block.content))
+        toolResultMap.set(block.tool_use_id, {
+          text: extractToolResultText(block.content),
+          isError: block.is_error ?? false,
+        })
       }
     }
   }
@@ -178,10 +182,12 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
         } else if (block.type === 'text') {
           assistantText = (assistantText ?? '') + block.text
         } else if (block.type === 'tool_use') {
+          const mapped = toolResultMap.get(block.id)
           toolCalls.push({
             name: block.name,
             input: block.input,
-            result: toolResultMap.get(block.id) ?? null,
+            result: mapped?.text ?? null,
+            isError: mapped?.isError ?? false,
           })
         }
       }
@@ -214,14 +220,14 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
   let toolUse = 0
   let assistantResponse = 0
 
-  const allToolUses: Array<{ name: string; input: Record<string, unknown> }> = []
+  const allToolUses: Array<{ name: string; input: Record<string, unknown>; isError: boolean }> = []
 
   for (const turn of turns) {
     if (turn.userMessage !== undefined) userInstructions++
     if (turn.assistantText !== undefined || turn.toolCalls.length > 0) assistantResponse++
     toolUse += turn.toolCalls.length
     for (const tc of turn.toolCalls) {
-      allToolUses.push({ name: tc.name, input: tc.input })
+      allToolUses.push({ name: tc.name, input: tc.input, isError: tc.isError })
     }
   }
 
