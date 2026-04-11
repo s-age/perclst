@@ -1,5 +1,7 @@
 # cloader
 
+> **Note**: This project has been tested to a reasonable extent but is still under active development. Use with care.
+
 CLI tool for managing Claude Code sub-agents.
 
 ## Features
