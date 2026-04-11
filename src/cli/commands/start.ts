@@ -6,6 +6,7 @@ export interface StartOptions {
   procedure?: string
   tags?: string[]
   askPermission?: boolean
+  allowedTools?: string[]
 }
 
 export async function startCommand(task: string, options: StartOptions) {
@@ -26,6 +27,7 @@ export async function startCommand(task: string, options: StartOptions) {
     const executor = new AgentExecutor()
     const updatedSession = await executor.execute(session.id, {
       interactivePermissions: options.askPermission,
+      allowedTools: options.allowedTools,
     })
 
     // Display response

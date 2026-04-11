@@ -8,6 +8,7 @@ import { logger } from '../utils/logger.js'
 
 export interface ExecuteOptions {
   interactivePermissions?: boolean
+  allowedTools?: string[]
 }
 
 export class AgentExecutor {
@@ -53,6 +54,7 @@ export class AgentExecutor {
       config: {
         ...this.config,
         interactivePermissions: options.interactivePermissions,
+        allowedTools: options.allowedTools,
       },
     })
 

@@ -75,6 +75,11 @@ export class ClaudeCLI {
       args.push('--model', request.config.model)
     }
 
+    // Explicitly allowed tools (passed as --allowedTools to claude)
+    if (request.config.allowedTools?.length) {
+      args.push('--allowedTools', ...request.config.allowedTools)
+    }
+
     // Attach the cloader permission MCP server when requested
     let mcpConfigPath: string | undefined
     if (request.config.interactivePermissions) {

@@ -5,6 +5,8 @@ export interface AgentConfig {
   api_key: string
   /** When true, attach the cloader permission MCP server so the user is prompted before each tool use */
   interactivePermissions?: boolean
+  /** List of Claude Code built-in tools to explicitly allow (e.g. ['WebFetch', 'WebSearch']) */
+  allowedTools?: string[]
 }
 
 export interface AgentRequest {
