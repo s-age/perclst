@@ -12,18 +12,39 @@ CLI tool for managing Claude Code sub-agents with session persistence.
 # Start a new agent session
 cloader start "task description"
 
+# Start with specific tools pre-approved (no permission prompt)
+cloader start "task description" --allowed-tools WebFetch Bash
+
+# Start with a specific model
+cloader start "task description" --model haiku
+
 # Resume a session
 cloader resume <session-id> "additional instruction"
+
+# Resume with a different model
+cloader resume <session-id> "additional instruction" --model opus
 
 # List all sessions
 cloader list
 
-# Show session details
+# Show session details (text)
 cloader show <session-id>
+
+# Show session details (JSON — includes thoughts and tool_history)
+cloader show <session-id> --format json
 
 # Delete a session
 cloader delete <session-id>
 ```
+
+> **For agents**: Always use `--output-only` when invoking cloader from within an agent.
+> Without it, thoughts, tool call details, and token usage are included in the output,
+> which wastes tokens and degrades efficiency.
+>
+> ```bash
+> cloader start "task description" --output-only
+> cloader resume <session-id> "instruction" --output-only
+> ```
 
 ## Architecture
 
@@ -48,17 +69,30 @@ cloader
 
 ## Configuration
 
-**Priority**: `./config.json` > `~/.cloader/config.json` > defaults
+**Priority**: `./.cloader/config.json` > `~/.cloader/config.json` > defaults
 
 ```json
 {
   "sessions_dir": "sessions",
   "logs_dir": "logs",
-  "model": "claude-sonnet-4-6"
+  "model": "claude-sonnet-4-6",
+  "display": {
+    "header_color": "#D97757",
+    "no_color": false
+  }
 }
 ```
 
-**Available models**: `claude-sonnet-4-6`, `claude-opus-4`, `claude-haiku-4-5`, or aliases: `sonnet`, `opus`, `haiku`
+**Available models**: `claude-sonnet-4-6`, `claude-opus-4-5`, `claude-haiku-4-5`, or aliases: `sonnet`, `opus`, `haiku`
+
+The `--model` flag on `start` / `resume` overrides the config for that invocation only:
+
+```bash
+cloader start "heavy task" --model opus
+cloader resume <session-id> "quick follow-up" --model haiku
+```
+
+**`display.header_color`**: Any `#RRGGBB` hex color. Set `no_color: true` or `NO_COLOR=1` (env) to disable colors entirely.
 
 ## Procedures
 
@@ -98,7 +132,21 @@ npm run build && cloader start "test"
   "procedure": "optional",
   "metadata": { "status": "active|completed|failed", "tags": [] },
   "turns": [
-    { "role": "user|assistant", "content": "...", "timestamp": "..." }
+    { "role": "user", "content": "...", "timestamp": "..." },
+    {
+      "role": "assistant",
+      "content": "...",
+      "timestamp": "...",
+      "model": "claude-cli",
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0
+      },
+      "thoughts": [{ "type": "thinking", "thinking": "..." }],
+      "tool_history": [{ "id": "...", "name": "WebFetch", "input": {}, "result": "..." }]
+    }
   ]
 }
 ```
