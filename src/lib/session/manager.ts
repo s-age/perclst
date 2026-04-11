@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import { ConfigResolver } from '../config/resolver.js'
 import { SessionStorage } from './storage.js'
-import { Session, CreateSessionParams, ResumeSessionParams, Turn } from './types.js'
+import type { Session, CreateSessionParams, ResumeSessionParams, Turn } from '../../../types/session.js'
 import { logger } from '../utils/logger.js'
 
 export class SessionManager {

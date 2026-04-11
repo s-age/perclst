@@ -1,4 +1,4 @@
-import { ThinkingBlock, ToolUseRecord } from '../agent/types.js'
+import type { ThinkingBlock, ToolUseRecord } from './common.js'
 
 export interface Session {
   id: string

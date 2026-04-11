@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { join } from 'path'
-import { Session } from './types.js'
+import type { Session } from '../../../types/session.js'
 import { SessionNotFoundError } from '../utils/errors.js'
 
 export class SessionStorage {

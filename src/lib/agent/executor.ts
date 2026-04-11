@@ -2,7 +2,7 @@ import { ConfigResolver } from '../config/resolver.js'
 import { SessionManager } from '../session/manager.js'
 import { ClaudeCLI } from './claude-cli.js'
 import { ProcedureLoader } from '../procedure/loader.js'
-import { Session, Turn } from '../session/types.js'
+import type { Session, Turn } from '../../../types/session.js'
 import { AgentConfig, Message } from './types.js'
 import { logger } from '../utils/logger.js'
 

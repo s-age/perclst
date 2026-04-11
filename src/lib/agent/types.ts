@@ -1,3 +1,5 @@
+import type { ThinkingBlock, ToolUseRecord } from '../../../types/common.js'
+
 export interface AgentConfig {
   model: string
   max_tokens: number
@@ -17,18 +19,6 @@ export interface AgentRequest {
 export interface Message {
   role: 'user' | 'assistant'
   content: string
-}
-
-export interface ThinkingBlock {
-  type: 'thinking'
-  thinking: string
-}
-
-export interface ToolUseRecord {
-  id: string
-  name: string
-  input: unknown
-  result?: string
 }
 
 export interface AgentResponse {

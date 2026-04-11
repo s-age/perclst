@@ -1,4 +1,4 @@
-import { Session, Turn } from '../lib/session/types.js'
+import type { Session, Turn } from '../../types/session.js'
 import { ConfigResolver } from '../lib/config/resolver.js'
 
 const RESET = '\x1b[0m'
