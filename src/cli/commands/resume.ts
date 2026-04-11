@@ -1,12 +1,18 @@
 import { AgentExecutor } from '../../lib/agent/executor.js'
 import { logger } from '../../lib/utils/logger.js'
 
-export async function resumeCommand(sessionId: string, instruction: string) {
+export interface ResumeOptions {
+  askPermission?: boolean
+}
+
+export async function resumeCommand(sessionId: string, instruction: string, options: ResumeOptions) {
   try {
     logger.info('Resuming session', { session_id: sessionId })
 
     const executor = new AgentExecutor()
-    const session = await executor.resume(sessionId, instruction)
+    const session = await executor.resume(sessionId, instruction, {
+      interactivePermissions: options.askPermission,
+    })
 
     // Display response
     const lastTurn = session.turns[session.turns.length - 1]

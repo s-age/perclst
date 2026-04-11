@@ -21,6 +21,7 @@ program
   .argument('<task>', 'Task description')
   .option('-p, --procedure <name>', 'Procedure to use')
   .option('-t, --tags <tags...>', 'Tags for the session')
+  .option('--ask-permission', 'Prompt for approval before each tool use (uses cloader permission MCP server)')
   .action(startCommand)
 
 // Resume command
@@ -29,6 +30,7 @@ program
   .description('Resume an existing session')
   .argument('<session-id>', 'Session ID')
   .argument('<instruction>', 'Additional instruction')
+  .option('--ask-permission', 'Prompt for approval before each tool use (uses cloader permission MCP server)')
   .action(resumeCommand)
 
 // List command

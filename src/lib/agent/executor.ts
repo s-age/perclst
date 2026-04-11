@@ -6,6 +6,10 @@ import { Session, Turn } from '../session/types.js'
 import { AgentConfig, Message } from './types.js'
 import { logger } from '../utils/logger.js'
 
+export interface ExecuteOptions {
+  interactivePermissions?: boolean
+}
+
 export class AgentExecutor {
   private sessionManager: SessionManager
   private procedureLoader: ProcedureLoader
@@ -21,11 +25,11 @@ export class AgentExecutor {
       model: config.model || 'claude-sonnet-4-6',
       max_tokens: config.max_tokens || 8000,
       temperature: config.temperature || 0.7,
-      api_key: '' // Not needed for CLI mode
+      api_key: '', // Not needed for CLI mode
     }
   }
 
-  async execute(sessionId: string): Promise<Session> {
+  async execute(sessionId: string, options: ExecuteOptions = {}): Promise<Session> {
     const session = await this.sessionManager.get(sessionId)
 
     // Load procedure if specified
@@ -38,7 +42,7 @@ export class AgentExecutor {
     // Build messages from turns
     const messages: Message[] = session.turns.map((turn) => ({
       role: turn.role,
-      content: turn.content
+      content: turn.content,
     }))
 
     // Call Claude CLI
@@ -46,7 +50,10 @@ export class AgentExecutor {
     const response = await client.call({
       messages,
       system: systemPrompt,
-      config: this.config
+      config: {
+        ...this.config,
+        interactivePermissions: options.interactivePermissions,
+      },
     })
 
     // Add assistant response to session
@@ -55,7 +62,7 @@ export class AgentExecutor {
       content: response.content,
       timestamp: new Date().toISOString(),
       model: response.model,
-      usage: response.usage
+      usage: response.usage,
     }
 
     await this.sessionManager.addTurn(sessionId, assistantTurn)
@@ -63,17 +70,17 @@ export class AgentExecutor {
     return await this.sessionManager.get(sessionId)
   }
 
-  async resume(sessionId: string, instruction: string): Promise<Session> {
+  async resume(sessionId: string, instruction: string, options: ExecuteOptions = {}): Promise<Session> {
     // Add user instruction
     const userTurn: Turn = {
       role: 'user',
       content: instruction,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }
 
     await this.sessionManager.addTurn(sessionId, userTurn)
 
     // Execute
-    return await this.execute(sessionId)
+    return await this.execute(sessionId, options)
   }
 }

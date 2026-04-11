@@ -5,6 +5,7 @@ import { logger } from '../../lib/utils/logger.js'
 export interface StartOptions {
   procedure?: string
   tags?: string[]
+  askPermission?: boolean
 }
 
 export async function startCommand(task: string, options: StartOptions) {
@@ -16,14 +17,16 @@ export async function startCommand(task: string, options: StartOptions) {
     const session = await sessionManager.create({
       task,
       procedure: options.procedure,
-      tags: options.tags
+      tags: options.tags,
     })
 
     console.log(`Session created: ${session.id}`)
 
     // Execute agent
     const executor = new AgentExecutor()
-    const updatedSession = await executor.execute(session.id)
+    const updatedSession = await executor.execute(session.id, {
+      interactivePermissions: options.askPermission,
+    })
 
     // Display response
     const lastTurn = updatedSession.turns[updatedSession.turns.length - 1]

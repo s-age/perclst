@@ -1,71 +1,113 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
+import { spawn } from 'child_process'
+import { writeFileSync, unlinkSync } from 'fs'
+import { tmpdir } from 'os'
+import { join, resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
 import { AgentRequest, AgentResponse } from './types.js'
 import { APIError } from '../utils/errors.js'
 import { logger } from '../utils/logger.js'
 
-const execAsync = promisify(exec)
+// Resolve the permission server path relative to this compiled file.
+// dist/lib/agent/claude-cli.js → dist/mcp/permission-server.js
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const PERMISSION_SERVER_PATH = resolve(__dirname, '../../mcp/permission-server.js')
+
+function buildMcpConfig(): string {
+  return JSON.stringify({
+    mcpServers: {
+      'cloader-permission': {
+        command: 'node',
+        args: [PERMISSION_SERVER_PATH],
+      },
+    },
+  })
+}
+
+function runClaude(args: string[], prompt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('claude', args, {
+      env: { ...process.env },
+      // Do NOT use 'pipe' for stderr — let it flow to the user's terminal so
+      // permission prompts (written to /dev/tty inside the MCP server) are
+      // visible even while we capture stdout.
+      stdio: ['pipe', 'pipe', 'inherit'],
+    })
+
+    let stdout = ''
+    child.stdout.on('data', (chunk: Buffer) => {
+      stdout += chunk.toString()
+    })
+
+    child.on('error', (err) => reject(new APIError(`Failed to spawn claude: ${err.message}`)))
+    child.on('close', (code) => {
+      if (code !== 0) {
+        reject(new APIError(`claude exited with code ${code}`))
+      } else {
+        resolve(stdout.trim())
+      }
+    })
+
+    // Write prompt to stdin and close it
+    child.stdin.write(prompt, 'utf-8')
+    child.stdin.end()
+  })
+}
 
 export class ClaudeCLI {
   async call(request: AgentRequest): Promise<AgentResponse> {
+    // Build prompt from conversation history
+    let fullPrompt = ''
+
+    if (request.system) {
+      fullPrompt += `System: ${request.system}\n\n`
+    }
+
+    for (const msg of request.messages) {
+      fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`
+    }
+
+    logger.debug('Calling claude CLI', { prompt_length: fullPrompt.length })
+
+    // Base args for -p (print / headless) mode
+    const args: string[] = ['-p']
+
+    if (request.config.model) {
+      args.push('--model', request.config.model)
+    }
+
+    // Attach the cloader permission MCP server when requested
+    let mcpConfigPath: string | undefined
+    if (request.config.interactivePermissions) {
+      mcpConfigPath = join(tmpdir(), `cloader-mcp-${process.pid}.json`)
+      writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
+      args.push('--mcp-config', mcpConfigPath)
+      // Claude Code prefixes MCP tool names as mcp__<server>__<tool>
+      args.push('--permission-prompt-tool', 'mcp__cloader-permission__ask_permission')
+      logger.debug('Interactive permissions enabled', { mcpConfigPath })
+    }
+
+    logger.debug('Executing claude command', { model: request.config.model, args })
+
     try {
-      // Build prompt from conversation history
-      let fullPrompt = ''
-
-      // Add system prompt if exists
-      if (request.system) {
-        fullPrompt += `System: ${request.system}\n\n`
-      }
-
-      // Add conversation history
-      for (const msg of request.messages) {
-        fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`
-      }
-
-      logger.debug('Calling claude CLI', {
-        prompt_length: fullPrompt.length
-      })
-
-      // Build claude command with model option
-      const modelArg = request.config.model ? `--model ${request.config.model}` : ''
-      const command = `claude -p ${JSON.stringify(fullPrompt)} ${modelArg}`.trim()
-
-      logger.debug('Executing claude command', { model: request.config.model })
-
-      // Execute claude -p command
-      const { stdout, stderr } = await execAsync(command, {
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-        timeout: 120000 // 2 minutes timeout
-      })
-
-      if (stderr) {
-        logger.warn('Claude CLI stderr', { stderr })
-      }
-
-      const content = stdout.trim()
+      const content = await runClaude(args, fullPrompt)
 
       if (!content) {
         throw new APIError('Empty response from Claude CLI')
       }
 
-      logger.info('Claude CLI response received', {
-        response_length: content.length
-      })
+      logger.info('Claude CLI response received', { response_length: content.length })
 
-      // Note: claude CLI doesn't provide token usage info
       return {
         content,
         model: 'claude-cli',
-        usage: {
-          input_tokens: 0,
-          output_tokens: 0
-        }
+        usage: { input_tokens: 0, output_tokens: 0 },
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new APIError(`Claude CLI error: ${error.message}`)
+    } finally {
+      // Clean up temp file
+      if (mcpConfigPath) {
+        try { unlinkSync(mcpConfigPath) } catch { /* ignore */ }
       }
-      throw error
     }
   }
 }

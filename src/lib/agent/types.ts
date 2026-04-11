@@ -3,6 +3,8 @@ export interface AgentConfig {
   max_tokens: number
   temperature: number
   api_key: string
+  /** When true, attach the cloader permission MCP server so the user is prompted before each tool use */
+  interactivePermissions?: boolean
 }
 
 export interface AgentRequest {
