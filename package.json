@@ -27,7 +27,7 @@
     "typescript"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "CC0-1.0",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
     "ts-morph": "^27.0.2",

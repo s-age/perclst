@@ -14,11 +14,7 @@ CLI tool for managing Claude Code sub-agents.
 ## Installation
 
 ```bash
-# Install globally
-npm install -g cloader
-
-# Or link locally for development
-git clone <repo>
+git clone https://github.com/s-age/cloader.git
 cd cloader
 npm install
 npm run build
@@ -92,4 +88,4 @@ Add to `~/.claude/settings.json`:
 
 ## License
 
-MIT
+CC0 1.0 Universal — public domain dedication, no rights reserved.
