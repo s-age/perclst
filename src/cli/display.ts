@@ -1,8 +1,8 @@
 import type { AgentResponse } from '../lib/agent/types.js'
 import { ConfigResolver } from '../lib/config/resolver.js'
+import { ANSI } from '../lib/config/types.js'
 
-const RESET = '\x1b[0m'
-const DIM = '\x1b[2m'
+const { RESET, DIM, BG_GREY, FG_ON_GREY } = ANSI
 
 function hexToAnsi(hex: string): string {
   const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i)
@@ -27,6 +27,19 @@ function header(text: string): string {
   return color
     ? `\n${color}--- ${text} ---${RESET}`
     : `\n--- ${text} ---`
+}
+
+function greyBlock(text: string): string {
+  if (resolveColor() === '') return text
+  const width = process.stdout.columns ?? 80
+  return text
+    .split('\n')
+    .map(line => {
+      const visibleLen = line.replace(/\x1b\[[0-9;]*m/g, '').length
+      const pad = Math.max(0, width - visibleLen)
+      return `${BG_GREY}${FG_ON_GREY}${line}${' '.repeat(pad)}${RESET}`
+    })
+    .join('\n')
 }
 
 function toolLabel(name: string): string {
@@ -64,7 +77,7 @@ export function printResponse(response: AgentResponse, opts: DisplayOptions = {}
   }
 
   console.log(header('Agent Response'))
-  console.log(response.content)
+  console.log(greyBlock(response.content))
 
   if (!silentUsage && response.usage) {
     const u = response.usage

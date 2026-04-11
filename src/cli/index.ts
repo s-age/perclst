@@ -6,6 +6,7 @@ import { resumeCommand } from './commands/resume.js'
 import { listCommand } from './commands/list.js'
 import { showCommand } from './commands/show.js'
 import { deleteCommand } from './commands/delete.js'
+import { analyzeCommand } from './commands/analyze.js'
 
 const program = new Command()
 
@@ -56,6 +57,15 @@ program
   .argument('<session-id>', 'Session ID')
   .option('-f, --format <format>', 'Output format (text|json)', 'text')
   .action(showCommand)
+
+// Analyze command
+program
+  .command('analyze')
+  .description('Analyze a session from Claude Code jsonl history')
+  .argument('<session-id>', 'Session ID')
+  .option('-f, --format <format>', 'Output format (text|json)', 'text')
+  .option('--print-detail', 'Show full content of each turn including tool results')
+  .action(analyzeCommand)
 
 // Delete command
 program
