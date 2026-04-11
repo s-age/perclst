@@ -7,18 +7,17 @@ import { AgentRequest, AgentResponse } from './types.js'
 import { APIError } from '../utils/errors.js'
 import { logger } from '../utils/logger.js'
 
-// Resolve the permission server path relative to this compiled file.
-// dist/lib/agent/claude-cli.js → dist/mcp/permission-server.js
+// dist/lib/agent/claude-cli.js → dist/mcp/server.js
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const PERMISSION_SERVER_PATH = resolve(__dirname, '../../mcp/permission-server.js')
+const MCP_SERVER_PATH = resolve(__dirname, '../../mcp/server.js')
 
 function buildMcpConfig(): string {
   return JSON.stringify({
     mcpServers: {
-      'cloader-permission': {
+      cloader: {
         command: 'node',
-        args: [PERMISSION_SERVER_PATH],
+        args: [MCP_SERVER_PATH],
       },
     },
   })
@@ -83,7 +82,7 @@ export class ClaudeCLI {
       writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
       args.push('--mcp-config', mcpConfigPath)
       // Claude Code prefixes MCP tool names as mcp__<server>__<tool>
-      args.push('--permission-prompt-tool', 'mcp__cloader-permission__ask_permission')
+      args.push('--permission-prompt-tool', 'mcp__cloader__ask_permission')
       logger.debug('Interactive permissions enabled', { mcpConfigPath })
     }
 

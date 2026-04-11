@@ -1,109 +1,266 @@
 #!/usr/bin/env node
 
-import { ts_analyze, executeTsAnalyze } from './tools/ts_analyze.js'
-import { ts_get_references, executeTsGetReferences } from './tools/ts_get_references.js'
-import { ts_get_types, executeTsGetTypes } from './tools/ts_get_types.js'
-import { MCPTool, MCPRequest, MCPResponse } from './types.js'
+/**
+ * cloader MCP server — JSON-RPC 2.0 over stdio
+ *
+ * Tools:
+ *   ask_permission     — permission-prompt-tool for claude -p sessions
+ *   ts_analyze         — TypeScript code structure analysis
+ *   ts_get_references  — Find references to a TypeScript symbol
+ *   ts_get_types       — Get type definitions for a TypeScript symbol
+ */
 
-const TOOLS: MCPTool[] = [ts_analyze, ts_get_references, ts_get_types]
+import { openSync, readSync, writeSync, closeSync } from 'fs'
+import { executeTsAnalyze } from './tools/ts_analyze.js'
+import { executeTsGetReferences } from './tools/ts_get_references.js'
+import { executeTsGetTypes } from './tools/ts_get_types.js'
 
-async function handleRequest(request: MCPRequest): Promise<MCPResponse> {
-  const { method, params } = request
+// ---------------------------------------------------------------------------
+// JSON-RPC 2.0 types
+// ---------------------------------------------------------------------------
 
-  if (method === 'tools/list') {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({ tools: TOOLS }, null, 2)
-        }
-      ]
-    }
+interface JSONRPCRequest {
+  jsonrpc: '2.0'
+  id?: number | string | null
+  method: string
+  params?: unknown
+}
+
+interface JSONRPCResponse {
+  jsonrpc: '2.0'
+  id: number | string | null
+  result?: unknown
+  error?: { code: number; message: string; data?: unknown }
+}
+
+// ---------------------------------------------------------------------------
+// Tool definitions
+// ---------------------------------------------------------------------------
+
+const TOOLS = [
+  {
+    name: 'ask_permission',
+    description:
+      'Ask the user whether to allow a tool call. ' +
+      'Called by Claude Code when it needs permission to use a built-in tool in headless (-p) mode.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tool_name: { type: 'string', description: 'The name of the tool requesting permission' },
+        input: { type: 'object', description: 'The input arguments for the tool' },
+        tool_use_id: { type: 'string', description: 'The unique tool use request ID' },
+      },
+      required: ['tool_name', 'input'],
+    },
+  },
+  {
+    name: 'ts_analyze',
+    description: 'Analyze TypeScript code structure (symbols, imports, exports)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        file_path: { type: 'string', description: 'Path to the TypeScript file to analyze' },
+      },
+      required: ['file_path'],
+    },
+  },
+  {
+    name: 'ts_get_references',
+    description: 'Find all references to a TypeScript symbol',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        file_path: { type: 'string', description: 'Path to the TypeScript file' },
+        symbol_name: { type: 'string', description: 'Name of the symbol to find references for' },
+      },
+      required: ['file_path', 'symbol_name'],
+    },
+  },
+  {
+    name: 'ts_get_types',
+    description: 'Get type definitions for a TypeScript symbol',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        file_path: { type: 'string', description: 'Path to the TypeScript file' },
+        symbol_name: { type: 'string', description: 'Name of the symbol to get type information for' },
+      },
+      required: ['file_path', 'symbol_name'],
+    },
+  },
+]
+
+// ---------------------------------------------------------------------------
+// ask_permission: interactive prompt via /dev/tty
+// ---------------------------------------------------------------------------
+
+function formatInputSummary(input: Record<string, unknown>): string {
+  const primary = input.command ?? input.file_path ?? input.path ?? input.url ?? input.pattern
+  if (primary !== undefined) return String(primary)
+  const json = JSON.stringify(input, null, 2)
+  const lines = json.split('\n')
+  return lines.length > 6 ? lines.slice(0, 6).join('\n') + '\n  ...' : json
+}
+
+type PermissionResult =
+  | { behavior: 'allow'; updatedInput: Record<string, unknown> }
+  | { behavior: 'deny'; message: string }
+
+async function askPermission(args: {
+  tool_name: string
+  input: Record<string, unknown>
+  tool_use_id?: string
+}): Promise<PermissionResult> {
+  const { tool_name, input } = args
+  const summary = formatInputSummary(input)
+
+  const prompt =
+    `\nPermission Request\n` +
+    `  Tool : ${tool_name}\n` +
+    `  Input: ${summary.replace(/\n/g, '\n         ')}\n` +
+    `  Allow? [y/N] `
+
+  let ttyFd: number
+  try {
+    ttyFd = openSync('/dev/tty', 'r+')
+  } catch {
+    return { behavior: 'deny', message: 'No terminal available for interactive prompt' }
   }
 
-  if (method === 'tools/call') {
-    const toolName = params?.name
-    const args = params?.arguments || {}
-
-    switch (toolName) {
-      case 'ts_analyze':
-        return await executeTsAnalyze(args as { file_path: string })
-
-      case 'ts_get_references':
-        return await executeTsGetReferences(args as {
-          file_path: string
-          symbol_name: string
-        })
-
-      case 'ts_get_types':
-        return await executeTsGetTypes(args as {
-          file_path: string
-          symbol_name: string
-        })
-
-      default:
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Unknown tool: ${toolName}`
-            }
-          ]
-        }
+  try {
+    writeSync(ttyFd, prompt)
+    const buf = Buffer.alloc(256)
+    const bytesRead = readSync(ttyFd, buf, 0, 256, null)
+    const answer = buf.slice(0, bytesRead).toString().trim().toLowerCase()
+    if (answer === 'y' || answer === 'yes') {
+      return { behavior: 'allow', updatedInput: input }
     }
-  }
-
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `Unknown method: ${method}`
-      }
-    ]
+    return { behavior: 'deny', message: 'User denied permission' }
+  } finally {
+    closeSync(ttyFd)
   }
 }
 
-// MCP Server stdio protocol
-async function main() {
-  process.stdin.setEncoding('utf-8')
+// ---------------------------------------------------------------------------
+// JSON-RPC helpers
+// ---------------------------------------------------------------------------
 
-  let buffer = ''
+function send(response: JSONRPCResponse): void {
+  process.stdout.write(JSON.stringify(response) + '\n')
+}
 
-  process.stdin.on('data', async (chunk) => {
-    buffer += chunk
+function err(id: number | string | null, code: number, message: string): JSONRPCResponse {
+  return { jsonrpc: '2.0', id, error: { code, message } }
+}
 
-    // Process complete JSON objects
-    let newlineIndex
-    while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-      const line = buffer.slice(0, newlineIndex)
-      buffer = buffer.slice(newlineIndex + 1)
+// ---------------------------------------------------------------------------
+// Request dispatcher
+// ---------------------------------------------------------------------------
 
-      if (line.trim()) {
-        try {
-          const request: MCPRequest = JSON.parse(line)
-          const response = await handleRequest(request)
+async function handleRequest(req: JSONRPCRequest): Promise<void> {
+  const id = req.id ?? null
 
-          process.stdout.write(JSON.stringify(response) + '\n')
-        } catch (error) {
-          console.error('Error processing request:', error)
-          process.stdout.write(
-            JSON.stringify({
+  // Notifications have no id and need no response
+  if (req.id === undefined && req.method.startsWith('notifications/')) return
+
+  switch (req.method) {
+    case 'initialize':
+      send({
+        jsonrpc: '2.0',
+        id,
+        result: {
+          protocolVersion: '2024-11-05',
+          capabilities: { tools: {} },
+          serverInfo: { name: 'cloader', version: '1.0.0' },
+        },
+      })
+      break
+
+    case 'tools/list':
+      send({ jsonrpc: '2.0', id, result: { tools: TOOLS } })
+      break
+
+    case 'tools/call': {
+      const p = req.params as { name: string; arguments: Record<string, unknown> }
+
+      try {
+        let result: { content: { type: string; text: string }[] }
+
+        switch (p.name) {
+          case 'ask_permission':
+            result = {
               content: [
                 {
                   type: 'text',
-                  text: `Error: ${error instanceof Error ? error.message : String(error)}`
-                }
-              ]
-            }) + '\n'
-          )
+                  text: JSON.stringify(
+                    await askPermission(p.arguments as {
+                      tool_name: string
+                      input: Record<string, unknown>
+                      tool_use_id?: string
+                    }),
+                  ),
+                },
+              ],
+            }
+            break
+
+          case 'ts_analyze':
+            result = await executeTsAnalyze(p.arguments as { file_path: string })
+            break
+
+          case 'ts_get_references':
+            result = await executeTsGetReferences(
+              p.arguments as { file_path: string; symbol_name: string },
+            )
+            break
+
+          case 'ts_get_types':
+            result = await executeTsGetTypes(
+              p.arguments as { file_path: string; symbol_name: string },
+            )
+            break
+
+          default:
+            send(err(id, -32601, `Unknown tool: ${p.name}`))
+            return
         }
+
+        send({ jsonrpc: '2.0', id, result })
+      } catch (e) {
+        send(err(id, -32603, `Tool execution failed: ${e instanceof Error ? e.message : String(e)}`))
+      }
+      break
+    }
+
+    default:
+      if (req.id !== undefined) send(err(id, -32601, `Method not found: ${req.method}`))
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main loop
+// ---------------------------------------------------------------------------
+
+async function main(): Promise<void> {
+  process.stdin.setEncoding('utf-8')
+  let buffer = ''
+
+  process.stdin.on('data', async (chunk: string) => {
+    buffer += chunk
+    let idx: number
+    while ((idx = buffer.indexOf('\n')) !== -1) {
+      const line = buffer.slice(0, idx).trim()
+      buffer = buffer.slice(idx + 1)
+      if (!line) continue
+      try {
+        await handleRequest(JSON.parse(line) as JSONRPCRequest)
+      } catch (e) {
+        send(err(null, -32700, `Parse error: ${e instanceof Error ? e.message : String(e)}`))
       }
     }
   })
 
-  process.stdin.on('end', () => {
-    process.exit(0)
-  })
+  process.stdin.on('end', () => process.exit(0))
 }
 
 main()

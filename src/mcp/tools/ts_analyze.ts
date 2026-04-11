@@ -1,7 +1,6 @@
 import { TypeScriptProject } from '../analyzers/project.js'
-import { MCPTool } from '../types.js'
 
-export const ts_analyze: MCPTool = {
+export const ts_analyze = {
   name: 'ts_analyze',
   description: 'Analyze TypeScript code structure (symbols, imports, exports)',
   inputSchema: {

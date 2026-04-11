@@ -1,7 +1,6 @@
 import { TypeScriptProject } from '../analyzers/project.js'
-import { MCPTool } from '../types.js'
 
-export const ts_get_types: MCPTool = {
+export const ts_get_types = {
   name: 'ts_get_types',
   description: 'Get type definitions for a TypeScript symbol',
   inputSchema: {

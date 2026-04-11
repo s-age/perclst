@@ -1,7 +1,6 @@
 import { TypeScriptProject } from '../analyzers/project.js'
-import { MCPTool } from '../types.js'
 
-export const ts_get_references: MCPTool = {
+export const ts_get_references = {
   name: 'ts_get_references',
   description: 'Find all references to a TypeScript symbol',
   inputSchema: {

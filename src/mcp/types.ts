@@ -1,27 +1,4 @@
-export interface MCPTool {
-  name: string
-  description: string
-  inputSchema: {
-    type: string
-    properties: Record<string, unknown>
-    required?: string[]
-  }
-}
-
-export interface MCPRequest {
-  method: string
-  params?: {
-    name?: string
-    arguments?: Record<string, unknown>
-  }
-}
-
-export interface MCPResponse {
-  content: Array<{
-    type: string
-    text?: string
-  }>
-}
+// TypeScript analysis result types used by ts_* MCP tools
 
 export interface TypeScriptAnalysis {
   file_path: string
