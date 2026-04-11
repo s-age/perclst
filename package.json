@@ -16,7 +16,8 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "prepublish": "npm run build",
-    "link": "npm link",
+    "setup": "node scripts/setup.mjs",
+    "link": "npm link && node scripts/setup.mjs",
     "unlink": "npm unlink -g perclst"
   },
   "keywords": [

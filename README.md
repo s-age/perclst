@@ -26,6 +26,15 @@ npm run build
 npm link
 ```
 
+`npm link` automatically registers the skill-inject hook into `~/.claude/settings.json`.
+Existing settings are preserved; only the perclst entry is added or updated.
+
+To re-run manually:
+
+```bash
+npm run setup
+```
+
 ## Usage
 
 ### CLI Commands
