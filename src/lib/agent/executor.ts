@@ -4,6 +4,7 @@ import { ClaudeCLI } from './claude-cli.js'
 import { ProcedureLoader } from '../procedure/loader.js'
 import type { AgentConfig, AgentResponse } from './types.js'
 import { logger } from '../utils/logger.js'
+import { DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '../../constants/config.js'
 
 export interface ExecuteOptions {
   allowedTools?: string[]
@@ -22,9 +23,9 @@ export class AgentExecutor {
     const config = ConfigResolver.load()
 
     this.config = {
-      model: config.model || 'claude-sonnet-4-6',
-      max_tokens: config.max_tokens || 8000,
-      temperature: config.temperature || 0.7,
+      model: config.model || DEFAULT_MODEL,
+      max_tokens: config.max_tokens || DEFAULT_MAX_TOKENS,
+      temperature: config.temperature || DEFAULT_TEMPERATURE,
       api_key: '', // Not needed for CLI mode
     }
   }

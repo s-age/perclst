@@ -1,14 +1,23 @@
 import type { Config } from './types.js'
+import {
+  DEFAULT_MODEL,
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_TEMPERATURE,
+  DEFAULT_SESSIONS_DIR,
+  DEFAULT_LOGS_DIR,
+  DEFAULT_HEADER_COLOR,
+  DEFAULT_API_KEY_ENV,
+} from '../../constants/config.js'
 
 export const DEFAULT_CONFIG: Config = {
-  sessions_dir: 'sessions',
-  logs_dir: 'logs',
-  model: 'claude-sonnet-4-6', // or use aliases: sonnet, opus, haiku
-  max_tokens: 8000,
-  temperature: 0.7,
-  api_key_env: 'ANTHROPIC_API_KEY',
+  sessions_dir: DEFAULT_SESSIONS_DIR,
+  logs_dir: DEFAULT_LOGS_DIR,
+  model: DEFAULT_MODEL,
+  max_tokens: DEFAULT_MAX_TOKENS,
+  temperature: DEFAULT_TEMPERATURE,
+  api_key_env: DEFAULT_API_KEY_ENV,
   display: {
-    header_color: '#D97757',
+    header_color: DEFAULT_HEADER_COLOR,
     no_color: false,
   }
 }

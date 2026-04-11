@@ -3,6 +3,7 @@ import { join } from 'path'
 import { homedir } from 'os'
 import type { Config } from './types.js'
 import { DEFAULT_CONFIG } from './defaults.js'
+import { CONFIG_DIR_NAME } from '../../constants/config.js'
 
 export class ConfigResolver {
   /**
@@ -12,8 +13,8 @@ export class ConfigResolver {
    * 3. Default values
    */
   static load(): Config {
-    const localConfig = this.loadFromPath('./.perclst/config.json')
-    const globalConfig = this.loadFromPath(join(homedir(), '.perclst/config.json'))
+    const localConfig = this.loadFromPath(join(`./${CONFIG_DIR_NAME}`, 'config.json'))
+    const globalConfig = this.loadFromPath(join(homedir(), CONFIG_DIR_NAME, 'config.json'))
 
     return {
       ...DEFAULT_CONFIG,

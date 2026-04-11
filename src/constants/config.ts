@@ -1,0 +1,17 @@
+export const APP_NAME = 'perclst'
+
+/** Directory name used for local/global config files (.perclst/config.json) */
+export const CONFIG_DIR_NAME = '.perclst'
+
+/** MCP server name registered in the perclst permission server */
+export const MCP_SERVER_NAME = 'perclst'
+
+// --- Default config values ---
+
+export const DEFAULT_MODEL = 'claude-sonnet-4-6'
+export const DEFAULT_MAX_TOKENS = 8000
+export const DEFAULT_TEMPERATURE = 0.7
+export const DEFAULT_SESSIONS_DIR = 'sessions'
+export const DEFAULT_LOGS_DIR = 'logs'
+export const DEFAULT_HEADER_COLOR = '#D97757'
+export const DEFAULT_API_KEY_ENV = 'ANTHROPIC_API_KEY'

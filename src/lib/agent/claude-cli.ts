@@ -7,6 +7,7 @@ import type { AgentRequest, AgentResponse } from './types.js'
 import type { ThinkingBlock, ToolUseRecord } from '../../../types/common.js'
 import { APIError } from '../utils/errors.js'
 import { logger } from '../utils/logger.js'
+import { APP_NAME, MCP_SERVER_NAME } from '../../constants/config.js'
 
 // dist/lib/agent/claude-cli.js → dist/mcp/server.js
 const __filename = fileURLToPath(import.meta.url)
@@ -16,7 +17,7 @@ const MCP_SERVER_PATH = resolve(__dirname, '../../mcp/server.js')
 function buildMcpConfig(): string {
   return JSON.stringify({
     mcpServers: {
-      perclst: {
+      [MCP_SERVER_NAME]: {
         command: 'node',
         args: [MCP_SERVER_PATH],
       },
@@ -182,11 +183,11 @@ export class ClaudeCLI {
     // Always attach the perclst permission MCP server so the user is prompted
     // before any tool use that isn't pre-approved via --allowedTools.
     // In non-interactive environments (no /dev/tty) the server auto-denies.
-    const mcpConfigPath = join(tmpdir(), `perclst-mcp-${process.pid}.json`)
+    const mcpConfigPath = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
     writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
     args.push('--mcp-config', mcpConfigPath)
     // Claude Code prefixes MCP tool names as mcp__<server>__<tool>
-    args.push('--permission-prompt-tool', 'mcp__perclst__ask_permission')
+    args.push('--permission-prompt-tool', `mcp__${MCP_SERVER_NAME}__ask_permission`)
 
     if (request.system) {
       args.push('--system-prompt', request.system)

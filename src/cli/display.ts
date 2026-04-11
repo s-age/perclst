@@ -1,6 +1,6 @@
 import type { AgentResponse } from '../lib/agent/types.js'
 import { ConfigResolver } from '../lib/config/resolver.js'
-import { ANSI } from '../lib/config/types.js'
+import { ANSI } from '../constants/ansi.js'
 
 const { RESET, DIM, BG_GREY, FG_ON_GREY } = ANSI
 
