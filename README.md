@@ -11,6 +11,7 @@ CLI tool for managing Claude Code sub-agents.
 ## Features
 
 - **Session Management**: Create, resume, and manage agent sessions
+- **Session Analysis**: Inspect turn breakdown, tool usage, and token stats from Claude Code's jsonl history
 - **Local Storage**: Sessions stored per-project by default
 - **MCP Server**: TypeScript analysis tools for Claude Code
 - **Procedure System**: Define agent behavior via system prompts
@@ -41,6 +42,15 @@ perclst list
 
 # Show session details
 perclst show <session-id>
+
+# Analyze session (turn breakdown, tool uses, token stats)
+perclst analyze <session-id>
+
+# Analyze with full turn content
+perclst analyze <session-id> --print-detail
+
+# Analyze with JSON output
+perclst analyze <session-id> --format json
 
 # Delete session
 perclst delete <session-id>
