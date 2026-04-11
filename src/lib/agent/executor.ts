@@ -7,7 +7,6 @@ import { AgentConfig, Message } from './types.js'
 import { logger } from '../utils/logger.js'
 
 export interface ExecuteOptions {
-  interactivePermissions?: boolean
   allowedTools?: string[]
 }
 
@@ -53,7 +52,6 @@ export class AgentExecutor {
       system: systemPrompt,
       config: {
         ...this.config,
-        interactivePermissions: options.interactivePermissions,
         allowedTools: options.allowedTools,
       },
     })

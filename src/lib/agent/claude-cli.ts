@@ -80,16 +80,14 @@ export class ClaudeCLI {
       args.push('--allowedTools', ...request.config.allowedTools)
     }
 
-    // Attach the cloader permission MCP server when requested
-    let mcpConfigPath: string | undefined
-    if (request.config.interactivePermissions) {
-      mcpConfigPath = join(tmpdir(), `cloader-mcp-${process.pid}.json`)
-      writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
-      args.push('--mcp-config', mcpConfigPath)
-      // Claude Code prefixes MCP tool names as mcp__<server>__<tool>
-      args.push('--permission-prompt-tool', 'mcp__cloader__ask_permission')
-      logger.debug('Interactive permissions enabled', { mcpConfigPath })
-    }
+    // Always attach the cloader permission MCP server so the user is prompted
+    // before any tool use that isn't pre-approved via --allowedTools.
+    // In non-interactive environments (no /dev/tty) the server auto-denies.
+    const mcpConfigPath = join(tmpdir(), `cloader-mcp-${process.pid}.json`)
+    writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
+    args.push('--mcp-config', mcpConfigPath)
+    // Claude Code prefixes MCP tool names as mcp__<server>__<tool>
+    args.push('--permission-prompt-tool', 'mcp__cloader__ask_permission')
 
     logger.debug('Executing claude command', { model: request.config.model, args })
 
@@ -108,10 +106,7 @@ export class ClaudeCLI {
         usage: { input_tokens: 0, output_tokens: 0 },
       }
     } finally {
-      // Clean up temp file
-      if (mcpConfigPath) {
-        try { unlinkSync(mcpConfigPath) } catch { /* ignore */ }
-      }
+      try { unlinkSync(mcpConfigPath) } catch { /* ignore */ }
     }
   }
 }

@@ -2,7 +2,6 @@ import { AgentExecutor } from '../../lib/agent/executor.js'
 import { logger } from '../../lib/utils/logger.js'
 
 export interface ResumeOptions {
-  askPermission?: boolean
   allowedTools?: string[]
 }
 
@@ -12,7 +11,6 @@ export async function resumeCommand(sessionId: string, instruction: string, opti
 
     const executor = new AgentExecutor()
     const session = await executor.resume(sessionId, instruction, {
-      interactivePermissions: options.askPermission,
       allowedTools: options.allowedTools,
     })
 

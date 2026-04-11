@@ -3,9 +3,7 @@ export interface AgentConfig {
   max_tokens: number
   temperature: number
   api_key: string
-  /** When true, attach the cloader permission MCP server so the user is prompted before each tool use */
-  interactivePermissions?: boolean
-  /** List of Claude Code built-in tools to explicitly allow (e.g. ['WebFetch', 'WebSearch']) */
+  /** List of Claude Code built-in tools to allow without prompting (e.g. ['WebFetch', 'WebSearch']) */
   allowedTools?: string[]
 }
 

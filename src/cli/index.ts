@@ -21,8 +21,7 @@ program
   .argument('<task>', 'Task description')
   .option('-p, --procedure <name>', 'Procedure to use')
   .option('-t, --tags <tags...>', 'Tags for the session')
-  .option('--ask-permission', 'Prompt for approval before each tool use (uses cloader permission MCP server)')
-  .option('--allowed-tools <tools...>', 'Claude Code built-in tools to allow (e.g. WebFetch WebSearch Bash)')
+  .option('--allowed-tools <tools...>', 'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)')
   .action(startCommand)
 
 // Resume command
@@ -31,8 +30,7 @@ program
   .description('Resume an existing session')
   .argument('<session-id>', 'Session ID')
   .argument('<instruction>', 'Additional instruction')
-  .option('--ask-permission', 'Prompt for approval before each tool use (uses cloader permission MCP server)')
-  .option('--allowed-tools <tools...>', 'Claude Code built-in tools to allow (e.g. WebFetch WebSearch Bash)')
+  .option('--allowed-tools <tools...>', 'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)')
   .action(resumeCommand)
 
 // List command
