@@ -1,4 +1,4 @@
-import type { Session, Turn } from '../../types/session.js'
+import type { AgentResponse } from '../lib/agent/types.js'
 import { ConfigResolver } from '../lib/config/resolver.js'
 
 const RESET = '\x1b[0m'
@@ -41,21 +41,21 @@ export interface DisplayOptions {
   outputOnly?: boolean
 }
 
-export function printTurn(turn: Turn, opts: DisplayOptions = {}, session?: Session) {
+export function printResponse(response: AgentResponse, opts: DisplayOptions = {}) {
   const silentThoughts = opts.outputOnly || opts.silentThoughts
   const silentToolResponse = opts.outputOnly || opts.silentToolResponse
   const silentUsage = opts.outputOnly || opts.silentUsage
 
-  if (!silentThoughts && turn.thoughts && turn.thoughts.length > 0) {
+  if (!silentThoughts && response.thoughts && response.thoughts.length > 0) {
     console.log(header('Thoughts'))
-    for (const t of turn.thoughts) {
+    for (const t of response.thoughts) {
       console.log(`${DIM}${t.thinking}${RESET}`)
     }
   }
 
-  if (!silentToolResponse && turn.tool_history && turn.tool_history.length > 0) {
+  if (!silentToolResponse && response.tool_history && response.tool_history.length > 0) {
     console.log(header('Tool Calls'))
-    for (const tool of turn.tool_history) {
+    for (const tool of response.tool_history) {
       console.log(`${toolLabel(tool.name)} input: ${JSON.stringify(tool.input)}`)
       if (tool.result !== undefined) {
         console.log(`         result: ${tool.result}`)
@@ -64,11 +64,11 @@ export function printTurn(turn: Turn, opts: DisplayOptions = {}, session?: Sessi
   }
 
   console.log(header('Agent Response'))
-  console.log(turn.content)
+  console.log(response.content)
 
-  if (!silentUsage && turn.usage) {
-    const u = turn.usage
-    console.log(header('Token Usage (this turn)'))
+  if (!silentUsage && response.usage) {
+    const u = response.usage
+    console.log(header('Token Usage'))
     console.log(`  Input:            ${u.input_tokens}`)
     console.log(`  Output:           ${u.output_tokens}`)
     if (u.cache_read_input_tokens !== undefined) {
@@ -77,36 +77,5 @@ export function printTurn(turn: Turn, opts: DisplayOptions = {}, session?: Sessi
     if (u.cache_creation_input_tokens !== undefined) {
       console.log(`  Cache creation:   ${u.cache_creation_input_tokens}`)
     }
-
-    if (session) {
-      const totals = calcCumulativeUsage(session)
-      console.log(header('Token Usage (cumulative)'))
-      console.log(`  Input:            ${totals.input_tokens}`)
-      console.log(`  Output:           ${totals.output_tokens}`)
-      if (totals.cache_read_input_tokens > 0) {
-        console.log(`  Cache read:       ${totals.cache_read_input_tokens}`)
-      }
-      if (totals.cache_creation_input_tokens > 0) {
-        console.log(`  Cache creation:   ${totals.cache_creation_input_tokens}`)
-      }
-    }
   }
-}
-
-function calcCumulativeUsage(session: Session) {
-  let input_tokens = 0
-  let output_tokens = 0
-  let cache_read_input_tokens = 0
-  let cache_creation_input_tokens = 0
-
-  for (const turn of session.turns) {
-    if (turn.usage) {
-      input_tokens += turn.usage.input_tokens
-      output_tokens += turn.usage.output_tokens
-      cache_read_input_tokens += turn.usage.cache_read_input_tokens ?? 0
-      cache_creation_input_tokens += turn.usage.cache_creation_input_tokens ?? 0
-    }
-  }
-
-  return { input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens }
 }

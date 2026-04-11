@@ -2,8 +2,7 @@ import { ConfigResolver } from '../config/resolver.js'
 import { SessionManager } from '../session/manager.js'
 import { ClaudeCLI } from './claude-cli.js'
 import { ProcedureLoader } from '../procedure/loader.js'
-import type { Session, Turn } from '../../../types/session.js'
-import { AgentConfig, Message } from './types.js'
+import type { AgentConfig, AgentResponse } from './types.js'
 import { logger } from '../utils/logger.js'
 
 export interface ExecuteOptions {
@@ -30,7 +29,7 @@ export class AgentExecutor {
     }
   }
 
-  async execute(sessionId: string, options: ExecuteOptions = {}): Promise<Session> {
+  async execute(sessionId: string, instruction: string, options: ExecuteOptions = {}): Promise<AgentResponse> {
     const session = await this.sessionManager.get(sessionId)
 
     // Load procedure if specified
@@ -40,52 +39,53 @@ export class AgentExecutor {
       logger.debug('Loaded procedure', { procedure: session.procedure })
     }
 
-    // Build messages from turns
-    const messages: Message[] = session.turns.map((turn) => ({
-      role: turn.role,
-      content: turn.content,
-    }))
-
-    // Call Claude CLI
     const client = new ClaudeCLI()
     const response = await client.call({
-      messages,
+      instruction,
       system: systemPrompt,
       config: {
         ...this.config,
         ...(options.model ? { model: options.model } : {}),
         allowedTools: options.allowedTools,
       },
+      claudeSessionId: session.claude_session_id,
+      isResume: false,
+      workingDir: session.working_dir,
       sessionFilePath: this.sessionManager.getPath(sessionId),
     })
 
-    // Add assistant response to session
-    const assistantTurn: Turn = {
-      role: 'assistant',
-      content: response.content,
-      timestamp: new Date().toISOString(),
-      model: response.model,
-      usage: response.usage,
-      thoughts: response.thoughts,
-      tool_history: response.tool_history,
-    }
+    await this.sessionManager.updateStatus(sessionId, 'active')
 
-    await this.sessionManager.addTurn(sessionId, assistantTurn)
-
-    return await this.sessionManager.get(sessionId)
+    return response
   }
 
-  async resume(sessionId: string, instruction: string, options: ExecuteOptions = {}): Promise<Session> {
-    // Add user instruction
-    const userTurn: Turn = {
-      role: 'user',
-      content: instruction,
-      timestamp: new Date().toISOString(),
+  async resume(sessionId: string, instruction: string, options: ExecuteOptions = {}): Promise<AgentResponse> {
+    const session = await this.sessionManager.get(sessionId)
+
+    // Load procedure if specified
+    let systemPrompt: string | undefined
+    if (session.procedure) {
+      systemPrompt = this.procedureLoader.load(session.procedure)
+      logger.debug('Loaded procedure', { procedure: session.procedure })
     }
 
-    await this.sessionManager.addTurn(sessionId, userTurn)
+    const client = new ClaudeCLI()
+    const response = await client.call({
+      instruction,
+      system: systemPrompt,
+      config: {
+        ...this.config,
+        ...(options.model ? { model: options.model } : {}),
+        allowedTools: options.allowedTools,
+      },
+      claudeSessionId: session.claude_session_id,
+      isResume: true,
+      workingDir: session.working_dir,
+      sessionFilePath: this.sessionManager.getPath(sessionId),
+    })
 
-    // Execute
-    return await this.execute(sessionId, options)
+    await this.sessionManager.updateStatus(sessionId, 'active')
+
+    return response
   }
 }

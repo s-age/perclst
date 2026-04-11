@@ -1,6 +1,6 @@
 import { AgentExecutor } from '../../lib/agent/executor.js'
 import { logger } from '../../lib/utils/logger.js'
-import { printTurn, DisplayOptions } from '../display.js'
+import { printResponse, DisplayOptions } from '../display.js'
 
 export interface ResumeOptions extends DisplayOptions {
   allowedTools?: string[]
@@ -12,14 +12,13 @@ export async function resumeCommand(sessionId: string, instruction: string, opti
     logger.info('Resuming session', { session_id: sessionId })
 
     const executor = new AgentExecutor()
-    const session = await executor.resume(sessionId, instruction, {
+    const response = await executor.resume(sessionId, instruction, {
       allowedTools: options.allowedTools,
       model: options.model,
     })
 
     // Display response
-    const lastTurn = session.turns[session.turns.length - 1]
-    printTurn(lastTurn, options, session)
+    printResponse(response, options)
 
     console.log(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {

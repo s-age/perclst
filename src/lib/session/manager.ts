@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import { ConfigResolver } from '../config/resolver.js'
 import { SessionStorage } from './storage.js'
-import type { Session, CreateSessionParams, ResumeSessionParams, Turn } from '../../../types/session.js'
+import type { Session, CreateSessionParams } from '../../../types/session.js'
 import { logger } from '../utils/logger.js'
 
 export class SessionManager {
@@ -16,23 +16,19 @@ export class SessionManager {
   }
 
   async create(params: CreateSessionParams): Promise<Session> {
+    const id = randomUUID()
     const session: Session = {
-      id: randomUUID(),
+      id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       procedure: params.procedure,
+      claude_session_id: id,
+      working_dir: process.cwd(),
       metadata: {
         parent_session_id: params.parent_session_id,
         tags: params.tags || [],
         status: 'active'
       },
-      turns: [
-        {
-          role: 'user',
-          content: params.task,
-          timestamp: new Date().toISOString()
-        }
-      ]
     }
 
     await this.storage.save(session)
@@ -58,18 +54,6 @@ export class SessionManager {
     logger.info('Session deleted', { session_id: sessionId })
   }
 
-  async addTurn(sessionId: string, turn: Turn): Promise<Session> {
-    const session = await this.get(sessionId)
-
-    session.turns.push(turn)
-    session.updated_at = new Date().toISOString()
-
-    await this.storage.save(session)
-    logger.debug('Turn added to session', { session_id: sessionId })
-
-    return session
-  }
-
   async updateStatus(
     sessionId: string,
     status: 'active' | 'completed' | 'failed'
@@ -81,17 +65,6 @@ export class SessionManager {
 
     await this.storage.save(session)
     logger.info('Session status updated', { session_id: sessionId, status })
-
-    return session
-  }
-
-  async updateSummary(sessionId: string, summary: string): Promise<Session> {
-    const session = await this.get(sessionId)
-
-    session.summary = summary
-    session.updated_at = new Date().toISOString()
-
-    await this.storage.save(session)
 
     return session
   }

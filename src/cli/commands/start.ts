@@ -1,7 +1,7 @@
 import { SessionManager } from '../../lib/session/manager.js'
 import { AgentExecutor } from '../../lib/agent/executor.js'
 import { logger } from '../../lib/utils/logger.js'
-import { printTurn, DisplayOptions } from '../display.js'
+import { printResponse, DisplayOptions } from '../display.js'
 
 export interface StartOptions extends DisplayOptions {
   procedure?: string
@@ -17,7 +17,6 @@ export async function startCommand(task: string, options: StartOptions) {
     // Create session
     const sessionManager = new SessionManager()
     const session = await sessionManager.create({
-      task,
       procedure: options.procedure,
       tags: options.tags,
     })
@@ -26,14 +25,13 @@ export async function startCommand(task: string, options: StartOptions) {
 
     // Execute agent
     const executor = new AgentExecutor()
-    const updatedSession = await executor.execute(session.id, {
+    const response = await executor.execute(session.id, task, {
       allowedTools: options.allowedTools,
       model: options.model,
     })
 
     // Display response
-    const lastTurn = updatedSession.turns[updatedSession.turns.length - 1]
-    printTurn(lastTurn, options, updatedSession)
+    printResponse(response, options)
 
     console.log(`\nTo resume: perclst resume ${session.id} "<instruction>"`)
   } catch (error) {

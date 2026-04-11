@@ -117,7 +117,7 @@ function parseStreamJson(raw: string): ParsedResponse {
   return { content: finalContent, thoughts, tool_history: Array.from(toolMap.values()), usage }
 }
 
-function runClaude(args: string[], prompt: string, sessionFilePath?: string): Promise<ParsedResponse> {
+function runClaude(args: string[], prompt: string, workingDir: string, sessionFilePath?: string): Promise<ParsedResponse> {
   return new Promise((resolve, reject) => {
     const env: NodeJS.ProcessEnv = { ...process.env }
     if (sessionFilePath) {
@@ -125,6 +125,7 @@ function runClaude(args: string[], prompt: string, sessionFilePath?: string): Pr
     }
     const child = spawn('claude', args, {
       env,
+      cwd: workingDir,
       // Do NOT use 'pipe' for stderr — let it flow to the user's terminal so
       // permission prompts (written to /dev/tty inside the MCP server) are
       // visible even while we capture stdout.
@@ -153,18 +154,11 @@ function runClaude(args: string[], prompt: string, sessionFilePath?: string): Pr
 
 export class ClaudeCLI {
   async call(request: AgentRequest): Promise<AgentResponse> {
-    // Build prompt from conversation history
-    let fullPrompt = ''
-
-    if (request.system) {
-      fullPrompt += `System: ${request.system}\n\n`
-    }
-
-    for (const msg of request.messages) {
-      fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`
-    }
-
-    logger.debug('Calling claude CLI', { prompt_length: fullPrompt.length })
+    logger.debug('Calling claude CLI', {
+      instruction_length: request.instruction.length,
+      is_resume: request.isResume,
+      session_id: request.claudeSessionId,
+    })
 
     // Base args for -p (print / headless) mode with stream-json output.
     // --verbose is required when combining --print and --output-format=stream-json.
@@ -172,6 +166,12 @@ export class ClaudeCLI {
 
     if (request.config.model) {
       args.push('--model', request.config.model)
+    }
+
+    if (request.isResume) {
+      args.push('--resume', request.claudeSessionId)
+    } else {
+      args.push('--session-id', request.claudeSessionId)
     }
 
     // Explicitly allowed tools (passed as --allowedTools to claude)
@@ -188,10 +188,14 @@ export class ClaudeCLI {
     // Claude Code prefixes MCP tool names as mcp__<server>__<tool>
     args.push('--permission-prompt-tool', 'mcp__perclst__ask_permission')
 
+    if (request.system) {
+      args.push('--system-prompt', request.system)
+    }
+
     logger.debug('Executing claude command', { model: request.config.model, args })
 
     try {
-      const parsed = await runClaude(args, fullPrompt, request.sessionFilePath)
+      const parsed = await runClaude(args, request.instruction, request.workingDir, request.sessionFilePath)
 
       if (!parsed.content) {
         throw new APIError('Empty response from Claude CLI')

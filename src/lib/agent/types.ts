@@ -10,15 +10,13 @@ export interface AgentConfig {
 }
 
 export interface AgentRequest {
-  messages: Message[]
+  instruction: string
   system?: string
   config: AgentConfig
+  claudeSessionId: string
+  isResume: boolean
+  workingDir: string
   sessionFilePath?: string
-}
-
-export interface Message {
-  role: 'user' | 'assistant'
-  content: string
 }
 
 export interface AgentResponse {
