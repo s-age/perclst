@@ -4,6 +4,10 @@
 
 CLI tool for managing Claude Code sub-agents.
 
+**Name**: *per**cl**st* — "persist" with "si" replaced by "**cl**" (from **Cl**aude Code). Pronounced "persist" or "perclst".
+
+
+
 ## Features
 
 - **Session Management**: Create, resume, and manage agent sessions
