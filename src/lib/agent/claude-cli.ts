@@ -116,10 +116,14 @@ function parseStreamJson(raw: string): ParsedResponse {
   return { content: finalContent, thoughts, tool_history: Array.from(toolMap.values()), usage }
 }
 
-function runClaude(args: string[], prompt: string): Promise<ParsedResponse> {
+function runClaude(args: string[], prompt: string, sessionFilePath?: string): Promise<ParsedResponse> {
   return new Promise((resolve, reject) => {
+    const env: NodeJS.ProcessEnv = { ...process.env }
+    if (sessionFilePath) {
+      env.PERCLST_SESSION_FILE = sessionFilePath
+    }
     const child = spawn('claude', args, {
-      env: { ...process.env },
+      env,
       // Do NOT use 'pipe' for stderr — let it flow to the user's terminal so
       // permission prompts (written to /dev/tty inside the MCP server) are
       // visible even while we capture stdout.
@@ -186,7 +190,7 @@ export class ClaudeCLI {
     logger.debug('Executing claude command', { model: request.config.model, args })
 
     try {
-      const parsed = await runClaude(args, fullPrompt)
+      const parsed = await runClaude(args, fullPrompt, request.sessionFilePath)
 
       if (!parsed.content) {
         throw new APIError('Empty response from Claude CLI')

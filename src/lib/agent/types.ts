@@ -11,6 +11,7 @@ export interface AgentRequest {
   messages: Message[]
   system?: string
   config: AgentConfig
+  sessionFilePath?: string
 }
 
 export interface Message {

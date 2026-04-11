@@ -56,6 +56,7 @@ export class AgentExecutor {
         ...(options.model ? { model: options.model } : {}),
         allowedTools: options.allowedTools,
       },
+      sessionFilePath: this.sessionManager.getPath(sessionId),
     })
 
     // Add assistant response to session

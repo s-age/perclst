@@ -14,7 +14,7 @@ export class SessionStorage {
     }
   }
 
-  private getSessionPath(sessionId: string): string {
+  getSessionPath(sessionId: string): string {
     return join(this.sessionsDir, `${sessionId}.json`)
   }
 

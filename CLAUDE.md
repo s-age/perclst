@@ -131,6 +131,7 @@ npm run build && perclst start "test"
   "updated_at": "ISO timestamp",
   "procedure": "optional",
   "metadata": { "status": "active|completed|failed", "tags": [] },
+  "injected_skills": ["skill-name"],
   "turns": [
     { "role": "user", "content": "...", "timestamp": "..." },
     {

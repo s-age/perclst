@@ -45,6 +45,10 @@ export class SessionManager {
     return await this.storage.load(sessionId)
   }
 
+  getPath(sessionId: string): string {
+    return this.storage.getSessionPath(sessionId)
+  }
+
   async list(): Promise<Session[]> {
     return await this.storage.list()
   }

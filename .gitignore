@@ -6,6 +6,9 @@ dist/
 sessions/*.json
 logs/
 
+# Claude Code
+.claude/plans/
+
 # Development
 .DS_Store
 .vscode/
