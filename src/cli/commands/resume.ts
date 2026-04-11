@@ -1,8 +1,10 @@
 import { AgentExecutor } from '../../lib/agent/executor.js'
 import { logger } from '../../lib/utils/logger.js'
+import { printTurn, DisplayOptions } from '../display.js'
 
-export interface ResumeOptions {
+export interface ResumeOptions extends DisplayOptions {
   allowedTools?: string[]
+  model?: string
 }
 
 export async function resumeCommand(sessionId: string, instruction: string, options: ResumeOptions) {
@@ -12,18 +14,12 @@ export async function resumeCommand(sessionId: string, instruction: string, opti
     const executor = new AgentExecutor()
     const session = await executor.resume(sessionId, instruction, {
       allowedTools: options.allowedTools,
+      model: options.model,
     })
 
     // Display response
     const lastTurn = session.turns[session.turns.length - 1]
-    console.log('\n--- Agent Response ---')
-    console.log(lastTurn.content)
-
-    if (lastTurn.usage) {
-      console.log('\n--- Token Usage ---')
-      console.log(`Input: ${lastTurn.usage.input_tokens}`)
-      console.log(`Output: ${lastTurn.usage.output_tokens}`)
-    }
+    printTurn(lastTurn, options, session)
 
     console.log(`\nTo resume: cloader resume ${sessionId} "<instruction>"`)
   } catch (error) {

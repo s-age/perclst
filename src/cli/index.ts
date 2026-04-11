@@ -22,6 +22,11 @@ program
   .option('-p, --procedure <name>', 'Procedure to use')
   .option('-t, --tags <tags...>', 'Tags for the session')
   .option('--allowed-tools <tools...>', 'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)')
+  .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
+  .option('--silent-thoughts', 'Hide thinking blocks from output')
+  .option('--silent-tool-response', 'Hide tool call details from output')
+  .option('--silent-usage', 'Hide token usage from output')
+  .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
   .action(startCommand)
 
 // Resume command
@@ -31,6 +36,11 @@ program
   .argument('<session-id>', 'Session ID')
   .argument('<instruction>', 'Additional instruction')
   .option('--allowed-tools <tools...>', 'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)')
+  .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
+  .option('--silent-thoughts', 'Hide thinking blocks from output')
+  .option('--silent-tool-response', 'Hide tool call details from output')
+  .option('--silent-usage', 'Hide token usage from output')
+  .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
   .action(resumeCommand)
 
 // List command

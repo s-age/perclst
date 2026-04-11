@@ -8,6 +8,7 @@ import { logger } from '../utils/logger.js'
 
 export interface ExecuteOptions {
   allowedTools?: string[]
+  model?: string
 }
 
 export class AgentExecutor {
@@ -52,6 +53,7 @@ export class AgentExecutor {
       system: systemPrompt,
       config: {
         ...this.config,
+        ...(options.model ? { model: options.model } : {}),
         allowedTools: options.allowedTools,
       },
     })
@@ -63,6 +65,8 @@ export class AgentExecutor {
       timestamp: new Date().toISOString(),
       model: response.model,
       usage: response.usage,
+      thoughts: response.thoughts,
+      tool_history: response.tool_history,
     }
 
     await this.sessionManager.addTurn(sessionId, assistantTurn)

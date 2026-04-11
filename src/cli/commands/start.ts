@@ -1,11 +1,13 @@
 import { SessionManager } from '../../lib/session/manager.js'
 import { AgentExecutor } from '../../lib/agent/executor.js'
 import { logger } from '../../lib/utils/logger.js'
+import { printTurn, DisplayOptions } from '../display.js'
 
-export interface StartOptions {
+export interface StartOptions extends DisplayOptions {
   procedure?: string
   tags?: string[]
   allowedTools?: string[]
+  model?: string
 }
 
 export async function startCommand(task: string, options: StartOptions) {
@@ -26,18 +28,12 @@ export async function startCommand(task: string, options: StartOptions) {
     const executor = new AgentExecutor()
     const updatedSession = await executor.execute(session.id, {
       allowedTools: options.allowedTools,
+      model: options.model,
     })
 
     // Display response
     const lastTurn = updatedSession.turns[updatedSession.turns.length - 1]
-    console.log('\n--- Agent Response ---')
-    console.log(lastTurn.content)
-
-    if (lastTurn.usage) {
-      console.log('\n--- Token Usage ---')
-      console.log(`Input: ${lastTurn.usage.input_tokens}`)
-      console.log(`Output: ${lastTurn.usage.output_tokens}`)
-    }
+    printTurn(lastTurn, options, updatedSession)
 
     console.log(`\nTo resume: cloader resume ${session.id} "<instruction>"`)
   } catch (error) {
