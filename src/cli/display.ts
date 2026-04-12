@@ -121,7 +121,11 @@ export function printResponse(
 
   if (!silentUsage && response.usage) {
     const u = response.usage
+    const cu = response.last_assistant_usage ?? u
     logger.print(header('Token Usage', color))
+    if (response.message_count !== undefined) {
+      logger.print(`  Messages:         ${response.message_count}`)
+    }
     logger.print(`  Input:            ${u.input_tokens}`)
     logger.print(`  Output:           ${u.output_tokens}`)
     if (u.cache_read_input_tokens !== undefined) {
@@ -131,7 +135,7 @@ export function printResponse(
       logger.print(`  Cache creation:   ${u.cache_creation_input_tokens}`)
     }
     const contextTokens =
-      u.input_tokens + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0)
+      cu.input_tokens + (cu.cache_read_input_tokens ?? 0) + (cu.cache_creation_input_tokens ?? 0)
     const pct = Math.round((contextTokens / CONTEXT_WINDOW_SIZE) * 100)
     logger.print(
       `  Context window:   ${contextTokens.toLocaleString()} / ${CONTEXT_WINDOW_SIZE.toLocaleString()} (${pct}%)`

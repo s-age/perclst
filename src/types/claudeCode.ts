@@ -33,6 +33,13 @@ export type RawOutput = {
     cache_read_input_tokens?: number
     cache_creation_input_tokens?: number
   }
+  last_assistant_usage?: {
+    input_tokens: number
+    output_tokens: number
+    cache_read_input_tokens?: number
+    cache_creation_input_tokens?: number
+  }
+  message_count: number
 }
 
 export type IClaudeCodeRepository = {

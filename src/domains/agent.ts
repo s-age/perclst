@@ -61,6 +61,8 @@ export class AgentDomain implements IAgentDomain {
       content: raw.content,
       model: 'claude-cli',
       usage: raw.usage,
+      last_assistant_usage: raw.last_assistant_usage,
+      message_count: raw.message_count,
       thoughts: raw.thoughts.length > 0 ? raw.thoughts : undefined,
       tool_history: raw.tool_history.length > 0 ? raw.tool_history : undefined
     }

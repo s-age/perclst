@@ -1,6 +1,6 @@
 import { spawn } from 'child_process'
-import { writeFileSync, unlinkSync } from 'fs'
-import { tmpdir } from 'os'
+import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'fs'
+import { tmpdir, homedir } from 'os'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
@@ -53,11 +53,26 @@ type StreamEvent = {
   }
 }
 
-function parseStreamJson(raw: string): RawOutput {
+function resolveJsonlPath(sessionId: string, workingDir: string): string {
+  const encoded = workingDir.replace(/\//g, '-')
+  return join(homedir(), '.claude', 'projects', encoded, `${sessionId}.jsonl`)
+}
+
+function countJsonlLines(path: string): number {
+  if (!existsSync(path)) return 0
+  return readFileSync(path, 'utf-8')
+    .split('\n')
+    .filter((l) => l.trim()).length
+}
+
+function parseStreamJson(raw: string, jsonlBaseline: number): RawOutput {
   const thoughts: ThinkingBlock[] = []
   const toolMap = new Map<string, ToolUseRecord>()
   let finalContent = ''
   let usage: RawOutput['usage'] = { input_tokens: 0, output_tokens: 0 }
+  let lastAssistantUsage: RawOutput['last_assistant_usage'] | undefined
+  let assistantEventCount = 0
+  let userToolResultEventCount = 0
 
   for (const line of raw.split('\n')) {
     const trimmed = line.trim()
@@ -71,6 +86,15 @@ function parseStreamJson(raw: string): RawOutput {
     }
 
     if (event.type === 'assistant' && event.message) {
+      assistantEventCount++
+      if (event.message.usage) {
+        lastAssistantUsage = {
+          input_tokens: event.message.usage.input_tokens,
+          output_tokens: event.message.usage.output_tokens,
+          cache_read_input_tokens: event.message.usage.cache_read_input_tokens,
+          cache_creation_input_tokens: event.message.usage.cache_creation_input_tokens
+        }
+      }
       for (const block of event.message.content) {
         if (block.type === 'thinking') {
           thoughts.push({ type: 'thinking', thinking: block.thinking })
@@ -79,6 +103,9 @@ function parseStreamJson(raw: string): RawOutput {
         }
       }
     } else if (event.type === 'user' && event.message) {
+      if (event.message.content.some((b) => b.type === 'tool_result')) {
+        userToolResultEventCount++
+      }
       for (const block of event.message.content) {
         if (block.type === 'tool_result') {
           const record = toolMap.get(block.tool_use_id)
@@ -103,13 +130,23 @@ function parseStreamJson(raw: string): RawOutput {
     }
   }
 
-  return { content: finalContent, thoughts, tool_history: Array.from(toolMap.values()), usage }
+  const messageCount = jsonlBaseline + 1 + assistantEventCount + userToolResultEventCount
+
+  return {
+    content: finalContent,
+    thoughts,
+    tool_history: Array.from(toolMap.values()),
+    usage,
+    last_assistant_usage: lastAssistantUsage,
+    message_count: messageCount
+  }
 }
 
 function runClaude(
   args: string[],
   prompt: string,
   workingDir: string,
+  jsonlBaseline: number,
   sessionFilePath?: string
 ): Promise<RawOutput> {
   return new Promise((resolve, reject) => {
@@ -147,7 +184,7 @@ function runClaude(
           reject(new APIError(`claude exited with code ${code}`))
         }
       } else {
-        resolve(parseStreamJson(stdout))
+        resolve(parseStreamJson(stdout, jsonlBaseline))
       }
     })
 
@@ -181,8 +218,16 @@ async function dispatch(action: ClaudeAction): Promise<RawOutput> {
   args.push('--mcp-config', mcpConfigPath)
   args.push('--permission-prompt-tool', `mcp__${MCP_SERVER_NAME}__ask_permission`)
 
+  const jsonlBaseline = countJsonlLines(resolveJsonlPath(action.sessionId, action.workingDir))
+
   try {
-    return await runClaude(args, action.prompt, action.workingDir, action.sessionFilePath)
+    return await runClaude(
+      args,
+      action.prompt,
+      action.workingDir,
+      jsonlBaseline,
+      action.sessionFilePath
+    )
   } finally {
     try {
       unlinkSync(mcpConfigPath)
