@@ -1,4 +1,4 @@
-import type { ThinkingBlock, ToolUseRecord } from '../../../types/common.js'
+import type { ThinkingBlock, ToolUseRecord } from './common.js'
 
 export interface AgentConfig {
   model: string

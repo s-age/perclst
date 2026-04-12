@@ -1,4 +1,4 @@
-import type { AgentResponse } from '../lib/agent/types.js'
+import type { AgentResponse } from '../../types/agent.js'
 import { ConfigResolver } from '../lib/config/resolver.js'
 import { ANSI } from '../constants/ansi.js'
 
@@ -47,12 +47,9 @@ function toolLabel(name: string): string {
   return color ? `${color}[${name}]${RESET}` : `[${name}]`
 }
 
-export interface DisplayOptions {
-  silentToolResponse?: boolean
-  silentThoughts?: boolean
-  silentUsage?: boolean
-  outputOnly?: boolean
-}
+import type { DisplayOptions } from '../../types/display.js'
+
+export type { DisplayOptions }
 
 export function printResponse(response: AgentResponse, opts: DisplayOptions = {}) {
   const silentThoughts = opts.outputOnly || opts.silentThoughts

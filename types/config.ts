@@ -14,4 +14,3 @@ export interface Config {
   api_key_env?: string
   display?: DisplayConfig
 }
-

@@ -1,4 +1,4 @@
-import type { Config } from './types.js'
+import type { Config } from '../../../types/config.js'
 import {
   DEFAULT_MODEL,
   DEFAULT_MAX_TOKENS,

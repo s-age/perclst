@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
-import type { Config } from './types.js'
+import type { Config } from '../../../types/config.js'
 import { DEFAULT_CONFIG } from './defaults.js'
 import { CONFIG_DIR_NAME } from '../../constants/config.js'
 
