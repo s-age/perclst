@@ -3,7 +3,8 @@ import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
 import { logger } from '@src/utils/logger'
 import { RateLimitError } from '@src/errors/rateLimitError'
-import { printResponse, DisplayOptions } from '@src/cli/display'
+import { printResponse } from '@src/cli/display'
+import type { DisplayOptions } from '@src/types/display'
 import type { Config } from '@src/types/config'
 
 export type StartOptions = {

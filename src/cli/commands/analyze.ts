@@ -26,7 +26,7 @@ function formatToolInput(name: string, input: Record<string, unknown>): string {
     input['prompt'] ?? // Agent, Skill
     input['skill'] ?? // Skill
     input['description'] ?? // Agent
-    input['task_id'] ?? // Task系
+    input['task_id'] ?? // Task tools
     null
 
   if (primary !== null) {

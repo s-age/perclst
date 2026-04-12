@@ -1,5 +1,6 @@
 import type { AgentResponse } from '@src/types/agent'
 import type { DisplayConfig } from '@src/types/config'
+import type { DisplayOptions } from '@src/types/display'
 import { DEFAULT_HEADER_COLOR } from '@src/constants/config'
 import { ANSI } from '@src/constants/ansi'
 import { logger } from '@src/utils/logger'
@@ -87,10 +88,6 @@ function formatToolResult(result: string): string {
       : '')
   )
 }
-
-import type { DisplayOptions } from '@src/types/display'
-
-export type { DisplayOptions }
 
 export function printResponse(
   response: AgentResponse,
