@@ -1,8 +1,8 @@
 import type { AgentResponse } from '@src/types/agent'
 import type { Session } from '@src/types/session'
+import type { IClaudeCodeRepository } from '@src/types/claudeCode'
 import { logger } from '@src/utils/logger'
 import { loadProcedure } from '@src/repositories/procedures'
-import { dispatch } from '@src/infrastructures/claudeCode'
 import { APIError } from '@src/errors/apiError'
 
 export type ExecuteOptions = {
@@ -21,7 +21,10 @@ export type IAgentDomain = {
 }
 
 export class AgentDomain implements IAgentDomain {
-  constructor(private model: string) {}
+  constructor(
+    private model: string,
+    private claudeCodeRepo: IClaudeCodeRepository
+  ) {}
 
   async run(
     session: Session,
@@ -44,7 +47,7 @@ export class AgentDomain implements IAgentDomain {
       sessionFilePath: options.sessionFilePath
     }
 
-    const raw = await dispatch(
+    const raw = await this.claudeCodeRepo.dispatch(
       isResume
         ? { type: 'resume', ...baseArgs }
         : { type: 'start', system: systemPrompt, ...baseArgs }

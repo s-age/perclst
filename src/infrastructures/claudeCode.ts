@@ -4,6 +4,7 @@ import { tmpdir } from 'os'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
+import type { ClaudeAction, RawOutput, IClaudeCodeRepository } from '@src/types/claudeCode'
 import { APIError } from '@src/errors/apiError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
@@ -11,41 +12,6 @@ import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const MCP_SERVER_PATH = resolve(__dirname, '../mcp/server.js')
-
-export type StartAction = {
-  type: 'start'
-  sessionId: string
-  prompt: string
-  system?: string
-  model?: string
-  allowedTools?: string[]
-  workingDir: string
-  sessionFilePath?: string
-}
-
-export type ResumeAction = {
-  type: 'resume'
-  sessionId: string
-  prompt: string
-  model?: string
-  allowedTools?: string[]
-  workingDir: string
-  sessionFilePath?: string
-}
-
-export type ClaudeAction = StartAction | ResumeAction
-
-export type RawOutput = {
-  content: string
-  thoughts: ThinkingBlock[]
-  tool_history: ToolUseRecord[]
-  usage: {
-    input_tokens: number
-    output_tokens: number
-    cache_read_input_tokens?: number
-    cache_creation_input_tokens?: number
-  }
-}
 
 function buildMcpConfig(): string {
   return JSON.stringify({
@@ -190,7 +156,7 @@ function runClaude(
   })
 }
 
-export async function dispatch(action: ClaudeAction): Promise<RawOutput> {
+async function dispatch(action: ClaudeAction): Promise<RawOutput> {
   const args: string[] = ['-p', '--output-format', 'stream-json', '--verbose']
 
   if (action.model) {
@@ -223,5 +189,11 @@ export async function dispatch(action: ClaudeAction): Promise<RawOutput> {
     } catch {
       /* ignore */
     }
+  }
+}
+
+export class ClaudeCodeRepository implements IClaudeCodeRepository {
+  async dispatch(action: ClaudeAction): Promise<RawOutput> {
+    return dispatch(action)
   }
 }

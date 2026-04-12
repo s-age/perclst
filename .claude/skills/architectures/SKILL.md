@@ -25,8 +25,8 @@ paths:
 | `src/cli/` | CLI commands and display logic |
 | `src/services/` | Use-case orchestration |
 | `src/domains/` | Business rules — session lifecycle, agent execution 等 |
-| `src/repositories/` | Port type definitions (`type IXxx`) |
-| `src/infrastructures/` | External I/O implementations (file, process, API) |
+| `src/repositories/` | Data access layer — uses `infrastructures/` as raw I/O adapters; port types for domain-side injection |
+| `src/infrastructures/` | Raw I/O adapters (file, process, API) — used by `repositories/` |
 | `src/types/` | Shared data types; types referenced across 2+ layers |
 | `src/errors/` | Error classes — one class per file |
 | `src/utils/` | General utilities (logger, etc.) |
@@ -37,25 +37,26 @@ paths:
 ## Unidirectional Import Rules
 
 ```
-cli → services → domains → repositories ← infrastructures
+cli → services → domains → repositories → infrastructures
                                   ↑
                     types  (referenced from any layer, one-way)
 ```
 
 | Layer | May import | Must NOT import |
 |---|---|---|
-| `cli` | `services`, `types`, `errors`, `utils`, `constants` | `repositories`, `infrastructures` |
+| `cli` | `services`, `types`, `errors`, `utils`, `constants`, `core/di` | `repositories`, `infrastructures` |
 | `services` | `domains`, `types`, `errors`, `utils`, `constants` | `repositories`, `infrastructures` |
 | `domains` | `repositories`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `infrastructures` |
-| `repositories` | `types` | everything else |
-| `infrastructures` | `repositories`, `types`, `errors`, `utils`, `constants` | `cli`, `services` |
+| `repositories` | `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains` |
+| `infrastructures` | `repositories`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains` |
 | `types` | nothing | all other layers |
 | `core/di/setup.ts` | all layers | — (sole exception: DI wiring is its responsibility) |
 
 **Violation examples:**
 - `cli` imports `infrastructures` directly → **NG** (route through a service)
-- `cli` imports `repositories` directly → **NG** (promote shared types to `types/`)
-- `services` imports `infrastructures` directly → **NG** (always go through a `repositories` port)
+- `cli` imports `repositories` directly → **NG** (use DI container or promote shared types to `types/`)
+- `services` imports `infrastructures` directly → **NG** (always go through `domains` → `repositories`)
+- `domains` imports `infrastructures` directly → **NG** (define a port type in `repositories/` and inject via constructor)
 
 ## Required Verification After Changes
 
@@ -85,6 +86,9 @@ npm run test:unit  # Vitest unit tests
 ### Types
 - Use `type` instead of `interface` everywhere
 - Types referenced by 2+ layers belong in `src/types/`
+- Port types (`type IXxx`) follow the same rule:
+  - Defined and implemented **within the same layer** (e.g. `ISessionDomain` alongside `SessionDomain` in `domains/`) → same file as the class
+  - Bridging **two different layers** (e.g. domain depends on it, infrastructure implements it) → `src/types/` alongside the related data types
 
 ### File & Directory Naming
 - All new `.ts` files under `src/` use **camelCase** (e.g., `sessionRepository.ts`, `agentService.ts`)
