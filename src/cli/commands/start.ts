@@ -8,6 +8,7 @@ import type { Config } from '@src/types/config'
 
 export type StartOptions = {
   procedure?: string
+  name?: string
   tags?: string[]
   allowedTools?: string[]
   model?: string
@@ -21,7 +22,7 @@ export async function startCommand(task: string, options: StartOptions) {
 
     const { sessionId, response } = await agentService.start(
       task,
-      { procedure: options.procedure, tags: options.tags },
+      { name: options.name, procedure: options.procedure, tags: options.tags },
       { allowedTools: options.allowedTools, model: options.model }
     )
 

@@ -1,5 +1,6 @@
 export type Session = {
   id: string
+  name?: string
   created_at: string
   updated_at: string
   procedure?: string
@@ -14,6 +15,7 @@ export type Session = {
 }
 
 export type CreateSessionParams = {
+  name?: string
   procedure?: string
   parent_session_id?: string
   tags?: string[]

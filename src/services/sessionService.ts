@@ -30,4 +30,8 @@ export class SessionService {
   ): Promise<Session> {
     return this.domain.updateStatus(sessionId, status)
   }
+
+  async rename(sessionId: string, name: string): Promise<Session> {
+    return this.domain.rename(sessionId, name)
+  }
 }

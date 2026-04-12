@@ -18,8 +18,8 @@ export async function listCommand() {
     for (const session of sessions) {
       const status = session.metadata.status
 
-      console.log(`[${status}] ${session.id}`)
-      console.log(`  Created: ${new Date(session.created_at).toLocaleString()}`)
+      const label = `${session.name ?? 'anonymous'}(${session.id})`
+      console.log(`[${status}] ${label}`)
       console.log(`  Working dir: ${session.working_dir}`)
       if (session.procedure) {
         console.log(`  Procedure: ${session.procedure}`)

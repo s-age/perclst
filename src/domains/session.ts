@@ -16,6 +16,7 @@ export type ISessionDomain = {
   list(): Promise<Session[]>
   delete(sessionId: string): Promise<void>
   updateStatus(sessionId: string, status: 'active' | 'completed' | 'failed'): Promise<Session>
+  rename(sessionId: string, name: string): Promise<Session>
 }
 
 export class SessionDomain implements ISessionDomain {
@@ -27,6 +28,7 @@ export class SessionDomain implements ISessionDomain {
     const id = generateId()
     const session: Session = {
       id,
+      ...(params.name !== undefined ? { name: params.name } : {}),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       procedure: params.procedure,
@@ -73,6 +75,18 @@ export class SessionDomain implements ISessionDomain {
 
     saveSession(this.sessionsDir, session)
     logger.info('Session status updated', { session_id: sessionId, status })
+
+    return session
+  }
+
+  async rename(sessionId: string, name: string): Promise<Session> {
+    const session = await this.get(sessionId)
+
+    session.name = name
+    session.updated_at = new Date().toISOString()
+
+    saveSession(this.sessionsDir, session)
+    logger.info('Session renamed', { session_id: sessionId, name })
 
     return session
   }

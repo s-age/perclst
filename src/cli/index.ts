@@ -7,6 +7,7 @@ import { listCommand } from './commands/list'
 import { showCommand } from './commands/show'
 import { deleteCommand } from './commands/delete'
 import { analyzeCommand } from './commands/analyze'
+import { renameCommand } from './commands/rename'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -21,6 +22,7 @@ program
   .description('Start a new agent session')
   .argument('<task>', 'Task description')
   .option('-p, --procedure <name>', 'Procedure to use')
+  .option('-n, --name <name>', 'Name for the session')
   .option('-t, --tags <tags...>', 'Tags for the session')
   .option(
     '--allowed-tools <tools...>',
@@ -76,5 +78,13 @@ program
   .description('Delete a session')
   .argument('<session-id>', 'Session ID')
   .action(deleteCommand)
+
+// Rename command
+program
+  .command('rename')
+  .description('Rename a session')
+  .argument('<session-id>', 'Session ID')
+  .argument('<name>', 'New name for the session')
+  .action(renameCommand)
 
 program.parse()
