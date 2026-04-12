@@ -24,7 +24,7 @@ paths:
 |---|---|
 | `src/cli/` | CLI commands and display logic |
 | `src/services/` | Use-case orchestration |
-| `src/domains/` | Business rules (currently empty) |
+| `src/domains/` | Business rules — session lifecycle, agent execution 等 |
 | `src/repositories/` | Port type definitions (`type IXxx`) |
 | `src/infrastructures/` | External I/O implementations (file, process, API) |
 | `src/types/` | Shared data types; types referenced across 2+ layers |
@@ -37,7 +37,7 @@ paths:
 ## Unidirectional Import Rules
 
 ```
-cli → services → (domains) → repositories ← infrastructures
+cli → services → domains → repositories ← infrastructures
                                   ↑
                     types  (referenced from any layer, one-way)
 ```
@@ -45,7 +45,8 @@ cli → services → (domains) → repositories ← infrastructures
 | Layer | May import | Must NOT import |
 |---|---|---|
 | `cli` | `services`, `types`, `errors`, `utils`, `constants` | `repositories`, `infrastructures` |
-| `services` | `repositories`, `types`, `errors`, `utils`, `constants` | `infrastructures` |
+| `services` | `domains`, `types`, `errors`, `utils`, `constants` | `repositories`, `infrastructures` |
+| `domains` | `repositories`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `infrastructures` |
 | `repositories` | `types` | everything else |
 | `infrastructures` | `repositories`, `types`, `errors`, `utils`, `constants` | `cli`, `services` |
 | `types` | nothing | all other layers |
