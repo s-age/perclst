@@ -33,15 +33,21 @@ function findProjectRoot(): string {
 function parseOutput(output: string, exitCode: number): CommandResult {
   const errors: string[] = []
   const warnings: string[] = []
+  let currentFile = ''
   for (const line of output.split('\n')) {
     const trimmed = line.trim()
     if (!trimmed) continue
     const lower = trimmed.toLowerCase()
+    // Detect ESLint-style file header lines (absolute path ending with a source extension)
+    if (/^\/.+\.(ts|tsx|js|jsx|mjs|cjs|json)$/.test(trimmed)) {
+      currentFile = trimmed
+      continue
+    }
     if (lower.includes('error')) {
       if (ERROR_IGNORE_PATTERNS.some((p) => lower.includes(p))) continue
-      errors.push(trimmed)
+      errors.push(currentFile ? `${currentFile}: ${trimmed}` : trimmed)
     } else if (lower.includes('warning')) {
-      warnings.push(trimmed)
+      warnings.push(currentFile ? `${currentFile}: ${trimmed}` : trimmed)
     }
   }
   return { errors, warnings, exitCode }
