@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node __REPO_DIR__/hooks/skill-inject.mjs"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/hooks/skill-inject.mjs"
           }
         ]
       }

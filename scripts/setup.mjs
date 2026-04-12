@@ -15,10 +15,8 @@ const templatePath = join(repoDir, '.claude', 'settings.json')
 const destPath = join(homedir(), '.claude', 'settings.json')
 const backupPath = destPath + '.bak'
 
-// --- Load template and substitute __REPO_DIR__ ---
-const template = JSON.parse(
-  readFileSync(templatePath, 'utf-8').replace(/__REPO_DIR__/g, repoDir)
-)
+// --- Load template ---
+const template = JSON.parse(readFileSync(templatePath, 'utf-8'))
 
 // --- Load existing ~/.claude/settings.json or start fresh ---
 let dest = {}
@@ -83,7 +81,7 @@ if (destExists) {
 mkdirSync(dirname(destPath), { recursive: true })
 writeFileSync(destPath, after + '\n')
 console.log(`updated: ${destPath}`)
-console.log(`  hook -> ${repoDir}/hooks/skill-inject.mjs`)
+console.log('  hook -> $CLAUDE_PROJECT_DIR/hooks/skill-inject.mjs')
 if (destExists) {
   console.log(`\nnote: original settings saved to ${backupPath}`)
   console.log('      you can restore it with:')
