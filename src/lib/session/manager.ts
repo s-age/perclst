@@ -28,7 +28,7 @@ export class SessionManager {
         parent_session_id: params.parent_session_id,
         tags: params.tags || [],
         status: 'active'
-      },
+      }
     }
 
     await this.storage.save(session)

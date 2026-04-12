@@ -19,10 +19,7 @@ export const ts_get_types = {
   }
 }
 
-export async function executeTsGetTypes(args: {
-  file_path: string
-  symbol_name: string
-}) {
+export async function executeTsGetTypes(args: { file_path: string; symbol_name: string }) {
   const project = new TypeScriptProject()
   const definition = project.getTypeDefinitions(args.file_path, args.symbol_name)
 

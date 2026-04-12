@@ -61,7 +61,7 @@ export class SessionStorage {
         try {
           const session = await this.load(sessionId)
           sessions.push(session)
-        } catch (error) {
+        } catch {
           // Skip invalid session files
           continue
         }
@@ -69,8 +69,8 @@ export class SessionStorage {
     }
 
     // Sort by updated_at (newest first)
-    return sessions.sort((a, b) =>
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    return sessions.sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
     )
   }
 }

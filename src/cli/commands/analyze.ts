@@ -1,8 +1,8 @@
 import { SessionManager } from '@src/lib/session/manager'
-import { readClaudeSession, resolveJsonlPath } from '@src/lib/session/jsonl-reader'
+import { readClaudeSession } from '@src/lib/session/jsonl-reader'
 import { logger } from '@src/lib/utils/logger'
 
-export interface AnalyzeOptions {
+export type AnalyzeOptions = {
   format?: 'text' | 'json'
   printDetail?: boolean
 }
@@ -14,16 +14,16 @@ export interface AnalyzeOptions {
 function formatToolInput(name: string, input: Record<string, unknown>): string {
   // Extract the most meaningful single value for common tools
   const primary =
-    input['command'] ??       // Bash
-    input['file_path'] ??     // Read, Edit, Write
-    input['pattern'] ??       // Glob, Grep
-    input['path'] ??          // Glob, Grep path
-    input['url'] ??           // WebFetch, WebSearch
-    input['query'] ??         // WebSearch, ToolSearch
-    input['prompt'] ??        // Agent, Skill
-    input['skill'] ??         // Skill
-    input['description'] ??   // Agent
-    input['task_id'] ??       // Task系
+    input['command'] ?? // Bash
+    input['file_path'] ?? // Read, Edit, Write
+    input['pattern'] ?? // Glob, Grep
+    input['path'] ?? // Glob, Grep path
+    input['url'] ?? // WebFetch, WebSearch
+    input['query'] ?? // WebSearch, ToolSearch
+    input['prompt'] ?? // Agent, Skill
+    input['skill'] ?? // Skill
+    input['description'] ?? // Agent
+    input['task_id'] ?? // Task系
     null
 
   if (primary !== null) {
@@ -48,30 +48,35 @@ export async function analyzeCommand(sessionId: string, options: AnalyzeOptions)
       if (options.printDetail) {
         console.log(JSON.stringify({ session, summary }, null, 2))
       } else {
-        const { turns: _, ...compactSummary } = summary
-        console.log(JSON.stringify({
-          session_id: session.id,
-          claude_session_id: session.claude_session_id,
-          working_dir: session.working_dir,
-          procedure: session.procedure ?? null,
-          status: session.metadata.status,
-          turns_breakdown: {
-            user_instructions: summary.turnsBreakdown.userInstructions,
-            tool_use: summary.turnsBreakdown.toolUse,
-            assistant_response: summary.turnsBreakdown.assistantResponse,
-            total: summary.turnsBreakdown.total,
-          },
-          tool_uses: summary.toolUses.map(t => ({
-            label: formatToolInput(t.name, t.input),
-            is_error: t.isError,
-          })),
-          tokens: {
-            input_total: summary.tokens.totalInput,
-            output_total: summary.tokens.totalOutput,
-            cache_read_total: summary.tokens.totalCacheRead,
-            cache_creation_total: summary.tokens.totalCacheCreation,
-          },
-        }, null, 2))
+        console.log(
+          JSON.stringify(
+            {
+              session_id: session.id,
+              claude_session_id: session.claude_session_id,
+              working_dir: session.working_dir,
+              procedure: session.procedure ?? null,
+              status: session.metadata.status,
+              turns_breakdown: {
+                user_instructions: summary.turnsBreakdown.userInstructions,
+                tool_use: summary.turnsBreakdown.toolUse,
+                assistant_response: summary.turnsBreakdown.assistantResponse,
+                total: summary.turnsBreakdown.total
+              },
+              tool_uses: summary.toolUses.map((t) => ({
+                label: formatToolInput(t.name, t.input),
+                is_error: t.isError
+              })),
+              tokens: {
+                input_total: summary.tokens.totalInput,
+                output_total: summary.tokens.totalOutput,
+                cache_read_total: summary.tokens.totalCacheRead,
+                cache_creation_total: summary.tokens.totalCacheCreation
+              }
+            },
+            null,
+            2
+          )
+        )
       }
       return
     }

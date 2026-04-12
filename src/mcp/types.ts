@@ -1,6 +1,6 @@
 // TypeScript analysis result types used by ts_* MCP tools
 
-export interface TypeScriptAnalysis {
+export type TypeScriptAnalysis = {
   file_path: string
   symbols?: SymbolInfo[]
   imports?: ImportInfo[]
@@ -8,31 +8,31 @@ export interface TypeScriptAnalysis {
   dependencies?: string[]
 }
 
-export interface SymbolInfo {
+export type SymbolInfo = {
   name: string
   kind: string
   line: number
   type?: string
 }
 
-export interface ImportInfo {
+export type ImportInfo = {
   source: string
   imported: string[]
 }
 
-export interface ExportInfo {
+export type ExportInfo = {
   name: string
   kind: string
 }
 
-export interface ReferenceInfo {
+export type ReferenceInfo = {
   file_path: string
   line: number
   column: number
   snippet: string
 }
 
-export interface TypeDefinition {
+export type TypeDefinition = {
   name: string
   type: string
   properties?: PropertyInfo[]
@@ -41,21 +41,21 @@ export interface TypeDefinition {
   returnType?: string
 }
 
-export interface PropertyInfo {
+export type PropertyInfo = {
   name: string
   type: string
   isStatic?: boolean
   isReadonly?: boolean
 }
 
-export interface MethodInfo {
+export type MethodInfo = {
   name: string
   parameters: ParameterInfo[]
   returnType: string
   isStatic?: boolean
 }
 
-export interface ParameterInfo {
+export type ParameterInfo = {
   name: string
   type: string
 }

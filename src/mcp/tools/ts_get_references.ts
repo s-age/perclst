@@ -19,10 +19,7 @@ export const ts_get_references = {
   }
 }
 
-export async function executeTsGetReferences(args: {
-  file_path: string
-  symbol_name: string
-}) {
+export async function executeTsGetReferences(args: { file_path: string; symbol_name: string }) {
   const project = new TypeScriptProject()
   const references = project.getReferences(args.file_path, args.symbol_name)
 

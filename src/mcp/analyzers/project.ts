@@ -1,4 +1,4 @@
-import { Project, SourceFile, SyntaxKind } from 'ts-morph'
+import { Project, SourceFile } from 'ts-morph'
 import {
   TypeScriptAnalysis,
   SymbolInfo,
@@ -37,11 +37,12 @@ export class TypeScriptProject {
     const references: ReferenceInfo[] = []
 
     // Find the symbol
-    const symbol = sourceFile.getFunction(symbolName) ||
-                  sourceFile.getClass(symbolName) ||
-                  sourceFile.getVariableDeclaration(symbolName) ||
-                  sourceFile.getInterface(symbolName) ||
-                  sourceFile.getTypeAlias(symbolName)
+    const symbol =
+      sourceFile.getFunction(symbolName) ||
+      sourceFile.getClass(symbolName) ||
+      sourceFile.getVariableDeclaration(symbolName) ||
+      sourceFile.getInterface(symbolName) ||
+      sourceFile.getTypeAlias(symbolName)
 
     if (!symbol) {
       return references
@@ -77,21 +78,27 @@ export class TypeScriptProject {
       return {
         name: symbolName,
         type: 'class',
-        properties: classDecl.getProperties().map((p): PropertyInfo => ({
-          name: p.getName(),
-          type: p.getType().getText(),
-          isStatic: p.isStatic(),
-          isReadonly: p.isReadonly()
-        })),
-        methods: classDecl.getMethods().map((m): MethodInfo => ({
-          name: m.getName(),
-          parameters: m.getParameters().map((p): ParameterInfo => ({
+        properties: classDecl.getProperties().map(
+          (p): PropertyInfo => ({
             name: p.getName(),
-            type: p.getType().getText()
-          })),
-          returnType: m.getReturnType().getText(),
-          isStatic: m.isStatic()
-        }))
+            type: p.getType().getText(),
+            isStatic: p.isStatic(),
+            isReadonly: p.isReadonly()
+          })
+        ),
+        methods: classDecl.getMethods().map(
+          (m): MethodInfo => ({
+            name: m.getName(),
+            parameters: m.getParameters().map(
+              (p): ParameterInfo => ({
+                name: p.getName(),
+                type: p.getType().getText()
+              })
+            ),
+            returnType: m.getReturnType().getText(),
+            isStatic: m.isStatic()
+          })
+        )
       }
     }
 
@@ -101,10 +108,12 @@ export class TypeScriptProject {
       return {
         name: symbolName,
         type: 'interface',
-        properties: interfaceDecl.getProperties().map((p): PropertyInfo => ({
-          name: p.getName(),
-          type: p.getType().getText()
-        }))
+        properties: interfaceDecl.getProperties().map(
+          (p): PropertyInfo => ({
+            name: p.getName(),
+            type: p.getType().getText()
+          })
+        )
       }
     }
 
@@ -124,10 +133,12 @@ export class TypeScriptProject {
       return {
         name: symbolName,
         type: 'function',
-        parameters: functionDecl.getParameters().map((p): ParameterInfo => ({
-          name: p.getName(),
-          type: p.getType().getText()
-        })),
+        parameters: functionDecl.getParameters().map(
+          (p): ParameterInfo => ({
+            name: p.getName(),
+            type: p.getType().getText()
+          })
+        ),
         returnType: functionDecl.getReturnType().getText()
       }
     }

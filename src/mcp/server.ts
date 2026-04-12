@@ -19,14 +19,14 @@ import { executeTsGetTypes } from './tools/ts_get_types'
 // JSON-RPC 2.0 types
 // ---------------------------------------------------------------------------
 
-interface JSONRPCRequest {
+type JSONRPCRequest = {
   jsonrpc: '2.0'
   id?: number | string | null
   method: string
   params?: unknown
 }
 
-interface JSONRPCResponse {
+type JSONRPCResponse = {
   jsonrpc: '2.0'
   id: number | string | null
   result?: unknown
@@ -48,10 +48,10 @@ const TOOLS = [
       properties: {
         tool_name: { type: 'string', description: 'The name of the tool requesting permission' },
         input: { type: 'object', description: 'The input arguments for the tool' },
-        tool_use_id: { type: 'string', description: 'The unique tool use request ID' },
+        tool_use_id: { type: 'string', description: 'The unique tool use request ID' }
       },
-      required: ['tool_name', 'input'],
-    },
+      required: ['tool_name', 'input']
+    }
   },
   {
     name: 'ts_analyze',
@@ -59,10 +59,10 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        file_path: { type: 'string', description: 'Path to the TypeScript file to analyze' },
+        file_path: { type: 'string', description: 'Path to the TypeScript file to analyze' }
       },
-      required: ['file_path'],
-    },
+      required: ['file_path']
+    }
   },
   {
     name: 'ts_get_references',
@@ -71,10 +71,10 @@ const TOOLS = [
       type: 'object',
       properties: {
         file_path: { type: 'string', description: 'Path to the TypeScript file' },
-        symbol_name: { type: 'string', description: 'Name of the symbol to find references for' },
+        symbol_name: { type: 'string', description: 'Name of the symbol to find references for' }
       },
-      required: ['file_path', 'symbol_name'],
-    },
+      required: ['file_path', 'symbol_name']
+    }
   },
   {
     name: 'ts_get_types',
@@ -83,11 +83,14 @@ const TOOLS = [
       type: 'object',
       properties: {
         file_path: { type: 'string', description: 'Path to the TypeScript file' },
-        symbol_name: { type: 'string', description: 'Name of the symbol to get type information for' },
+        symbol_name: {
+          type: 'string',
+          description: 'Name of the symbol to get type information for'
+        }
       },
-      required: ['file_path', 'symbol_name'],
-    },
-  },
+      required: ['file_path', 'symbol_name']
+    }
+  }
 ]
 
 // ---------------------------------------------------------------------------
@@ -171,8 +174,8 @@ async function handleRequest(req: JSONRPCRequest): Promise<void> {
         result: {
           protocolVersion: '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'perclst', version: '1.0.0' },
-        },
+          serverInfo: { name: 'perclst', version: '1.0.0' }
+        }
       })
       break
 
@@ -193,14 +196,16 @@ async function handleRequest(req: JSONRPCRequest): Promise<void> {
                 {
                   type: 'text',
                   text: JSON.stringify(
-                    await askPermission(p.arguments as {
-                      tool_name: string
-                      input: Record<string, unknown>
-                      tool_use_id?: string
-                    }),
-                  ),
-                },
-              ],
+                    await askPermission(
+                      p.arguments as {
+                        tool_name: string
+                        input: Record<string, unknown>
+                        tool_use_id?: string
+                      }
+                    )
+                  )
+                }
+              ]
             }
             break
 
@@ -210,13 +215,13 @@ async function handleRequest(req: JSONRPCRequest): Promise<void> {
 
           case 'ts_get_references':
             result = await executeTsGetReferences(
-              p.arguments as { file_path: string; symbol_name: string },
+              p.arguments as { file_path: string; symbol_name: string }
             )
             break
 
           case 'ts_get_types':
             result = await executeTsGetTypes(
-              p.arguments as { file_path: string; symbol_name: string },
+              p.arguments as { file_path: string; symbol_name: string }
             )
             break
 
@@ -227,7 +232,9 @@ async function handleRequest(req: JSONRPCRequest): Promise<void> {
 
         send({ jsonrpc: '2.0', id, result })
       } catch (e) {
-        send(err(id, -32603, `Tool execution failed: ${e instanceof Error ? e.message : String(e)}`))
+        send(
+          err(id, -32603, `Tool execution failed: ${e instanceof Error ? e.message : String(e)}`)
+        )
       }
       break
     }

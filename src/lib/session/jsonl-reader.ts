@@ -2,14 +2,14 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
 
-export interface ToolCall {
+export type ToolCall = {
   name: string
   input: Record<string, unknown>
-  result: string | null  // null for tool_reference type (ToolSearch)
+  result: string | null // null for tool_reference type (ToolSearch)
   isError: boolean
 }
 
-export interface ClaudeCodeTurn {
+export type ClaudeCodeTurn = {
   userMessage?: string
   toolCalls: ToolCall[]
   assistantText?: string
@@ -22,7 +22,7 @@ export interface ClaudeCodeTurn {
   }
 }
 
-export interface AnalysisSummary {
+export type AnalysisSummary = {
   turns: ClaudeCodeTurn[]
   turnsBreakdown: {
     userInstructions: number
@@ -44,14 +44,14 @@ export interface AnalysisSummary {
 }
 
 // Claude Code jsonl entry types (raw)
-interface RawUserEntry {
+type RawUserEntry = {
   type: 'user'
   message: {
     content: string | RawContentBlock[]
   }
 }
 
-interface RawAssistantEntry {
+type RawAssistantEntry = {
   type: 'assistant'
   message: {
     content: RawContentBlock[]
@@ -68,7 +68,12 @@ type RawContentBlock =
   | { type: 'text'; text: string }
   | { type: 'thinking'; thinking: string }
   | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
-  | { type: 'tool_result'; tool_use_id: string; content: string | RawContentBlock[]; is_error?: boolean }
+  | {
+      type: 'tool_result'
+      tool_use_id: string
+      content: string | RawContentBlock[]
+      is_error?: boolean
+    }
   | { type: 'tool_reference'; id: string }
 
 type RawEntry = RawUserEntry | RawAssistantEntry | { type: string }
@@ -97,7 +102,7 @@ function extractToolResultText(content: string | RawContentBlock[]): string | nu
   if (Array.isArray(content)) {
     const texts = content
       .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-      .map(b => b.text)
+      .map((b) => b.text)
     return texts.length > 0 ? texts.join('\n') : null
   }
   return null
@@ -116,8 +121,8 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
   const raw = readFileSync(jsonlPath, 'utf-8')
   const entries: RawEntry[] = raw
     .split('\n')
-    .filter(line => line.trim())
-    .map(line => JSON.parse(line) as RawEntry)
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line) as RawEntry)
 
   const turns: ClaudeCodeTurn[] = []
 
@@ -132,7 +137,7 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
       if (block.type === 'tool_result') {
         toolResultMap.set(block.tool_use_id, {
           text: extractToolResultText(block.content),
-          isError: block.is_error ?? false,
+          isError: block.is_error ?? false
         })
       }
     }
@@ -152,11 +157,11 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
         turns.push({ userMessage: content, toolCalls: [] })
       } else if (Array.isArray(content)) {
         // Array with no tool_result blocks = user instruction in block form
-        const hasToolResult = content.some(b => b.type === 'tool_result')
+        const hasToolResult = content.some((b) => b.type === 'tool_result')
         if (!hasToolResult) {
           const texts = content
             .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-            .map(b => b.text)
+            .map((b) => b.text)
           if (texts.length > 0) {
             turns.push({ userMessage: texts.join('\n'), toolCalls: [] })
           }
@@ -170,7 +175,7 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
       // Skip thinking-only entries: Claude Code writes a separate entry per content block,
       // so a thinking entry is always followed by the real content entry with identical usage.
       // Counting it would double the usage and inflate turn counts.
-      if (content.length > 0 && content.every(b => b.type === 'thinking')) continue
+      if (content.length > 0 && content.every((b) => b.type === 'thinking')) continue
 
       const thinkingBlocks: string[] = []
       const toolCalls: ToolCall[] = []
@@ -187,7 +192,7 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
             name: block.name,
             input: block.input,
             result: mapped?.text ?? null,
-            isError: mapped?.isError ?? false,
+            isError: mapped?.isError ?? false
           })
         }
       }
@@ -199,7 +204,12 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
         const out = u.output_tokens ?? 0
         const cr = u.cache_read_input_tokens ?? 0
         const cc = u.cache_creation_input_tokens ?? 0
-        usage = { input_tokens: inp, output_tokens: out, cache_read_input_tokens: cr, cache_creation_input_tokens: cc }
+        usage = {
+          input_tokens: inp,
+          output_tokens: out,
+          cache_read_input_tokens: cr,
+          cache_creation_input_tokens: cc
+        }
         totalInput += inp
         totalOutput += out
         totalCacheRead += cr
@@ -210,7 +220,7 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
         toolCalls,
         assistantText: assistantText?.trim() || undefined,
         thinkingBlocks: thinkingBlocks.length > 0 ? thinkingBlocks : undefined,
-        usage,
+        usage
       })
     }
   }
@@ -237,14 +247,14 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
       userInstructions,
       toolUse,
       assistantResponse,
-      total: userInstructions + toolUse * 2 + assistantResponse,
+      total: userInstructions + toolUse * 2 + assistantResponse
     },
     toolUses: allToolUses,
     tokens: {
       totalInput,
       totalOutput,
       totalCacheRead,
-      totalCacheCreation,
-    },
+      totalCacheCreation
+    }
   }
 }

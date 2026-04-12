@@ -19,9 +19,9 @@ function buildMcpConfig(): string {
     mcpServers: {
       [MCP_SERVER_NAME]: {
         command: 'node',
-        args: [MCP_SERVER_PATH],
-      },
-    },
+        args: [MCP_SERVER_PATH]
+      }
+    }
   })
 }
 
@@ -33,7 +33,7 @@ type ContentBlock =
   | { type: 'tool_use'; id: string; name: string; input: unknown }
   | { type: 'tool_result'; tool_use_id: string; content: unknown }
 
-interface StreamEvent {
+type StreamEvent = {
   type: 'assistant' | 'user' | 'system' | 'result'
   subtype?: string
   parent_tool_use_id?: string
@@ -56,7 +56,7 @@ interface StreamEvent {
   }
 }
 
-interface ParsedResponse {
+type ParsedResponse = {
   content: string
   thoughts: ThinkingBlock[]
   tool_history: ToolUseRecord[]
@@ -98,9 +98,10 @@ function parseStreamJson(raw: string): ParsedResponse {
         if (block.type === 'tool_result') {
           const record = toolMap.get(block.tool_use_id)
           if (record) {
-            record.result = typeof block.content === 'string'
-              ? block.content
-              : JSON.stringify(block.content, null, 2)
+            record.result =
+              typeof block.content === 'string'
+                ? block.content
+                : JSON.stringify(block.content, null, 2)
           }
         }
       }
@@ -111,7 +112,7 @@ function parseStreamJson(raw: string): ParsedResponse {
           input_tokens: event.usage.input_tokens,
           output_tokens: event.usage.output_tokens,
           cache_read_input_tokens: event.usage.cache_read_input_tokens,
-          cache_creation_input_tokens: event.usage.cache_creation_input_tokens,
+          cache_creation_input_tokens: event.usage.cache_creation_input_tokens
         }
       }
     }
@@ -120,7 +121,12 @@ function parseStreamJson(raw: string): ParsedResponse {
   return { content: finalContent, thoughts, tool_history: Array.from(toolMap.values()), usage }
 }
 
-function runClaude(args: string[], prompt: string, workingDir: string, sessionFilePath?: string): Promise<ParsedResponse> {
+function runClaude(
+  args: string[],
+  prompt: string,
+  workingDir: string,
+  sessionFilePath?: string
+): Promise<ParsedResponse> {
   return new Promise((resolve, reject) => {
     const env: NodeJS.ProcessEnv = { ...process.env }
     if (sessionFilePath) {
@@ -132,7 +138,7 @@ function runClaude(args: string[], prompt: string, workingDir: string, sessionFi
       // Do NOT use 'pipe' for stderr — let it flow to the user's terminal so
       // permission prompts (written to /dev/tty inside the MCP server) are
       // visible even while we capture stdout.
-      stdio: ['pipe', 'pipe', 'inherit'],
+      stdio: ['pipe', 'pipe', 'inherit']
     })
 
     let stdout = ''
@@ -160,7 +166,7 @@ export class ClaudeCLI {
     logger.debug('Calling claude CLI', {
       instruction_length: request.instruction.length,
       is_resume: request.isResume,
-      session_id: request.claudeSessionId,
+      session_id: request.claudeSessionId
     })
 
     // Base args for -p (print / headless) mode with stream-json output.
@@ -198,7 +204,12 @@ export class ClaudeCLI {
     logger.debug('Executing claude command', { model: request.config.model, args })
 
     try {
-      const parsed = await runClaude(args, request.instruction, request.workingDir, request.sessionFilePath)
+      const parsed = await runClaude(
+        args,
+        request.instruction,
+        request.workingDir,
+        request.sessionFilePath
+      )
 
       if (!parsed.content) {
         throw new APIError('Empty response from Claude CLI')
@@ -207,7 +218,7 @@ export class ClaudeCLI {
       logger.info('Claude CLI response received', {
         response_length: parsed.content.length,
         thoughts_count: parsed.thoughts.length,
-        tool_calls_count: parsed.tool_history.length,
+        tool_calls_count: parsed.tool_history.length
       })
 
       return {
@@ -215,10 +226,14 @@ export class ClaudeCLI {
         model: 'claude-cli',
         usage: parsed.usage,
         thoughts: parsed.thoughts.length > 0 ? parsed.thoughts : undefined,
-        tool_history: parsed.tool_history.length > 0 ? parsed.tool_history : undefined,
+        tool_history: parsed.tool_history.length > 0 ? parsed.tool_history : undefined
       }
     } finally {
-      try { unlinkSync(mcpConfigPath) } catch { /* ignore */ }
+      try {
+        unlinkSync(mcpConfigPath)
+      } catch {
+        /* ignore */
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 import { SessionManager } from '@src/lib/session/manager'
 import { logger } from '@src/lib/utils/logger'
 
-export interface ShowOptions {
+export type ShowOptions = {
   format?: 'text' | 'json'
 }
 

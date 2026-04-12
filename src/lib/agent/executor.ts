@@ -6,7 +6,7 @@ import type { AgentConfig, AgentResponse } from '@types/agent'
 import { logger } from '@src/lib/utils/logger'
 import { DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@src/constants/config'
 
-export interface ExecuteOptions {
+export type ExecuteOptions = {
   allowedTools?: string[]
   model?: string
 }
@@ -26,11 +26,15 @@ export class AgentExecutor {
       model: config.model || DEFAULT_MODEL,
       max_tokens: config.max_tokens || DEFAULT_MAX_TOKENS,
       temperature: config.temperature || DEFAULT_TEMPERATURE,
-      api_key: '', // Not needed for CLI mode
+      api_key: '' // Not needed for CLI mode
     }
   }
 
-  async execute(sessionId: string, instruction: string, options: ExecuteOptions = {}): Promise<AgentResponse> {
+  async execute(
+    sessionId: string,
+    instruction: string,
+    options: ExecuteOptions = {}
+  ): Promise<AgentResponse> {
     const session = await this.sessionManager.get(sessionId)
 
     // Load procedure if specified
@@ -47,12 +51,12 @@ export class AgentExecutor {
       config: {
         ...this.config,
         ...(options.model ? { model: options.model } : {}),
-        allowedTools: options.allowedTools,
+        allowedTools: options.allowedTools
       },
       claudeSessionId: session.claude_session_id,
       isResume: false,
       workingDir: session.working_dir,
-      sessionFilePath: this.sessionManager.getPath(sessionId),
+      sessionFilePath: this.sessionManager.getPath(sessionId)
     })
 
     await this.sessionManager.updateStatus(sessionId, 'active')
@@ -60,7 +64,11 @@ export class AgentExecutor {
     return response
   }
 
-  async resume(sessionId: string, instruction: string, options: ExecuteOptions = {}): Promise<AgentResponse> {
+  async resume(
+    sessionId: string,
+    instruction: string,
+    options: ExecuteOptions = {}
+  ): Promise<AgentResponse> {
     const session = await this.sessionManager.get(sessionId)
 
     // Load procedure if specified
@@ -77,12 +85,12 @@ export class AgentExecutor {
       config: {
         ...this.config,
         ...(options.model ? { model: options.model } : {}),
-        allowedTools: options.allowedTools,
+        allowedTools: options.allowedTools
       },
       claudeSessionId: session.claude_session_id,
       isResume: true,
       workingDir: session.working_dir,
-      sessionFilePath: this.sessionManager.getPath(sessionId),
+      sessionFilePath: this.sessionManager.getPath(sessionId)
     })
 
     await this.sessionManager.updateStatus(sessionId, 'active')

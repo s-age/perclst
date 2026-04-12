@@ -18,7 +18,11 @@
     "prepublish": "npm run build",
     "setup": "node scripts/setup.mjs",
     "link": "npm link && node scripts/setup.mjs",
-    "unlink": "npm unlink -g perclst"
+    "unlink": "npm unlink -g perclst",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
   },
   "keywords": [
     "claude",
@@ -35,9 +39,15 @@
     "ts-morph": "^27.0.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^20.0.0",
+    "eslint": "^10.2.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.2",
     "tsup": "^8.5.1",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.58.1"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -3,12 +3,12 @@ import { AgentExecutor } from '@src/lib/agent/executor'
 import { logger } from '@src/lib/utils/logger'
 import { printResponse, DisplayOptions } from '@src/cli/display'
 
-export interface StartOptions extends DisplayOptions {
+export type StartOptions = {
   procedure?: string
   tags?: string[]
   allowedTools?: string[]
   model?: string
-}
+} & DisplayOptions
 
 export async function startCommand(task: string, options: StartOptions) {
   try {
@@ -18,7 +18,7 @@ export async function startCommand(task: string, options: StartOptions) {
     const sessionManager = new SessionManager()
     const session = await sessionManager.create({
       procedure: options.procedure,
-      tags: options.tags,
+      tags: options.tags
     })
 
     console.log(`Session created: ${session.id}`)
@@ -27,7 +27,7 @@ export async function startCommand(task: string, options: StartOptions) {
     const executor = new AgentExecutor()
     const response = await executor.execute(session.id, task, {
       allowedTools: options.allowedTools,
-      model: options.model,
+      model: options.model
     })
 
     // Display response

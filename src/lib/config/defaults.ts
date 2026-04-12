@@ -6,7 +6,7 @@ import {
   DEFAULT_SESSIONS_DIR,
   DEFAULT_LOGS_DIR,
   DEFAULT_HEADER_COLOR,
-  DEFAULT_API_KEY_ENV,
+  DEFAULT_API_KEY_ENV
 } from '@src/constants/config'
 
 export const DEFAULT_CONFIG: Config = {
@@ -18,6 +18,6 @@ export const DEFAULT_CONFIG: Config = {
   api_key_env: DEFAULT_API_KEY_ENV,
   display: {
     header_color: DEFAULT_HEADER_COLOR,
-    no_color: false,
+    no_color: false
   }
 }

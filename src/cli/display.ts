@@ -24,9 +24,7 @@ function resolveColor(): string {
 
 function header(text: string): string {
   const color = resolveColor()
-  return color
-    ? `\n${color}--- ${text} ---${RESET}`
-    : `\n--- ${text} ---`
+  return color ? `\n${color}--- ${text} ---${RESET}` : `\n--- ${text} ---`
 }
 
 function greyBlock(text: string): string {
@@ -34,7 +32,8 @@ function greyBlock(text: string): string {
   const width = process.stdout.columns ?? 80
   return text
     .split('\n')
-    .map(line => {
+    .map((line) => {
+      // eslint-disable-next-line no-control-regex
       const visibleLen = line.replace(/\x1b\[[0-9;]*m/g, '').length
       const pad = Math.max(0, width - visibleLen)
       return `${BG_GREY}${FG_ON_GREY}${line}${' '.repeat(pad)}${RESET}`
@@ -56,10 +55,14 @@ function formatToolResult(result: string): string {
     const parsed: unknown = JSON.parse(result)
     // MCP tool results come back as an array of content blocks: [{type:'text', text:'...'}]
     // Extract the text fields and try to parse each as JSON
-    if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0] as { type?: string }).type === 'text') {
+    if (
+      Array.isArray(parsed) &&
+      parsed.length > 0 &&
+      (parsed[0] as { type?: string }).type === 'text'
+    ) {
       const extracted = (parsed as Array<{ type: string; text?: string }>)
-        .filter(b => b.type === 'text' && b.text !== undefined)
-        .map(b => {
+        .filter((b) => b.type === 'text' && b.text !== undefined)
+        .map((b) => {
           try {
             return JSON.stringify(JSON.parse(b.text!), null, 2)
           } catch {
@@ -76,7 +79,16 @@ function formatToolResult(result: string): string {
   }
 
   const lines = text.split('\n')
-  return lines[0] + (lines.length > 1 ? '\n' + lines.slice(1).map(l => indent + l).join('\n') : '')
+  return (
+    lines[0] +
+    (lines.length > 1
+      ? '\n' +
+        lines
+          .slice(1)
+          .map((l) => indent + l)
+          .join('\n')
+      : '')
+  )
 }
 
 import type { DisplayOptions } from '@types/display'

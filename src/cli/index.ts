@@ -10,10 +10,7 @@ import { analyzeCommand } from './commands/analyze'
 
 const program = new Command()
 
-program
-  .name('perclst')
-  .description('CLI tool for managing Claude Code sub-agents')
-  .version('0.1.0')
+program.name('perclst').description('CLI tool for managing Claude Code sub-agents').version('0.1.0')
 
 // Start command
 program
@@ -22,7 +19,10 @@ program
   .argument('<task>', 'Task description')
   .option('-p, --procedure <name>', 'Procedure to use')
   .option('-t, --tags <tags...>', 'Tags for the session')
-  .option('--allowed-tools <tools...>', 'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)')
+  .option(
+    '--allowed-tools <tools...>',
+    'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)'
+  )
   .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
   .option('--silent-thoughts', 'Hide thinking blocks from output')
   .option('--silent-tool-response', 'Hide tool call details from output')
@@ -36,7 +36,10 @@ program
   .description('Resume an existing session')
   .argument('<session-id>', 'Session ID')
   .argument('<instruction>', 'Additional instruction')
-  .option('--allowed-tools <tools...>', 'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)')
+  .option(
+    '--allowed-tools <tools...>',
+    'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)'
+  )
   .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
   .option('--silent-thoughts', 'Hide thinking blocks from output')
   .option('--silent-tool-response', 'Hide tool call details from output')
@@ -45,10 +48,7 @@ program
   .action(resumeCommand)
 
 // List command
-program
-  .command('list')
-  .description('List all sessions')
-  .action(listCommand)
+program.command('list').description('List all sessions').action(listCommand)
 
 // Show command
 program
