@@ -1,15 +1,15 @@
 ---
 name: utils
-description: Use this skill when working with error types, logging, or anything in src/lib/utils/. Covers the custom error classes and the Logger singleton.
+description: Use this skill when working with error types, logging, or anything in src/utils/. Covers the custom error classes and the Logger singleton.
 paths:
-  - src/lib/utils/**
+  - src/utils/**
 ---
 
 # Utilities
 
 ## Files
-- `src/lib/utils/errors.ts` — Custom error classes
-- `src/lib/utils/logger.ts` — `Logger` class and `logger` singleton
+- `src/utils/errors.ts` — Custom error classes
+- `src/utils/logger.ts` — `Logger` class and `logger` singleton
 
 ## Error Classes
 

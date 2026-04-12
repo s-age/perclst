@@ -1,4 +1,4 @@
-import { IAgentClient } from '@src/application/ports/agent-client'
+import type { IAgentClient } from '@src/repositories/agentClient'
 import { AgentRequest, AgentResponse } from '@src/types/agent'
 
 export class MockAgentClient implements IAgentClient {

@@ -1,4 +1,4 @@
-import { IConfigProvider } from '@src/application/ports/config-provider'
+import type { IConfigProvider } from '@src/types/config'
 import { Config } from '@src/types/config'
 
 export class InMemoryConfigProvider implements IConfigProvider {

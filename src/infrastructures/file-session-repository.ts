@@ -1,8 +1,8 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import type { Session } from '@src/types/session'
-import { SessionNotFoundError } from '@src/lib/utils/errors'
-import { ISessionRepository } from '@src/application/ports/session-repository'
+import { SessionNotFoundError } from '@src/utils/errors'
+import type { ISessionRepository } from '@src/repositories/sessionRepository'
 
 export class FileSessionRepository implements ISessionRepository {
   constructor(private sessionsDir: string) {

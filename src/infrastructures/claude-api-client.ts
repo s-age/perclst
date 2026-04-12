@@ -5,10 +5,10 @@ import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { AgentRequest, AgentResponse } from '@src/types/agent'
 import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
-import { APIError } from '@src/lib/utils/errors'
-import { logger } from '@src/lib/utils/logger'
+import { APIError } from '@src/utils/errors'
+import { logger } from '@src/utils/logger'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
-import { IAgentClient } from '@src/application/ports/agent-client'
+import type { IAgentClient } from '@src/repositories/agentClient'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)

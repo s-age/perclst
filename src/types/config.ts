@@ -1,11 +1,11 @@
-export interface DisplayConfig {
+export type DisplayConfig = {
   /** Header color in #RRGGBB format (default: Claude orange #D97757) */
   header_color?: string
   /** Disable all color output (also honored via NO_COLOR env var) */
   no_color?: boolean
 }
 
-export interface Config {
+export type Config = {
   sessions_dir?: string
   logs_dir?: string
   model?: string
@@ -13,4 +13,10 @@ export interface Config {
   temperature?: number
   api_key_env?: string
   display?: DisplayConfig
+}
+
+export type IConfigProvider = {
+  load(): Config
+  resolveSessionsDir(config: Config): string
+  resolveLogsDir(config: Config): string
 }

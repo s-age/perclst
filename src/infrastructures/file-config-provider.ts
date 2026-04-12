@@ -2,8 +2,8 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
 import type { Config } from '@src/types/config'
-import { IConfigProvider } from '@src/application/ports/config-provider'
-import { DEFAULT_CONFIG } from '@src/lib/config/defaults'
+import type { IConfigProvider } from '@src/types/config'
+import { DEFAULT_CONFIG } from '@src/constants/config'
 import { CONFIG_DIR_NAME } from '@src/constants/config'
 
 export class FileConfigProvider implements IConfigProvider {

@@ -1,5 +1,5 @@
 import type { AgentRequest, AgentResponse } from '@src/types/agent'
 
-export interface IAgentClient {
+export type IAgentClient = {
   call(request: AgentRequest): Promise<AgentResponse>
 }

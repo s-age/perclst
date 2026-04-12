@@ -1,6 +1,6 @@
 import type { Session } from '@src/types/session'
 
-export interface ISessionRepository {
+export type ISessionRepository = {
   save(session: Session): Promise<void>
   load(sessionId: string): Promise<Session>
   exists(sessionId: string): Promise<boolean>

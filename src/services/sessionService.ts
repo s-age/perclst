@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import type { Session, CreateSessionParams } from '@src/types/session'
-import { logger } from '@src/lib/utils/logger'
-import { ISessionRepository } from './ports/session-repository'
+import { logger } from '@src/utils/logger'
+import type { ISessionRepository } from '@src/repositories/sessionRepository'
 
 export class SessionService {
   constructor(private storage: ISessionRepository) {

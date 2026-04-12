@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { AgentService } from '../agent-service'
-import { InMemorySessionRepository } from '../../infrastructure/__tests__/in-memory-session-repository'
-import { InMemoryProcedureLoader } from '../../infrastructure/__tests__/in-memory-procedure-loader'
-import { MockAgentClient } from '../../infrastructure/__tests__/mock-agent-client'
-import { InMemoryConfigProvider } from '../../infrastructure/__tests__/in-memory-config-provider'
+import { AgentService } from '../agentService'
+import { InMemorySessionRepository } from '../../infrastructures/__tests__/in-memory-session-repository'
+import { InMemoryProcedureLoader } from '../../infrastructures/__tests__/in-memory-procedure-loader'
+import { MockAgentClient } from '../../infrastructures/__tests__/mock-agent-client'
+import { InMemoryConfigProvider } from '../../infrastructures/__tests__/in-memory-config-provider'
 
 describe('AgentService', () => {
   let repository: InMemorySessionRepository

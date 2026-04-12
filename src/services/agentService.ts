@@ -1,10 +1,10 @@
 import type { AgentConfig, AgentResponse } from '@src/types/agent'
-import { logger } from '@src/lib/utils/logger'
+import { logger } from '@src/utils/logger'
 import { DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@src/constants/config'
-import { ISessionRepository } from './ports/session-repository'
-import { IProcedureLoader } from './ports/procedure-loader'
-import { IAgentClient } from './ports/agent-client'
-import { IConfigProvider } from './ports/config-provider'
+import type { ISessionRepository } from '@src/repositories/sessionRepository'
+import type { IProcedureLoader } from '@src/repositories/procedureLoader'
+import type { IAgentClient } from '@src/repositories/agentClient'
+import type { IConfigProvider } from '@src/types/config'
 
 export type ExecuteOptions = {
   allowedTools?: string[]
@@ -57,7 +57,6 @@ export class AgentService {
       sessionFilePath: this.sessionRepository.getSessionPath(sessionId)
     })
 
-    // Update status to active
     const updatedSession = {
       ...session,
       metadata: { ...session.metadata, status: 'active' as const },
@@ -95,7 +94,6 @@ export class AgentService {
       sessionFilePath: this.sessionRepository.getSessionPath(sessionId)
     })
 
-    // Update status to active
     const updatedSession = {
       ...session,
       metadata: { ...session.metadata, status: 'active' as const },

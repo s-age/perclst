@@ -1,4 +1,4 @@
-import { IProcedureLoader } from '@src/application/ports/procedure-loader'
+import type { IProcedureLoader } from '@src/repositories/procedureLoader'
 
 export class InMemoryProcedureLoader implements IProcedureLoader {
   private procedures = new Map<string, string>()

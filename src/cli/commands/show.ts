@@ -1,7 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { SessionService } from '@src/application/session-service'
-import { logger } from '@src/lib/utils/logger'
+import { SessionService } from '@src/services/sessionService'
+import { logger } from '@src/utils/logger'
 
 export type ShowOptions = {
   format?: 'text' | 'json'

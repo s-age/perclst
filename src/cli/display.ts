@@ -1,7 +1,7 @@
 import type { AgentResponse } from '@src/types/agent'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { IConfigProvider } from '@src/application/ports/config-provider'
+import type { IConfigProvider } from '@src/types/config'
 import { ANSI } from '@src/constants/ansi'
 
 const { RESET, DIM, BG_GREY, FG_ON_GREY } = ANSI

@@ -1,8 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { SessionService } from '@src/application/session-service'
-import { readClaudeSession } from '@src/lib/session/jsonl-reader'
-import { logger } from '@src/lib/utils/logger'
+import { AnalyzeService } from '@src/services/analyzeService'
+import { logger } from '@src/utils/logger'
 
 export type AnalyzeOptions = {
   format?: 'text' | 'json'
@@ -41,10 +40,8 @@ function formatToolInput(name: string, input: Record<string, unknown>): string {
 
 export async function analyzeCommand(sessionId: string, options: AnalyzeOptions) {
   try {
-    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-    const session = await sessionService.get(sessionId)
-
-    const summary = readClaudeSession(session.claude_session_id, session.working_dir)
+    const analyzeService = container.resolve<AnalyzeService>(TOKENS.AnalyzeService)
+    const { session, summary } = await analyzeService.analyze(sessionId)
 
     if (options.format === 'json') {
       if (options.printDetail) {
@@ -110,8 +107,7 @@ export async function analyzeCommand(sessionId: string, options: AnalyzeOptions)
 
     if (options.printDetail) {
       console.log(`\n  Detail:`)
-      for (let i = 0; i < summary.turns.length; i++) {
-        const turn = summary.turns[i]
+      for (const turn of summary.turns) {
         if (turn.userMessage !== undefined) {
           console.log(`\n  ─── User ───`)
           console.log(`  ${turn.userMessage}`)

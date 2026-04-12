@@ -1,8 +1,8 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { SessionService } from '@src/application/session-service'
-import { AgentService } from '@src/application/agent-service'
-import { logger } from '@src/lib/utils/logger'
+import { SessionService } from '@src/services/sessionService'
+import { AgentService } from '@src/services/agentService'
+import { logger } from '@src/utils/logger'
 import { printResponse, DisplayOptions } from '@src/cli/display'
 
 export type StartOptions = {

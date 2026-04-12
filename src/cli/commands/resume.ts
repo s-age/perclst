@@ -1,7 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { AgentService } from '@src/application/agent-service'
-import { logger } from '@src/lib/utils/logger'
+import { AgentService } from '@src/services/agentService'
+import { logger } from '@src/utils/logger'
 import { printResponse, DisplayOptions } from '@src/cli/display'
 
 export type ResumeOptions = {
