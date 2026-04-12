@@ -4,6 +4,7 @@ import { AgentService } from '@src/services/agentService'
 import { logger } from '@src/utils/logger'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { printResponse, DisplayOptions } from '@src/cli/display'
+import { loadConfig } from '@src/repositories/config'
 
 export type ResumeOptions = {
   allowedTools?: string[]
@@ -25,7 +26,8 @@ export async function resumeCommand(
       model: options.model
     })
 
-    printResponse(response, options)
+    const config = loadConfig()
+    printResponse(response, options, config.display)
 
     console.log(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {

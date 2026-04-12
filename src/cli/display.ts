@@ -1,7 +1,6 @@
 import type { AgentResponse } from '@src/types/agent'
-import { container } from '@src/core/di/container'
-import { TOKENS } from '@src/core/di/identifiers'
-import type { IConfigProvider } from '@src/types/config'
+import type { DisplayConfig } from '@src/types/config'
+import { DEFAULT_HEADER_COLOR } from '@src/constants/config'
 import { ANSI } from '@src/constants/ansi'
 
 const { RESET, DIM, BG_GREY, FG_ON_GREY } = ANSI
@@ -13,30 +12,20 @@ function hexToAnsi(hex: string): string {
   return `\x1b[38;2;${parseInt(r, 16)};${parseInt(g, 16)};${parseInt(b, 16)}m`
 }
 
-function resolveColor(): string {
+function resolveColor(displayConfig?: DisplayConfig): string {
   // NO_COLOR env var (https://no-color.org/)
   if (process.env.NO_COLOR !== undefined) return ''
-
-  try {
-    const configProvider = container.resolve<IConfigProvider>(TOKENS.ConfigProvider)
-    const config = configProvider.load()
-    if (config.display?.no_color) return ''
-
-    const hex = config.display?.header_color ?? '#D97757'
-    return hexToAnsi(hex)
-  } catch {
-    // Fallback if container not setup
-    return hexToAnsi('#D97757')
-  }
+  if (displayConfig?.no_color) return ''
+  const hex = displayConfig?.header_color ?? DEFAULT_HEADER_COLOR
+  return hexToAnsi(hex)
 }
 
-function header(text: string): string {
-  const color = resolveColor()
+function header(text: string, color: string): string {
   return color ? `\n${color}--- ${text} ---${RESET}` : `\n--- ${text} ---`
 }
 
-function greyBlock(text: string): string {
-  if (resolveColor() === '') return text
+function greyBlock(text: string, color: string): string {
+  if (color === '') return text
   const width = process.stdout.columns ?? 80
   return text
     .split('\n')
@@ -49,8 +38,7 @@ function greyBlock(text: string): string {
     .join('\n')
 }
 
-function toolLabel(name: string): string {
-  const color = resolveColor()
+function toolLabel(name: string, color: string): string {
   return color ? `${color}[${name}]${RESET}` : `[${name}]`
 }
 
@@ -103,34 +91,39 @@ import type { DisplayOptions } from '@src/types/display'
 
 export type { DisplayOptions }
 
-export function printResponse(response: AgentResponse, opts: DisplayOptions = {}) {
+export function printResponse(
+  response: AgentResponse,
+  opts: DisplayOptions = {},
+  displayConfig?: DisplayConfig
+): void {
+  const color = resolveColor(displayConfig)
   const silentThoughts = opts.outputOnly || opts.silentThoughts
   const silentToolResponse = opts.outputOnly || opts.silentToolResponse
   const silentUsage = opts.outputOnly || opts.silentUsage
 
   if (!silentThoughts && response.thoughts && response.thoughts.length > 0) {
-    console.log(header('Thoughts'))
+    console.log(header('Thoughts', color))
     for (const t of response.thoughts) {
       console.log(`${DIM}${t.thinking}${RESET}`)
     }
   }
 
   if (!silentToolResponse && response.tool_history && response.tool_history.length > 0) {
-    console.log(header('Tool Calls'))
+    console.log(header('Tool Calls', color))
     for (const tool of response.tool_history) {
-      console.log(`${toolLabel(tool.name)} input: ${JSON.stringify(tool.input)}`)
+      console.log(`${toolLabel(tool.name, color)} input: ${JSON.stringify(tool.input)}`)
       if (tool.result !== undefined) {
         console.log(`         result: ${formatToolResult(tool.result)}`)
       }
     }
   }
 
-  console.log(header('Agent Response'))
-  console.log(greyBlock(response.content))
+  console.log(header('Agent Response', color))
+  console.log(greyBlock(response.content, color))
 
   if (!silentUsage && response.usage) {
     const u = response.usage
-    console.log(header('Token Usage'))
+    console.log(header('Token Usage', color))
     console.log(`  Input:            ${u.input_tokens}`)
     console.log(`  Output:           ${u.output_tokens}`)
     if (u.cache_read_input_tokens !== undefined) {
