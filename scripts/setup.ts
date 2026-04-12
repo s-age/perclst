@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 // Installs perclst hooks into ~/.claude/settings.json
 // Run once after `npm link`: npm run setup
 
@@ -7,13 +7,14 @@ import { join, resolve, dirname } from 'path'
 import { homedir } from 'os'
 import { fileURLToPath } from 'url'
 import { createInterface } from 'readline'
+import { logger } from '../src/utils/logger.js'
 
 const YES = process.argv.includes('--yes') || process.argv.includes('-y')
 
-console.log('Note: By default, perclst stores session data and logs under ~/.perclst/')
-console.log('      You can override this in .perclst/config.json or ~/.perclst/config.json')
-console.log('      e.g. { "sessions_dir": "./sessions", "logs_dir": "./logs" }')
-console.log()
+logger.print('Note: By default, perclst stores session data and logs under ~/.perclst/')
+logger.print('      You can override this in .perclst/config.json or ~/.perclst/config.json')
+logger.print('      e.g. { "sessions_dir": "./sessions", "logs_dir": "./logs" }')
+logger.print('')
 
 const repoDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const templatePath = join(repoDir, '.claude', 'settings.json')
@@ -24,7 +25,7 @@ const backupPath = destPath + '.bak'
 const template = JSON.parse(readFileSync(templatePath, 'utf-8'))
 
 // --- Load existing ~/.claude/settings.json or start fresh ---
-let dest = {}
+let dest: Record<string, unknown> = {}
 const destExists = existsSync(destPath)
 if (destExists) {
   dest = JSON.parse(readFileSync(destPath, 'utf-8'))
@@ -36,8 +37,11 @@ merged.hooks ??= {}
 merged.hooks.PreToolUse ??= []
 
 // Remove any existing entry whose command references skill-inject.mjs
-merged.hooks.PreToolUse = merged.hooks.PreToolUse.filter(entry =>
-  !entry.hooks?.some(h => h.command?.includes('skill-inject.mjs'))
+merged.hooks.PreToolUse = merged.hooks.PreToolUse.filter(
+  (entry: Record<string, unknown>) =>
+    !(entry.hooks as Array<Record<string, string>> | undefined)?.some((h) =>
+      h.command?.includes('skill-inject.mjs')
+    )
 )
 
 // Append entries from template
@@ -47,27 +51,27 @@ merged.hooks.PreToolUse.push(...template.hooks.PreToolUse)
 const before = JSON.stringify(dest, null, 2)
 const after = JSON.stringify(merged, null, 2)
 
-console.log(`destination: ${destPath}`)
+logger.print(`destination: ${destPath}`)
 if (!destExists) {
-  console.log('  (file does not exist — will be created)')
+  logger.print('  (file does not exist — will be created)')
 } else if (before === after) {
-  console.log('  no changes needed')
+  logger.print('  no changes needed')
   process.exit(0)
 } else {
-  console.log('\nbefore:')
-  console.log(before)
-  console.log('\nafter:')
-  console.log(after)
+  logger.print('\nbefore:')
+  logger.print(before)
+  logger.print('\nafter:')
+  logger.print(after)
 }
 
 // --- Confirm ---
 if (!YES) {
   const rl = createInterface({ input: process.stdin, output: process.stdout })
-  await new Promise((resolve, reject) => {
-    rl.question('\nApply changes? [y/N] ', answer => {
+  await new Promise<void>((resolve, reject) => {
+    rl.question('\nApply changes? [y/N] ', (answer) => {
       rl.close()
       if (answer.trim().toLowerCase() !== 'y') {
-        console.log('aborted')
+        logger.print('aborted')
         reject(new Error('aborted'))
       } else {
         resolve()
@@ -79,16 +83,16 @@ if (!YES) {
 // --- Backup existing file ---
 if (destExists) {
   copyFileSync(destPath, backupPath)
-  console.log(`backup:  ${backupPath}`)
+  logger.print(`backup:  ${backupPath}`)
 }
 
 // --- Write ---
 mkdirSync(dirname(destPath), { recursive: true })
 writeFileSync(destPath, after + '\n')
-console.log(`updated: ${destPath}`)
-console.log('  hook -> $CLAUDE_PROJECT_DIR/hooks/skill-inject.mjs')
+logger.print(`updated: ${destPath}`)
+logger.print('  hook -> $CLAUDE_PROJECT_DIR/hooks/skill-inject.mjs')
 if (destExists) {
-  console.log(`\nnote: original settings saved to ${backupPath}`)
-  console.log('      you can restore it with:')
-  console.log(`        cp ${backupPath} ${destPath}`)
+  logger.print(`\nnote: original settings saved to ${backupPath}`)
+  logger.print('      you can restore it with:')
+  logger.print(`        cp ${backupPath} ${destPath}`)
 }

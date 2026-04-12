@@ -34,6 +34,7 @@ describe('AgentService', () => {
       getPath: vi.fn().mockReturnValue(SESSION_FILE_PATH),
       list: vi.fn(),
       delete: vi.fn(),
+      rename: vi.fn().mockResolvedValue(mockSession),
       updateStatus: vi.fn().mockResolvedValue({
         ...mockSession,
         metadata: { ...mockSession.metadata, status: 'active' }
