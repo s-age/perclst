@@ -7,16 +7,12 @@ import { AnalyzeDomain } from '@src/domains/analyze'
 import { SessionService } from '@src/services/sessionService'
 import { AgentService } from '@src/services/agentService'
 import { AnalyzeService } from '@src/services/analyzeService'
-import { TypeScriptProject } from '@src/mcp/analyzers/project'
 import { DEFAULT_MODEL } from '@src/constants/config'
 
 export function setupContainer(): void {
   const config = loadConfig()
   const sessionsDir = resolveSessionsDir(config)
   const model = config.model ?? DEFAULT_MODEL
-
-  const tsProject = new TypeScriptProject()
-  container.register(TOKENS.TypeScriptProject, tsProject)
 
   const sessionDomain = new SessionDomain(sessionsDir)
   const agentDomain = new AgentDomain(model)

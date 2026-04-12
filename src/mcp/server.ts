@@ -16,8 +16,12 @@ import { executeTsGetReferences } from './tools/ts_get_references'
 import { executeTsGetTypes } from './tools/ts_get_types'
 import { executeTsChecker } from './tools/tsChecker'
 import { setupContainer } from '@src/core/di/setup'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { TypeScriptProject } from './analyzers/project'
 
 setupContainer()
+container.register(TOKENS.TypeScriptProject, new TypeScriptProject())
 
 // ---------------------------------------------------------------------------
 // JSON-RPC 2.0 types
