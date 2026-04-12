@@ -11,9 +11,9 @@
  */
 
 import { openSync, readSync, writeSync, closeSync } from 'fs'
-import { executeTsAnalyze } from './tools/ts_analyze'
-import { executeTsGetReferences } from './tools/ts_get_references'
-import { executeTsGetTypes } from './tools/ts_get_types'
+import { executeTsAnalyze } from './tools/tsAnalyze'
+import { executeTsGetReferences } from './tools/tsGetReferences'
+import { executeTsGetTypes } from './tools/tsGetTypes'
 import { executeTsChecker } from './tools/tsChecker'
 import { setupContainer } from '@src/core/di/setup'
 import { container } from '@src/core/di/container'

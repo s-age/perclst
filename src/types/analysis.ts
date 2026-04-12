@@ -1,3 +1,10 @@
+import type { Session } from './session.js'
+
+export type AnalyzeResult = {
+  session: Session
+  summary: AnalysisSummary
+}
+
 export type ToolCall = {
   name: string
   input: Record<string, unknown>

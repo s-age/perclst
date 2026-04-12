@@ -86,6 +86,7 @@ npm run test:unit  # Vitest unit tests
 ### Types
 - Use `type` instead of `interface` everywhere
 - Types referenced by 2+ layers belong in `src/types/`
+- Files within `src/types/` may import from sibling `src/types/` files (intra-layer imports are permitted to avoid duplication; there is no circular-dependency risk within a single leaf layer)
 - Port types (`type IXxx`) follow the same rule:
   - Defined and implemented **within the same layer** (e.g. `ISessionDomain` alongside `SessionDomain` in `domains/`) → same file as the class
   - Bridging **two different layers** (e.g. domain depends on it, infrastructure implements it) → `src/types/` alongside the related data types

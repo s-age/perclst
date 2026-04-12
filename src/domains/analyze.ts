@@ -1,12 +1,6 @@
-import type { Session } from '@src/types/session'
-import type { AnalysisSummary } from '@src/types/analysis'
+import type { AnalyzeResult } from '@src/types/analysis'
 import type { ISessionDomain } from '@src/domains/session'
 import { readClaudeSession } from '@src/repositories/claudeSessions'
-
-export type AnalyzeResult = {
-  session: Session
-  summary: AnalysisSummary
-}
 
 export type IAnalyzeDomain = {
   analyze(sessionId: string): Promise<AnalyzeResult>
