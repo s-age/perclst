@@ -18,22 +18,7 @@ CLI tool for managing Claude Code sub-agents.
 
 ## Installation
 
-```bash
-git clone https://github.com/s-age/perclst.git
-cd perclst
-npm install
-npm run build
-npm link
-```
-
-`npm link` automatically registers the skill-inject hook into `~/.claude/settings.json`.
-Existing settings are preserved; only the perclst entry is added or updated.
-
-To re-run manually:
-
-```bash
-npm run setup
-```
+See [INSTALLATION.md](INSTALLATION.md) for full setup instructions.
 
 ## Usage
 
