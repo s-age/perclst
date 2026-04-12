@@ -2,10 +2,6 @@ node_modules/
 dist/
 *.log
 
-# Sessions and logs
-sessions/*.json
-logs/
-
 # Claude Code
 .claude/plans/
 
