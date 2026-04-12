@@ -1,7 +1,7 @@
 import type { AgentResponse } from '@src/types/agent'
 import type { DisplayConfig } from '@src/types/config'
 import type { DisplayOptions } from '@src/types/display'
-import { DEFAULT_HEADER_COLOR } from '@src/constants/config'
+import { DEFAULT_HEADER_COLOR, CONTEXT_WINDOW_SIZE } from '@src/constants/config'
 import { ANSI } from '@src/constants/ansi'
 import { logger } from '@src/utils/logger'
 
@@ -130,5 +130,11 @@ export function printResponse(
     if (u.cache_creation_input_tokens !== undefined) {
       logger.print(`  Cache creation:   ${u.cache_creation_input_tokens}`)
     }
+    const contextTokens =
+      u.input_tokens + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0)
+    const pct = Math.round((contextTokens / CONTEXT_WINDOW_SIZE) * 100)
+    logger.print(
+      `  Context window:   ${contextTokens.toLocaleString()} / ${CONTEXT_WINDOW_SIZE.toLocaleString()} (${pct}%)`
+    )
   }
 }

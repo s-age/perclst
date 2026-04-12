@@ -17,6 +17,7 @@ export const DEFAULT_SESSIONS_DIR = '~/.perclst/sessions'
 export const DEFAULT_LOGS_DIR = '~/.perclst/logs'
 export const DEFAULT_HEADER_COLOR = '#D97757'
 export const DEFAULT_API_KEY_ENV = 'ANTHROPIC_API_KEY'
+export const CONTEXT_WINDOW_SIZE = 200_000
 
 export const DEFAULT_CONFIG: Config = {
   sessions_dir: DEFAULT_SESSIONS_DIR,
