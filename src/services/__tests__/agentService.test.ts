@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { AgentService } from '../agentService'
-import { InMemorySessionRepository } from '../../infrastructures/__tests__/in-memory-session-repository'
-import { InMemoryProcedureLoader } from '../../infrastructures/__tests__/in-memory-procedure-loader'
-import { MockAgentClient } from '../../infrastructures/__tests__/mock-agent-client'
-import { InMemoryConfigProvider } from '../../infrastructures/__tests__/in-memory-config-provider'
+import { InMemorySessionRepository } from '../../infrastructures/__tests__/inMemorySessionRepository'
+import { InMemoryProcedureLoader } from '../../infrastructures/__tests__/inMemoryProcedureLoader'
+import { MockAgentClient } from '../../infrastructures/__tests__/mockAgentClient'
+import { InMemoryConfigProvider } from '../../infrastructures/__tests__/inMemoryConfigProvider'
 
 describe('AgentService', () => {
   let repository: InMemorySessionRepository
@@ -41,6 +41,22 @@ describe('AgentService', () => {
 
     const updated = await repository.load('test-session')
     expect(updated.metadata.status).toBe('active')
+  })
+
+  it('should create a new session and execute the task', async () => {
+    loader.register('conductor', 'You are a conductor.')
+
+    const { sessionId, response } = await service.start('Hello', { procedure: 'conductor' })
+
+    expect(sessionId).toBeDefined()
+    expect(response.content).toBe('Mock response')
+    expect(client.lastRequest?.system).toBe('You are a conductor.')
+    expect(client.lastRequest?.instruction).toBe('Hello')
+    expect(client.lastRequest?.isResume).toBe(false)
+
+    const saved = await repository.load(sessionId)
+    expect(saved.procedure).toBe('conductor')
+    expect(saved.metadata.status).toBe('active')
   })
 
   it('should resume a session', async () => {
