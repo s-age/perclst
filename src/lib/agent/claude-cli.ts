@@ -31,7 +31,7 @@ type ContentBlock =
   | { type: 'text'; text: string }
   | { type: 'thinking'; thinking: string }
   | { type: 'tool_use'; id: string; name: string; input: unknown }
-  | { type: 'tool_result'; tool_use_id: string; content: string }
+  | { type: 'tool_result'; tool_use_id: string; content: unknown }
 
 interface StreamEvent {
   type: 'assistant' | 'user' | 'system' | 'result'
@@ -98,7 +98,9 @@ function parseStreamJson(raw: string): ParsedResponse {
         if (block.type === 'tool_result') {
           const record = toolMap.get(block.tool_use_id)
           if (record) {
-            record.result = block.content
+            record.result = typeof block.content === 'string'
+              ? block.content
+              : JSON.stringify(block.content, null, 2)
           }
         }
       }

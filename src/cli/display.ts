@@ -47,6 +47,38 @@ function toolLabel(name: string): string {
   return color ? `${color}[${name}]${RESET}` : `[${name}]`
 }
 
+function formatToolResult(result: string): string {
+  // Indent continuation lines so multi-line results are visually grouped
+  const indent = '         '
+  let text = result
+
+  try {
+    const parsed: unknown = JSON.parse(result)
+    // MCP tool results come back as an array of content blocks: [{type:'text', text:'...'}]
+    // Extract the text fields and try to parse each as JSON
+    if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0] as { type?: string }).type === 'text') {
+      const extracted = (parsed as Array<{ type: string; text?: string }>)
+        .filter(b => b.type === 'text' && b.text !== undefined)
+        .map(b => {
+          try {
+            return JSON.stringify(JSON.parse(b.text!), null, 2)
+          } catch {
+            return b.text!
+          }
+        })
+        .join('\n')
+      text = extracted
+    } else {
+      text = JSON.stringify(parsed, null, 2)
+    }
+  } catch {
+    // Not JSON — display as-is
+  }
+
+  const lines = text.split('\n')
+  return lines[0] + (lines.length > 1 ? '\n' + lines.slice(1).map(l => indent + l).join('\n') : '')
+}
+
 import type { DisplayOptions } from '../../types/display.js'
 
 export type { DisplayOptions }
@@ -68,7 +100,7 @@ export function printResponse(response: AgentResponse, opts: DisplayOptions = {}
     for (const tool of response.tool_history) {
       console.log(`${toolLabel(tool.name)} input: ${JSON.stringify(tool.input)}`)
       if (tool.result !== undefined) {
-        console.log(`         result: ${tool.result}`)
+        console.log(`         result: ${formatToolResult(tool.result)}`)
       }
     }
   }
