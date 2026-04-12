@@ -12,7 +12,7 @@ CLI tool for managing Claude Code sub-agents.
 
 - **Session Management**: Create, resume, and manage agent sessions
 - **Session Analysis**: Inspect turn breakdown, tool usage, and token stats from Claude Code's jsonl history
-- **Local Storage**: Sessions stored per-project by default
+- **Local Storage**: Sessions stored in `~/.perclst/sessions/` by default
 - **MCP Server**: TypeScript analysis tools for Claude Code
 - **Procedure System**: Define agent behavior via system prompts
 
@@ -52,7 +52,7 @@ perclst delete <session-id>
 
 ### Configuration
 
-Sessions are stored in `.perclst/sessions/` by default.
+Sessions are stored in `~/.perclst/sessions/` by default (absolute path, independent of current working directory).
 
 **Priority**:
 1. `./.perclst/config.json` (project-local)
@@ -63,8 +63,8 @@ Sessions are stored in `.perclst/sessions/` by default.
 
 ```json
 {
-  "sessions_dir": "sessions",
-  "logs_dir": "logs",
+  "sessions_dir": "~/.perclst/sessions",
+  "logs_dir": "~/.perclst/logs",
   "model": "claude-sonnet-4-5",
   "max_tokens": 8000,
   "temperature": 0.7

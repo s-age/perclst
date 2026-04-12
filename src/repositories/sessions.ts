@@ -46,7 +46,9 @@ export function listSessions(sessionsDir: string): Session[] {
   for (const file of files) {
     const sessionId = file.replace('.json', '')
     try {
-      sessions.push(loadSession(sessionsDir, sessionId))
+      const session = loadSession(sessionsDir, sessionId)
+      if (!session.id || !session.metadata) continue
+      sessions.push(session)
     } catch {
       continue
     }

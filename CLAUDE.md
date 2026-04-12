@@ -52,7 +52,7 @@ perclst delete <session-id>
 perclst
 ├── CLI Commands (src/cli/)
 │   └── Wraps claude -p with session management
-├── Session Storage (sessions/)
+├── Session Storage (~/.perclst/sessions/)
 │   └── JSON files with conversation history
 ├── Procedures (procedures/)
 │   └── System prompts (default, conductor, analyzer)
@@ -63,7 +63,7 @@ perclst
 ## How It Works
 
 1. **No API Key Required**: Uses `claude -p` internally
-2. **Session Persistence**: Saves conversations to `sessions/<session-id>.json`
+2. **Session Persistence**: Saves conversations to `~/.perclst/sessions/<session-id>.json`
 3. **Procedure System**: Optional system prompts via `--procedure <name>`
 4. **Model Selection**: Configurable via `config.json` (default: `claude-sonnet-4-6`)
 
@@ -73,8 +73,8 @@ perclst
 
 ```json
 {
-  "sessions_dir": "sessions",
-  "logs_dir": "logs",
+  "sessions_dir": "~/.perclst/sessions",
+  "logs_dir": "~/.perclst/logs",
   "model": "claude-sonnet-4-6",
   "display": {
     "header_color": "#D97757",

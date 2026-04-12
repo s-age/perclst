@@ -13,8 +13,8 @@ export const MCP_SERVER_NAME = 'perclst'
 export const DEFAULT_MODEL = 'claude-sonnet-4-6'
 export const DEFAULT_MAX_TOKENS = 8000
 export const DEFAULT_TEMPERATURE = 0.7
-export const DEFAULT_SESSIONS_DIR = 'sessions'
-export const DEFAULT_LOGS_DIR = 'logs'
+export const DEFAULT_SESSIONS_DIR = '~/.perclst/sessions'
+export const DEFAULT_LOGS_DIR = '~/.perclst/logs'
 export const DEFAULT_HEADER_COLOR = '#D97757'
 export const DEFAULT_API_KEY_ENV = 'ANTHROPIC_API_KEY'
 
