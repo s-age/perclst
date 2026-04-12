@@ -10,6 +10,11 @@ import { createInterface } from 'readline'
 
 const YES = process.argv.includes('--yes') || process.argv.includes('-y')
 
+console.log('Note: By default, perclst stores session data and logs under ~/.perclst/')
+console.log('      You can override this in .perclst/config.json or ~/.perclst/config.json')
+console.log('      e.g. { "sessions_dir": "./sessions", "logs_dir": "./logs" }')
+console.log()
+
 const repoDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const templatePath = join(repoDir, '.claude', 'settings.json')
 const destPath = join(homedir(), '.claude', 'settings.json')
