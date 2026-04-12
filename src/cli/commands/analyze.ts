@@ -1,4 +1,6 @@
-import { SessionManager } from '@src/lib/session/manager'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { SessionService } from '@src/application/session-service'
 import { readClaudeSession } from '@src/lib/session/jsonl-reader'
 import { logger } from '@src/lib/utils/logger'
 
@@ -39,8 +41,8 @@ function formatToolInput(name: string, input: Record<string, unknown>): string {
 
 export async function analyzeCommand(sessionId: string, options: AnalyzeOptions) {
   try {
-    const sessionManager = new SessionManager()
-    const session = await sessionManager.get(sessionId)
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
+    const session = await sessionService.get(sessionId)
 
     const summary = readClaudeSession(session.claude_session_id, session.working_dir)
 

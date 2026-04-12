@@ -7,6 +7,9 @@ import { listCommand } from './commands/list'
 import { showCommand } from './commands/show'
 import { deleteCommand } from './commands/delete'
 import { analyzeCommand } from './commands/analyze'
+import { setupContainer } from '@src/core/di/setup'
+
+setupContainer()
 
 const program = new Command()
 

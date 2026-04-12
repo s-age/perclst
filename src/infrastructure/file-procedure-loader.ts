@@ -2,25 +2,25 @@ import { existsSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { ProcedureNotFoundError } from '@src/lib/utils/errors'
+import { IProcedureLoader } from '@src/application/ports/procedure-loader'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-export class ProcedureLoader {
+export class FileProcedureLoader implements IProcedureLoader {
   private proceduresDir: string
 
   constructor() {
-    // procedures/ directory at project root
+    // Project root procedures/ directory
+    // This assumes it's running from src/infrastructure/
     this.proceduresDir = join(__dirname, '../../../procedures')
   }
 
   load(procedureName: string): string {
     const procedurePath = join(this.proceduresDir, `${procedureName}.md`)
-
     if (!existsSync(procedurePath)) {
       throw new ProcedureNotFoundError(procedureName)
     }
-
     return readFileSync(procedurePath, 'utf-8')
   }
 

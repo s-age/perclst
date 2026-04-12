@@ -1,10 +1,12 @@
-import { SessionManager } from '@src/lib/session/manager'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { SessionService } from '@src/application/session-service'
 import { logger } from '@src/lib/utils/logger'
 
 export async function deleteCommand(sessionId: string) {
   try {
-    const sessionManager = new SessionManager()
-    await sessionManager.delete(sessionId)
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
+    await sessionService.delete(sessionId)
 
     console.log(`Session deleted: ${sessionId}`)
   } catch (error) {

@@ -1,18 +1,13 @@
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
-import type { Config } from '@types/config'
-import { DEFAULT_CONFIG } from './defaults'
+import type { Config } from '@src/types/config'
+import { IConfigProvider } from '@src/application/ports/config-provider'
+import { DEFAULT_CONFIG } from '@src/lib/config/defaults'
 import { CONFIG_DIR_NAME } from '@src/constants/config'
 
-export class ConfigResolver {
-  /**
-   * Load configuration with priority:
-   * 1. ./.perclst/config.json (current directory)
-   * 2. ~/.perclst/config.json (home directory)
-   * 3. Default values
-   */
-  static load(): Config {
+export class FileConfigProvider implements IConfigProvider {
+  load(): Config {
     const localConfig = this.loadFromPath(join(`./${CONFIG_DIR_NAME}`, 'config.json'))
     const globalConfig = this.loadFromPath(join(homedir(), CONFIG_DIR_NAME, 'config.json'))
 
@@ -23,40 +18,28 @@ export class ConfigResolver {
     }
   }
 
-  /**
-   * Resolve sessions directory path
-   */
-  static resolveSessionsDir(config: Config): string {
+  resolveSessionsDir(config: Config): string {
     return this.resolvePath(config.sessions_dir || DEFAULT_CONFIG.sessions_dir!)
   }
 
-  /**
-   * Resolve logs directory path
-   */
-  static resolveLogsDir(config: Config): string {
+  resolveLogsDir(config: Config): string {
     return this.resolvePath(config.logs_dir || DEFAULT_CONFIG.logs_dir!)
   }
 
-  private static resolvePath(path: string): string {
-    // Absolute path
+  private resolvePath(path: string): string {
     if (path.startsWith('/')) {
       return path
     }
-
-    // Home directory
     if (path.startsWith('~')) {
       return path.replace('~', homedir())
     }
-
-    // Relative path (from current working directory)
     return join(process.cwd(), path)
   }
 
-  private static loadFromPath(path: string): Partial<Config> {
+  private loadFromPath(path: string): Partial<Config> {
     if (!existsSync(path)) {
       return {}
     }
-
     try {
       const content = readFileSync(path, 'utf-8')
       return JSON.parse(content)

@@ -14,6 +14,9 @@ import { openSync, readSync, writeSync, closeSync } from 'fs'
 import { executeTsAnalyze } from './tools/ts_analyze'
 import { executeTsGetReferences } from './tools/ts_get_references'
 import { executeTsGetTypes } from './tools/ts_get_types'
+import { setupContainer } from '@src/core/di/setup'
+
+setupContainer()
 
 // ---------------------------------------------------------------------------
 // JSON-RPC 2.0 types

@@ -1,26 +1,26 @@
-import { ConfigResolver } from '@src/lib/config/resolver'
-import { SessionManager } from '@src/lib/session/manager'
-import { ClaudeCLI } from './claude-cli'
-import { ProcedureLoader } from '@src/lib/procedure/loader'
-import type { AgentConfig, AgentResponse } from '@types/agent'
+import type { AgentConfig, AgentResponse } from '@src/types/agent'
 import { logger } from '@src/lib/utils/logger'
 import { DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@src/constants/config'
+import { ISessionRepository } from './ports/session-repository'
+import { IProcedureLoader } from './ports/procedure-loader'
+import { IAgentClient } from './ports/agent-client'
+import { IConfigProvider } from './ports/config-provider'
 
 export type ExecuteOptions = {
   allowedTools?: string[]
   model?: string
 }
 
-export class AgentExecutor {
-  private sessionManager: SessionManager
-  private procedureLoader: ProcedureLoader
+export class AgentService {
   private config: AgentConfig
 
-  constructor() {
-    this.sessionManager = new SessionManager()
-    this.procedureLoader = new ProcedureLoader()
-
-    const config = ConfigResolver.load()
+  constructor(
+    private sessionRepository: ISessionRepository,
+    private procedureLoader: IProcedureLoader,
+    private agentClient: IAgentClient,
+    configProvider: IConfigProvider
+  ) {
+    const config = configProvider.load()
 
     this.config = {
       model: config.model || DEFAULT_MODEL,
@@ -35,17 +35,15 @@ export class AgentExecutor {
     instruction: string,
     options: ExecuteOptions = {}
   ): Promise<AgentResponse> {
-    const session = await this.sessionManager.get(sessionId)
+    const session = await this.sessionRepository.load(sessionId)
 
-    // Load procedure if specified
     let systemPrompt: string | undefined
     if (session.procedure) {
       systemPrompt = this.procedureLoader.load(session.procedure)
       logger.debug('Loaded procedure', { procedure: session.procedure })
     }
 
-    const client = new ClaudeCLI()
-    const response = await client.call({
+    const response = await this.agentClient.call({
       instruction,
       system: systemPrompt,
       config: {
@@ -56,10 +54,16 @@ export class AgentExecutor {
       claudeSessionId: session.claude_session_id,
       isResume: false,
       workingDir: session.working_dir,
-      sessionFilePath: this.sessionManager.getPath(sessionId)
+      sessionFilePath: this.sessionRepository.getSessionPath(sessionId)
     })
 
-    await this.sessionManager.updateStatus(sessionId, 'active')
+    // Update status to active
+    const updatedSession = {
+      ...session,
+      metadata: { ...session.metadata, status: 'active' as const },
+      updated_at: new Date().toISOString()
+    }
+    await this.sessionRepository.save(updatedSession)
 
     return response
   }
@@ -69,17 +73,15 @@ export class AgentExecutor {
     instruction: string,
     options: ExecuteOptions = {}
   ): Promise<AgentResponse> {
-    const session = await this.sessionManager.get(sessionId)
+    const session = await this.sessionRepository.load(sessionId)
 
-    // Load procedure if specified
     let systemPrompt: string | undefined
     if (session.procedure) {
       systemPrompt = this.procedureLoader.load(session.procedure)
       logger.debug('Loaded procedure', { procedure: session.procedure })
     }
 
-    const client = new ClaudeCLI()
-    const response = await client.call({
+    const response = await this.agentClient.call({
       instruction,
       system: systemPrompt,
       config: {
@@ -90,10 +92,16 @@ export class AgentExecutor {
       claudeSessionId: session.claude_session_id,
       isResume: true,
       workingDir: session.working_dir,
-      sessionFilePath: this.sessionManager.getPath(sessionId)
+      sessionFilePath: this.sessionRepository.getSessionPath(sessionId)
     })
 
-    await this.sessionManager.updateStatus(sessionId, 'active')
+    // Update status to active
+    const updatedSession = {
+      ...session,
+      metadata: { ...session.metadata, status: 'active' as const },
+      updated_at: new Date().toISOString()
+    }
+    await this.sessionRepository.save(updatedSession)
 
     return response
   }

@@ -1,9 +1,10 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { join } from 'path'
-import type { Session } from '@types/session'
+import type { Session } from '@src/types/session'
 import { SessionNotFoundError } from '@src/lib/utils/errors'
+import { ISessionRepository } from '@src/application/ports/session-repository'
 
-export class SessionStorage {
+export class FileSessionRepository implements ISessionRepository {
   constructor(private sessionsDir: string) {
     this.ensureDirectory()
   }
@@ -52,6 +53,7 @@ export class SessionStorage {
   }
 
   async list(): Promise<Session[]> {
+    if (!existsSync(this.sessionsDir)) return []
     const files = readdirSync(this.sessionsDir)
     const sessions: Session[] = []
 

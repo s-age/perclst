@@ -1,4 +1,6 @@
-import { SessionManager } from '@src/lib/session/manager'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { SessionService } from '@src/application/session-service'
 import { logger } from '@src/lib/utils/logger'
 
 export type ShowOptions = {
@@ -7,8 +9,8 @@ export type ShowOptions = {
 
 export async function showCommand(sessionId: string, options: ShowOptions) {
   try {
-    const sessionManager = new SessionManager()
-    const session = await sessionManager.get(sessionId)
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
+    const session = await sessionService.get(sessionId)
 
     if (options.format === 'json') {
       console.log(JSON.stringify(session, null, 2))

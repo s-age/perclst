@@ -1,3 +1,5 @@
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
 import { TypeScriptProject } from '@src/mcp/analyzers/project'
 
 export const ts_get_references = {
@@ -20,7 +22,7 @@ export const ts_get_references = {
 }
 
 export async function executeTsGetReferences(args: { file_path: string; symbol_name: string }) {
-  const project = new TypeScriptProject()
+  const project = container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)
   const references = project.getReferences(args.file_path, args.symbol_name)
 
   return {

@@ -1,4 +1,4 @@
-import type { Config } from '@types/config'
+import type { Config } from '@src/types/config'
 import {
   DEFAULT_MODEL,
   DEFAULT_MAX_TOKENS,

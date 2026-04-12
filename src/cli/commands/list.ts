@@ -1,10 +1,12 @@
-import { SessionManager } from '@src/lib/session/manager'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { SessionService } from '@src/application/session-service'
 import { logger } from '@src/lib/utils/logger'
 
 export async function listCommand() {
   try {
-    const sessionManager = new SessionManager()
-    const sessions = await sessionManager.list()
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
+    const sessions = await sessionService.list()
 
     if (sessions.length === 0) {
       console.log('No sessions found')

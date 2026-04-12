@@ -1,5 +1,7 @@
-import type { AgentResponse } from '@types/agent'
-import { ConfigResolver } from '@src/lib/config/resolver'
+import type { AgentResponse } from '@src/types/agent'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { IConfigProvider } from '@src/application/ports/config-provider'
 import { ANSI } from '@src/constants/ansi'
 
 const { RESET, DIM, BG_GREY, FG_ON_GREY } = ANSI
@@ -15,11 +17,17 @@ function resolveColor(): string {
   // NO_COLOR env var (https://no-color.org/)
   if (process.env.NO_COLOR !== undefined) return ''
 
-  const config = ConfigResolver.load()
-  if (config.display?.no_color) return ''
+  try {
+    const configProvider = container.resolve<IConfigProvider>(TOKENS.ConfigProvider)
+    const config = configProvider.load()
+    if (config.display?.no_color) return ''
 
-  const hex = config.display?.header_color ?? '#D97757'
-  return hexToAnsi(hex)
+    const hex = config.display?.header_color ?? '#D97757'
+    return hexToAnsi(hex)
+  } catch {
+    // Fallback if container not setup
+    return hexToAnsi('#D97757')
+  }
 }
 
 function header(text: string): string {
@@ -91,7 +99,7 @@ function formatToolResult(result: string): string {
   )
 }
 
-import type { DisplayOptions } from '@types/display'
+import type { DisplayOptions } from '@src/types/display'
 
 export type { DisplayOptions }
 

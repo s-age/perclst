@@ -3,13 +3,13 @@ import { writeFileSync, unlinkSync } from 'fs'
 import { tmpdir } from 'os'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { AgentRequest, AgentResponse } from '@types/agent'
-import type { ThinkingBlock, ToolUseRecord } from '@types/common'
+import type { AgentRequest, AgentResponse } from '@src/types/agent'
+import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
 import { APIError } from '@src/lib/utils/errors'
 import { logger } from '@src/lib/utils/logger'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
+import { IAgentClient } from '@src/application/ports/agent-client'
 
-// dist/src/cli/index.js (tsup bundle) → dist/src/mcp/server.js
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const MCP_SERVER_PATH = resolve(__dirname, '../mcp/server.js')
@@ -24,8 +24,6 @@ function buildMcpConfig(): string {
     }
   })
 }
-
-// --- stream-json event types ---
 
 type ContentBlock =
   | { type: 'text'; text: string }
@@ -135,9 +133,6 @@ function runClaude(
     const child = spawn('claude', args, {
       env,
       cwd: workingDir,
-      // Do NOT use 'pipe' for stderr — let it flow to the user's terminal so
-      // permission prompts (written to /dev/tty inside the MCP server) are
-      // visible even while we capture stdout.
       stdio: ['pipe', 'pipe', 'inherit']
     })
 
@@ -155,13 +150,12 @@ function runClaude(
       }
     })
 
-    // Write prompt to stdin and close it
     child.stdin.write(prompt, 'utf-8')
     child.stdin.end()
   })
 }
 
-export class ClaudeCLI {
+export class ClaudeApiClient implements IAgentClient {
   async call(request: AgentRequest): Promise<AgentResponse> {
     logger.debug('Calling claude CLI', {
       instruction_length: request.instruction.length,
@@ -169,8 +163,6 @@ export class ClaudeCLI {
       session_id: request.claudeSessionId
     })
 
-    // Base args for -p (print / headless) mode with stream-json output.
-    // --verbose is required when combining --print and --output-format=stream-json.
     const args: string[] = ['-p', '--output-format', 'stream-json', '--verbose']
 
     if (request.config.model) {
@@ -183,25 +175,18 @@ export class ClaudeCLI {
       args.push('--session-id', request.claudeSessionId)
     }
 
-    // Explicitly allowed tools (passed as --allowedTools to claude)
     if (request.config.allowedTools?.length) {
       args.push('--allowedTools', ...request.config.allowedTools)
     }
 
-    // Always attach the perclst permission MCP server so the user is prompted
-    // before any tool use that isn't pre-approved via --allowedTools.
-    // In non-interactive environments (no /dev/tty) the server auto-denies.
     const mcpConfigPath = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
     writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
     args.push('--mcp-config', mcpConfigPath)
-    // Claude Code prefixes MCP tool names as mcp__<server>__<tool>
     args.push('--permission-prompt-tool', `mcp__${MCP_SERVER_NAME}__ask_permission`)
 
     if (request.system) {
       args.push('--system-prompt', request.system)
     }
-
-    logger.debug('Executing claude command', { model: request.config.model, args })
 
     try {
       const parsed = await runClaude(
@@ -214,12 +199,6 @@ export class ClaudeCLI {
       if (!parsed.content) {
         throw new APIError('Empty response from Claude CLI')
       }
-
-      logger.info('Claude CLI response received', {
-        response_length: parsed.content.length,
-        thoughts_count: parsed.thoughts.length,
-        tool_calls_count: parsed.tool_history.length
-      })
 
       return {
         content: parsed.content,

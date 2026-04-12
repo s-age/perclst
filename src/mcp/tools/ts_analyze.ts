@@ -1,3 +1,5 @@
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
 import { TypeScriptProject } from '@src/mcp/analyzers/project'
 
 export const ts_analyze = {
@@ -16,7 +18,7 @@ export const ts_analyze = {
 }
 
 export async function executeTsAnalyze(args: { file_path: string }) {
-  const project = new TypeScriptProject()
+  const project = container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)
   const analysis = project.analyze(args.file_path)
 
   return {

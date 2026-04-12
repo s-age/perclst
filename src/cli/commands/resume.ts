@@ -1,4 +1,6 @@
-import { AgentExecutor } from '@src/lib/agent/executor'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { AgentService } from '@src/application/agent-service'
 import { logger } from '@src/lib/utils/logger'
 import { printResponse, DisplayOptions } from '@src/cli/display'
 
@@ -15,8 +17,8 @@ export async function resumeCommand(
   try {
     logger.info('Resuming session', { session_id: sessionId })
 
-    const executor = new AgentExecutor()
-    const response = await executor.resume(sessionId, instruction, {
+    const agentService = container.resolve<AgentService>(TOKENS.AgentService)
+    const response = await agentService.resume(sessionId, instruction, {
       allowedTools: options.allowedTools,
       model: options.model
     })

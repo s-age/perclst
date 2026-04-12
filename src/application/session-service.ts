@@ -1,18 +1,11 @@
 import { randomUUID } from 'crypto'
-import { ConfigResolver } from '@src/lib/config/resolver'
-import { SessionStorage } from './storage'
-import type { Session, CreateSessionParams } from '@types/session'
+import type { Session, CreateSessionParams } from '@src/types/session'
 import { logger } from '@src/lib/utils/logger'
+import { ISessionRepository } from './ports/session-repository'
 
-export class SessionManager {
-  private storage: SessionStorage
-
-  constructor() {
-    const config = ConfigResolver.load()
-    const sessionsDir = ConfigResolver.resolveSessionsDir(config)
-    this.storage = new SessionStorage(sessionsDir)
-
-    logger.debug('SessionManager initialized', { sessionsDir })
+export class SessionService {
+  constructor(private storage: ISessionRepository) {
+    logger.debug('SessionService initialized')
   }
 
   async create(params: CreateSessionParams): Promise<Session> {

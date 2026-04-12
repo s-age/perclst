@@ -17,9 +17,9 @@
     "sourceMap": true,
     "paths": {
       "@src/*": ["src/*"],
-      "@types/*": ["types/*"]
+      "@types/*": ["src/types/*"]
     }
-  },
-  "include": ["src/**/*", "types/**/*"],
+    },
+    "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

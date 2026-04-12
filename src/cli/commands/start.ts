@@ -1,5 +1,7 @@
-import { SessionManager } from '@src/lib/session/manager'
-import { AgentExecutor } from '@src/lib/agent/executor'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { SessionService } from '@src/application/session-service'
+import { AgentService } from '@src/application/agent-service'
 import { logger } from '@src/lib/utils/logger'
 import { printResponse, DisplayOptions } from '@src/cli/display'
 
@@ -14,9 +16,11 @@ export async function startCommand(task: string, options: StartOptions) {
   try {
     logger.info('Starting new agent session')
 
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
+    const agentService = container.resolve<AgentService>(TOKENS.AgentService)
+
     // Create session
-    const sessionManager = new SessionManager()
-    const session = await sessionManager.create({
+    const session = await sessionService.create({
       procedure: options.procedure,
       tags: options.tags
     })
@@ -24,8 +28,7 @@ export async function startCommand(task: string, options: StartOptions) {
     console.log(`Session created: ${session.id}`)
 
     // Execute agent
-    const executor = new AgentExecutor()
-    const response = await executor.execute(session.id, task, {
+    const response = await agentService.execute(session.id, task, {
       allowedTools: options.allowedTools,
       model: options.model
     })
