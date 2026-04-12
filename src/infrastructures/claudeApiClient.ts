@@ -5,7 +5,7 @@ import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { AgentRequest, AgentResponse } from '@src/types/agent'
 import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
-import { APIError } from '@src/utils/errors'
+import { APIError, RateLimitError } from '@src/utils/errors'
 import { logger } from '@src/utils/logger'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
 import type { IAgentClient } from '@src/repositories/agentClient'
@@ -133,18 +133,29 @@ function runClaude(
     const child = spawn('claude', args, {
       env,
       cwd: workingDir,
-      stdio: ['pipe', 'pipe', 'inherit']
+      stdio: ['pipe', 'pipe', 'pipe']
     })
 
     let stdout = ''
+    let stderr = ''
     child.stdout.on('data', (chunk: Buffer) => {
       stdout += chunk.toString()
+    })
+    child.stderr.on('data', (chunk: Buffer) => {
+      stderr += chunk.toString()
     })
 
     child.on('error', (err) => reject(new APIError(`Failed to spawn claude: ${err.message}`)))
     child.on('close', (code) => {
       if (code !== 0) {
-        reject(new APIError(`claude exited with code ${code}`))
+        const combined = stderr + stdout
+        const rateLimitMatch = combined.match(/resets?\s+([^\n\r]+)/i)
+        if (combined.toLowerCase().includes("you've hit your limit") || combined.toLowerCase().includes("you have hit your limit")) {
+          reject(new RateLimitError(rateLimitMatch?.[1]?.trim()))
+        } else {
+          if (stderr) process.stderr.write(stderr)
+          reject(new APIError(`claude exited with code ${code}`))
+        }
       } else {
         resolve(parseStreamJson(stdout))
       }

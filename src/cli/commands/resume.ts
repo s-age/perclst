@@ -2,6 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
 import { logger } from '@src/utils/logger'
+import { RateLimitError } from '@src/utils/errors'
 import { printResponse, DisplayOptions } from '@src/cli/display'
 
 export type ResumeOptions = {
@@ -28,7 +29,12 @@ export async function resumeCommand(
 
     console.log(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {
-    logger.error('Failed to resume session', error as Error)
+    if (error instanceof RateLimitError) {
+      const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
+      logger.error(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
+    } else {
+      logger.error('Failed to resume session', error as Error)
+    }
     process.exit(1)
   }
 }

@@ -22,6 +22,14 @@ export class APIError extends Error {
   }
 }
 
+export class RateLimitError extends Error {
+  constructor(public readonly resetInfo?: string) {
+    const detail = resetInfo ? ` (${resetInfo})` : ''
+    super(`Claude API usage limit reached${detail}`)
+    this.name = 'RateLimitError'
+  }
+}
+
 export class ConfigError extends Error {
   constructor(message: string) {
     super(message)
