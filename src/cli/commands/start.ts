@@ -26,12 +26,12 @@ export async function startCommand(task: string, options: StartOptions) {
       { allowedTools: options.allowedTools, model: options.model }
     )
 
-    console.log(`Session created: ${sessionId}`)
+    logger.print(`Session created: ${sessionId}`)
 
     const config = container.resolve<Config>(TOKENS.Config)
     printResponse(response, options, config.display)
 
-    console.log(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
+    logger.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {
     if (error instanceof RateLimitError) {
       const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''

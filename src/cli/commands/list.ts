@@ -9,22 +9,22 @@ export async function listCommand() {
     const sessions = await sessionService.list()
 
     if (sessions.length === 0) {
-      console.log('No sessions found')
+      logger.print('No sessions found')
       return
     }
 
-    console.log(`\nFound ${sessions.length} session(s):\n`)
+    logger.print(`\nFound ${sessions.length} session(s):\n`)
 
     for (const session of sessions) {
       const status = session.metadata.status
 
       const label = `${session.name ?? 'anonymous'}(${session.id})`
-      console.log(`[${status}] ${label}`)
-      console.log(`  Working dir: ${session.working_dir}`)
+      logger.print(`[${status}] ${label}`)
+      logger.print(`  Working dir: ${session.working_dir}`)
       if (session.procedure) {
-        console.log(`  Procedure: ${session.procedure}`)
+        logger.print(`  Procedure: ${session.procedure}`)
       }
-      console.log()
+      logger.print('')
     }
   } catch (error) {
     logger.error('Failed to list sessions', error as Error)

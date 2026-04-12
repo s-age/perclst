@@ -8,8 +8,8 @@ export async function renameCommand(sessionId: string, name: string) {
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const session = await sessionService.rename(sessionId, name)
 
-    console.log(`Session renamed: ${session.id}`)
-    console.log(`  Name: ${session.name}`)
+    logger.print(`Session renamed: ${session.id}`)
+    logger.print(`  Name: ${session.name}`)
   } catch (error) {
     logger.error('Failed to rename session', error as Error)
     process.exit(1)

@@ -45,9 +45,9 @@ export async function analyzeCommand(sessionId: string, options: AnalyzeOptions)
 
     if (options.format === 'json') {
       if (options.printDetail) {
-        console.log(JSON.stringify({ session, summary }, null, 2))
+        logger.print(JSON.stringify({ session, summary }, null, 2))
       } else {
-        console.log(
+        logger.print(
           JSON.stringify(
             {
               session_id: session.id,
@@ -83,67 +83,67 @@ export async function analyzeCommand(sessionId: string, options: AnalyzeOptions)
     // Text format
     const { turnsBreakdown: bd, toolUses, tokens } = summary
 
-    console.log(`\n  Session: ${session.id}`)
-    console.log(`  Status: ${session.metadata.status}  /  Working dir: ${session.working_dir}`)
+    logger.print(`\n  Session: ${session.id}`)
+    logger.print(`  Status: ${session.metadata.status}  /  Working dir: ${session.working_dir}`)
     if (session.procedure) {
-      console.log(`  Procedure: ${session.procedure}`)
+      logger.print(`  Procedure: ${session.procedure}`)
     }
 
-    console.log(`\n  Turns breakdown:`)
-    console.log(`    User Instructions:  ${bd.userInstructions}`)
-    console.log(`    Tool Use:          ${bd.toolUse} × 2`)
-    console.log(`    Assistant Response: ${bd.assistantResponse}`)
-    console.log(`    Turns:             ${bd.total}`)
+    logger.print(`\n  Turns breakdown:`)
+    logger.print(`    User Instructions:  ${bd.userInstructions}`)
+    logger.print(`    Tool Use:          ${bd.toolUse} × 2`)
+    logger.print(`    Assistant Response: ${bd.assistantResponse}`)
+    logger.print(`    Turns:             ${bd.total}`)
 
-    console.log(`\n  Tool uses:`)
+    logger.print(`\n  Tool uses:`)
     if (toolUses.length === 0) {
-      console.log(`    (none)`)
+      logger.print(`    (none)`)
     } else {
       for (const t of toolUses) {
         const mark = t.isError ? '✗' : '✓'
-        console.log(`    ${mark}  ${formatToolInput(t.name, t.input)}`)
+        logger.print(`    ${mark}  ${formatToolInput(t.name, t.input)}`)
       }
     }
 
     if (options.printDetail) {
-      console.log(`\n  Detail:`)
+      logger.print(`\n  Detail:`)
       for (const turn of summary.turns) {
         if (turn.userMessage !== undefined) {
-          console.log(`\n  ─── User ───`)
-          console.log(`  ${turn.userMessage}`)
+          logger.print(`\n  ─── User ───`)
+          logger.print(`  ${turn.userMessage}`)
         }
         if (turn.thinkingBlocks && turn.thinkingBlocks.length > 0) {
           for (const t of turn.thinkingBlocks) {
-            console.log(`\n  [Thinking] ${t}`)
+            logger.print(`\n  [Thinking] ${t}`)
           }
         }
         if (turn.toolCalls.length > 0) {
           for (const tc of turn.toolCalls) {
-            console.log(`\n  ▶ ${formatToolInput(tc.name, tc.input)}`)
+            logger.print(`\n  ▶ ${formatToolInput(tc.name, tc.input)}`)
             if (tc.result !== null) {
-              console.log(`    → ${tc.result}`)
+              logger.print(`    → ${tc.result}`)
             } else {
-              console.log(`    → (no result)`)
+              logger.print(`    → (no result)`)
             }
           }
         }
         if (turn.assistantText !== undefined) {
-          console.log(`\n  ─── Assistant ───`)
-          console.log(`  ${turn.assistantText}`)
+          logger.print(`\n  ─── Assistant ───`)
+          logger.print(`  ${turn.assistantText}`)
         }
       }
     }
 
-    console.log(`\n  Tokens:`)
-    console.log(`    Input:   ${tokens.totalInput.toLocaleString()}`)
-    console.log(`    Output:  ${tokens.totalOutput.toLocaleString()}`)
+    logger.print(`\n  Tokens:`)
+    logger.print(`    Input:   ${tokens.totalInput.toLocaleString()}`)
+    logger.print(`    Output:  ${tokens.totalOutput.toLocaleString()}`)
     if (tokens.totalCacheRead > 0) {
-      console.log(`    Cache read (total): ${tokens.totalCacheRead.toLocaleString()}`)
+      logger.print(`    Cache read (total): ${tokens.totalCacheRead.toLocaleString()}`)
     }
     if (tokens.totalCacheCreation > 0) {
-      console.log(`    Cache created:      ${tokens.totalCacheCreation.toLocaleString()}`)
+      logger.print(`    Cache created:      ${tokens.totalCacheCreation.toLocaleString()}`)
     }
-    console.log()
+    logger.print('')
   } catch (error) {
     logger.error('Failed to analyze session', error as Error)
     process.exit(1)

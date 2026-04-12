@@ -2,6 +2,7 @@ import type { AgentResponse } from '@src/types/agent'
 import type { DisplayConfig } from '@src/types/config'
 import { DEFAULT_HEADER_COLOR } from '@src/constants/config'
 import { ANSI } from '@src/constants/ansi'
+import { logger } from '@src/utils/logger'
 
 const { RESET, DIM, BG_GREY, FG_ON_GREY } = ANSI
 
@@ -102,35 +103,35 @@ export function printResponse(
   const silentUsage = opts.outputOnly || opts.silentUsage
 
   if (!silentThoughts && response.thoughts && response.thoughts.length > 0) {
-    console.log(header('Thoughts', color))
+    logger.print(header('Thoughts', color))
     for (const t of response.thoughts) {
-      console.log(`${DIM}${t.thinking}${RESET}`)
+      logger.print(`${DIM}${t.thinking}${RESET}`)
     }
   }
 
   if (!silentToolResponse && response.tool_history && response.tool_history.length > 0) {
-    console.log(header('Tool Calls', color))
+    logger.print(header('Tool Calls', color))
     for (const tool of response.tool_history) {
-      console.log(`${toolLabel(tool.name, color)} input: ${JSON.stringify(tool.input)}`)
+      logger.print(`${toolLabel(tool.name, color)} input: ${JSON.stringify(tool.input)}`)
       if (tool.result !== undefined) {
-        console.log(`         result: ${formatToolResult(tool.result)}`)
+        logger.print(`         result: ${formatToolResult(tool.result)}`)
       }
     }
   }
 
-  console.log(header('Agent Response', color))
-  console.log(greyBlock(response.content, color))
+  logger.print(header('Agent Response', color))
+  logger.print(greyBlock(response.content, color))
 
   if (!silentUsage && response.usage) {
     const u = response.usage
-    console.log(header('Token Usage', color))
-    console.log(`  Input:            ${u.input_tokens}`)
-    console.log(`  Output:           ${u.output_tokens}`)
+    logger.print(header('Token Usage', color))
+    logger.print(`  Input:            ${u.input_tokens}`)
+    logger.print(`  Output:           ${u.output_tokens}`)
     if (u.cache_read_input_tokens !== undefined) {
-      console.log(`  Cache read:       ${u.cache_read_input_tokens}`)
+      logger.print(`  Cache read:       ${u.cache_read_input_tokens}`)
     }
     if (u.cache_creation_input_tokens !== undefined) {
-      console.log(`  Cache creation:   ${u.cache_creation_input_tokens}`)
+      logger.print(`  Cache creation:   ${u.cache_creation_input_tokens}`)
     }
   }
 }
