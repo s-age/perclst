@@ -1,22 +1,11 @@
-import type { Session } from '@src/types/session'
-import type { AnalysisSummary } from '@src/types/analysis'
-import type { ISessionRepository } from '@src/repositories/sessionRepository'
-import type { IClaudeSessionReader } from '@src/repositories/claudeSessionReader'
+import type { IAnalyzeDomain, AnalyzeResult } from '@src/domains/analyze'
 
-export type AnalyzeResult = {
-  session: Session
-  summary: AnalysisSummary
-}
+export type { AnalyzeResult }
 
 export class AnalyzeService {
-  constructor(
-    private sessionRepository: ISessionRepository,
-    private sessionReader: IClaudeSessionReader
-  ) {}
+  constructor(private domain: IAnalyzeDomain) {}
 
   async analyze(sessionId: string): Promise<AnalyzeResult> {
-    const session = await this.sessionRepository.load(sessionId)
-    const summary = this.sessionReader.read(session.claude_session_id, session.working_dir)
-    return { session, summary }
+    return this.domain.analyze(sessionId)
   }
 }

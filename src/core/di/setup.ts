@@ -5,6 +5,9 @@ import { FileConfigProvider } from '@src/infrastructures/fileConfigProvider'
 import { FileProcedureLoader } from '@src/infrastructures/fileProcedureLoader'
 import { ClaudeApiClient } from '@src/infrastructures/claudeApiClient'
 import { ClaudeSessionReader } from '@src/infrastructures/claudeSessionReader'
+import { SessionDomain } from '@src/domains/session'
+import { AgentDomain } from '@src/domains/agent'
+import { AnalyzeDomain } from '@src/domains/analyze'
 import { SessionService } from '@src/services/sessionService'
 import { AgentService } from '@src/services/agentService'
 import { AnalyzeService } from '@src/services/analyzeService'
@@ -28,14 +31,17 @@ export function setupContainer(): void {
   container.register(TOKENS.ClaudeSessionReader, claudeSessionReader)
   container.register(TOKENS.TypeScriptProject, tsProject)
 
+  // Register domains
+  const sessionDomain = new SessionDomain(sessionRepository)
+  const agentDomain = new AgentDomain(procedureLoader, agentClient, configProvider)
+  const analyzeDomain = new AnalyzeDomain(sessionRepository, claudeSessionReader)
+
+  container.register(TOKENS.SessionDomain, sessionDomain)
+  container.register(TOKENS.AgentDomain, agentDomain)
+  container.register(TOKENS.AnalyzeDomain, analyzeDomain)
+
   // Register services
-  container.register(TOKENS.SessionService, new SessionService(sessionRepository))
-  container.register(
-    TOKENS.AgentService,
-    new AgentService(procedureLoader, agentClient, configProvider)
-  )
-  container.register(
-    TOKENS.AnalyzeService,
-    new AnalyzeService(sessionRepository, claudeSessionReader)
-  )
+  container.register(TOKENS.SessionService, new SessionService(sessionDomain))
+  container.register(TOKENS.AgentService, new AgentService(agentDomain))
+  container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
 }

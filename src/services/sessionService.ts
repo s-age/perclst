@@ -1,64 +1,33 @@
 import type { Session, CreateSessionParams } from '@src/types/session'
-import { generateId } from '@src/utils/uuid'
-import { logger } from '@src/utils/logger'
-import type { ISessionRepository } from '@src/repositories/sessionRepository'
+import type { ISessionDomain } from '@src/domains/session'
 
 export class SessionService {
-  constructor(private storage: ISessionRepository) {
-    logger.debug('SessionService initialized')
-  }
+  constructor(private domain: ISessionDomain) {}
 
   async create(params: CreateSessionParams): Promise<Session> {
-    const id = generateId()
-    const session: Session = {
-      id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      procedure: params.procedure,
-      claude_session_id: id,
-      working_dir: process.cwd(),
-      metadata: {
-        parent_session_id: params.parent_session_id,
-        tags: params.tags || [],
-        status: 'active'
-      }
-    }
-
-    await this.storage.save(session)
-    logger.info('Session created', { session_id: session.id })
-
-    return session
+    return this.domain.create(params)
   }
 
   async get(sessionId: string): Promise<Session> {
-    return await this.storage.load(sessionId)
+    return this.domain.get(sessionId)
   }
 
   getPath(sessionId: string): string {
-    return this.storage.getSessionPath(sessionId)
+    return this.domain.getPath(sessionId)
   }
 
   async list(): Promise<Session[]> {
-    return await this.storage.list()
+    return this.domain.list()
   }
 
   async delete(sessionId: string): Promise<void> {
-    await this.storage.delete(sessionId)
-    logger.info('Session deleted', { session_id: sessionId })
+    return this.domain.delete(sessionId)
   }
 
   async updateStatus(
     sessionId: string,
     status: 'active' | 'completed' | 'failed'
   ): Promise<Session> {
-    const session = await this.get(sessionId)
-
-    session.metadata.status = status
-    session.updated_at = new Date().toISOString()
-
-    await this.storage.save(session)
-    logger.info('Session status updated', { session_id: sessionId, status })
-
-    return session
+    return this.domain.updateStatus(sessionId, status)
   }
 }

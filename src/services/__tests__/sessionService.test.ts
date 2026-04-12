@@ -1,57 +1,71 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { SessionService } from '../sessionService'
-import { InMemorySessionRepository } from '../../infrastructures/__tests__/inMemorySessionRepository'
+import type { ISessionDomain } from '@src/domains/session'
+import type { Session } from '@src/types/session'
+
+const mockSession: Session = {
+  id: 'test-id',
+  created_at: '2024-01-01T00:00:00.000Z',
+  updated_at: '2024-01-01T00:00:00.000Z',
+  procedure: 'test',
+  claude_session_id: 'test-id',
+  working_dir: '/tmp',
+  metadata: { status: 'active', tags: [] }
+}
+
+function makeMockDomain(): ISessionDomain {
+  return {
+    create: vi.fn().mockResolvedValue(mockSession),
+    get: vi.fn().mockResolvedValue(mockSession),
+    getPath: vi.fn().mockReturnValue('/tmp/sessions/test-id.json'),
+    list: vi.fn().mockResolvedValue([mockSession]),
+    delete: vi.fn().mockResolvedValue(undefined),
+    updateStatus: vi.fn().mockResolvedValue({ ...mockSession, metadata: { ...mockSession.metadata, status: 'completed' } })
+  }
+}
 
 describe('SessionService', () => {
-  let repository: InMemorySessionRepository
+  let domain: ISessionDomain
   let service: SessionService
 
   beforeEach(() => {
-    repository = new InMemorySessionRepository()
-    service = new SessionService(repository)
+    domain = makeMockDomain()
+    service = new SessionService(domain)
   })
 
-  it('should create a new session', async () => {
-    const session = await service.create({
-      procedure: 'test-procedure',
-      tags: ['tag1', 'tag2']
-    })
-
-    expect(session.id).toBeDefined()
-    expect(session.procedure).toBe('test-procedure')
-    expect(session.metadata.tags).toContain('tag1')
-    expect(session.metadata.status).toBe('active')
-
-    const loaded = await repository.load(session.id)
-    expect(loaded).toEqual(session)
+  it('delegates create to domain', async () => {
+    const params = { procedure: 'p1', tags: ['t1'] }
+    const result = await service.create(params)
+    expect(domain.create).toHaveBeenCalledWith(params)
+    expect(result).toBe(mockSession)
   })
 
-  it('should list sessions in descending order of updated_at', async () => {
-    const s1 = await service.create({ procedure: 'p1' })
-    const s2 = await service.create({ procedure: 'p2' })
-
-    // Manually update updated_at for s1 to be later
-    s1.updated_at = new Date(Date.now() + 1000).toISOString()
-    await repository.save(s1)
-
-    const list = await service.list()
-    expect(list[0].id).toBe(s1.id)
-    expect(list[1].id).toBe(s2.id)
+  it('delegates get to domain', async () => {
+    const result = await service.get('test-id')
+    expect(domain.get).toHaveBeenCalledWith('test-id')
+    expect(result).toBe(mockSession)
   })
 
-  it('should delete a session', async () => {
-    const session = await service.create({ procedure: 'p1' })
-    await service.delete(session.id)
-
-    await expect(service.get(session.id)).rejects.toThrow()
+  it('delegates getPath to domain', () => {
+    const result = service.getPath('test-id')
+    expect(domain.getPath).toHaveBeenCalledWith('test-id')
+    expect(result).toBe('/tmp/sessions/test-id.json')
   })
 
-  it('should update session status', async () => {
-    const session = await service.create({ procedure: 'p1' })
-    const updated = await service.updateStatus(session.id, 'completed')
+  it('delegates list to domain', async () => {
+    const result = await service.list()
+    expect(domain.list).toHaveBeenCalled()
+    expect(result).toEqual([mockSession])
+  })
 
-    expect(updated.metadata.status).toBe('completed')
-    const loaded = await service.get(session.id)
-    expect(loaded.metadata.status).toBe('completed')
+  it('delegates delete to domain', async () => {
+    await service.delete('test-id')
+    expect(domain.delete).toHaveBeenCalledWith('test-id')
+  })
+
+  it('delegates updateStatus to domain', async () => {
+    const result = await service.updateStatus('test-id', 'completed')
+    expect(domain.updateStatus).toHaveBeenCalledWith('test-id', 'completed')
+    expect(result.metadata.status).toBe('completed')
   })
 })

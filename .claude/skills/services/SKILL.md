@@ -7,32 +7,47 @@ paths:
 
 # Services Layer
 
-Services are use-case orchestrators. Each service composes repository calls (and, when `src/domains/` is populated, domain logic) into a single named operation. They contain no I/O implementation and no storage logic.
+Services are use-case orchestrators. Each service composes **domain object calls** into a single named operation. They contain no I/O implementation, no storage logic, and no business logic — that belongs in `src/domains/`.
+
+## Layer Responsibilities
+
+```
+cli → services (use-case orchestration)
+              ↓ DI
+           domains (business logic + repository access)
+              ↓ DI
+           repositories (interfaces)
+              ↓
+           infrastructures (implementations)
+```
+
+- **services**: Orchestrate use-cases by calling domain objects in order. No logic of their own.
+- **domains**: Own business logic and are injected with repository interfaces.
+- Services must never directly inject repository interfaces — that is the domain's responsibility.
 
 ## Files
 
-- `src/services/sessionService.ts` — `SessionService`: session CRUD + status updates
-- `src/services/agentService.ts` — `AgentService`: assemble `AgentRequest` from a `Session` and call the agent
-- `src/services/analyzeService.ts` — `AnalyzeService`: load a session and read its Claude session file
+- `src/services/sessionService.ts` — `SessionService`: session lifecycle orchestration
+- `src/services/agentService.ts` — `AgentService`: agent execution orchestration
+- `src/services/analyzeService.ts` — `AnalyzeService`: session analysis orchestration
 
 ## Import Rules
 
 | May import | Must NOT import |
 |---|---|
-| `@src/repositories/*` (interfaces only) | `@src/infrastructures/*` |
-| `@src/types/*` | `@src/cli/*` |
-| `@src/errors/*` | other `@src/services/*` |
-| `@src/utils/*` | |
+| `@src/domains/*` (interfaces only) | `@src/repositories/*` |
+| `@src/types/*` | `@src/infrastructures/*` |
+| `@src/errors/*` | `@src/cli/*` |
+| `@src/utils/*` | other `@src/services/*` |
 | `@src/constants/*` | |
 
-Services never depend on concrete implementations — only on repository port types (`type IXxx`).
+Services never depend on concrete implementations — only on domain interfaces (`type IXxx`).
 Services never import each other; cross-service orchestration belongs in the CLI command layer.
 
 ## Class Conventions
 
 - One class per file, named `<Domain>Service` (e.g. `SessionService`, `AgentService`)
-- Constructor receives only repository interfaces and config providers — never infrastructure classes
-- Config that is constant across calls (e.g. model, tokens) is read **once in the constructor** and stored as a private field; do not call `configProvider.load()` inside methods
+- Constructor receives only **domain interfaces** — never repository interfaces or infrastructure classes
 - All constructor parameters that need to be called later are `private` fields
 
 ## Method Signatures
@@ -40,53 +55,22 @@ Services never import each other; cross-service orchestration belongs in the CLI
 - Accept **domain objects** as parameters, not raw IDs, when the caller already holds the object
   - `run(session: Session, ...)` rather than `run(sessionId: string, ...)`
   - Use IDs only when the service itself is responsible for loading (e.g. `get(sessionId)`, `updateStatus(sessionId, ...)`)
-- Return domain types from `@src/types/` or composite result types defined locally in the service file
-- Local result types are `export type`, defined at the top of the file before the class
-
-## Logging
-
-- `logger.info(...)` on **mutations**: create, delete, status changes
-- `logger.debug(...)` on **reads and intermediate steps**: loaded procedure, session loaded
-- Always include relevant IDs in the structured second argument: `{ session_id: id }`
-
-```typescript
-logger.info('Session created', { session_id: session.id })
-logger.debug('Loaded procedure', { procedure: session.procedure })
-```
-
-## ID Generation
-
-Use `generateId()` from `@src/utils/uuid` — never import `randomUUID` from `crypto` directly.
-
-```typescript
-import { generateId } from '@src/utils/uuid'
-const id = generateId()
-```
+- Return domain types from `@src/types/` or re-export result types from `@src/domains/*`
 
 ## Keeping Services Thin
 
+- No business logic — methods should delegate directly to a domain call
 - No input validation — validate at the CLI boundary
-- No error wrapping — let repository errors propagate unchanged
-- No conditional branching on infrastructure state (e.g. "if file exists…") — that belongs in the repository or domain layer
-- If a method body is more than ~10 lines of non-trivial logic, consider whether a domain object should own that logic
-
-## Domains Layer
-
-`src/domains/` is currently empty. When domain logic is introduced, services call it **between** repository operations:
-
-```
-load from repository → apply domain logic → save back via repository
-```
-
-Even before any domain logic exists, services act as the designated orchestration point — they must always be created, even if thin, rather than calling repositories directly from the CLI.
+- No error wrapping — let domain errors propagate unchanged
+- No direct calls to Node.js APIs (e.g. `process.cwd()`, `fs.*`) — that belongs in infrastructures or domains
 
 ## Adding a New Service
 
-1. Create `src/services/<name>Service.ts`
-2. Inject repository interface types via constructor
+1. Ensure the corresponding domain object exists in `src/domains/`
+2. Create `src/services/<name>Service.ts` — inject the domain interface via constructor
 3. Register in `src/core/di/setup.ts`:
    ```typescript
-   container.register(TOKENS.<Name>Service, new <Name>Service(dep1, dep2))
+   container.register(TOKENS.<Name>Service, new <Name>Service(nameDomain))
    ```
 4. Add `<Name>Service: Symbol.for('<Name>Service')` to `src/core/di/identifiers.ts`
 5. Run `ts_checker()` to verify lint, build, and tests pass
