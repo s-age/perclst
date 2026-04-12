@@ -193,6 +193,63 @@ function err(id: number | string | null, code: number, message: string): JSONRPC
 }
 
 // ---------------------------------------------------------------------------
+// Tool call dispatcher
+// ---------------------------------------------------------------------------
+
+function wrapTextResult(text: string): { content: { type: string; text: string }[] } {
+  return { content: [{ type: 'text', text }] }
+}
+
+async function handleToolsCall(id: number | string | null, params: unknown): Promise<void> {
+  const p = params as { name: string; arguments: Record<string, unknown> }
+  try {
+    let result: { content: { type: string; text: string }[] }
+    switch (p.name) {
+      case 'ask_permission':
+        result = wrapTextResult(
+          JSON.stringify(
+            await askPermission(
+              p.arguments as {
+                tool_name: string
+                input: Record<string, unknown>
+                tool_use_id?: string
+              }
+            )
+          )
+        )
+        break
+      case 'ts_analyze':
+        result = await executeTsAnalyze(p.arguments as { file_path: string })
+        break
+      case 'ts_get_references':
+        result = await executeTsGetReferences(
+          p.arguments as { file_path: string; symbol_name: string }
+        )
+        break
+      case 'ts_get_types':
+        result = await executeTsGetTypes(p.arguments as { file_path: string; symbol_name: string })
+        break
+      case 'ts_checker':
+        result = await executeTsChecker(
+          p.arguments as {
+            project_root?: string
+            lint_command?: string
+            build_command?: string
+            test_command?: string
+          }
+        )
+        break
+      default:
+        send(err(id, -32601, `Unknown tool: ${p.name}`))
+        return
+    }
+    send({ jsonrpc: '2.0', id, result })
+  } catch (e) {
+    send(err(id, -32603, `Tool execution failed: ${e instanceof Error ? e.message : String(e)}`))
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Request dispatcher
 // ---------------------------------------------------------------------------
 
@@ -219,72 +276,9 @@ async function handleRequest(req: JSONRPCRequest): Promise<void> {
       send({ jsonrpc: '2.0', id, result: { tools: TOOLS } })
       break
 
-    case 'tools/call': {
-      const p = req.params as { name: string; arguments: Record<string, unknown> }
-
-      try {
-        let result: { content: { type: string; text: string }[] }
-
-        switch (p.name) {
-          case 'ask_permission':
-            result = {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(
-                    await askPermission(
-                      p.arguments as {
-                        tool_name: string
-                        input: Record<string, unknown>
-                        tool_use_id?: string
-                      }
-                    )
-                  )
-                }
-              ]
-            }
-            break
-
-          case 'ts_analyze':
-            result = await executeTsAnalyze(p.arguments as { file_path: string })
-            break
-
-          case 'ts_get_references':
-            result = await executeTsGetReferences(
-              p.arguments as { file_path: string; symbol_name: string }
-            )
-            break
-
-          case 'ts_get_types':
-            result = await executeTsGetTypes(
-              p.arguments as { file_path: string; symbol_name: string }
-            )
-            break
-
-          case 'ts_checker':
-            result = await executeTsChecker(
-              p.arguments as {
-                project_root?: string
-                lint_command?: string
-                build_command?: string
-                test_command?: string
-              }
-            )
-            break
-
-          default:
-            send(err(id, -32601, `Unknown tool: ${p.name}`))
-            return
-        }
-
-        send({ jsonrpc: '2.0', id, result })
-      } catch (e) {
-        send(
-          err(id, -32603, `Tool execution failed: ${e instanceof Error ? e.message : String(e)}`)
-        )
-      }
+    case 'tools/call':
+      await handleToolsCall(id, req.params)
       break
-    }
 
     default:
       if (req.id !== undefined) send(err(id, -32601, `Method not found: ${req.method}`))

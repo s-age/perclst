@@ -69,81 +69,85 @@ export class TypeScriptProject {
     return references
   }
 
+  private extractClassDefinition(
+    sourceFile: SourceFile,
+    symbolName: string
+  ): TypeDefinition | null {
+    const classDecl = sourceFile.getClass(symbolName)
+    if (!classDecl) return null
+    return {
+      name: symbolName,
+      type: 'class',
+      properties: classDecl.getProperties().map(
+        (p): PropertyInfo => ({
+          name: p.getName(),
+          type: p.getType().getText(),
+          isStatic: p.isStatic(),
+          isReadonly: p.isReadonly()
+        })
+      ),
+      methods: classDecl.getMethods().map(
+        (m): MethodInfo => ({
+          name: m.getName(),
+          parameters: m
+            .getParameters()
+            .map((p): ParameterInfo => ({ name: p.getName(), type: p.getType().getText() })),
+          returnType: m.getReturnType().getText(),
+          isStatic: m.isStatic()
+        })
+      )
+    }
+  }
+
+  private extractInterfaceDefinition(
+    sourceFile: SourceFile,
+    symbolName: string
+  ): TypeDefinition | null {
+    const interfaceDecl = sourceFile.getInterface(symbolName)
+    if (!interfaceDecl) return null
+    return {
+      name: symbolName,
+      type: 'interface',
+      properties: interfaceDecl
+        .getProperties()
+        .map((p): PropertyInfo => ({ name: p.getName(), type: p.getType().getText() }))
+    }
+  }
+
+  private extractTypeAliasDefinition(
+    sourceFile: SourceFile,
+    symbolName: string
+  ): TypeDefinition | null {
+    const typeAlias = sourceFile.getTypeAlias(symbolName)
+    if (!typeAlias) return null
+    return { name: symbolName, type: 'type', returnType: typeAlias.getType().getText() }
+  }
+
+  private extractFunctionDefinition(
+    sourceFile: SourceFile,
+    symbolName: string
+  ): TypeDefinition | null {
+    const functionDecl = sourceFile.getFunction(symbolName)
+    if (!functionDecl) return null
+    return {
+      name: symbolName,
+      type: 'function',
+      parameters: functionDecl
+        .getParameters()
+        .map((p): ParameterInfo => ({ name: p.getName(), type: p.getType().getText() })),
+      returnType: functionDecl.getReturnType().getText()
+    }
+  }
+
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {
     const sourceFile = this.project.addSourceFileAtPath(filePath)
-
-    // Try class
-    const classDecl = sourceFile.getClass(symbolName)
-    if (classDecl) {
-      return {
-        name: symbolName,
-        type: 'class',
-        properties: classDecl.getProperties().map(
-          (p): PropertyInfo => ({
-            name: p.getName(),
-            type: p.getType().getText(),
-            isStatic: p.isStatic(),
-            isReadonly: p.isReadonly()
-          })
-        ),
-        methods: classDecl.getMethods().map(
-          (m): MethodInfo => ({
-            name: m.getName(),
-            parameters: m.getParameters().map(
-              (p): ParameterInfo => ({
-                name: p.getName(),
-                type: p.getType().getText()
-              })
-            ),
-            returnType: m.getReturnType().getText(),
-            isStatic: m.isStatic()
-          })
-        )
-      }
-    }
-
-    // Try interface
-    const interfaceDecl = sourceFile.getInterface(symbolName)
-    if (interfaceDecl) {
-      return {
-        name: symbolName,
-        type: 'interface',
-        properties: interfaceDecl.getProperties().map(
-          (p): PropertyInfo => ({
-            name: p.getName(),
-            type: p.getType().getText()
-          })
-        )
-      }
-    }
-
-    // Try type alias
-    const typeAlias = sourceFile.getTypeAlias(symbolName)
-    if (typeAlias) {
-      return {
-        name: symbolName,
-        type: 'type',
-        returnType: typeAlias.getType().getText()
-      }
-    }
-
-    // Try function
-    const functionDecl = sourceFile.getFunction(symbolName)
-    if (functionDecl) {
-      return {
-        name: symbolName,
-        type: 'function',
-        parameters: functionDecl.getParameters().map(
-          (p): ParameterInfo => ({
-            name: p.getName(),
-            type: p.getType().getText()
-          })
-        ),
-        returnType: functionDecl.getReturnType().getText()
-      }
-    }
-
-    return null
+    return (
+      this.extractClassDefinition(sourceFile, symbolName) ??
+      this.extractInterfaceDefinition(sourceFile, symbolName) ??
+      this.extractTypeAliasDefinition(sourceFile, symbolName) ??
+      this.extractFunctionDefinition(sourceFile, symbolName) ??
+      null
+    )
   }
 
   private getSymbols(sourceFile: SourceFile): SymbolInfo[] {

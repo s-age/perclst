@@ -58,22 +58,24 @@ function extractToolResultText(content: string | RawContentBlock[]): string | nu
   return null
 }
 
-export function readClaudeSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
-  const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
+type TokenTotals = {
+  totalInput: number
+  totalOutput: number
+  totalCacheRead: number
+  totalCacheCreation: number
+}
 
-  if (!fileExists(jsonlPath)) {
-    throw new Error(`Claude Code session file not found: ${jsonlPath}`)
-  }
-
-  const raw = readFileSync(jsonlPath, 'utf-8')
-  const entries: RawEntry[] = raw
+function parseRawEntries(raw: string): RawEntry[] {
+  return raw
     .split('\n')
     .filter((line) => line.trim())
     .map((line) => JSON.parse(line) as RawEntry)
+}
 
-  const turns: ClaudeCodeTurn[] = []
-
-  const toolResultMap = new Map<string, { text: string | null; isError: boolean }>()
+function buildToolResultMap(
+  entries: RawEntry[]
+): Map<string, { text: string | null; isError: boolean }> {
+  const map = new Map<string, { text: string | null; isError: boolean }>()
   for (const entry of entries) {
     if (entry.type !== 'user') continue
     const userEntry = entry as RawUserEntry
@@ -81,14 +83,73 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
     if (!Array.isArray(content)) continue
     for (const block of content) {
       if (block.type === 'tool_result') {
-        toolResultMap.set(block.tool_use_id, {
+        map.set(block.tool_use_id, {
           text: extractToolResultText(block.content),
           isError: block.is_error ?? false
         })
       }
     }
   }
+  return map
+}
 
+function processAssistantEntry(
+  entry: RawAssistantEntry,
+  toolResultMap: Map<string, { text: string | null; isError: boolean }>
+): { turn: ClaudeCodeTurn; tokenDeltas: TokenTotals } | null {
+  const content = entry.message.content ?? []
+  if (content.length > 0 && content.every((b) => b.type === 'thinking')) return null
+
+  const thinkingBlocks: string[] = []
+  const toolCalls: ToolCall[] = []
+  let assistantText: string | undefined
+
+  for (const block of content) {
+    if (block.type === 'thinking') {
+      thinkingBlocks.push(block.thinking)
+    } else if (block.type === 'text') {
+      assistantText = (assistantText ?? '') + block.text
+    } else if (block.type === 'tool_use') {
+      const mapped = toolResultMap.get(block.id)
+      toolCalls.push({
+        name: block.name,
+        input: block.input,
+        result: mapped?.text ?? null,
+        isError: mapped?.isError ?? false
+      })
+    }
+  }
+
+  const u = entry.message.usage
+  const inp = u?.input_tokens ?? 0
+  const out = u?.output_tokens ?? 0
+  const cr = u?.cache_read_input_tokens ?? 0
+  const cc = u?.cache_creation_input_tokens ?? 0
+  const usage: ClaudeCodeTurn['usage'] | undefined = u
+    ? {
+        input_tokens: inp,
+        output_tokens: out,
+        cache_read_input_tokens: cr,
+        cache_creation_input_tokens: cc
+      }
+    : undefined
+
+  return {
+    turn: {
+      toolCalls,
+      assistantText: assistantText?.trim() || undefined,
+      thinkingBlocks: thinkingBlocks.length > 0 ? thinkingBlocks : undefined,
+      usage
+    },
+    tokenDeltas: { totalInput: inp, totalOutput: out, totalCacheRead: cr, totalCacheCreation: cc }
+  }
+}
+
+function buildTurns(
+  entries: RawEntry[],
+  toolResultMap: Map<string, { text: string | null; isError: boolean }>
+): { turns: ClaudeCodeTurn[]; tokens: TokenTotals } {
+  const turns: ClaudeCodeTurn[] = []
   let totalInput = 0
   let totalOutput = 0
   let totalCacheRead = 0
@@ -96,79 +157,38 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
 
   for (const entry of entries) {
     if (entry.type === 'user') {
-      const userEntry = entry as RawUserEntry
-      const content = userEntry.message.content
+      const content = (entry as RawUserEntry).message.content
       if (typeof content === 'string') {
         turns.push({ userMessage: content, toolCalls: [] })
-      } else if (Array.isArray(content)) {
-        const hasToolResult = content.some((b) => b.type === 'tool_result')
-        if (!hasToolResult) {
-          const texts = content
-            .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-            .map((b) => b.text)
-          if (texts.length > 0) {
-            turns.push({ userMessage: texts.join('\n'), toolCalls: [] })
-          }
-        }
+      } else if (Array.isArray(content) && !content.some((b) => b.type === 'tool_result')) {
+        const texts = content
+          .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
+          .map((b) => b.text)
+        if (texts.length > 0) turns.push({ userMessage: texts.join('\n'), toolCalls: [] })
       }
     } else if (entry.type === 'assistant') {
-      const asstEntry = entry as RawAssistantEntry
-      const content = asstEntry.message.content ?? []
-
-      if (content.length > 0 && content.every((b) => b.type === 'thinking')) continue
-
-      const thinkingBlocks: string[] = []
-      const toolCalls: ToolCall[] = []
-      let assistantText: string | undefined
-
-      for (const block of content) {
-        if (block.type === 'thinking') {
-          thinkingBlocks.push(block.thinking)
-        } else if (block.type === 'text') {
-          assistantText = (assistantText ?? '') + block.text
-        } else if (block.type === 'tool_use') {
-          const mapped = toolResultMap.get(block.id)
-          toolCalls.push({
-            name: block.name,
-            input: block.input,
-            result: mapped?.text ?? null,
-            isError: mapped?.isError ?? false
-          })
-        }
+      const result = processAssistantEntry(entry as RawAssistantEntry, toolResultMap)
+      if (result) {
+        turns.push(result.turn)
+        totalInput += result.tokenDeltas.totalInput
+        totalOutput += result.tokenDeltas.totalOutput
+        totalCacheRead += result.tokenDeltas.totalCacheRead
+        totalCacheCreation += result.tokenDeltas.totalCacheCreation
       }
-
-      const u = asstEntry.message.usage
-      let usage: ClaudeCodeTurn['usage'] | undefined
-      if (u) {
-        const inp = u.input_tokens ?? 0
-        const out = u.output_tokens ?? 0
-        const cr = u.cache_read_input_tokens ?? 0
-        const cc = u.cache_creation_input_tokens ?? 0
-        usage = {
-          input_tokens: inp,
-          output_tokens: out,
-          cache_read_input_tokens: cr,
-          cache_creation_input_tokens: cc
-        }
-        totalInput += inp
-        totalOutput += out
-        totalCacheRead += cr
-        totalCacheCreation += cc
-      }
-
-      turns.push({
-        toolCalls,
-        assistantText: assistantText?.trim() || undefined,
-        thinkingBlocks: thinkingBlocks.length > 0 ? thinkingBlocks : undefined,
-        usage
-      })
     }
   }
 
+  return { turns, tokens: { totalInput, totalOutput, totalCacheRead, totalCacheCreation } }
+}
+
+function buildSummaryStats(turns: ClaudeCodeTurn[]): {
+  turnsBreakdown: AnalysisSummary['turnsBreakdown']
+  toolUses: AnalysisSummary['toolUses']
+} {
   let userInstructions = 0
   let toolUse = 0
   let assistantResponse = 0
-  const allToolUses: Array<{ name: string; input: Record<string, unknown>; isError: boolean }> = []
+  const allToolUses: AnalysisSummary['toolUses'] = []
 
   for (const turn of turns) {
     if (turn.userMessage !== undefined) userInstructions++
@@ -180,14 +200,27 @@ export function readClaudeSession(claudeSessionId: string, workingDir: string): 
   }
 
   return {
-    turns,
     turnsBreakdown: {
       userInstructions,
       toolUse,
       assistantResponse,
       total: userInstructions + toolUse * 2 + assistantResponse
     },
-    toolUses: allToolUses,
-    tokens: { totalInput, totalOutput, totalCacheRead, totalCacheCreation }
+    toolUses: allToolUses
   }
+}
+
+export function readClaudeSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
+  const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
+
+  if (!fileExists(jsonlPath)) {
+    throw new Error(`Claude Code session file not found: ${jsonlPath}`)
+  }
+
+  const entries = parseRawEntries(readFileSync(jsonlPath, 'utf-8'))
+  const toolResultMap = buildToolResultMap(entries)
+  const { turns, tokens } = buildTurns(entries, toolResultMap)
+  const { turnsBreakdown, toolUses } = buildSummaryStats(turns)
+
+  return { turns, turnsBreakdown, toolUses, tokens }
 }
