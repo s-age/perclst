@@ -32,7 +32,7 @@ export function setupContainer(): void {
   container.register(TOKENS.SessionService, new SessionService(sessionRepository))
   container.register(
     TOKENS.AgentService,
-    new AgentService(sessionRepository, procedureLoader, agentClient, configProvider)
+    new AgentService(procedureLoader, agentClient, configProvider)
   )
   container.register(
     TOKENS.AnalyzeService,

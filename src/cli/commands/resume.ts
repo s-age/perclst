@@ -1,6 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
+import { SessionService } from '@src/services/sessionService'
 import { logger } from '@src/utils/logger'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { printResponse, DisplayOptions } from '@src/cli/display'
@@ -18,11 +19,19 @@ export async function resumeCommand(
   try {
     logger.info('Resuming session', { session_id: sessionId })
 
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
-    const response = await agentService.resume(sessionId, instruction, {
+
+    const session = await sessionService.get(sessionId)
+    const sessionFilePath = sessionService.getPath(session.id)
+
+    const response = await agentService.run(session, instruction, true, {
       allowedTools: options.allowedTools,
-      model: options.model
+      model: options.model,
+      sessionFilePath
     })
+
+    await sessionService.updateStatus(session.id, 'active')
 
     // Display response
     printResponse(response, options)

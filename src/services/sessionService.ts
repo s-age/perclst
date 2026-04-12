@@ -1,5 +1,5 @@
-import { randomUUID } from 'crypto'
 import type { Session, CreateSessionParams } from '@src/types/session'
+import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
 import type { ISessionRepository } from '@src/repositories/sessionRepository'
 
@@ -9,7 +9,7 @@ export class SessionService {
   }
 
   async create(params: CreateSessionParams): Promise<Session> {
-    const id = randomUUID()
+    const id = generateId()
     const session: Session = {
       id,
       created_at: new Date().toISOString(),
