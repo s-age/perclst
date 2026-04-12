@@ -58,7 +58,17 @@ cli → services → (domains) → repositories ← infrastructures
 
 ## Required Verification After Changes
 
-Run in this order before completing any task:
+Use the `ts_checker` MCP tool to run lint, build, and tests in a single call:
+
+```
+ts_checker()          # runs lint:fix → build → test:unit; returns { ok, lint, build, test }
+```
+
+This saves multiple tool-call round-trips and token overhead versus running each command separately.
+If `ok` is `true`, all three steps passed. Otherwise inspect the `errors` / `warnings` arrays for
+the failing step(s) and fix them before completing the task.
+
+Alternatively, run each step manually in this order:
 
 ```bash
 npm run lint:fix   # Prettier + ESLint auto-fix; resolve remaining errors manually

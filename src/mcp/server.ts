@@ -14,6 +14,7 @@ import { openSync, readSync, writeSync, closeSync } from 'fs'
 import { executeTsAnalyze } from './tools/ts_analyze'
 import { executeTsGetReferences } from './tools/ts_get_references'
 import { executeTsGetTypes } from './tools/ts_get_types'
+import { executeTsChecker } from './tools/tsChecker'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -92,6 +93,34 @@ const TOOLS = [
         }
       },
       required: ['file_path', 'symbol_name']
+    }
+  },
+  {
+    name: 'ts_checker',
+    description:
+      'Run lint (lint:fix), build, and unit tests in one shot and report errors/warnings for each. ' +
+      'Use this after making TypeScript changes to verify correctness before completing a task.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project_root: {
+          type: 'string',
+          description: 'Absolute path to the project root. Auto-detected when omitted.'
+        },
+        lint_command: {
+          type: 'string',
+          description: 'Lint command. Defaults to "npm run lint:fix".'
+        },
+        build_command: {
+          type: 'string',
+          description: 'Build command. Defaults to "npm run build".'
+        },
+        test_command: {
+          type: 'string',
+          description: 'Test command. Defaults to "npm run test:unit".'
+        }
+      },
+      required: []
     }
   }
 ]
@@ -225,6 +254,17 @@ async function handleRequest(req: JSONRPCRequest): Promise<void> {
           case 'ts_get_types':
             result = await executeTsGetTypes(
               p.arguments as { file_path: string; symbol_name: string }
+            )
+            break
+
+          case 'ts_checker':
+            result = await executeTsChecker(
+              p.arguments as {
+                project_root?: string
+                lint_command?: string
+                build_command?: string
+                test_command?: string
+              }
             )
             break
 
