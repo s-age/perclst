@@ -1,6 +1,6 @@
 import type { Session } from '@src/types/session'
 import type { AnalysisSummary } from '@src/types/analysis'
-import { loadSession } from '@src/repositories/sessions'
+import type { ISessionDomain } from '@src/domains/session'
 import { readClaudeSession } from '@src/repositories/claudeSessions'
 
 export type AnalyzeResult = {
@@ -13,10 +13,10 @@ export type IAnalyzeDomain = {
 }
 
 export class AnalyzeDomain implements IAnalyzeDomain {
-  constructor(private sessionsDir: string) {}
+  constructor(private sessionDomain: ISessionDomain) {}
 
   async analyze(sessionId: string): Promise<AnalyzeResult> {
-    const session = loadSession(this.sessionsDir, sessionId)
+    const session = await this.sessionDomain.get(sessionId)
     const summary = readClaudeSession(session.claude_session_id, session.working_dir)
     return { session, summary }
   }

@@ -20,7 +20,7 @@ export function setupContainer(): void {
 
   const sessionDomain = new SessionDomain(sessionsDir)
   const agentDomain = new AgentDomain(model)
-  const analyzeDomain = new AnalyzeDomain(sessionsDir)
+  const analyzeDomain = new AnalyzeDomain(sessionDomain)
 
   container.register(TOKENS.SessionDomain, sessionDomain)
   container.register(TOKENS.AgentDomain, agentDomain)
