@@ -1,5 +1,5 @@
-import { SessionManager } from '../../lib/session/manager.js'
-import { logger } from '../../lib/utils/logger.js'
+import { SessionManager } from '@src/lib/session/manager'
+import { logger } from '@src/lib/utils/logger'
 
 export interface ShowOptions {
   format?: 'text' | 'json'

@@ -1,4 +1,4 @@
-import { TypeScriptProject } from '../analyzers/project.js'
+import { TypeScriptProject } from '@src/mcp/analyzers/project'
 
 export const ts_get_types = {
   name: 'ts_get_types',

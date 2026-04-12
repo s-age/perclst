@@ -3,16 +3,16 @@ import { writeFileSync, unlinkSync } from 'fs'
 import { tmpdir } from 'os'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { AgentRequest, AgentResponse } from '../../../types/agent.js'
-import type { ThinkingBlock, ToolUseRecord } from '../../../types/common.js'
-import { APIError } from '../utils/errors.js'
-import { logger } from '../utils/logger.js'
-import { APP_NAME, MCP_SERVER_NAME } from '../../constants/config.js'
+import type { AgentRequest, AgentResponse } from '@types/agent'
+import type { ThinkingBlock, ToolUseRecord } from '@types/common'
+import { APIError } from '@src/lib/utils/errors'
+import { logger } from '@src/lib/utils/logger'
+import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
 
-// dist/lib/agent/claude-cli.js → dist/mcp/server.js
+// dist/src/cli/index.js (tsup bundle) → dist/src/mcp/server.js
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const MCP_SERVER_PATH = resolve(__dirname, '../../mcp/server.js')
+const MCP_SERVER_PATH = resolve(__dirname, '../mcp/server.js')
 
 function buildMcpConfig(): string {
   return JSON.stringify({

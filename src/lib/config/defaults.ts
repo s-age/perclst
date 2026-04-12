@@ -1,4 +1,4 @@
-import type { Config } from '../../../types/config.js'
+import type { Config } from '@types/config'
 import {
   DEFAULT_MODEL,
   DEFAULT_MAX_TOKENS,
@@ -7,7 +7,7 @@ import {
   DEFAULT_LOGS_DIR,
   DEFAULT_HEADER_COLOR,
   DEFAULT_API_KEY_ENV,
-} from '../../constants/config.js'
+} from '@src/constants/config'
 
 export const DEFAULT_CONFIG: Config = {
   sessions_dir: DEFAULT_SESSIONS_DIR,

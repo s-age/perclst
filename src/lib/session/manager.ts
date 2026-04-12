@@ -1,8 +1,8 @@
 import { randomUUID } from 'crypto'
-import { ConfigResolver } from '../config/resolver.js'
-import { SessionStorage } from './storage.js'
-import type { Session, CreateSessionParams } from '../../../types/session.js'
-import { logger } from '../utils/logger.js'
+import { ConfigResolver } from '@src/lib/config/resolver'
+import { SessionStorage } from './storage'
+import type { Session, CreateSessionParams } from '@types/session'
+import { logger } from '@src/lib/utils/logger'
 
 export class SessionManager {
   private storage: SessionStorage

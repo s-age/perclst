@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import { startCommand } from './commands/start.js'
-import { resumeCommand } from './commands/resume.js'
-import { listCommand } from './commands/list.js'
-import { showCommand } from './commands/show.js'
-import { deleteCommand } from './commands/delete.js'
-import { analyzeCommand } from './commands/analyze.js'
+import { startCommand } from './commands/start'
+import { resumeCommand } from './commands/resume'
+import { listCommand } from './commands/list'
+import { showCommand } from './commands/show'
+import { deleteCommand } from './commands/delete'
+import { analyzeCommand } from './commands/analyze'
 
 const program = new Command()
 

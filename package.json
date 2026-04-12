@@ -12,8 +12,8 @@
     "procedures/**/*"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "clean": "rm -rf dist",
     "prepublish": "npm run build",
     "setup": "node scripts/setup.mjs",
@@ -31,11 +31,12 @@
   "license": "CC0-1.0",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
-    "ts-morph": "^27.0.2",
-    "commander": "^12.0.0"
+    "commander": "^12.0.0",
+    "ts-morph": "^27.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.0.0"
   },
   "engines": {

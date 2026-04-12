@@ -1,6 +1,6 @@
-import type { AgentResponse } from '../../types/agent.js'
-import { ConfigResolver } from '../lib/config/resolver.js'
-import { ANSI } from '../constants/ansi.js'
+import type { AgentResponse } from '@types/agent'
+import { ConfigResolver } from '@src/lib/config/resolver'
+import { ANSI } from '@src/constants/ansi'
 
 const { RESET, DIM, BG_GREY, FG_ON_GREY } = ANSI
 
@@ -79,7 +79,7 @@ function formatToolResult(result: string): string {
   return lines[0] + (lines.length > 1 ? '\n' + lines.slice(1).map(l => indent + l).join('\n') : '')
 }
 
-import type { DisplayOptions } from '../../types/display.js'
+import type { DisplayOptions } from '@types/display'
 
 export type { DisplayOptions }
 

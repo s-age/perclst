@@ -1,7 +1,7 @@
-import { SessionManager } from '../../lib/session/manager.js'
-import { AgentExecutor } from '../../lib/agent/executor.js'
-import { logger } from '../../lib/utils/logger.js'
-import { printResponse, DisplayOptions } from '../display.js'
+import { SessionManager } from '@src/lib/session/manager'
+import { AgentExecutor } from '@src/lib/agent/executor'
+import { logger } from '@src/lib/utils/logger'
+import { printResponse, DisplayOptions } from '@src/cli/display'
 
 export interface StartOptions extends DisplayOptions {
   procedure?: string

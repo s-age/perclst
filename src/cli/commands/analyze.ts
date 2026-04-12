@@ -1,6 +1,6 @@
-import { SessionManager } from '../../lib/session/manager.js'
-import { readClaudeSession, resolveJsonlPath } from '../../lib/session/jsonl-reader.js'
-import { logger } from '../../lib/utils/logger.js'
+import { SessionManager } from '@src/lib/session/manager'
+import { readClaudeSession, resolveJsonlPath } from '@src/lib/session/jsonl-reader'
+import { logger } from '@src/lib/utils/logger'
 
 export interface AnalyzeOptions {
   format?: 'text' | 'json'

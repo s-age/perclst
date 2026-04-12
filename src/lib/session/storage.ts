@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { join } from 'path'
-import type { Session } from '../../../types/session.js'
-import { SessionNotFoundError } from '../utils/errors.js'
+import type { Session } from '@types/session'
+import { SessionNotFoundError } from '@src/lib/utils/errors'
 
 export class SessionStorage {
   constructor(private sessionsDir: string) {

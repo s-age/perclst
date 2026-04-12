@@ -93,7 +93,7 @@ Add to `~/.claude/settings.json`:
   "mcpServers": {
     "perclst": {
       "command": "node",
-      "args": ["/path/to/perclst/dist/mcp/server.js"]
+      "args": ["/path/to/perclst/dist/src/mcp/server.js"]
     }
   }
 }
@@ -101,7 +101,7 @@ Add to `~/.claude/settings.json`:
 
 Replace `/path/to/perclst` with the actual path.
 
-**Available tools**: `ts_analyze`, `ts_get_references`, `ts_get_types`, `ts_test_strategist`
+**Available tools**: `ts_analyze`, `ts_get_references`, `ts_get_types`
 
 ## Troubleshooting
 

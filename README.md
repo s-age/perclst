@@ -82,7 +82,7 @@ Add to `~/.claude/settings.json`:
   "mcpServers": {
     "perclst": {
       "command": "node",
-      "args": ["/path/to/perclst/dist/mcp/server.js"]
+      "args": ["/path/to/perclst/dist/src/mcp/server.js"]
     }
   }
 }
@@ -92,7 +92,6 @@ Add to `~/.claude/settings.json`:
 - `ts_analyze`: Analyze TypeScript code structure
 - `ts_get_references`: Find symbol references
 - `ts_get_types`: Get type definitions
-- `ts_test_strategist`: Suggest test strategy
 
 ## License
 

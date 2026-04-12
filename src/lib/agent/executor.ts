@@ -1,10 +1,10 @@
-import { ConfigResolver } from '../config/resolver.js'
-import { SessionManager } from '../session/manager.js'
-import { ClaudeCLI } from './claude-cli.js'
-import { ProcedureLoader } from '../procedure/loader.js'
-import type { AgentConfig, AgentResponse } from '../../../types/agent.js'
-import { logger } from '../utils/logger.js'
-import { DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '../../constants/config.js'
+import { ConfigResolver } from '@src/lib/config/resolver'
+import { SessionManager } from '@src/lib/session/manager'
+import { ClaudeCLI } from './claude-cli'
+import { ProcedureLoader } from '@src/lib/procedure/loader'
+import type { AgentConfig, AgentResponse } from '@types/agent'
+import { logger } from '@src/lib/utils/logger'
+import { DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@src/constants/config'
 
 export interface ExecuteOptions {
   allowedTools?: string[]

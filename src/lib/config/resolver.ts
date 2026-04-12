@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
-import type { Config } from '../../../types/config.js'
-import { DEFAULT_CONFIG } from './defaults.js'
-import { CONFIG_DIR_NAME } from '../../constants/config.js'
+import type { Config } from '@types/config'
+import { DEFAULT_CONFIG } from './defaults'
+import { CONFIG_DIR_NAME } from '@src/constants/config'
 
 export class ConfigResolver {
   /**

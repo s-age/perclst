@@ -9,7 +9,7 @@ import {
   PropertyInfo,
   MethodInfo,
   ParameterInfo
-} from '../types.js'
+} from '@src/mcp/types'
 
 export class TypeScriptProject {
   private project: Project

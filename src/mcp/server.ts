@@ -11,9 +11,9 @@
  */
 
 import { openSync, readSync, writeSync, closeSync } from 'fs'
-import { executeTsAnalyze } from './tools/ts_analyze.js'
-import { executeTsGetReferences } from './tools/ts_get_references.js'
-import { executeTsGetTypes } from './tools/ts_get_types.js'
+import { executeTsAnalyze } from './tools/ts_analyze'
+import { executeTsGetReferences } from './tools/ts_get_references'
+import { executeTsGetTypes } from './tools/ts_get_types'
 
 // ---------------------------------------------------------------------------
 // JSON-RPC 2.0 types
