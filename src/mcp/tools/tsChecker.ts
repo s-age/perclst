@@ -43,6 +43,8 @@ function parseOutput(output: string, exitCode: number): CommandResult {
       currentFile = trimmed
       continue
     }
+    // Skip ESLint summary lines like "✖ 7 problems (0 errors, 7 warnings)"
+    if (/\d+ problems?\s*\(\d+ errors?,\s*\d+ warnings?\)/.test(trimmed)) continue
     if (lower.includes('error')) {
       if (ERROR_IGNORE_PATTERNS.some((p) => lower.includes(p))) continue
       errors.push(currentFile ? `${currentFile}: ${trimmed}` : trimmed)
