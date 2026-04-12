@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { ProcedureNotFoundError } from '@src/utils/errors'
+import { ProcedureNotFoundError } from '@src/errors/procedureNotFoundError'
 import type { IProcedureLoader } from '@src/repositories/procedureLoader'
 
 const __filename = fileURLToPath(import.meta.url)

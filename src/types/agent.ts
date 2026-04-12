@@ -1,6 +1,6 @@
 import type { ThinkingBlock, ToolUseRecord } from './common.js'
 
-export interface AgentConfig {
+export type AgentConfig = {
   model: string
   max_tokens: number
   temperature: number
@@ -9,7 +9,7 @@ export interface AgentConfig {
   allowedTools?: string[]
 }
 
-export interface AgentRequest {
+export type AgentRequest = {
   instruction: string
   system?: string
   config: AgentConfig
@@ -19,7 +19,7 @@ export interface AgentRequest {
   sessionFilePath?: string
 }
 
-export interface AgentResponse {
+export type AgentResponse = {
   content: string
   model: string
   usage: {

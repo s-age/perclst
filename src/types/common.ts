@@ -1,9 +1,9 @@
-export interface ThinkingBlock {
+export type ThinkingBlock = {
   type: 'thinking'
   thinking: string
 }
 
-export interface ToolUseRecord {
+export type ToolUseRecord = {
   id: string
   name: string
   input: unknown

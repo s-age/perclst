@@ -1,6 +1,6 @@
 import type { Session } from '@src/types/session'
 import type { ISessionRepository } from '@src/repositories/sessionRepository'
-import { SessionNotFoundError } from '@src/utils/errors'
+import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
 
 export class InMemorySessionRepository implements ISessionRepository {
   private sessions = new Map<string, Session>()

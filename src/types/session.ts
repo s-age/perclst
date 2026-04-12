@@ -1,4 +1,4 @@
-export interface Session {
+export type Session = {
   id: string
   created_at: string
   updated_at: string
@@ -13,13 +13,13 @@ export interface Session {
   }
 }
 
-export interface CreateSessionParams {
+export type CreateSessionParams = {
   procedure?: string
   parent_session_id?: string
   tags?: string[]
 }
 
-export interface ResumeSessionParams {
+export type ResumeSessionParams = {
   session_id: string
   instruction: string
 }

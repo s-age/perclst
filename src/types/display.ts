@@ -1,4 +1,4 @@
-export interface DisplayOptions {
+export type DisplayOptions = {
   silentToolResponse?: boolean
   silentThoughts?: boolean
   silentUsage?: boolean

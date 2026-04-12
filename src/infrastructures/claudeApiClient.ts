@@ -5,7 +5,8 @@ import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { AgentRequest, AgentResponse } from '@src/types/agent'
 import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
-import { APIError, RateLimitError } from '@src/utils/errors'
+import { APIError } from '@src/errors/apiError'
+import { RateLimitError } from '@src/errors/rateLimitError'
 import { logger } from '@src/utils/logger'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
 import type { IAgentClient } from '@src/repositories/agentClient'
@@ -150,7 +151,10 @@ function runClaude(
       if (code !== 0) {
         const combined = stderr + stdout
         const rateLimitMatch = combined.match(/resets?\s+([^\n\r]+)/i)
-        if (combined.toLowerCase().includes("you've hit your limit") || combined.toLowerCase().includes("you have hit your limit")) {
+        if (
+          combined.toLowerCase().includes("you've hit your limit") ||
+          combined.toLowerCase().includes('you have hit your limit')
+        ) {
           reject(new RateLimitError(rateLimitMatch?.[1]?.trim()))
         } else {
           if (stderr) process.stderr.write(stderr)
