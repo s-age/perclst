@@ -1,10 +1,9 @@
-import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
+import { readFileSync } from 'fs'
 import type { AnalysisSummary, ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
-import type { IClaudeSessionReader } from '@src/repositories/claudeSessionReader'
+import { fileExists } from '@src/infrastructures/fs'
 
-// Claude Code jsonl entry types (raw)
 type RawUserEntry = {
   type: 'user'
   message: {
@@ -39,25 +38,15 @@ type RawContentBlock =
 
 type RawEntry = RawUserEntry | RawAssistantEntry | { type: string }
 
-/**
- * Encode working directory to Claude Code project path format.
- * /Users/s-age/foo → -Users-s-age-foo
- */
 function encodeWorkingDir(workingDir: string): string {
   return workingDir.replace(/\//g, '-')
 }
 
-/**
- * Resolve the jsonl file path for a Claude Code session.
- */
 function resolveJsonlPath(claudeSessionId: string, workingDir: string): string {
   const encoded = encodeWorkingDir(workingDir)
   return join(homedir(), '.claude', 'projects', encoded, `${claudeSessionId}.jsonl`)
 }
 
-/**
- * Extract text from tool_result content (string or block array).
- */
 function extractToolResultText(content: string | RawContentBlock[]): string | null {
   if (typeof content === 'string') return content
   if (Array.isArray(content)) {
@@ -69,13 +58,10 @@ function extractToolResultText(content: string | RawContentBlock[]): string | nu
   return null
 }
 
-/**
- * Parse a Claude Code jsonl session file and return structured analysis.
- */
-function parseSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
+export function readClaudeSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
   const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
 
-  if (!existsSync(jsonlPath)) {
+  if (!fileExists(jsonlPath)) {
     throw new Error(`Claude Code session file not found: ${jsonlPath}`)
   }
 
@@ -87,7 +73,6 @@ function parseSession(claudeSessionId: string, workingDir: string): AnalysisSumm
 
   const turns: ClaudeCodeTurn[] = []
 
-  // Build a map from tool_use id → { text, isError } from user entries
   const toolResultMap = new Map<string, { text: string | null; isError: boolean }>()
   for (const entry of entries) {
     if (entry.type !== 'user') continue
@@ -113,11 +98,9 @@ function parseSession(claudeSessionId: string, workingDir: string): AnalysisSumm
     if (entry.type === 'user') {
       const userEntry = entry as RawUserEntry
       const content = userEntry.message.content
-      // Plain string = user instruction
       if (typeof content === 'string') {
         turns.push({ userMessage: content, toolCalls: [] })
       } else if (Array.isArray(content)) {
-        // Array with no tool_result blocks = user instruction in block form
         const hasToolResult = content.some((b) => b.type === 'tool_result')
         if (!hasToolResult) {
           const texts = content
@@ -127,15 +110,11 @@ function parseSession(claudeSessionId: string, workingDir: string): AnalysisSumm
             turns.push({ userMessage: texts.join('\n'), toolCalls: [] })
           }
         }
-        // Pure tool_result entries are folded into the preceding assistant turn below
       }
     } else if (entry.type === 'assistant') {
       const asstEntry = entry as RawAssistantEntry
       const content = asstEntry.message.content ?? []
 
-      // Skip thinking-only entries: Claude Code writes a separate entry per content block,
-      // so a thinking entry is always followed by the real content entry with identical usage.
-      // Counting it would double the usage and inflate turn counts.
       if (content.length > 0 && content.every((b) => b.type === 'thinking')) continue
 
       const thinkingBlocks: string[] = []
@@ -186,11 +165,9 @@ function parseSession(claudeSessionId: string, workingDir: string): AnalysisSumm
     }
   }
 
-  // Compute breakdown
   let userInstructions = 0
   let toolUse = 0
   let assistantResponse = 0
-
   const allToolUses: Array<{ name: string; input: Record<string, unknown>; isError: boolean }> = []
 
   for (const turn of turns) {
@@ -211,17 +188,6 @@ function parseSession(claudeSessionId: string, workingDir: string): AnalysisSumm
       total: userInstructions + toolUse * 2 + assistantResponse
     },
     toolUses: allToolUses,
-    tokens: {
-      totalInput,
-      totalOutput,
-      totalCacheRead,
-      totalCacheCreation
-    }
-  }
-}
-
-export class ClaudeSessionReader implements IClaudeSessionReader {
-  read(claudeSessionId: string, workingDir: string): AnalysisSummary {
-    return parseSession(claudeSessionId, workingDir)
+    tokens: { totalInput, totalOutput, totalCacheRead, totalCacheCreation }
   }
 }

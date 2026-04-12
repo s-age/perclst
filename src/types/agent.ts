@@ -1,24 +1,5 @@
 import type { ThinkingBlock, ToolUseRecord } from './common.js'
 
-export type AgentConfig = {
-  model: string
-  max_tokens: number
-  temperature: number
-  api_key: string
-  /** List of Claude Code built-in tools to allow without prompting (e.g. ['WebFetch', 'WebSearch']) */
-  allowedTools?: string[]
-}
-
-export type AgentRequest = {
-  instruction: string
-  system?: string
-  config: AgentConfig
-  claudeSessionId: string
-  isResume: boolean
-  workingDir: string
-  sessionFilePath?: string
-}
-
 export type AgentResponse = {
   content: string
   model: string

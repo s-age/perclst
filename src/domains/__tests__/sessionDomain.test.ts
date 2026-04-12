@@ -1,14 +1,32 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
+
+vi.mock('@src/repositories/sessions', () => ({
+  saveSession: vi.fn(),
+  loadSession: vi.fn(),
+  existsSession: vi.fn(),
+  deleteSession: vi.fn(),
+  listSessions: vi.fn(),
+  getSessionPath: vi.fn()
+}))
+
+import {
+  saveSession,
+  loadSession,
+  deleteSession,
+  listSessions,
+  getSessionPath
+} from '@src/repositories/sessions'
 import { SessionDomain } from '../session'
-import { InMemorySessionRepository } from '../../infrastructures/__tests__/inMemorySessionRepository'
+import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
+
+const SESSIONS_DIR = '/tmp/sessions'
 
 describe('SessionDomain', () => {
-  let repository: InMemorySessionRepository
   let domain: SessionDomain
 
   beforeEach(() => {
-    repository = new InMemorySessionRepository()
-    domain = new SessionDomain(repository)
+    vi.clearAllMocks()
+    domain = new SessionDomain(SESSIONS_DIR)
   })
 
   it('should create a new session', async () => {
@@ -21,37 +39,63 @@ describe('SessionDomain', () => {
     expect(session.procedure).toBe('test-procedure')
     expect(session.metadata.tags).toContain('tag1')
     expect(session.metadata.status).toBe('active')
-
-    const loaded = await repository.load(session.id)
-    expect(loaded).toEqual(session)
+    expect(saveSession).toHaveBeenCalledWith(SESSIONS_DIR, session)
   })
 
-  it('should list sessions in descending order of updated_at', async () => {
-    const s1 = await domain.create({ procedure: 'p1' })
-    const s2 = await domain.create({ procedure: 'p2' })
+  it('should delegate get to loadSession', async () => {
+    const mockSession = { id: 'abc', procedure: 'p1' } as never
+    vi.mocked(loadSession).mockReturnValue(mockSession)
 
-    // Manually update updated_at for s1 to be later
-    s1.updated_at = new Date(Date.now() + 1000).toISOString()
-    await repository.save(s1)
+    const result = await domain.get('abc')
 
-    const list = await domain.list()
-    expect(list[0].id).toBe(s1.id)
-    expect(list[1].id).toBe(s2.id)
+    expect(loadSession).toHaveBeenCalledWith(SESSIONS_DIR, 'abc')
+    expect(result).toBe(mockSession)
+  })
+
+  it('should delegate list to listSessions', async () => {
+    const mockSessions = [{ id: 's1' }, { id: 's2' }] as never[]
+    vi.mocked(listSessions).mockReturnValue(mockSessions)
+
+    const result = await domain.list()
+
+    expect(listSessions).toHaveBeenCalledWith(SESSIONS_DIR)
+    expect(result).toBe(mockSessions)
   })
 
   it('should delete a session', async () => {
-    const session = await domain.create({ procedure: 'p1' })
-    await domain.delete(session.id)
+    vi.mocked(deleteSession).mockResolvedValue(undefined)
 
-    await expect(domain.get(session.id)).rejects.toThrow()
+    await domain.delete('abc')
+
+    expect(deleteSession).toHaveBeenCalledWith(SESSIONS_DIR, 'abc')
+  })
+
+  it('should propagate SessionNotFoundError on delete', async () => {
+    vi.mocked(deleteSession).mockRejectedValue(new SessionNotFoundError('abc'))
+
+    await expect(domain.delete('abc')).rejects.toThrow(SessionNotFoundError)
   })
 
   it('should update session status', async () => {
-    const session = await domain.create({ procedure: 'p1' })
-    const updated = await domain.updateStatus(session.id, 'completed')
+    const mockSession = {
+      id: 'abc',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      metadata: { status: 'active', tags: [] }
+    } as never
+    vi.mocked(loadSession).mockReturnValue(mockSession)
+
+    const updated = await domain.updateStatus('abc', 'completed')
 
     expect(updated.metadata.status).toBe('completed')
-    const loaded = await domain.get(session.id)
-    expect(loaded.metadata.status).toBe('completed')
+    expect(saveSession).toHaveBeenCalledWith(SESSIONS_DIR, updated)
+  })
+
+  it('should delegate getPath to getSessionPath', () => {
+    vi.mocked(getSessionPath).mockReturnValue('/tmp/sessions/abc.json')
+
+    const result = domain.getPath('abc')
+
+    expect(getSessionPath).toHaveBeenCalledWith(SESSIONS_DIR, 'abc')
+    expect(result).toBe('/tmp/sessions/abc.json')
   })
 })

@@ -1,7 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
-import { SessionService } from '@src/services/sessionService'
 import { logger } from '@src/utils/logger'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { printResponse, DisplayOptions } from '@src/cli/display'
@@ -17,28 +16,19 @@ export async function startCommand(task: string, options: StartOptions) {
   try {
     logger.info('Starting new agent session')
 
-    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
 
-    const session = await sessionService.create({
-      procedure: options.procedure,
-      tags: options.tags
-    })
-    const sessionFilePath = sessionService.getPath(session.id)
+    const { sessionId, response } = await agentService.start(
+      task,
+      { procedure: options.procedure, tags: options.tags },
+      { allowedTools: options.allowedTools, model: options.model }
+    )
 
-    const response = await agentService.run(session, task, false, {
-      allowedTools: options.allowedTools,
-      model: options.model,
-      sessionFilePath
-    })
-
-    await sessionService.updateStatus(session.id, 'active')
-
-    console.log(`Session created: ${session.id}`)
+    console.log(`Session created: ${sessionId}`)
 
     printResponse(response, options)
 
-    console.log(`\nTo resume: perclst resume ${session.id} "<instruction>"`)
+    console.log(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {
     if (error instanceof RateLimitError) {
       const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''

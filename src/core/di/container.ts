@@ -1,18 +1,18 @@
-type Identifier<T> = string | symbol
+type Identifier = string | symbol
 
 export class Container {
-  private bindings = new Map<Identifier<any>, any>()
+  private bindings = new Map<Identifier, unknown>()
 
-  register<T>(id: Identifier<T>, instance: T): void {
+  register(id: Identifier, instance: unknown): void {
     this.bindings.set(id, instance)
   }
 
-  resolve<T>(id: Identifier<T>): T {
+  resolve<T>(id: Identifier): T {
     const instance = this.bindings.get(id)
-    if (!instance) {
+    if (instance === undefined) {
       throw new Error(`No binding found for ${String(id)}`)
     }
-    return instance
+    return instance as T
   }
 }
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AgentService } from '../agentService'
 import type { IAgentDomain } from '@src/domains/agent'
+import type { ISessionDomain } from '@src/domains/session'
 import type { Session } from '@src/types/session'
 
 const mockSession: Session = {
@@ -19,24 +20,80 @@ const mockResponse = {
   usage: { input_tokens: 10, output_tokens: 10 }
 }
 
+const SESSION_FILE_PATH = '/sessions/test-session.json'
+
 describe('AgentService', () => {
-  let domain: IAgentDomain
+  let sessionDomain: ISessionDomain
+  let agentDomain: IAgentDomain
   let service: AgentService
 
   beforeEach(() => {
-    domain = { run: vi.fn().mockResolvedValue(mockResponse) }
-    service = new AgentService(domain)
+    sessionDomain = {
+      create: vi.fn().mockResolvedValue(mockSession),
+      get: vi.fn().mockResolvedValue(mockSession),
+      getPath: vi.fn().mockReturnValue(SESSION_FILE_PATH),
+      list: vi.fn(),
+      delete: vi.fn(),
+      updateStatus: vi.fn().mockResolvedValue({ ...mockSession, metadata: { ...mockSession.metadata, status: 'active' } })
+    }
+    agentDomain = { run: vi.fn().mockResolvedValue(mockResponse) }
+    service = new AgentService(sessionDomain, agentDomain)
   })
 
-  it('delegates run to domain', async () => {
-    const options = { model: 'claude-opus-4-6' }
-    const result = await service.run(mockSession, 'Hello', false, options)
-    expect(domain.run).toHaveBeenCalledWith(mockSession, 'Hello', false, options)
-    expect(result).toBe(mockResponse)
+  describe('start', () => {
+    it('creates session, runs agent, updates status, returns sessionId and response', async () => {
+      const result = await service.start('Do a task', { procedure: 'conductor', tags: ['tag1'] }, { model: 'claude-opus-4-6' })
+
+      expect(sessionDomain.create).toHaveBeenCalledWith({ procedure: 'conductor', tags: ['tag1'] })
+      expect(sessionDomain.getPath).toHaveBeenCalledWith(mockSession.id)
+      expect(agentDomain.run).toHaveBeenCalledWith(
+        mockSession,
+        'Do a task',
+        false,
+        { model: 'claude-opus-4-6', sessionFilePath: SESSION_FILE_PATH }
+      )
+      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
+      expect(result.sessionId).toBe(mockSession.id)
+      expect(result.response).toBe(mockResponse)
+    })
+
+    it('works with default empty options', async () => {
+      await service.start('Do a task', {})
+
+      expect(agentDomain.run).toHaveBeenCalledWith(
+        mockSession,
+        'Do a task',
+        false,
+        { sessionFilePath: SESSION_FILE_PATH }
+      )
+    })
   })
 
-  it('passes empty options by default', async () => {
-    await service.run(mockSession, 'Hello', true)
-    expect(domain.run).toHaveBeenCalledWith(mockSession, 'Hello', true, {})
+  describe('resume', () => {
+    it('loads session, runs agent, updates status, returns response', async () => {
+      const result = await service.resume(mockSession.id, 'Continue', { model: 'claude-sonnet-4-6' })
+
+      expect(sessionDomain.get).toHaveBeenCalledWith(mockSession.id)
+      expect(sessionDomain.getPath).toHaveBeenCalledWith(mockSession.id)
+      expect(agentDomain.run).toHaveBeenCalledWith(
+        mockSession,
+        'Continue',
+        true,
+        { model: 'claude-sonnet-4-6', sessionFilePath: SESSION_FILE_PATH }
+      )
+      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
+      expect(result).toBe(mockResponse)
+    })
+
+    it('works with default empty options', async () => {
+      await service.resume(mockSession.id, 'Continue')
+
+      expect(agentDomain.run).toHaveBeenCalledWith(
+        mockSession,
+        'Continue',
+        true,
+        { sessionFilePath: SESSION_FILE_PATH }
+      )
+    })
   })
 })

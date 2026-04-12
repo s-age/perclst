@@ -3,17 +3,49 @@ import { writeFileSync, unlinkSync } from 'fs'
 import { tmpdir } from 'os'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { AgentRequest, AgentResponse } from '@src/types/agent'
 import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
 import { APIError } from '@src/errors/apiError'
 import { RateLimitError } from '@src/errors/rateLimitError'
-import { logger } from '@src/utils/logger'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
-import type { IAgentClient } from '@src/repositories/agentClient'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const MCP_SERVER_PATH = resolve(__dirname, '../mcp/server.js')
+
+export type StartAction = {
+  type: 'start'
+  sessionId: string
+  prompt: string
+  system?: string
+  model?: string
+  allowedTools?: string[]
+  workingDir: string
+  sessionFilePath?: string
+}
+
+export type ResumeAction = {
+  type: 'resume'
+  sessionId: string
+  prompt: string
+  model?: string
+  allowedTools?: string[]
+  workingDir: string
+  sessionFilePath?: string
+}
+
+export type ClaudeAction = StartAction | ResumeAction
+
+export type RawOutput = {
+  content: string
+  thoughts: ThinkingBlock[]
+  tool_history: ToolUseRecord[]
+  usage: {
+    input_tokens: number
+    output_tokens: number
+    cache_read_input_tokens?: number
+    cache_creation_input_tokens?: number
+  }
+}
 
 function buildMcpConfig(): string {
   return JSON.stringify({
@@ -55,23 +87,11 @@ type StreamEvent = {
   }
 }
 
-type ParsedResponse = {
-  content: string
-  thoughts: ThinkingBlock[]
-  tool_history: ToolUseRecord[]
-  usage: {
-    input_tokens: number
-    output_tokens: number
-    cache_read_input_tokens?: number
-    cache_creation_input_tokens?: number
-  }
-}
-
-function parseStreamJson(raw: string): ParsedResponse {
+function parseStreamJson(raw: string): RawOutput {
   const thoughts: ThinkingBlock[] = []
   const toolMap = new Map<string, ToolUseRecord>()
   let finalContent = ''
-  let usage: ParsedResponse['usage'] = { input_tokens: 0, output_tokens: 0 }
+  let usage: RawOutput['usage'] = { input_tokens: 0, output_tokens: 0 }
 
   for (const line of raw.split('\n')) {
     const trimmed = line.trim()
@@ -125,7 +145,7 @@ function runClaude(
   prompt: string,
   workingDir: string,
   sessionFilePath?: string
-): Promise<ParsedResponse> {
+): Promise<RawOutput> {
   return new Promise((resolve, reject) => {
     const env: NodeJS.ProcessEnv = { ...process.env }
     if (sessionFilePath) {
@@ -170,64 +190,38 @@ function runClaude(
   })
 }
 
-export class ClaudeApiClient implements IAgentClient {
-  async call(request: AgentRequest): Promise<AgentResponse> {
-    logger.debug('Calling claude CLI', {
-      instruction_length: request.instruction.length,
-      is_resume: request.isResume,
-      session_id: request.claudeSessionId
-    })
+export async function dispatch(action: ClaudeAction): Promise<RawOutput> {
+  const args: string[] = ['-p', '--output-format', 'stream-json', '--verbose']
 
-    const args: string[] = ['-p', '--output-format', 'stream-json', '--verbose']
+  if (action.model) {
+    args.push('--model', action.model)
+  }
 
-    if (request.config.model) {
-      args.push('--model', request.config.model)
+  if (action.type === 'resume') {
+    args.push('--resume', action.sessionId)
+  } else {
+    args.push('--session-id', action.sessionId)
+    if (action.system) {
+      args.push('--system-prompt', action.system)
     }
+  }
 
-    if (request.isResume) {
-      args.push('--resume', request.claudeSessionId)
-    } else {
-      args.push('--session-id', request.claudeSessionId)
-    }
+  if (action.allowedTools?.length) {
+    args.push('--allowedTools', ...action.allowedTools)
+  }
 
-    if (request.config.allowedTools?.length) {
-      args.push('--allowedTools', ...request.config.allowedTools)
-    }
+  const mcpConfigPath = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
+  writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
+  args.push('--mcp-config', mcpConfigPath)
+  args.push('--permission-prompt-tool', `mcp__${MCP_SERVER_NAME}__ask_permission`)
 
-    const mcpConfigPath = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
-    writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
-    args.push('--mcp-config', mcpConfigPath)
-    args.push('--permission-prompt-tool', `mcp__${MCP_SERVER_NAME}__ask_permission`)
-
-    if (request.system) {
-      args.push('--system-prompt', request.system)
-    }
-
+  try {
+    return await runClaude(args, action.prompt, action.workingDir, action.sessionFilePath)
+  } finally {
     try {
-      const parsed = await runClaude(
-        args,
-        request.instruction,
-        request.workingDir,
-        request.sessionFilePath
-      )
-
-      if (!parsed.content) {
-        throw new APIError('Empty response from Claude CLI')
-      }
-
-      return {
-        content: parsed.content,
-        model: 'claude-cli',
-        usage: parsed.usage,
-        thoughts: parsed.thoughts.length > 0 ? parsed.thoughts : undefined,
-        tool_history: parsed.tool_history.length > 0 ? parsed.tool_history : undefined
-      }
-    } finally {
-      try {
-        unlinkSync(mcpConfigPath)
-      } catch {
-        /* ignore */
-      }
+      unlinkSync(mcpConfigPath)
+    } catch {
+      /* ignore */
     }
   }
 }

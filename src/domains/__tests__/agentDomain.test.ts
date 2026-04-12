@@ -1,13 +1,20 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
+
+vi.mock('@src/infrastructures/claudeCode', () => ({
+  dispatch: vi.fn()
+}))
+
+vi.mock('@src/repositories/procedures', () => ({
+  loadProcedure: vi.fn()
+}))
+
+import { dispatch } from '@src/infrastructures/claudeCode'
+import { loadProcedure } from '@src/repositories/procedures'
 import { AgentDomain } from '../agent'
-import { InMemoryProcedureLoader } from '../../infrastructures/__tests__/inMemoryProcedureLoader'
-import { MockAgentClient } from '../../infrastructures/__tests__/mockAgentClient'
-import { InMemoryConfigProvider } from '../../infrastructures/__tests__/inMemoryConfigProvider'
+
+const DEFAULT_MODEL = 'claude-sonnet-4-6'
 
 describe('AgentDomain', () => {
-  let loader: InMemoryProcedureLoader
-  let client: MockAgentClient
-  let config: InMemoryConfigProvider
   let domain: AgentDomain
 
   const session = {
@@ -21,21 +28,31 @@ describe('AgentDomain', () => {
   }
 
   beforeEach(() => {
-    loader = new InMemoryProcedureLoader()
-    client = new MockAgentClient()
-    config = new InMemoryConfigProvider()
-    domain = new AgentDomain(loader, client, config)
+    vi.clearAllMocks()
+    domain = new AgentDomain(DEFAULT_MODEL)
+
+    vi.mocked(dispatch).mockResolvedValue({
+      content: 'Mock response',
+      thoughts: [],
+      tool_history: [],
+      usage: { input_tokens: 10, output_tokens: 10 }
+    })
   })
 
   it('should run a task with the procedure system prompt', async () => {
-    loader.register('conductor', 'You are a conductor.')
+    vi.mocked(loadProcedure).mockReturnValue('You are a conductor.')
 
     const response = await domain.run(session, 'Hello', false)
 
     expect(response.content).toBe('Mock response')
-    expect(client.lastRequest?.system).toBe('You are a conductor.')
-    expect(client.lastRequest?.instruction).toBe('Hello')
-    expect(client.lastRequest?.isResume).toBe(false)
+    expect(loadProcedure).toHaveBeenCalledWith('conductor')
+    expect(vi.mocked(dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'start',
+        system: 'You are a conductor.',
+        prompt: 'Hello'
+      })
+    )
   })
 
   it('should run without a system prompt when no procedure is set', async () => {
@@ -43,23 +60,33 @@ describe('AgentDomain', () => {
 
     await domain.run(sessionWithoutProcedure, 'Hello', false)
 
-    expect(client.lastRequest?.system).toBeUndefined()
+    expect(loadProcedure).not.toHaveBeenCalled()
+    expect(vi.mocked(dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'start',
+        system: undefined
+      })
+    )
   })
 
-  it('should pass isResume=true when resuming', async () => {
-    loader.register('conductor', 'You are a conductor.')
-
+  it('should dispatch a resume action when resuming', async () => {
     await domain.run(session, 'Continue', true)
 
-    expect(client.lastRequest?.isResume).toBe(true)
-    expect(client.lastRequest?.instruction).toBe('Continue')
+    expect(vi.mocked(dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'resume',
+        prompt: 'Continue'
+      })
+    )
   })
 
   it('should override model from options', async () => {
-    loader.register('conductor', 'You are a conductor.')
-
     await domain.run(session, 'Hello', false, { model: 'claude-opus-4-6' })
 
-    expect(client.lastRequest?.config.model).toBe('claude-opus-4-6')
+    expect(vi.mocked(dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'claude-opus-4-6'
+      })
+    )
   })
 })

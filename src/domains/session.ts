@@ -1,7 +1,13 @@
 import type { Session, CreateSessionParams } from '@src/types/session'
 import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
-import type { ISessionRepository } from '@src/repositories/sessionRepository'
+import {
+  saveSession,
+  loadSession,
+  deleteSession,
+  listSessions,
+  getSessionPath
+} from '@src/repositories/sessions'
 
 export type ISessionDomain = {
   create(params: CreateSessionParams): Promise<Session>
@@ -13,7 +19,7 @@ export type ISessionDomain = {
 }
 
 export class SessionDomain implements ISessionDomain {
-  constructor(private storage: ISessionRepository) {
+  constructor(private sessionsDir: string) {
     logger.debug('SessionDomain initialized')
   }
 
@@ -33,26 +39,26 @@ export class SessionDomain implements ISessionDomain {
       }
     }
 
-    await this.storage.save(session)
+    saveSession(this.sessionsDir, session)
     logger.info('Session created', { session_id: session.id })
 
     return session
   }
 
   async get(sessionId: string): Promise<Session> {
-    return this.storage.load(sessionId)
+    return loadSession(this.sessionsDir, sessionId)
   }
 
   getPath(sessionId: string): string {
-    return this.storage.getSessionPath(sessionId)
+    return getSessionPath(this.sessionsDir, sessionId)
   }
 
   async list(): Promise<Session[]> {
-    return this.storage.list()
+    return listSessions(this.sessionsDir)
   }
 
   async delete(sessionId: string): Promise<void> {
-    await this.storage.delete(sessionId)
+    await deleteSession(this.sessionsDir, sessionId)
     logger.info('Session deleted', { session_id: sessionId })
   }
 
@@ -65,7 +71,7 @@ export class SessionDomain implements ISessionDomain {
     session.metadata.status = status
     session.updated_at = new Date().toISOString()
 
-    await this.storage.save(session)
+    saveSession(this.sessionsDir, session)
     logger.info('Session status updated', { session_id: sessionId, status })
 
     return session

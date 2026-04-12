@@ -1,10 +1,9 @@
-import type { AgentConfig, AgentResponse } from '@src/types/agent'
+import type { AgentResponse } from '@src/types/agent'
 import type { Session } from '@src/types/session'
-import type { IConfigProvider } from '@src/types/config'
 import { logger } from '@src/utils/logger'
-import { DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@src/constants/config'
-import type { IProcedureLoader } from '@src/repositories/procedureLoader'
-import type { IAgentClient } from '@src/repositories/agentClient'
+import { loadProcedure } from '@src/repositories/procedures'
+import { dispatch } from '@src/infrastructures/claudeCode'
+import { APIError } from '@src/errors/apiError'
 
 export type ExecuteOptions = {
   allowedTools?: string[]
@@ -22,22 +21,7 @@ export type IAgentDomain = {
 }
 
 export class AgentDomain implements IAgentDomain {
-  private config: AgentConfig
-
-  constructor(
-    private procedureLoader: IProcedureLoader,
-    private agentClient: IAgentClient,
-    configProvider: IConfigProvider
-  ) {
-    const config = configProvider.load()
-
-    this.config = {
-      model: config.model || DEFAULT_MODEL,
-      max_tokens: config.max_tokens || DEFAULT_MAX_TOKENS,
-      temperature: config.temperature || DEFAULT_TEMPERATURE,
-      api_key: '' // Not needed for CLI mode
-    }
-  }
+  constructor(private model: string) {}
 
   async run(
     session: Session,
@@ -47,22 +31,35 @@ export class AgentDomain implements IAgentDomain {
   ): Promise<AgentResponse> {
     let systemPrompt: string | undefined
     if (session.procedure) {
-      systemPrompt = this.procedureLoader.load(session.procedure)
+      systemPrompt = loadProcedure(session.procedure)
       logger.debug('Loaded procedure', { procedure: session.procedure })
     }
 
-    return this.agentClient.call({
-      instruction,
-      system: systemPrompt,
-      config: {
-        ...this.config,
-        ...(options.model ? { model: options.model } : {}),
-        allowedTools: options.allowedTools
-      },
-      claudeSessionId: session.claude_session_id,
-      isResume,
+    const baseArgs = {
+      sessionId: session.claude_session_id,
+      prompt: instruction,
+      model: options.model ?? this.model,
+      allowedTools: options.allowedTools,
       workingDir: session.working_dir,
       sessionFilePath: options.sessionFilePath
-    })
+    }
+
+    const raw = await dispatch(
+      isResume
+        ? { type: 'resume', ...baseArgs }
+        : { type: 'start', system: systemPrompt, ...baseArgs }
+    )
+
+    if (!raw.content) {
+      throw new APIError('Empty response from Claude CLI')
+    }
+
+    return {
+      content: raw.content,
+      model: 'claude-cli',
+      usage: raw.usage,
+      thoughts: raw.thoughts.length > 0 ? raw.thoughts : undefined,
+      tool_history: raw.tool_history.length > 0 ? raw.tool_history : undefined
+    }
   }
 }

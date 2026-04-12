@@ -20,7 +20,10 @@ function makeMockDomain(): ISessionDomain {
     getPath: vi.fn().mockReturnValue('/tmp/sessions/test-id.json'),
     list: vi.fn().mockResolvedValue([mockSession]),
     delete: vi.fn().mockResolvedValue(undefined),
-    updateStatus: vi.fn().mockResolvedValue({ ...mockSession, metadata: { ...mockSession.metadata, status: 'completed' } })
+    updateStatus: vi.fn().mockResolvedValue({
+      ...mockSession,
+      metadata: { ...mockSession.metadata, status: 'completed' }
+    })
   }
 }
 

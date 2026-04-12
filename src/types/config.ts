@@ -14,9 +14,3 @@ export type Config = {
   api_key_env?: string
   display?: DisplayConfig
 }
-
-export type IConfigProvider = {
-  load(): Config
-  resolveSessionsDir(config: Config): string
-  resolveLogsDir(config: Config): string
-}
