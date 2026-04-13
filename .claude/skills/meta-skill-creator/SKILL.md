@@ -42,6 +42,7 @@ Bad: `helper`, `stuff`, `myskill`, `utils`
 - Target **50–100 lines** for `SKILL.md`; move large reference material to supporting files
 - Use numbered lists for sequential steps, bullets for options or facts
 - Write what Claude should **do**, not what the skill **is**
+- Write **How**, never **What** — a skill captures the approach (how to review, how to format, how to structure), not the task itself (what to review, what to write). The same layer can be used for implement, test, or review; locking in the "what" makes the skill rigid and non-reusable.
 
 ## Good vs Bad
 
@@ -66,6 +67,19 @@ When explaining code, always include:
 # Bad — wastes tokens on meta-explanation
 ## Goal
 This skill helps you write better code by providing a structured explanation framework...
+```
+
+**How vs What**
+
+```
+# Good — captures How; works for implement, test, or review
+When writing TypeScript, always:
+1. Prefer explicit return types on public functions
+2. Use `unknown` over `any` at system boundaries
+
+# Bad — locks in What; can only ever be used to implement one thing
+Implement the session manager by creating a SessionManager class
+with create(), get(), and delete() methods.
 ```
 
 **paths**
