@@ -51,7 +51,15 @@ function parseFrontmatter(content) {
 
   const paths = pathsMatch[1]
     .split('\n')
-    .map(line => line.match(/^\s+-\s+(.+)$/)?.[1]?.trim())
+    .map(line => {
+      const val = line.match(/^\s+-\s+(.+)$/)?.[1]?.trim()
+      if (!val) return undefined
+      // Strip surrounding YAML quotes (' or ")
+      if ((val.startsWith("'") && val.endsWith("'")) || (val.startsWith('"') && val.endsWith('"'))) {
+        return val.slice(1, -1)
+      }
+      return val
+    })
     .filter(Boolean)
 
   return { name, paths }
