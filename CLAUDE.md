@@ -159,6 +159,20 @@ npm run build && perclst start "test"
 }
 ```
 
+## Knowledge Capture
+
+When you encounter any of the following, write a note to `knowledge/draft/` immediately — don't wait:
+
+- **Problem**: something broke, behaved unexpectedly, or caused confusion
+- **Discovery**: you learned how something actually works (vs. how you assumed it worked)
+- **External**: a fact from a library, tool, or API that isn't obvious from the code
+- **Decision**: a design choice made for a non-obvious reason (constraints, trade-offs)
+- **Gotcha**: a subtle rule or edge case that would surprise a future reader
+
+Drop a freeform `.md` file in `knowledge/draft/` with whatever detail you have. The `librarian` procedure will structure and file it properly later.
+
+> Run `perclst start "Promote all draft knowledge" --procedure librarian --allowed-tools Write Read Bash --output-only` to promote drafts.
+
 ## Common Tasks
 
 **Add a new procedure**:
