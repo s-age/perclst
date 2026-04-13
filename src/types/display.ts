@@ -3,4 +3,5 @@ export type DisplayOptions = {
   silentThoughts?: boolean
   silentUsage?: boolean
   outputOnly?: boolean
+  format?: 'text' | 'json'
 }

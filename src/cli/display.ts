@@ -5,6 +5,8 @@ import { DEFAULT_HEADER_COLOR, CONTEXT_WINDOW_SIZE } from '@src/constants/config
 import { ANSI } from '@src/constants/ansi'
 import { logger } from '@src/utils/logger'
 
+type PrintResponseExtra = { sessionId: string }
+
 const { RESET, DIM, BG_GREY, FG_ON_GREY } = ANSI
 
 function hexToAnsi(hex: string): string {
@@ -89,11 +91,46 @@ function formatToolResult(result: string): string {
   )
 }
 
+function printJsonResponse(response: AgentResponse, extra?: PrintResponseExtra): void {
+  const cu = response.last_assistant_usage ?? response.usage
+  const contextWindowTokens =
+    cu.input_tokens + (cu.cache_read_input_tokens ?? 0) + (cu.cache_creation_input_tokens ?? 0)
+
+  const obj: Record<string, unknown> = {
+    session_id: extra?.sessionId ?? null,
+    content: response.content,
+    model: response.model,
+    usage: {
+      input_tokens: response.usage.input_tokens,
+      output_tokens: response.usage.output_tokens,
+      cache_read_input_tokens: response.usage.cache_read_input_tokens ?? 0,
+      cache_creation_input_tokens: response.usage.cache_creation_input_tokens ?? 0,
+      context_window_tokens: contextWindowTokens
+    }
+  }
+  if (response.message_count !== undefined) {
+    obj.message_count = response.message_count
+  }
+  if (response.tool_history !== undefined) {
+    obj.tool_history = response.tool_history
+  }
+  if (response.thoughts !== undefined) {
+    obj.thoughts = response.thoughts
+  }
+
+  logger.print(JSON.stringify(obj))
+}
+
 export function printResponse(
   response: AgentResponse,
   opts: DisplayOptions = {},
-  displayConfig?: DisplayConfig
+  displayConfig?: DisplayConfig,
+  extra?: PrintResponseExtra
 ): void {
+  if (opts.format === 'json') {
+    printJsonResponse(response, extra)
+    return
+  }
   const color = resolveColor(displayConfig)
   const silentThoughts = opts.outputOnly || opts.silentThoughts
   const silentToolResponse = opts.outputOnly || opts.silentToolResponse

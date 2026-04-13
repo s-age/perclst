@@ -41,7 +41,7 @@ export async function startCommand(task: string, options: StartOptions) {
 
     logger.print(`Session created: ${sessionId}`)
 
-    printResponse(response, options, config.display)
+    printResponse(response, options, config.display, { sessionId })
 
     logger.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {

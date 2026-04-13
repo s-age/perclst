@@ -39,6 +39,7 @@ program
     '--max-context-tokens <n>',
     'Max context window tokens before graceful termination (-1 = disabled)'
   )
+  .option('-f, --format <format>', 'Output format (text|json)', 'text')
   .action(startCommand)
 
 // Resume command
@@ -61,6 +62,7 @@ program
     '--max-context-tokens <n>',
     'Max context window tokens before graceful termination (-1 = disabled)'
   )
+  .option('-f, --format <format>', 'Output format (text|json)', 'text')
   .action(resumeCommand)
 
 // List command
