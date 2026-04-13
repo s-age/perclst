@@ -168,7 +168,9 @@ When you encounter any of the following, write a note to `knowledge/draft/` imme
 
 Drop a freeform `.md` file in `knowledge/draft/` with whatever detail you have. The `meta-curate-knowledge` procedure will structure and file it properly later.
 
-> Run `perclst start "Promote all draft knowledge" --procedure meta-curate-knowledge --allowed-tools Write Read Bash --output-only` to promote drafts.
+> **Rule**: Only the `meta-curate-knowledge` procedure may write directly to `knowledge/` (outside of `draft/`). All other agents and conversations must write to `knowledge/draft/` only.
+
+> Run `perclst start "Curate all draft knowledge" --procedure meta-curate-knowledge --allowed-tools Write Read Bash --output-only` to promote drafts.
 
 ## Common Tasks
 
