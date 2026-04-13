@@ -1,5 +1,5 @@
 ---
-name: architectures
+name: arch
 description: Use this skill when creating or editing TypeScript files in src/. Covers language stack, layer architecture, unidirectional import rules, directory conventions, and required verification steps after changes.
 paths:
   - 'src/**/*.ts'
