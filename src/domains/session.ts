@@ -11,6 +11,7 @@ import {
 
 export type ISessionDomain = {
   create(params: CreateSessionParams): Promise<Session>
+  save(session: Session): Promise<void>
   get(sessionId: string): Promise<Session>
   getPath(sessionId: string): string
   list(): Promise<Session[]>
@@ -22,6 +23,10 @@ export type ISessionDomain = {
 export class SessionDomain implements ISessionDomain {
   constructor(private sessionsDir: string) {
     logger.debug('SessionDomain initialized')
+  }
+
+  async save(session: Session): Promise<void> {
+    saveSession(this.sessionsDir, session)
   }
 
   async create(params: CreateSessionParams): Promise<Session> {

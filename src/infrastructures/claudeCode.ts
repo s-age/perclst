@@ -65,9 +65,12 @@ function countJsonlLines(path: string): number {
     .filter((l) => l.trim()).length
 }
 
+const PERMISSION_TOOL_NAME = `mcp__${MCP_SERVER_NAME}__ask_permission`
+
 function parseStreamJson(raw: string, jsonlBaseline: number): RawOutput {
   const thoughts: ThinkingBlock[] = []
   const toolMap = new Map<string, ToolUseRecord>()
+  const permissionToolIds = new Set<string>()
   let finalContent = ''
   let usage: RawOutput['usage'] = { input_tokens: 0, output_tokens: 0 }
   let lastAssistantUsage: RawOutput['last_assistant_usage'] | undefined
@@ -86,7 +89,6 @@ function parseStreamJson(raw: string, jsonlBaseline: number): RawOutput {
     }
 
     if (event.type === 'assistant' && event.message) {
-      assistantEventCount++
       if (event.message.usage) {
         lastAssistantUsage = {
           input_tokens: event.message.usage.input_tokens,
@@ -95,19 +97,30 @@ function parseStreamJson(raw: string, jsonlBaseline: number): RawOutput {
           cache_creation_input_tokens: event.message.usage.cache_creation_input_tokens
         }
       }
+      let hasCountableContent = false
       for (const block of event.message.content) {
         if (block.type === 'thinking') {
           thoughts.push({ type: 'thinking', thinking: block.thinking })
         } else if (block.type === 'tool_use') {
-          toolMap.set(block.id, { id: block.id, name: block.name, input: block.input })
+          if (block.name === PERMISSION_TOOL_NAME) {
+            permissionToolIds.add(block.id)
+          } else {
+            toolMap.set(block.id, { id: block.id, name: block.name, input: block.input })
+            hasCountableContent = true
+          }
+        } else {
+          hasCountableContent = true
         }
       }
-    } else if (event.type === 'user' && event.message) {
-      if (event.message.content.some((b) => b.type === 'tool_result')) {
-        userToolResultEventCount++
+      if (hasCountableContent) {
+        assistantEventCount++
       }
+    } else if (event.type === 'user' && event.message) {
+      let hasRealToolResult = false
       for (const block of event.message.content) {
         if (block.type === 'tool_result') {
+          if (permissionToolIds.has(block.tool_use_id)) continue
+          hasRealToolResult = true
           const record = toolMap.get(block.tool_use_id)
           if (record) {
             record.result =
@@ -116,6 +129,9 @@ function parseStreamJson(raw: string, jsonlBaseline: number): RawOutput {
                 : JSON.stringify(block.content, null, 2)
           }
         }
+      }
+      if (hasRealToolResult) {
+        userToolResultEventCount++
       }
     } else if (event.type === 'result') {
       finalContent = event.result ?? ''

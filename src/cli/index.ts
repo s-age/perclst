@@ -8,6 +8,7 @@ import { showCommand } from './commands/show'
 import { deleteCommand } from './commands/delete'
 import { analyzeCommand } from './commands/analyze'
 import { renameCommand } from './commands/rename'
+import { importCommand } from './commands/import'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -86,5 +87,14 @@ program
   .argument('<session-id>', 'Session ID')
   .argument('<name>', 'New name for the session')
   .action(renameCommand)
+
+// Import command
+program
+  .command('import')
+  .description('Import a Claude Code session into perclst management')
+  .argument('<claude-session-id>', 'Claude Code session ID')
+  .option('-n, --name <name>', 'Name for the imported session')
+  .option('--cwd <path>', 'Working directory of the Claude Code session (auto-detected if omitted)')
+  .action(importCommand)
 
 program.parse()

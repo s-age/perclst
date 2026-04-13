@@ -7,6 +7,7 @@ import { AnalyzeDomain } from '@src/domains/analyze'
 import { SessionService } from '@src/services/sessionService'
 import { AgentService } from '@src/services/agentService'
 import { AnalyzeService } from '@src/services/analyzeService'
+import { ImportService } from '@src/services/importService'
 import { ClaudeCodeRepository } from '@src/infrastructures/claudeCode'
 import { DEFAULT_MODEL } from '@src/constants/config'
 
@@ -29,4 +30,5 @@ export function setupContainer(): void {
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
+  container.register(TOKENS.ImportService, new ImportService(sessionDomain))
 }

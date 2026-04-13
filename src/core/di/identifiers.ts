@@ -10,6 +10,7 @@ export const TOKENS = {
   SessionService: Symbol.for('SessionService'),
   AgentService: Symbol.for('AgentService'),
   AnalyzeService: Symbol.for('AnalyzeService'),
+  ImportService: Symbol.for('ImportService'),
   // Repositories
   ClaudeCodeRepository: Symbol.for('ClaudeCodeRepository')
 } as const

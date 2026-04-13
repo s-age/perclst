@@ -50,6 +50,37 @@ perclst analyze <session-id> --format json
 perclst delete <session-id>
 ```
 
+### Output
+
+Each `start` / `resume` run prints an output block like this:
+
+```
+--- Thoughts ---
+<thinking content>
+
+--- Tool Calls ---
+[mcp__perclst__ts_checker] input: {}
+         result: { "ok": true, ... }
+
+--- Agent Response ---
+<final response text>
+
+--- Token Usage ---
+  Messages:         4
+  Input:            18
+  Output:           626
+  Cache read:       51,631
+  Cache creation:   9,096
+  Context window:   30,635 / 200,000 (15%)
+```
+
+**Token Usage notes**:
+- **Messages** — number of API messages exchanged (user prompts + assistant responses + tool round-trips)
+- **Input / Output / Cache read / Cache creation** — cumulative token counts across all API calls in the run
+- **Context window** — token count of the final API call's context (input side only). Claude Code's
+  built-in tool infrastructure (Bash, Read, Write, Edit, Glob, Grep, etc.) consumes a fixed baseline
+  of approximately **30,000 tokens** regardless of task content. Actual task content adds on top.
+
 ### Configuration
 
 Sessions are stored in `~/.perclst/sessions/` by default (absolute path, independent of current working directory).

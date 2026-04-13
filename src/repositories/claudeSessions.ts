@@ -1,6 +1,6 @@
 import { join } from 'path'
 import { homedir } from 'os'
-import { readFileSync } from 'fs'
+import { readFileSync, readdirSync, existsSync, statSync } from 'fs'
 import type { AnalysisSummary, ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
 import { fileExists } from '@src/infrastructures/fs'
 
@@ -208,6 +208,77 @@ function buildSummaryStats(turns: ClaudeCodeTurn[]): {
     },
     toolUses: allToolUses
   }
+}
+
+/**
+ * Decode an encoded project directory name back to an absolute working directory path.
+ * The encoding is `workingDir.replace(/\//g, '-')`, so `-` can be either `/` or a literal `-`.
+ * This function searches the real filesystem to resolve the ambiguity.
+ *
+ * Returns the decoded path, or null if no unique real path can be found.
+ * `ambiguous` is true when multiple valid paths exist (caller should require --cwd).
+ */
+export function decodeWorkingDir(encoded: string): { path: string | null; ambiguous: boolean } {
+  if (!encoded.startsWith('-')) return { path: null, ambiguous: false }
+
+  const parts = encoded.slice(1).split('-') // strip leading '-', split on remaining '-'
+  const results: string[] = []
+
+  function search(partIdx: number, current: string): void {
+    if (partIdx >= parts.length) {
+      results.push(current)
+      return
+    }
+    let component = ''
+    for (let i = partIdx; i < parts.length; i++) {
+      component = component ? `${component}-${parts[i]}` : parts[i]
+      const candidate = join(current, component)
+      try {
+        if (existsSync(candidate) && statSync(candidate).isDirectory()) {
+          search(i + 1, candidate)
+        }
+      } catch {
+        // ignore permission errors
+      }
+    }
+  }
+
+  search(0, '/')
+
+  if (results.length === 1) return { path: results[0], ambiguous: false }
+  if (results.length > 1) return { path: null, ambiguous: true }
+  return { path: null, ambiguous: false }
+}
+
+/**
+ * Search `~/.claude/projects/` for a JSONL file matching the given Claude Code session ID.
+ * Returns the encoded project directory name, or throws if not found / ambiguous.
+ */
+export function findEncodedDirBySessionId(claudeSessionId: string): string {
+  const projectsDir = join(homedir(), '.claude', 'projects')
+  if (!existsSync(projectsDir)) {
+    throw new Error(`Claude Code projects directory not found: ${projectsDir}`)
+  }
+
+  const matches: string[] = []
+  for (const entry of readdirSync(projectsDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    const jsonlPath = join(projectsDir, entry.name, `${claudeSessionId}.jsonl`)
+    if (existsSync(jsonlPath)) {
+      matches.push(entry.name)
+    }
+  }
+
+  if (matches.length === 0) {
+    throw new Error(`Claude Code session not found: ${claudeSessionId}`)
+  }
+  if (matches.length > 1) {
+    throw new Error(
+      `Session ID ${claudeSessionId} exists in multiple project directories.\n` +
+        `Use --cwd to specify the working directory.`
+    )
+  }
+  return matches[0]
 }
 
 export function readClaudeSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
