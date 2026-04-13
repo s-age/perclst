@@ -34,18 +34,27 @@ if (destExists) {
 // --- Build merged result ---
 const merged = JSON.parse(JSON.stringify(dest)) // deep clone
 merged.hooks ??= {}
-merged.hooks.PreToolUse ??= []
+
+// Determine which hook event the template uses (PreToolUse or PostToolUse)
+const hookEvent: string = template.hooks.PostToolUse ? 'PostToolUse' : 'PreToolUse'
+merged.hooks[hookEvent] ??= []
 
 // Remove any existing entry whose command references skill-inject.mjs
-merged.hooks.PreToolUse = merged.hooks.PreToolUse.filter(
-  (entry: Record<string, unknown>) =>
-    !(entry.hooks as Array<Record<string, string>> | undefined)?.some((h) =>
-      h.command?.includes('skill-inject.mjs')
-    )
-)
+// (clean up both PreToolUse and PostToolUse in case of migration)
+for (const event of ['PreToolUse', 'PostToolUse']) {
+  if (!Array.isArray(merged.hooks[event])) continue
+  merged.hooks[event] = merged.hooks[event].filter(
+    (entry: Record<string, unknown>) =>
+      !(entry.hooks as Array<Record<string, string>> | undefined)?.some((h) =>
+        h.command?.includes('skill-inject.mjs')
+      )
+  )
+  if (merged.hooks[event].length === 0) delete merged.hooks[event]
+}
 
 // Append entries from template
-merged.hooks.PreToolUse.push(...template.hooks.PreToolUse)
+merged.hooks[hookEvent] ??= []
+merged.hooks[hookEvent].push(...template.hooks[hookEvent])
 
 // --- Show diff summary ---
 const before = JSON.stringify(dest, null, 2)

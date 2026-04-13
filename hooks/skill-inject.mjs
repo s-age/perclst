@@ -172,6 +172,9 @@ try {
 
 // --- JSON response to stdout ---
 process.stdout.write(JSON.stringify({
-  permissionDecision: 'allow',
-  additionalContext: context,
+  hookSpecificOutput: {
+    hookEventName: 'PreToolUse',
+    permissionDecision: 'allow',
+    additionalContext: context,
+  },
 }))
