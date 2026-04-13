@@ -2,10 +2,18 @@ import type { AgentResponse } from '@src/types/agent'
 import type { CreateSessionParams } from '@src/types/session'
 import type { IAgentDomain } from '@src/domains/agent'
 import type { ISessionDomain } from '@src/domains/session'
+import { logger } from '@src/utils/logger'
+
+const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Please:
+1. Summarize what was completed successfully
+2. List tasks that could not be completed and the reasons why
+Then provide your final response.`
 
 export type AgentRunOptions = {
   allowedTools?: string[]
   model?: string
+  maxTurns?: number
+  maxContextTokens?: number
 }
 
 export type StartResult = {
@@ -13,11 +21,39 @@ export type StartResult = {
   response: AgentResponse
 }
 
+function getContextTokens(response: AgentResponse): number {
+  const u = response.last_assistant_usage
+  if (!u) return 0
+  return u.input_tokens + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0)
+}
+
 export class AgentService {
   constructor(
     private sessionDomain: ISessionDomain,
     private agentDomain: IAgentDomain
   ) {}
+
+  private isLimitExceeded(response: AgentResponse, options: AgentRunOptions): boolean {
+    const maxTurns = options.maxTurns ?? -1
+    if (maxTurns > 0) {
+      const messageCount = response.message_count ?? 0
+      if (messageCount >= maxTurns) {
+        logger.info(`Turn limit reached: ${messageCount} >= ${maxTurns}`)
+        return true
+      }
+    }
+
+    const maxContextTokens = options.maxContextTokens ?? -1
+    if (maxContextTokens > 0) {
+      const contextTokens = getContextTokens(response)
+      if (contextTokens >= maxContextTokens) {
+        logger.info(`Context token limit reached: ${contextTokens} >= ${maxContextTokens}`)
+        return true
+      }
+    }
+
+    return false
+  }
 
   async start(
     task: string,
@@ -27,10 +63,18 @@ export class AgentService {
     const session = await this.sessionDomain.create(createParams)
     const sessionFilePath = this.sessionDomain.getPath(session.id)
 
-    const response = await this.agentDomain.run(session, task, false, {
-      ...options,
-      sessionFilePath
-    })
+    const executeOptions = { ...options, sessionFilePath }
+
+    let response = await this.agentDomain.run(session, task, false, executeOptions)
+
+    if (this.isLimitExceeded(response, options)) {
+      response = await this.agentDomain.run(
+        session,
+        GRACEFUL_TERMINATION_PROMPT,
+        true,
+        executeOptions
+      )
+    }
 
     await this.sessionDomain.updateStatus(session.id, 'active')
 
@@ -45,10 +89,18 @@ export class AgentService {
     const session = await this.sessionDomain.get(sessionId)
     const sessionFilePath = this.sessionDomain.getPath(session.id)
 
-    const response = await this.agentDomain.run(session, instruction, true, {
-      ...options,
-      sessionFilePath
-    })
+    const executeOptions = { ...options, sessionFilePath }
+
+    let response = await this.agentDomain.run(session, instruction, true, executeOptions)
+
+    if (this.isLimitExceeded(response, options)) {
+      response = await this.agentDomain.run(
+        session,
+        GRACEFUL_TERMINATION_PROMPT,
+        true,
+        executeOptions
+      )
+    }
 
     await this.sessionDomain.updateStatus(session.id, 'active')
 

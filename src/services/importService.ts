@@ -2,10 +2,7 @@ import type { Session } from '@src/types/session'
 import type { ISessionDomain } from '@src/domains/session'
 import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
-import {
-  findEncodedDirBySessionId,
-  decodeWorkingDir
-} from '@src/repositories/claudeSessions'
+import { findEncodedDirBySessionId, decodeWorkingDir } from '@src/repositories/claudeSessions'
 
 export type ImportOptions = {
   name?: string

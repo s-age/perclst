@@ -34,6 +34,11 @@ program
   .option('--silent-tool-response', 'Hide tool call details from output')
   .option('--silent-usage', 'Hide token usage from output')
   .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
+  .option('--max-turns <n>', 'Max message count before graceful termination (-1 = disabled)')
+  .option(
+    '--max-context-tokens <n>',
+    'Max context window tokens before graceful termination (-1 = disabled)'
+  )
   .action(startCommand)
 
 // Resume command
@@ -51,6 +56,11 @@ program
   .option('--silent-tool-response', 'Hide tool call details from output')
   .option('--silent-usage', 'Hide token usage from output')
   .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
+  .option('--max-turns <n>', 'Max message count before graceful termination (-1 = disabled)')
+  .option(
+    '--max-context-tokens <n>',
+    'Max context window tokens before graceful termination (-1 = disabled)'
+  )
   .action(resumeCommand)
 
 // List command

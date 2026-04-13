@@ -33,13 +33,13 @@ cli → services (use-case orchestration)
 
 ## Import Rules
 
-| May import | Must NOT import |
-|---|---|
-| `@src/domains/*` (interfaces only) | `@src/repositories/*` |
-| `@src/types/*` | `@src/infrastructures/*` |
-| `@src/errors/*` | `@src/cli/*` |
-| `@src/utils/*` | other `@src/services/*` |
-| `@src/constants/*` | |
+| May import                         | Must NOT import          |
+| ---------------------------------- | ------------------------ |
+| `@src/domains/*` (interfaces only) | `@src/repositories/*`    |
+| `@src/types/*`                     | `@src/infrastructures/*` |
+| `@src/errors/*`                    | `@src/cli/*`             |
+| `@src/utils/*`                     | other `@src/services/*`  |
+| `@src/constants/*`                 |                          |
 
 Services never depend on concrete implementations — only on domain interfaces (`type IXxx`).
 Services never import each other; cross-service orchestration belongs in the CLI command layer.

@@ -10,6 +10,8 @@ import type { Config } from '@src/types/config'
 export type ResumeOptions = {
   allowedTools?: string[]
   model?: string
+  maxTurns?: string
+  maxContextTokens?: string
 } & DisplayOptions
 
 export async function resumeCommand(
@@ -21,13 +23,24 @@ export async function resumeCommand(
     logger.info('Resuming session', { session_id: sessionId })
 
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
+    const config = container.resolve<Config>(TOKENS.Config)
+
+    const maxTurns =
+      options.maxTurns !== undefined
+        ? parseInt(options.maxTurns, 10)
+        : (config.limits?.max_turns ?? -1)
+    const maxContextTokens =
+      options.maxContextTokens !== undefined
+        ? parseInt(options.maxContextTokens, 10)
+        : (config.limits?.max_context_tokens ?? -1)
 
     const response = await agentService.resume(sessionId, instruction, {
       allowedTools: options.allowedTools,
-      model: options.model
+      model: options.model,
+      maxTurns,
+      maxContextTokens
     })
 
-    const config = container.resolve<Config>(TOKENS.Config)
     printResponse(response, options, config.display)
 
     logger.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)

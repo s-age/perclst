@@ -5,12 +5,18 @@ export type DisplayConfig = {
   no_color?: boolean
 }
 
+export type AgentLimitsConfig = {
+  /** Maximum message count before graceful termination. -1 = disabled. */
+  max_turns?: number
+  /** Maximum context window tokens before graceful termination. -1 = disabled. */
+  max_context_tokens?: number
+}
+
 export type Config = {
   sessions_dir?: string
   logs_dir?: string
   model?: string
-  max_tokens?: number
-  temperature?: number
   api_key_env?: string
   display?: DisplayConfig
+  limits?: AgentLimitsConfig
 }

@@ -13,6 +13,8 @@ export type StartOptions = {
   tags?: string[]
   allowedTools?: string[]
   model?: string
+  maxTurns?: string
+  maxContextTokens?: string
 } & DisplayOptions
 
 export async function startCommand(task: string, options: StartOptions) {
@@ -20,16 +22,25 @@ export async function startCommand(task: string, options: StartOptions) {
     logger.info('Starting new agent session')
 
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
+    const config = container.resolve<Config>(TOKENS.Config)
+
+    const maxTurns =
+      options.maxTurns !== undefined
+        ? parseInt(options.maxTurns, 10)
+        : (config.limits?.max_turns ?? -1)
+    const maxContextTokens =
+      options.maxContextTokens !== undefined
+        ? parseInt(options.maxContextTokens, 10)
+        : (config.limits?.max_context_tokens ?? -1)
 
     const { sessionId, response } = await agentService.start(
       task,
       { name: options.name, procedure: options.procedure, tags: options.tags },
-      { allowedTools: options.allowedTools, model: options.model }
+      { allowedTools: options.allowedTools, model: options.model, maxTurns, maxContextTokens }
     )
 
     logger.print(`Session created: ${sessionId}`)
 
-    const config = container.resolve<Config>(TOKENS.Config)
     printResponse(response, options, config.display)
 
     logger.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)

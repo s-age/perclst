@@ -48,7 +48,42 @@ perclst analyze <session-id> --format json
 
 # Delete session
 perclst delete <session-id>
+
+# Import an existing Claude Code session into perclst
+perclst import <claude-session-id>
+perclst import <claude-session-id> --name "My session"
+perclst import <claude-session-id> --cwd /path/to/working/dir
 ```
+
+### Graceful Termination
+
+Use `--max-turns` or `--max-context-tokens` to automatically stop an agent run and request a summary when limits are reached.
+
+```bash
+# Stop after 20 messages and request a summary
+perclst start "long task" --max-turns 20
+
+# Stop when context window exceeds 150,000 tokens
+perclst start "long task" --max-context-tokens 150000
+
+# Both options work on resume as well
+perclst resume <session-id> "continue" --max-turns 20 --max-context-tokens 150000
+```
+
+When a limit is reached, perclst automatically sends a follow-up prompt asking the agent to summarize what was completed and what remains unfinished.
+
+Defaults can be set in config (`-1` = disabled):
+
+```json
+{
+  "limits": {
+    "max_turns": -1,
+    "max_context_tokens": -1
+  }
+}
+```
+
+CLI options take precedence over config values.
 
 ### Output
 
@@ -97,8 +132,10 @@ Sessions are stored in `~/.perclst/sessions/` by default (absolute path, indepen
   "sessions_dir": "~/.perclst/sessions",
   "logs_dir": "~/.perclst/logs",
   "model": "claude-sonnet-4-5",
-  "max_tokens": 8000,
-  "temperature": 0.7
+  "limits": {
+    "max_turns": -1,
+    "max_context_tokens": -1
+  }
 }
 ```
 
