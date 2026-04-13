@@ -101,6 +101,13 @@ Use `--procedure <name>` to set agent behavior:
 - **default**: General-purpose assistant
 - **conductor**: Complex task orchestration
 - **analyzer**: Code analysis (has access to ts_* MCP tools)
+- **librarian**: Promotes `knowledge/draft/` entries into structured `knowledge/` files
+
+> **Note**: Some procedures require file write access. The `librarian` procedure needs
+> `--allowed-tools Write Read Bash` or it will stall on permission prompts:
+> ```bash
+> perclst start "Promote all draft knowledge" --procedure librarian --allowed-tools Write Read Bash --output-only
+> ```
 
 ## Development
 
