@@ -29,10 +29,7 @@ flowchart TD
     Fix --> Verify
     Valid -- Yes --> DeleteEntry[Delete promoted entry from draft]
 
-    DeleteEntry --> DraftEmpty{knowledge/draft/\nis empty?}
-    DraftEmpty -- Yes --> RemoveDir[Remove knowledge/draft/ directory]
-    RemoveDir --> Done
-    DraftEmpty -- No --> PickEntry
+    DeleteEntry --> PickEntry
 ```
 
 Consult the `meta-librarian` skill for file format and classification criteria.

@@ -89,4 +89,4 @@ Create the directory and update file paths accordingly.
 1. Verify each promoted file has: type, context, do/don't sections, keywords line
 2. Verify no file exceeds ~80 lines (split if needed)
 3. Delete the draft entry (or the section within it) that was promoted — git history is the safety net
-4. If `knowledge/draft/` is empty, remove the directory
+4. `knowledge/draft/` contains a `.gitkeep` — leave the directory in place; do not remove it
