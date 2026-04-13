@@ -40,7 +40,7 @@ perclst's design maps onto Docker's execution model:
 
 ## Installation
 
-See [INSTALLATION.md](INSTALLATION.md) for full setup instructions.
+See [docs/INSTALLATION.md](docs/INSTALLATION.md) for full setup instructions.
 
 ## Usage
 
@@ -137,6 +137,8 @@ Each `start` / `resume` run prints an output block like this:
 - **Context window** — token count of the final API call's context (input side only). Claude Code's
   built-in tool infrastructure (Bash, Read, Write, Edit, Glob, Grep, etc.) consumes a fixed baseline
   of approximately **30,000 tokens** regardless of task content. Actual task content adds on top.
+  On `resume`, the context window is structurally smaller (~20K) due to a known Claude Code bug —
+  see [docs/context-window-on-resume.md](docs/context-window-on-resume.md) for details.
 
 ### Configuration
 
