@@ -10,6 +10,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Commit complete. Is there any knowledge worth capturing to knowledge/draft/ related to this commit? (problems, discoveries, design decisions, gotchas, etc.) If so, record it now.\"}}'"
+          }
+        ]
+      }
     ]
   }
 }
