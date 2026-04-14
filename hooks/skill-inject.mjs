@@ -11,6 +11,10 @@ import { homedir } from 'os'
 const input = JSON.parse(readFileSync('/dev/stdin', 'utf-8'))
 const { tool_name, tool_input, cwd } = input
 
+// Skip in interactive mode — skills are injected natively by Claude Code there.
+// PERCLST_SESSION_FILE is only set when perclst spawns a sub-agent via claude -p.
+if (!process.env.PERCLST_SESSION_FILE) process.exit(0)
+
 // Only handle file-path tools
 const FILE_TOOLS = new Set(['Read', 'Edit', 'Write', 'Glob', 'Grep'])
 if (!FILE_TOOLS.has(tool_name)) process.exit(0)
