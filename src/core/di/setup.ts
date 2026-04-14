@@ -4,6 +4,7 @@ import { loadConfig, resolveSessionsDir } from '@src/repositories/config'
 import { SessionDomain } from '@src/domains/session'
 import { AgentDomain } from '@src/domains/agent'
 import { AnalyzeDomain } from '@src/domains/analyze'
+import { ImportDomain } from '@src/domains/import'
 import { SessionService } from '@src/services/sessionService'
 import { AgentService } from '@src/services/agentService'
 import { AnalyzeService } from '@src/services/analyzeService'
@@ -20,15 +21,17 @@ export function setupContainer(): void {
   const sessionDomain = new SessionDomain(sessionsDir)
   const agentDomain = new AgentDomain(model, claudeCodeRepo)
   const analyzeDomain = new AnalyzeDomain(sessionDomain)
+  const importDomain = new ImportDomain()
 
   container.register(TOKENS.Config, config)
   container.register(TOKENS.ClaudeCodeRepository, claudeCodeRepo)
   container.register(TOKENS.SessionDomain, sessionDomain)
   container.register(TOKENS.AgentDomain, agentDomain)
   container.register(TOKENS.AnalyzeDomain, analyzeDomain)
+  container.register(TOKENS.ImportDomain, importDomain)
 
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
-  container.register(TOKENS.ImportService, new ImportService(sessionDomain))
+  container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))
 }

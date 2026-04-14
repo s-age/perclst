@@ -6,6 +6,7 @@ export const TOKENS = {
   SessionDomain: Symbol.for('SessionDomain'),
   AgentDomain: Symbol.for('AgentDomain'),
   AnalyzeDomain: Symbol.for('AnalyzeDomain'),
+  ImportDomain: Symbol.for('ImportDomain'),
   // Services
   SessionService: Symbol.for('SessionService'),
   AgentService: Symbol.for('AgentService'),

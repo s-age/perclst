@@ -1,12 +1,8 @@
 import type { Session } from '@src/types/session'
 import type { ISessionDomain } from '@src/domains/session'
+import type { IImportDomain } from '@src/domains/import'
 import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
-import {
-  findEncodedDirBySessionId,
-  decodeWorkingDir,
-  validateSessionAtDir
-} from '@src/repositories/claudeSessions'
 
 export type ImportOptions = {
   name?: string
@@ -14,13 +10,16 @@ export type ImportOptions = {
 }
 
 export class ImportService {
-  constructor(private sessionDomain: ISessionDomain) {}
+  constructor(
+    private sessionDomain: ISessionDomain,
+    private importDomain: IImportDomain
+  ) {}
 
   async import(claudeSessionId: string, options: ImportOptions = {}): Promise<Session> {
-    const workingDir = options.cwd ?? this.resolveWorkingDir(claudeSessionId)
+    const workingDir = options.cwd ?? this.importDomain.resolveWorkingDir(claudeSessionId)
 
     if (options.cwd) {
-      validateSessionAtDir(claudeSessionId, workingDir)
+      this.importDomain.validateSession(claudeSessionId, workingDir)
     }
 
     const now = new Date().toISOString()
@@ -40,24 +39,5 @@ export class ImportService {
     await this.sessionDomain.save(session)
     logger.info('Session imported', { session_id: session.id, claude_session_id: claudeSessionId })
     return session
-  }
-
-  private resolveWorkingDir(claudeSessionId: string): string {
-    const encodedDir = findEncodedDirBySessionId(claudeSessionId)
-    const { path, ambiguous } = decodeWorkingDir(encodedDir)
-
-    if (ambiguous) {
-      throw new Error(
-        `Working directory is ambiguous for session ${claudeSessionId}.\n` +
-          `Use --cwd to specify the working directory explicitly.`
-      )
-    }
-    if (path === null) {
-      throw new Error(
-        `Could not decode working directory from project path "${encodedDir}".\n` +
-          `Use --cwd to specify the working directory explicitly.`
-      )
-    }
-    return path
   }
 }
