@@ -4,9 +4,10 @@ import { AnalyzeService } from '@src/services/analyzeService'
 import { logger } from '@src/utils/logger'
 import type { Session } from '@src/types/session'
 import type { AnalysisSummary } from '@src/types/analysis'
+import { parseAnalyzeSession } from '@src/validators/cli/analyzeSession'
 
-export type AnalyzeOptions = {
-  format?: 'text' | 'json'
+type RawAnalyzeOptions = {
+  format?: string
   printDetail?: boolean
 }
 
@@ -142,18 +143,20 @@ function printDetailedTurns(turns: AnalysisSummary['turns']): void {
   }
 }
 
-export async function analyzeCommand(sessionId: string, options: AnalyzeOptions) {
+export async function analyzeCommand(sessionId: string, options: RawAnalyzeOptions) {
   try {
-    const analyzeService = container.resolve<AnalyzeService>(TOKENS.AnalyzeService)
-    const { session, summary } = await analyzeService.analyze(sessionId)
+    const input = parseAnalyzeSession({ sessionId, ...options })
 
-    if (options.format === 'json') {
-      printJsonOutput(session, summary, options.printDetail ?? false)
+    const analyzeService = container.resolve<AnalyzeService>(TOKENS.AnalyzeService)
+    const { session, summary } = await analyzeService.analyze(input.sessionId)
+
+    if (input.format === 'json') {
+      printJsonOutput(session, summary, input.printDetail ?? false)
       return
     }
 
     printTextSummary(session, summary)
-    if (options.printDetail) {
+    if (input.printDetail) {
       printDetailedTurns(summary.turns)
     }
   } catch (error) {

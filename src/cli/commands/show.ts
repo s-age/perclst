@@ -2,17 +2,20 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { SessionService } from '@src/services/sessionService'
 import { logger } from '@src/utils/logger'
+import { parseShowSession } from '@src/validators/cli/showSession'
 
-export type ShowOptions = {
-  format?: 'text' | 'json'
+type RawShowOptions = {
+  format?: string
 }
 
-export async function showCommand(sessionId: string, options: ShowOptions) {
+export async function showCommand(sessionId: string, options: RawShowOptions) {
   try {
-    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-    const session = await sessionService.get(sessionId)
+    const input = parseShowSession({ sessionId, ...options })
 
-    if (options.format === 'json') {
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
+    const session = await sessionService.get(input.sessionId)
+
+    if (input.format === 'json') {
       logger.print(JSON.stringify(session, null, 2))
       return
     }

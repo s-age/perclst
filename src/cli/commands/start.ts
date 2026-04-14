@@ -3,11 +3,12 @@ import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
 import { logger } from '@src/utils/logger'
 import { RateLimitError } from '@src/errors/rateLimitError'
+import { ValidationError } from '@src/errors/validationError'
 import { printResponse } from '@src/cli/display'
-import type { DisplayOptions } from '@src/types/display'
 import type { Config } from '@src/types/config'
+import { parseStartSession } from '@src/validators/cli/startSession'
 
-export type StartOptions = {
+type RawStartOptions = {
   procedure?: string
   name?: string
   tags?: string[]
@@ -15,37 +16,40 @@ export type StartOptions = {
   model?: string
   maxTurns?: string
   maxContextTokens?: string
-} & DisplayOptions
+  silentThoughts?: boolean
+  silentToolResponse?: boolean
+  silentUsage?: boolean
+  outputOnly?: boolean
+  format?: string
+}
 
-export async function startCommand(task: string, options: StartOptions) {
+export async function startCommand(task: string, options: RawStartOptions) {
   try {
     logger.info('Starting new agent session')
 
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
     const config = container.resolve<Config>(TOKENS.Config)
 
-    const maxTurns =
-      options.maxTurns !== undefined
-        ? parseInt(options.maxTurns, 10)
-        : (config.limits?.max_turns ?? -1)
-    const maxContextTokens =
-      options.maxContextTokens !== undefined
-        ? parseInt(options.maxContextTokens, 10)
-        : (config.limits?.max_context_tokens ?? -1)
+    const input = parseStartSession({ task, ...options })
+
+    const maxTurns = input.maxTurns ?? config.limits?.max_turns ?? -1
+    const maxContextTokens = input.maxContextTokens ?? config.limits?.max_context_tokens ?? -1
 
     const { sessionId, response } = await agentService.start(
-      task,
-      { name: options.name, procedure: options.procedure, tags: options.tags },
-      { allowedTools: options.allowedTools, model: options.model, maxTurns, maxContextTokens }
+      input.task,
+      { name: input.name, procedure: input.procedure, tags: input.tags },
+      { allowedTools: input.allowedTools, model: input.model, maxTurns, maxContextTokens }
     )
 
     logger.print(`Session created: ${sessionId}`)
 
-    printResponse(response, options, config.display, { sessionId })
+    printResponse(response, input, config.display, { sessionId })
 
     logger.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {
-    if (error instanceof RateLimitError) {
+    if (error instanceof ValidationError) {
+      logger.error(`Invalid arguments: ${error.message}`)
+    } else if (error instanceof RateLimitError) {
       const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
       logger.error(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
     } else {

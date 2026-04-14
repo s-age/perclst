@@ -3,21 +3,27 @@ import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
 import { logger } from '@src/utils/logger'
 import { RateLimitError } from '@src/errors/rateLimitError'
+import { ValidationError } from '@src/errors/validationError'
 import { printResponse } from '@src/cli/display'
-import type { DisplayOptions } from '@src/types/display'
 import type { Config } from '@src/types/config'
+import { parseResumeSession } from '@src/validators/cli/resumeSession'
 
-export type ResumeOptions = {
+type RawResumeOptions = {
   allowedTools?: string[]
   model?: string
   maxTurns?: string
   maxContextTokens?: string
-} & DisplayOptions
+  silentThoughts?: boolean
+  silentToolResponse?: boolean
+  silentUsage?: boolean
+  outputOnly?: boolean
+  format?: string
+}
 
 export async function resumeCommand(
   sessionId: string,
   instruction: string,
-  options: ResumeOptions
+  options: RawResumeOptions
 ) {
   try {
     logger.info('Resuming session', { session_id: sessionId })
@@ -25,27 +31,25 @@ export async function resumeCommand(
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
     const config = container.resolve<Config>(TOKENS.Config)
 
-    const maxTurns =
-      options.maxTurns !== undefined
-        ? parseInt(options.maxTurns, 10)
-        : (config.limits?.max_turns ?? -1)
-    const maxContextTokens =
-      options.maxContextTokens !== undefined
-        ? parseInt(options.maxContextTokens, 10)
-        : (config.limits?.max_context_tokens ?? -1)
+    const input = parseResumeSession({ sessionId, instruction, ...options })
 
-    const response = await agentService.resume(sessionId, instruction, {
-      allowedTools: options.allowedTools,
-      model: options.model,
+    const maxTurns = input.maxTurns ?? config.limits?.max_turns ?? -1
+    const maxContextTokens = input.maxContextTokens ?? config.limits?.max_context_tokens ?? -1
+
+    const response = await agentService.resume(input.sessionId, input.instruction, {
+      allowedTools: input.allowedTools,
+      model: input.model,
       maxTurns,
-      maxContextTokens
+      maxContextTokens,
     })
 
-    printResponse(response, options, config.display, { sessionId })
+    printResponse(response, input, config.display, { sessionId: input.sessionId })
 
-    logger.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
+    logger.print(`\nTo resume: perclst resume ${input.sessionId} "<instruction>"`)
   } catch (error) {
-    if (error instanceof RateLimitError) {
+    if (error instanceof ValidationError) {
+      logger.error(`Invalid arguments: ${error.message}`)
+    } else if (error instanceof RateLimitError) {
       const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
       logger.error(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
     } else {

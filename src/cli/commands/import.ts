@@ -2,22 +2,26 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { ImportService } from '@src/services/importService'
 import { logger } from '@src/utils/logger'
+import { parseImportSession } from '@src/validators/cli/importSession'
 
-export type ImportCommandOptions = {
+type RawImportOptions = {
   name?: string
   cwd?: string
 }
 
 export async function importCommand(
   claudeSessionId: string,
-  options: ImportCommandOptions
+  options: RawImportOptions
 ): Promise<void> {
   try {
+    const input = parseImportSession({ claudeSessionId, ...options })
+
     const importService = container.resolve<ImportService>(TOKENS.ImportService)
-    const session = await importService.import(claudeSessionId, {
-      name: options.name,
-      cwd: options.cwd
+    const session = await importService.import(input.claudeSessionId, {
+      name: input.name,
+      cwd: input.cwd,
     })
+
     logger.print(`Imported: ${session.id}`)
     logger.print(`  Claude session: ${session.claude_session_id}`)
     logger.print(`  Working dir:    ${session.working_dir}`)

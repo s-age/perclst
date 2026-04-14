@@ -14,6 +14,7 @@ paths:
 - **CLI framework**: `commander`
 - **AI client**: `@anthropic-ai/sdk`
 - **TypeScript analysis**: `ts-morph`
+- **Validation**: `zod` — confined to `src/validators/` only
 - **Build**: `tsup`
 - **Test**: `vitest`
 - **Lint / Format**: `eslint` + `prettier`
@@ -23,6 +24,9 @@ paths:
 | Directory              | Role                                                                                                  |
 | ---------------------- | ----------------------------------------------------------------------------------------------------- |
 | `src/cli/`             | CLI commands and display logic                                                                        |
+| `src/validators/`      | Input validation layer — Zod schemas confined here; exposes typed parse functions to all entry points |
+| `src/validators/rules/`| Zod type constructors (`z.*`) — the **only** place `zod` is imported                                 |
+| `src/validators/cli/`  | CLI-specific validators; future entry points get their own subdirectory (e.g. `validators/mcp/`)      |
 | `src/services/`        | Use-case orchestration                                                                                |
 | `src/domains/`         | Business rules — session lifecycle, agent execution 等                                                |
 | `src/repositories/`    | Data access layer — uses `infrastructures/` as raw I/O adapters; port types for domain-side injection |
@@ -37,20 +41,24 @@ paths:
 ## Unidirectional Import Rules
 
 ```
-cli → services → domains → repositories → infrastructures
-                                  ↑
-                    types  (referenced from any layer, one-way)
+cli ──┐
+mcp ──┼→ validators → services → domains → repositories → infrastructures
+...  ─┘                   ↑
+                types  (referenced from any layer, one-way)
 ```
 
-| Layer              | May import                                                     | Must NOT import                                     |
-| ------------------ | -------------------------------------------------------------- | --------------------------------------------------- |
-| `cli`              | `services`, `types`, `errors`, `utils`, `constants`, `core/di` | `repositories`, `infrastructures`                   |
-| `services`         | `domains`, `types`, `errors`, `utils`, `constants`             | `repositories`, `infrastructures`                   |
-| `domains`          | `repositories`, `types`, `errors`, `utils`, `constants`        | `cli`, `services`, `infrastructures`                |
-| `repositories`     | `infrastructures`, `types`, `errors`, `utils`, `constants`     | `cli`, `services`, `domains`                        |
-| `infrastructures`  | `repositories`, `types`, `errors`, `utils`, `constants`        | `cli`, `services`, `domains`                        |
-| `types`            | nothing                                                        | all other layers                                    |
-| `core/di/setup.ts` | all layers                                                     | — (sole exception: DI wiring is its responsibility) |
+| Layer              | May import                                                              | Must NOT import                                     |
+| ------------------ | ----------------------------------------------------------------------- | --------------------------------------------------- |
+| `cli`              | `validators`, `services`, `types`, `errors`, `utils`, `constants`, `core/di` | `repositories`, `infrastructures`              |
+| `validators`       | `errors`, `types`, `constants`                                          | `cli`, `services`, `domains`, `repositories`, `infrastructures` |
+| `validators/rules` | `zod` only                                                              | all `src/` layers                                   |
+| `validators/schema.ts` | `zod`, `errors`                                                     | all other `src/` layers                             |
+| `services`         | `domains`, `types`, `errors`, `utils`, `constants`                      | `repositories`, `infrastructures`                   |
+| `domains`          | `repositories`, `types`, `errors`, `utils`, `constants`                 | `cli`, `services`, `infrastructures`                |
+| `repositories`     | `infrastructures`, `types`, `errors`, `utils`, `constants`              | `cli`, `services`, `domains`                        |
+| `infrastructures`  | `repositories`, `types`, `errors`, `utils`, `constants`                 | `cli`, `services`, `domains`                        |
+| `types`            | nothing                                                                 | all other layers                                    |
+| `core/di/setup.ts` | all layers                                                              | — (sole exception: DI wiring is its responsibility) |
 
 **Violation examples:**
 
@@ -58,6 +66,7 @@ cli → services → domains → repositories → infrastructures
 - `cli` imports `repositories` directly → **NG** (use DI container or promote shared types to `types/`)
 - `services` imports `infrastructures` directly → **NG** (always go through `domains` → `repositories`)
 - `domains` imports `infrastructures` directly → **NG** (define a port type in `repositories/` and inject via constructor)
+- any file outside `validators/` imports `zod` → **NG** (Zod must not leak out of the validators layer)
 
 ## Required Verification After Changes
 
