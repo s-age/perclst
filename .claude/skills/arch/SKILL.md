@@ -57,7 +57,7 @@ mcp ──┼→ validators → services → domains → repositories → infras
 | `services`         | `domains`, `types`, `errors`, `utils`, `constants`                      | `repositories`, `infrastructures`                   |
 | `domains`          | `repositories`, `types`, `errors`, `utils`, `constants`                 | `cli`, `services`, `infrastructures`                |
 | `repositories`     | `infrastructures`, `types`, `errors`, `utils`, `constants`              | `cli`, `services`, `domains`                        |
-| `infrastructures`  | `repositories`, `types`, `errors`, `utils`, `constants`                 | `cli`, `services`, `domains`                        |
+| `infrastructures`  | `types`, `errors`, `utils`, `constants`                                 | `cli`, `services`, `domains`, `repositories`        |
 | `types`            | nothing                                                                 | all other layers                                    |
 | `core/di/setup.ts` | all layers                                                              | — (sole exception: DI wiring is its responsibility) |
 
