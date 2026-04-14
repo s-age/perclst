@@ -57,8 +57,8 @@ mcp ──┼→ validators → services → domains → repositories → infras
 | `validators`       | `errors`, `types`, `constants`                                          | `cli`, `services`, `domains`, `repositories`, `infrastructures` |
 | `validators/rules` | `zod` only                                                              | all `src/` layers                                   |
 | `validators/schema.ts` | `zod`, `errors`                                                     | all other `src/` layers                             |
-| `services`         | `domains/ports`, `types`, `errors`, `utils`, `constants`                | `repositories`, `infrastructures`                   |
-| `domains`          | `domains/ports` (intra), `repositories/ports`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `infrastructures`   |
+| `services`         | `domains/ports`, `types`, `errors`, `utils`, `constants`                | `cli`, `domains`, `repositories`, `infrastructures`                   |
+| `domains`          | `domains/ports` (intra), `repositories/ports`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `repositories`, `infrastructures`   |
 | `repositories`     | `repositories/ports` (intra), `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains`        |
 | `infrastructures`  | `types`, `errors`, `utils`, `constants`                                 | `cli`, `services`, `domains`, `repositories`        |
 | `utils`            | external libraries (e.g. `dayjs`); Node.js non-I/O built-ins (e.g. `crypto`) | all `src/` layers                             |
@@ -70,7 +70,7 @@ mcp ──┼→ validators → services → domains → repositories → infras
 - `cli` imports `infrastructures` directly → **NG** (route through a service)
 - `cli` imports `repositories` directly → **NG** (use DI container or promote shared types to `types/`)
 - `services` imports `infrastructures` directly → **NG** (always go through `domains` → `repositories`)
-- `domains` imports `infrastructures` directly → **NG** (define a port type in `repositories/` and inject via constructor)
+- `domains` imports `infrastructures` directly → **NG** (define a port type in `repositories/ports/` and inject via constructor)
 - any file outside `validators/` imports `zod` → **NG** (Zod must not leak out of the validators layer)
 
 ## Required Verification After Changes
