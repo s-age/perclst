@@ -13,16 +13,19 @@ Wraps infrastructure adapters into atomic, domain-meaningful operations. Exposes
 
 | File | Role |
 |------|------|
-| `sessions.ts` | Atomic CRUD for perclst sessions — `saveSession`, `loadSession`, `existsSession`, `deleteSession`, `listSessions`, `getSessionPath`; also exports `SessionRepository` + `ISessionRepository` |
-| `claudeSessions.ts` | Reads and parses Claude Code JSONL session files — `findEncodedDirBySessionId`, `decodeWorkingDir`, `validateSessionAtDir`, `readClaudeSession`; also exports `ClaudeSessionRepository` + `IClaudeSessionRepository` |
+| `sessions.ts` | Atomic CRUD for perclst sessions — `saveSession`, `loadSession`, `existsSession`, `deleteSession`, `listSessions`, `getSessionPath`; also exports `SessionRepository` |
+| `claudeSessions.ts` | Reads and parses Claude Code JSONL session files — `findEncodedDirBySessionId`, `decodeWorkingDir`, `validateSessionAtDir`, `readClaudeSession`; also exports `ClaudeSessionRepository` |
 | `config.ts` | Config loading and path resolution — `loadConfig()`, `resolveSessionsDir()`, `resolveLogsDir()` (standalone functions only, no class) |
-| `procedures.ts` | Procedure markdown loader — `loadProcedure()`, `procedureExists()`; also exports `ProcedureRepository` + `IProcedureRepository` |
+| `procedures.ts` | Procedure markdown loader — `loadProcedure()`, `procedureExists()`; also exports `ProcedureRepository` |
+| `ports/session.ts` | `ISessionRepository` — port contract consumed by `domains/` |
+| `ports/agent.ts` | `IProcedureRepository` — port contract consumed by `domains/` |
+| `ports/analysis.ts` | `IClaudeSessionRepository` — port contract consumed by `domains/` |
 
 ## Import Rules
 
 | May import | Must NOT import |
 |-----------|----------------|
-| `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains` |
+| `repositories/ports` (intra), `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains` |
 
 ## Patterns
 
@@ -72,17 +75,17 @@ export class ConfigRepository {
 }
 ```
 
-**Port type placement** — always `src/types/`
+**Port type placement** — `src/repositories/ports/`
 
-All port types (`IXxx`) live in `src/types/`, co-located with related data types. Never define them in repository files.
+Port types (`IXxx`) live in `src/repositories/ports/`, co-located by domain area. Never define them in the repository implementation files.
 
 ```ts
-// Good — ISessionRepository is defined in src/types/session.ts; import it here
-import type { ISessionRepository } from '@src/types/session'
+// Good — ISessionRepository is defined in src/repositories/ports/session.ts; import it here
+import type { ISessionRepository } from '@src/repositories/ports/session'
 export class SessionRepository implements ISessionRepository { ... }
 
-// Bad — defining the port type in the repository file
-export type ISessionRepository = { ... }  // NG: belongs in src/types/session.ts
+// Bad — defining the port type in the repository implementation file
+export type ISessionRepository = { ... }  // NG: belongs in src/repositories/ports/session.ts
 export class SessionRepository implements ISessionRepository { ... }
 ```
 
@@ -108,5 +111,5 @@ import { readFileSync } from 'fs'  // NG: bypasses the infrastructure adapter
 - Never call raw Node.js `fs` functions (`readFileSync`, `writeFileSync`, `readdirSync`, etc.) when `infrastructures/fs` provides the equivalent; if `fs.ts` lacks the operation, extend it there first
 - Never add business logic (validation, branching on domain rules, cross-entity orchestration) — keep every exported function atomic and mechanical
 - Never instantiate a domain class — dependency flows downward only (`domains → repositories`, never the reverse)
-- Never define a port type (`IXxx`) in a repository file — all port types belong in `src/types/`
-- Never import from sibling repository files — each file is independent; shared utilities belong in `utils/` or `constants/`
+- Never define a port type (`IXxx`) in a repository implementation file — port types belong in `src/repositories/ports/`
+- Never import from sibling repository implementation files — each file is independent; shared utilities belong in `utils/` or `constants/`

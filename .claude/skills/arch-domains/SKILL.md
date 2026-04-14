@@ -13,40 +13,39 @@ Owns all business rules — session lifecycle, agent execution, import resolutio
 
 | File | Role |
 |------|------|
-| `agent.ts` | `AgentDomain` + `IAgentDomain` — runs a Claude CLI sub-agent via injected `IClaudeCodeRepository`; loads procedure system prompt from `repositories/procedures` |
-| `session.ts` | `SessionDomain` + `ISessionDomain` — full CRUD for perclst sessions; calls repository functions in `repositories/sessions` directly |
-| `import.ts` | `ImportDomain` + `IImportDomain` — resolves and validates Claude Code session paths; calls repository functions in `repositories/claudeSessions` directly |
-| `analyze.ts` | `AnalyzeDomain` + `IAnalyzeDomain` — reads a Claude Code jsonl session; composes with `ISessionDomain` via constructor injection |
-| `__tests__/agentDomain.test.ts` | Unit tests for `AgentDomain` — mocks `repositories/procedures`, injects a mock `IClaudeCodeRepository` |
+| `agent.ts` | `AgentDomain` — runs a Claude CLI sub-agent via injected `IClaudeCodeRepository`; loads procedure system prompt via injected `IProcedureRepository` |
+| `session.ts` | `SessionDomain` — full CRUD for perclst sessions; calls repository functions in `repositories/sessions` directly |
+| `import.ts` | `ImportDomain` — resolves and validates Claude Code session paths via injected `IClaudeSessionRepository` |
+| `analyze.ts` | `AnalyzeDomain` — reads a Claude Code jsonl session; composes with `ISessionDomain` via constructor injection |
+| `ports/session.ts` | `ISessionDomain`, `IImportDomain` — port contracts consumed by `services/` |
+| `ports/agent.ts` | `IAgentDomain` — port contract consumed by `services/` |
+| `ports/analysis.ts` | `IAnalyzeDomain` — port contract consumed by `services/` |
+| `__tests__/agentDomain.test.ts` | Unit tests for `AgentDomain` — mocks `repositories/ports/agent`, injects a mock `IClaudeCodeRepository` |
 | `__tests__/sessionDomain.test.ts` | Unit tests for `SessionDomain` |
 
 ## Import Rules
 
 | May import | Must NOT import |
 |-----------|----------------|
-| `repositories`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `infrastructures` |
+| `domains/ports` (intra), `repositories/ports`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `infrastructures` |
 
-Intra-domain imports are permitted: a domain class may accept another domain's port type (`IXxxDomain`) via constructor injection (see `AnalyzeDomain`).
+Intra-domain imports are permitted: a domain class may accept another domain's port type from `domains/ports/` via constructor injection (see `AnalyzeDomain`).
 
 ## Patterns
 
 **Style A — interface injection** (use when the repository is class-based with `IXxx`)
 
-Port type placement rule: define in the same file as the implementing class. Move to `src/types/` only when multiple external layers must both import the type (see rule in `arch/SKILL.md`).
-
 ```ts
-// Good — IClaudeCodeRepository is in src/types/claudeCode.ts because it bridges
-// domains (caller) and infrastructures (implementor)
+// Good — implement own port type from domains/ports/; inject repository port from repositories/ports/
+import type { IAgentDomain } from '@src/domains/ports/agent'
+import type { IProcedureRepository } from '@src/repositories/ports/agent'
 import type { IClaudeCodeRepository } from '@src/types/claudeCode'
-
-export type IAgentDomain = {
-  run(session: Session, instruction: string, isResume: boolean, options?: ExecuteOptions): Promise<AgentResponse>
-}
 
 export class AgentDomain implements IAgentDomain {
   constructor(
     private model: string,
-    private claudeCodeRepo: IClaudeCodeRepository   // injected interface, not concrete class
+    private claudeCodeRepo: IClaudeCodeRepository,  // injected interface, not concrete class
+    private procedureRepo: IProcedureRepository
   ) {}
 
   async run(...): Promise<AgentResponse> {
@@ -81,25 +80,24 @@ export class SessionDomain implements ISessionDomain {
 import { readFileSync } from 'fs'   // NG: raw I/O belongs in infrastructures/
 ```
 
-**Port type placement** — always `src/types/`
-
-All port types (`IXxx`) live in `src/types/`, co-located with related data types. Never define them in domain files.
+**Port type placement** — `domains/ports/` for domain ports, `repositories/ports/` for repository ports
 
 ```ts
-// Good — ISessionDomain is defined in src/types/session.ts; import it here
-import type { ISessionDomain, ISessionRepository } from '@src/types/session'
+// Good — implement own port from domains/ports/; consume repository port from repositories/ports/
+import type { ISessionDomain } from '@src/domains/ports/session'
+import type { ISessionRepository } from '@src/repositories/ports/session'
 export class SessionDomain implements ISessionDomain { ... }
 
-// Bad — defining the port type in the domain file
-export type ISessionDomain = { ... }  // NG: belongs in src/types/session.ts
+// Bad — defining the port type in the domain implementation file
+export type ISessionDomain = { ... }  // NG: belongs in src/domains/ports/session.ts
 export class SessionDomain implements ISessionDomain { ... }
 ```
 
-**Intra-domain composition** — inject another domain's port type, not the concrete class
+**Intra-domain composition** — inject another domain's port type from `domains/ports/`, not the concrete class
 
 ```ts
 // Good
-import type { ISessionDomain } from '@src/domains/session'
+import type { ISessionDomain } from '@src/domains/ports/session'
 
 export class AnalyzeDomain implements IAnalyzeDomain {
   constructor(private sessionDomain: ISessionDomain) {}   // port type, not SessionDomain
@@ -118,6 +116,6 @@ export class AnalyzeDomain {
 - Never import from `cli`, `services`, or `infrastructures` — `infrastructures` access must go through `repositories`
 - Never import `zod` — validation is the validators layer's exclusive responsibility
 - Never access the file system, spawn processes, or call external APIs directly — delegate to repository functions or injected repository interfaces
-- Never define a port type (`IXxx`) in a domain file — all port types belong in `src/types/`
+- Never define a port type (`IXxx`) in a domain implementation file — domain ports belong in `src/domains/ports/`, repository ports in `src/repositories/ports/`
 - Never import a concrete repository class — inject the interface or call exported functions; never `new XxxRepository()` inside a domain
 - Never call `services` — domains sit below services in the dependency chain

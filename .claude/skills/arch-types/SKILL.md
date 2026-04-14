@@ -1,25 +1,25 @@
 ---
 name: arch-types
-description: "Required for any work in src/types/. Load before creating, editing, reviewing, or investigating files in this layer. Covers shared type placement rules, intra-layer imports, port type bridging, and the prohibition on importing other layers."
+description: "Required for any work in src/types/. Load before creating, editing, reviewing, or investigating files in this layer. Covers shared type placement rules, intra-layer imports, and the prohibition on importing other layers."
 paths:
   - 'src/types/**/*.ts'
 ---
 
 ## Role
 
-Holds **all** data types and port interfaces (`IXxx`) for the codebase. Acts as a shared vocabulary layer — no logic, no I/O, no layer-specific concerns. Port types always live here regardless of how many layers reference them; this eliminates the decision of "where does this interface go?" entirely.
+Holds **shared data types** for the codebase. Acts as a shared vocabulary layer — no logic, no I/O, no layer-specific concerns. Port types (`IXxx`) do **not** live here; they live in `ports/` subdirectories of the layer that consumes them (see `arch/SKILL.md`).
 
 ## Files
 
 | File | Role |
 |------|------|
 | `common.ts` | `ThinkingBlock`, `ToolUseRecord` — low-level primitives shared across agent, infrastructure, and display logic |
-| `session.ts` | Session data types + port interfaces: `Session`, `CreateSessionParams`, `ResumeSessionParams`, `ISessionRepository`, `ISessionDomain`, `IImportDomain` |
-| `claudeCode.ts` | Claude CLI types + port interface: `ClaudeAction`, `RawOutput`, `IClaudeCodeRepository` |
-| `agent.ts` | Agent types + port interfaces: `AgentResponse`, `ExecuteOptions`, `IAgentDomain`, `IProcedureRepository` |
+| `session.ts` | `Session`, `CreateSessionParams`, `ResumeSessionParams` |
+| `claudeCode.ts` | `ClaudeAction`, `RawOutput`, `IClaudeCodeRepository` |
+| `agent.ts` | `AgentResponse`, `ExecuteOptions` |
 | `config.ts` | `DisplayConfig`, `AgentLimitsConfig`, `Config` — configuration shape used across CLI, services, and repositories |
 | `display.ts` | `DisplayOptions` — display flag set shared between CLI commands and display helpers |
-| `analysis.ts` | Analysis types + port interfaces: `AnalyzeResult`, `ToolCall`, `ClaudeCodeTurn`, `AnalysisSummary`, `IClaudeSessionRepository`, `IAnalyzeDomain` |
+| `analysis.ts` | `AnalyzeResult`, `ToolCall`, `ClaudeCodeTurn`, `AnalysisSummary` |
 
 ## Import Rules
 
@@ -51,23 +51,6 @@ export type RawOutput = {
 }
 ```
 
-**Port types always live here** — no placement decision required
-
-```ts
-// Good — all IXxx interfaces belong in src/types/, co-located with related data types
-// types/session.ts
-export type ISessionRepository = { save(session: Session): void; ... }
-export type ISessionDomain = { create(params: CreateSessionParams): Promise<Session>; ... }
-
-// types/agent.ts
-export type IAgentDomain = { run(session: Session, ...): Promise<AgentResponse> }
-export type IProcedureRepository = { load(name: string): string; ... }
-
-// Bad — defining a port type inside a domain or repository file
-// src/domains/session.ts
-export type ISessionDomain = { ... }  // NG: port types always go in src/types/
-```
-
 **`type` not `interface`** — consistent with the project-wide rule
 
 ```ts
@@ -90,4 +73,4 @@ export interface Session {   // NG: use type, not interface
 - Never import `zod` or any npm package — this layer has zero runtime dependencies
 - Never use `interface` — always use `type`
 - Never add logic, helper functions, or constants — pure type declarations only
-- Never define a port type (`IXxx`) outside of `src/types/` — all interfaces belong here, co-located with their related data types
+- Never define a port type (`IXxx`) here — port types belong in `src/repositories/ports/` or `src/domains/ports/`
