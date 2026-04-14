@@ -2,6 +2,7 @@ import type { Session, CreateSessionParams } from '@src/types/session'
 import type { ISessionRepository } from '@src/repositories/sessions'
 import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
+import { toISO } from '@src/utils/date'
 
 export type ISessionDomain = {
   create(params: CreateSessionParams): Promise<Session>
@@ -28,8 +29,8 @@ export class SessionDomain implements ISessionDomain {
     const session: Session = {
       id,
       ...(params.name !== undefined ? { name: params.name } : {}),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: toISO(),
+      updated_at: toISO(),
       procedure: params.procedure,
       claude_session_id: id,
       working_dir: process.cwd(),
@@ -70,7 +71,7 @@ export class SessionDomain implements ISessionDomain {
     const session = await this.get(sessionId)
 
     session.metadata.status = status
-    session.updated_at = new Date().toISOString()
+    session.updated_at = toISO()
 
     this.sessionRepo.save(session)
     logger.info('Session status updated', { session_id: sessionId, status })
@@ -82,7 +83,7 @@ export class SessionDomain implements ISessionDomain {
     const session = await this.get(sessionId)
 
     session.name = name
-    session.updated_at = new Date().toISOString()
+    session.updated_at = toISO()
 
     this.sessionRepo.save(session)
     logger.info('Session renamed', { session_id: sessionId, name })

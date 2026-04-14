@@ -3,6 +3,7 @@ import type { ISessionDomain } from '@src/domains/session'
 import type { IImportDomain } from '@src/domains/import'
 import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
+import { toISO } from '@src/utils/date'
 
 export type ImportOptions = {
   name?: string
@@ -22,7 +23,7 @@ export class ImportService {
       this.importDomain.validateSession(claudeSessionId, workingDir)
     }
 
-    const now = new Date().toISOString()
+    const now = toISO()
     const session: Session = {
       id: generateId(),
       ...(options.name !== undefined ? { name: options.name } : {}),

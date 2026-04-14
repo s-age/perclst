@@ -1,5 +1,6 @@
 import { join } from 'path'
 import type { Session } from '@src/types/session'
+import { toTimestamp } from '@src/utils/date'
 import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
 import {
   readJson,
@@ -91,7 +92,5 @@ export function listSessions(sessionsDir: string): Session[] {
     }
   }
 
-  return sessions.sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  )
+  return sessions.sort((a, b) => toTimestamp(b.updated_at) - toTimestamp(a.updated_at))
 }

@@ -2,6 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { SessionService } from '@src/services/sessionService'
 import { logger } from '@src/utils/logger'
+import { toLocaleString } from '@src/utils/date'
 import { parseShowSession } from '@src/validators/cli/showSession'
 
 type RawShowOptions = {
@@ -22,8 +23,8 @@ export async function showCommand(sessionId: string, options: RawShowOptions) {
 
     // Text format — metadata only (turns are managed by Claude Code)
     logger.print(`\nSession: ${session.id}`)
-    logger.print(`Created: ${new Date(session.created_at).toLocaleString()}`)
-    logger.print(`Updated: ${new Date(session.updated_at).toLocaleString()}`)
+    logger.print(`Created: ${toLocaleString(session.created_at)}`)
+    logger.print(`Updated: ${toLocaleString(session.updated_at)}`)
     logger.print(`Status: ${session.metadata.status}`)
     logger.print(`Working dir: ${session.working_dir}`)
 
