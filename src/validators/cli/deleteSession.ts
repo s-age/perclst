@@ -2,7 +2,7 @@ import { schema, safeParse } from '../schema'
 import { stringRule } from '../rules/string'
 
 const deleteSchema = schema({
-  sessionId: stringRule({ required: true }),
+  sessionId: stringRule({ required: true })
 })
 
 export type DeleteSessionInput = typeof deleteSchema._output

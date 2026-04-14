@@ -4,7 +4,7 @@ import { formatRule } from '../rules/format'
 
 const showSchema = schema({
   sessionId: stringRule({ required: true }),
-  format: formatRule(),
+  format: formatRule()
 })
 
 export type ShowSessionInput = typeof showSchema._output

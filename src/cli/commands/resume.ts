@@ -40,7 +40,7 @@ export async function resumeCommand(
       allowedTools: input.allowedTools,
       model: input.model,
       maxTurns,
-      maxContextTokens,
+      maxContextTokens
     })
 
     printResponse(response, input, config.display, { sessionId: input.sessionId })

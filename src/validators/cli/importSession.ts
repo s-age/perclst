@@ -4,7 +4,7 @@ import { stringRule } from '../rules/string'
 const importSchema = schema({
   claudeSessionId: stringRule({ required: true }),
   name: stringRule().optional(),
-  cwd: stringRule().optional(),
+  cwd: stringRule().optional()
 })
 
 export type ImportSessionInput = typeof importSchema._output

@@ -6,7 +6,7 @@ import { formatRule } from '../rules/format'
 const analyzeSchema = schema({
   sessionId: stringRule({ required: true }),
   format: formatRule(),
-  printDetail: booleanRule().optional(),
+  printDetail: booleanRule().optional()
 })
 
 export type AnalyzeSessionInput = typeof analyzeSchema._output

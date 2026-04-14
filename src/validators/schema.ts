@@ -10,7 +10,7 @@ export function safeParse<T>(zodSchema: z.ZodType<T>, raw: unknown): T {
     return zodSchema.parse(raw)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const message = error.errors
+      const message = error.issues
         .map((e) => `${e.path.join('.') || 'input'}: ${e.message}`)
         .join('; ')
       throw new ValidationError(message)

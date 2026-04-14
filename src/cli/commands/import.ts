@@ -19,7 +19,7 @@ export async function importCommand(
     const importService = container.resolve<ImportService>(TOKENS.ImportService)
     const session = await importService.import(input.claudeSessionId, {
       name: input.name,
-      cwd: input.cwd,
+      cwd: input.cwd
     })
 
     logger.print(`Imported: ${session.id}`)

@@ -16,7 +16,7 @@ const resumeSchema = schema({
   silentThoughts: booleanRule().optional(),
   silentToolResponse: booleanRule().optional(),
   silentUsage: booleanRule().optional(),
-  outputOnly: booleanRule().optional(),
+  outputOnly: booleanRule().optional()
 })
 
 export type ResumeSessionInput = typeof resumeSchema._output
