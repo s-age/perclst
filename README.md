@@ -188,3 +188,5 @@ Add to `~/.claude/settings.json`:
 ## License
 
 CC0 1.0 Universal — public domain dedication, no rights reserved.
+
+> This applies to perclst's own source code only. Each dependency is distributed under its own license — refer to the respective package for terms.
