@@ -53,7 +53,7 @@ mcp ──┼→ validators → services → domains → repositories → infras
 | Layer              | May import                                                              | Must NOT import                                     |
 | ------------------ | ----------------------------------------------------------------------- | --------------------------------------------------- |
 | `cli`              | `validators`, `services`, `types`, `errors`, `utils`, `constants`, `core/di` | `repositories`, `infrastructures`              |
-| `mcp`              | `core/di`, `types`, `errors`, `utils`, `constants`, intra-mcp (`./`)         | `cli`, `validators`, `services`, `domains`, `repositories`, `infrastructures` |
+| `mcp`              | `validators`, `services`, `types`, `errors`, `utils`, `constants`, `core/di`, intra-mcp (`./`) | `cli`, `domains`, `repositories`, `infrastructures` |
 | `validators`       | `errors`, `types`, `constants`                                          | `cli`, `services`, `domains`, `repositories`, `infrastructures` |
 | `validators/rules` | `zod` only                                                              | all `src/` layers                                   |
 | `validators/schema.ts` | `zod`, `errors`                                                     | all other `src/` layers                             |

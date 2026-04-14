@@ -8,6 +8,7 @@
  *   ts_analyze         — TypeScript code structure analysis
  *   ts_get_references  — Find references to a TypeScript symbol
  *   ts_get_types       — Get type definitions for a TypeScript symbol
+ *   ts_checker         — Run lint/build/test and report results
  */
 
 import { openSync, readSync, writeSync, closeSync } from 'fs'

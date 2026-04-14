@@ -19,15 +19,15 @@ Implements the perclst MCP server as a standalone process communicating over JSO
 | `tools/tsAnalyze.ts` | Schema object `ts_analyze` + `executeTsAnalyze()` — delegates to `TypeScriptProject.analyze()` |
 | `tools/tsGetReferences.ts` | Schema object `ts_get_references` + `executeTsGetReferences()` — delegates to `TypeScriptProject.getReferences()` |
 | `tools/tsGetTypes.ts` | Schema object `ts_get_types` + `executeTsGetTypes()` — delegates to `TypeScriptProject.getTypeDefinitions()` |
-| `tools/tsChecker.ts` | `executeTsChecker()` only (no schema object) — runs lint/build/test via `execSync`; uses Node.js built-ins directly |
+| `tools/tsChecker.ts` | Schema object `ts_checker` + `executeTsChecker()` — delegates to `CheckerService` via DI |
 
 ## Import Rules
 
 | May import | Must NOT import |
 |-----------|----------------|
-| `core/di`, `types`, `errors`, `utils`, `constants`, intra-mcp (`./`) | `cli`, `validators`, `services`, `domains`, `repositories`, `infrastructures` |
+| `validators`, `services`, `types`, `errors`, `utils`, `constants`, `core/di`, intra-mcp (`./`) | `cli`, `domains`, `repositories`, `infrastructures` |
 
-Node.js built-ins (`fs`, `child_process`, `path`, `url`) are permitted in this layer because `server.ts` and `tsChecker.ts` are standalone process entry points. All other tool files must avoid Node.js built-ins and go through the DI container instead.
+Node.js built-ins (`fs`, `child_process`, `path`, `url`) are permitted only in `server.ts`, which is the standalone process entry point. Tool files under `tools/` must avoid Node.js built-ins and go through the DI container or services instead.
 
 ## Patterns
 
@@ -131,9 +131,9 @@ async function askPermission(args: { tool_name: string; input: Record<string, un
 
 ## Prohibitions
 
-- Never import from `cli`, `validators`, `services`, `domains`, `repositories`, or `infrastructures` — the MCP server is a standalone process; it must not depend on the application business layers
+- Never import from `cli`, `domains`, `repositories`, or `infrastructures` — MCP is a peer of `cli`; business logic is accessed via `validators` and `services`, not through lower layers directly
 - Never return a raw object from an execute function — always wrap in `{ content: [{ type: 'text', text: string }] }`
 - Never add a tool to `TOOLS` without a matching `case` in `handleToolsCall`, and vice versa — the two must stay in sync
 - Never instantiate `TypeScriptProject` directly in a tool file — always resolve via `container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)`
-- Never use Node.js built-ins (`fs`, `child_process`, etc.) in tool files other than `tsChecker.ts` — those files must stay I/O-free and delegate to the DI-injected analyzer
+- Never use Node.js built-ins (`fs`, `child_process`, etc.) in `tools/` files — those files must stay I/O-free; I/O belongs in `infrastructures/` and is accessed via services
 - Never add a second `setupContainer()` call — it is called exactly once at the top of `server.ts`

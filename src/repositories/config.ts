@@ -15,7 +15,7 @@ function loadFromPath(path: string): Partial<Config> {
 
 function resolvePath(path: string): string {
   if (path.startsWith('/')) return path
-  if (path.startsWith('~')) return path.replace('~', homedir())
+  if (path.startsWith('~')) return path.replace('~', homeDir())
   return join(process.cwd(), path)
 }
 

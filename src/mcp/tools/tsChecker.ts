@@ -1,68 +1,33 @@
-import { execSync } from 'child_process'
-import { existsSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import type { CheckerService } from '@src/services/checkerService'
 
-type CommandResult = {
-  errors: string[]
-  warnings: string[]
-  exitCode: number
-}
-
-type TsCheckerResult = {
-  lint: CommandResult
-  build: CommandResult
-  test: CommandResult
-}
-
-// Lines matching these patterns are noise, not real errors
-const ERROR_IGNORE_PATTERNS = ['rollup', 'throw new error', 'requirewithfriendlyerror']
-
-function findProjectRoot(): string {
-  const thisFile = fileURLToPath(import.meta.url)
-  let dir = dirname(thisFile)
-  for (let i = 0; i < 8; i++) {
-    if (existsSync(join(dir, 'package.json'))) return dir
-    const parent = dirname(dir)
-    if (parent === dir) break
-    dir = parent
-  }
-  return process.cwd()
-}
-
-function parseOutput(output: string, exitCode: number): CommandResult {
-  const errors: string[] = []
-  const warnings: string[] = []
-  let currentFile = ''
-  for (const line of output.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    const lower = trimmed.toLowerCase()
-    // Detect ESLint-style file header lines (absolute path ending with a source extension)
-    if (/^\/.+\.(ts|tsx|js|jsx|mjs|cjs|json)$/.test(trimmed)) {
-      currentFile = trimmed
-      continue
-    }
-    // Skip ESLint summary lines like "✖ 7 problems (0 errors, 7 warnings)"
-    if (/\d+ problems?\s*\(\d+ errors?,\s*\d+ warnings?\)/.test(trimmed)) continue
-    if (lower.includes('error')) {
-      if (ERROR_IGNORE_PATTERNS.some((p) => lower.includes(p))) continue
-      errors.push(currentFile ? `${currentFile}: ${trimmed}` : trimmed)
-    } else if (lower.includes('warning')) {
-      warnings.push(currentFile ? `${currentFile}: ${trimmed}` : trimmed)
-    }
-  }
-  return { errors, warnings, exitCode }
-}
-
-function runCommand(command: string, cwd: string): CommandResult {
-  try {
-    const output = execSync(command, { cwd, encoding: 'utf-8', stdio: 'pipe' })
-    return parseOutput(output, 0)
-  } catch (e: unknown) {
-    const err = e as { stdout?: string; stderr?: string; status?: number }
-    const output = (err.stdout ?? '') + (err.stderr ?? '')
-    return parseOutput(output, err.status ?? 1)
+export const ts_checker = {
+  name: 'ts_checker',
+  description:
+    'Run lint (lint:fix), build, and unit tests in one shot and report errors/warnings for each. ' +
+    'Use this after making TypeScript changes to verify correctness before completing a task.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      project_root: {
+        type: 'string',
+        description: 'Absolute path to the project root. Auto-detected when omitted.'
+      },
+      lint_command: {
+        type: 'string',
+        description: 'Lint command. Defaults to "npm run lint:fix".'
+      },
+      build_command: {
+        type: 'string',
+        description: 'Build command. Defaults to "npm run build".'
+      },
+      test_command: {
+        type: 'string',
+        description: 'Test command. Defaults to "npm run test:unit".'
+      }
+    },
+    required: []
   }
 }
 
@@ -72,26 +37,12 @@ export async function executeTsChecker(args: {
   build_command?: string
   test_command?: string
 }) {
-  const projectRoot = args.project_root ?? findProjectRoot()
-  const lintCommand = args.lint_command ?? 'npm run lint:fix'
-  const buildCommand = args.build_command ?? 'npm run build'
-  const testCommand = args.test_command ?? 'npm run test:unit'
-
-  const result: TsCheckerResult = {
-    lint: runCommand(lintCommand, projectRoot),
-    build: runCommand(buildCommand, projectRoot),
-    test: runCommand(testCommand, projectRoot)
-  }
-
-  const allClear =
-    result.lint.exitCode === 0 && result.build.exitCode === 0 && result.test.exitCode === 0
-
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify({ ok: allClear, ...result }, null, 2)
-      }
-    ]
-  }
+  const service = container.resolve<CheckerService>(TOKENS.CheckerService)
+  const result = service.check({
+    projectRoot: args.project_root,
+    lintCommand: args.lint_command,
+    buildCommand: args.build_command,
+    testCommand: args.test_command
+  })
+  return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
 }
