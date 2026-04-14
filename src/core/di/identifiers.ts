@@ -13,5 +13,8 @@ export const TOKENS = {
   AnalyzeService: Symbol.for('AnalyzeService'),
   ImportService: Symbol.for('ImportService'),
   // Repositories
-  ClaudeCodeRepository: Symbol.for('ClaudeCodeRepository')
+  ClaudeCodeRepository: Symbol.for('ClaudeCodeRepository'),
+  SessionRepository: Symbol.for('SessionRepository'),
+  ClaudeSessionRepository: Symbol.for('ClaudeSessionRepository'),
+  ProcedureRepository: Symbol.for('ProcedureRepository')
 } as const

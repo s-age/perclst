@@ -1,6 +1,9 @@
 import { container } from './container'
 import { TOKENS } from './identifiers'
 import { loadConfig, resolveSessionsDir } from '@src/repositories/config'
+import { SessionRepository } from '@src/repositories/sessions'
+import { ClaudeSessionRepository } from '@src/repositories/claudeSessions'
+import { ProcedureRepository } from '@src/repositories/procedures'
 import { SessionDomain } from '@src/domains/session'
 import { AgentDomain } from '@src/domains/agent'
 import { AnalyzeDomain } from '@src/domains/analyze'
@@ -18,13 +21,20 @@ export function setupContainer(): void {
   const model = config.model ?? DEFAULT_MODEL
 
   const claudeCodeRepo = new ClaudeCodeRepository()
-  const sessionDomain = new SessionDomain(sessionsDir)
-  const agentDomain = new AgentDomain(model, claudeCodeRepo)
-  const analyzeDomain = new AnalyzeDomain(sessionDomain)
-  const importDomain = new ImportDomain()
+  const sessionRepo = new SessionRepository(sessionsDir)
+  const claudeSessionRepo = new ClaudeSessionRepository()
+  const procedureRepo = new ProcedureRepository()
+
+  const sessionDomain = new SessionDomain(sessionRepo)
+  const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
+  const analyzeDomain = new AnalyzeDomain(sessionDomain, claudeSessionRepo)
+  const importDomain = new ImportDomain(claudeSessionRepo)
 
   container.register(TOKENS.Config, config)
   container.register(TOKENS.ClaudeCodeRepository, claudeCodeRepo)
+  container.register(TOKENS.SessionRepository, sessionRepo)
+  container.register(TOKENS.ClaudeSessionRepository, claudeSessionRepo)
+  container.register(TOKENS.ProcedureRepository, procedureRepo)
   container.register(TOKENS.SessionDomain, sessionDomain)
   container.register(TOKENS.AgentDomain, agentDomain)
   container.register(TOKENS.AnalyzeDomain, analyzeDomain)

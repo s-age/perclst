@@ -1,8 +1,8 @@
 import type { AgentResponse } from '@src/types/agent'
 import type { Session } from '@src/types/session'
 import type { IClaudeCodeRepository } from '@src/types/claudeCode'
+import type { IProcedureRepository } from '@src/repositories/procedures'
 import { logger } from '@src/utils/logger'
-import { loadProcedure } from '@src/repositories/procedures'
 import { APIError } from '@src/errors/apiError'
 
 export type ExecuteOptions = {
@@ -23,7 +23,8 @@ export type IAgentDomain = {
 export class AgentDomain implements IAgentDomain {
   constructor(
     private model: string,
-    private claudeCodeRepo: IClaudeCodeRepository
+    private claudeCodeRepo: IClaudeCodeRepository,
+    private procedureRepo: IProcedureRepository
   ) {}
 
   async run(
@@ -34,7 +35,7 @@ export class AgentDomain implements IAgentDomain {
   ): Promise<AgentResponse> {
     let systemPrompt: string | undefined
     if (session.procedure) {
-      systemPrompt = loadProcedure(session.procedure)
+      systemPrompt = this.procedureRepo.load(session.procedure)
       logger.debug('Loaded procedure', { procedure: session.procedure })
     }
 

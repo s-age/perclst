@@ -218,6 +218,31 @@ function buildSummaryStats(turns: ClaudeCodeTurn[]): {
  * Returns the decoded path, or null if no unique real path can be found.
  * `ambiguous` is true when multiple valid paths exist (caller should require --cwd).
  */
+export type IClaudeSessionRepository = {
+  findEncodedDirBySessionId(claudeSessionId: string): string
+  decodeWorkingDir(encoded: string): { path: string | null; ambiguous: boolean }
+  validateSessionAtDir(claudeSessionId: string, workingDir: string): void
+  readSession(claudeSessionId: string, workingDir: string): AnalysisSummary
+}
+
+export class ClaudeSessionRepository implements IClaudeSessionRepository {
+  findEncodedDirBySessionId(claudeSessionId: string): string {
+    return findEncodedDirBySessionId(claudeSessionId)
+  }
+
+  decodeWorkingDir(encoded: string): { path: string | null; ambiguous: boolean } {
+    return decodeWorkingDir(encoded)
+  }
+
+  validateSessionAtDir(claudeSessionId: string, workingDir: string): void {
+    validateSessionAtDir(claudeSessionId, workingDir)
+  }
+
+  readSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
+    return readClaudeSession(claudeSessionId, workingDir)
+  }
+}
+
 export function decodeWorkingDir(encoded: string): { path: string | null; ambiguous: boolean } {
   if (!encoded.startsWith('-')) return { path: null, ambiguous: false }
 

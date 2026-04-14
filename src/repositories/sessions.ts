@@ -10,6 +10,43 @@ import {
   ensureDir
 } from '@src/infrastructures/fs'
 
+export type ISessionRepository = {
+  save(session: Session): void
+  load(sessionId: string): Session
+  exists(sessionId: string): boolean
+  delete(sessionId: string): Promise<void>
+  list(): Session[]
+  getPath(sessionId: string): string
+}
+
+export class SessionRepository implements ISessionRepository {
+  constructor(private sessionsDir: string) {}
+
+  save(session: Session): void {
+    saveSession(this.sessionsDir, session)
+  }
+
+  load(sessionId: string): Session {
+    return loadSession(this.sessionsDir, sessionId)
+  }
+
+  exists(sessionId: string): boolean {
+    return existsSession(this.sessionsDir, sessionId)
+  }
+
+  async delete(sessionId: string): Promise<void> {
+    await deleteSession(this.sessionsDir, sessionId)
+  }
+
+  list(): Session[] {
+    return listSessions(this.sessionsDir)
+  }
+
+  getPath(sessionId: string): string {
+    return getSessionPath(this.sessionsDir, sessionId)
+  }
+}
+
 export function getSessionPath(sessionsDir: string, sessionId: string): string {
   return join(sessionsDir, `${sessionId}.json`)
 }

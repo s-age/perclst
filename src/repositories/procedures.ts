@@ -8,6 +8,21 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const PROCEDURES_DIR = join(__dirname, '../../../procedures')
 
+export type IProcedureRepository = {
+  load(name: string): string
+  exists(name: string): boolean
+}
+
+export class ProcedureRepository implements IProcedureRepository {
+  load(name: string): string {
+    return loadProcedure(name)
+  }
+
+  exists(name: string): boolean {
+    return procedureExists(name)
+  }
+}
+
 export function loadProcedure(name: string): string {
   const path = join(PROCEDURES_DIR, `${name}.md`)
   if (!fileExists(path)) {

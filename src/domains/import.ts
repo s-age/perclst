@@ -1,8 +1,4 @@
-import {
-  findEncodedDirBySessionId,
-  decodeWorkingDir,
-  validateSessionAtDir
-} from '@src/repositories/claudeSessions'
+import type { IClaudeSessionRepository } from '@src/repositories/claudeSessions'
 
 export type IImportDomain = {
   resolveWorkingDir(claudeSessionId: string): string
@@ -10,9 +6,11 @@ export type IImportDomain = {
 }
 
 export class ImportDomain implements IImportDomain {
+  constructor(private claudeSessionRepo: IClaudeSessionRepository) {}
+
   resolveWorkingDir(claudeSessionId: string): string {
-    const encodedDir = findEncodedDirBySessionId(claudeSessionId)
-    const { path, ambiguous } = decodeWorkingDir(encodedDir)
+    const encodedDir = this.claudeSessionRepo.findEncodedDirBySessionId(claudeSessionId)
+    const { path, ambiguous } = this.claudeSessionRepo.decodeWorkingDir(encodedDir)
 
     if (ambiguous) {
       throw new Error(
@@ -30,6 +28,6 @@ export class ImportDomain implements IImportDomain {
   }
 
   validateSession(claudeSessionId: string, workingDir: string): void {
-    validateSessionAtDir(claudeSessionId, workingDir)
+    this.claudeSessionRepo.validateSessionAtDir(claudeSessionId, workingDir)
   }
 }

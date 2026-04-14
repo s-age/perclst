@@ -1,11 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-
-vi.mock('@src/repositories/procedures', () => ({
-  loadProcedure: vi.fn()
-}))
-
-import { loadProcedure } from '@src/repositories/procedures'
 import type { IClaudeCodeRepository } from '@src/types/claudeCode'
+import type { IProcedureRepository } from '@src/repositories/procedures'
 import { AgentDomain } from '../agent'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
@@ -13,6 +8,7 @@ const DEFAULT_MODEL = 'claude-sonnet-4-6'
 describe('AgentDomain', () => {
   let domain: AgentDomain
   let claudeCodeRepo: IClaudeCodeRepository
+  let procedureRepo: IProcedureRepository
 
   const session = {
     id: 'test-session',
@@ -36,16 +32,21 @@ describe('AgentDomain', () => {
       })
     }
 
-    domain = new AgentDomain(DEFAULT_MODEL, claudeCodeRepo)
+    procedureRepo = {
+      load: vi.fn(),
+      exists: vi.fn()
+    }
+
+    domain = new AgentDomain(DEFAULT_MODEL, claudeCodeRepo, procedureRepo)
   })
 
   it('should run a task with the procedure system prompt', async () => {
-    vi.mocked(loadProcedure).mockReturnValue('You are a conductor.')
+    vi.mocked(procedureRepo.load).mockReturnValue('You are a conductor.')
 
     const response = await domain.run(session, 'Hello', false)
 
     expect(response.content).toBe('Mock response')
-    expect(loadProcedure).toHaveBeenCalledWith('conductor')
+    expect(procedureRepo.load).toHaveBeenCalledWith('conductor')
     expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'start',
@@ -60,7 +61,7 @@ describe('AgentDomain', () => {
 
     await domain.run(sessionWithoutProcedure, 'Hello', false)
 
-    expect(loadProcedure).not.toHaveBeenCalled()
+    expect(procedureRepo.load).not.toHaveBeenCalled()
     expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'start',
