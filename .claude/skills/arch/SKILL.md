@@ -30,8 +30,8 @@ paths:
 | `src/validators/cli/`  | CLI-specific validators; future entry points get their own subdirectory (e.g. `validators/mcp/`)      |
 | `src/services/`        | Use-case orchestration                                                                                |
 | `src/domains/`         | Business rules — session lifecycle, agent execution 等                                                |
-| `src/repositories/`    | Data access layer — uses `infrastructures/` as raw I/O adapters; port types for domain-side injection |
-| `src/infrastructures/` | Raw I/O adapters (file, process, API) — used by `repositories/`                                       |
+| `src/repositories/`    | Translates infrastructure primitives into atomic domain operations (e.g. `startSession`, `getTurns`); holds port types for DI |
+| `src/infrastructures/` | Wraps raw external I/O primitives (HTTP verbs, CLI commands, file ops) — no domain knowledge; consumed by `repositories/` |
 | `src/types/`           | Shared data types; types referenced across 2+ layers                                                  |
 | `src/errors/`          | Error classes — one class per file                                                                    |
 | `src/utils/`           | Pure functions and library wrappers (e.g. dayjs → `date.ts`); no I/O — that belongs in `infrastructures/` |
