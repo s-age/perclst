@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import type { ISessionRepository } from '@src/repositories/sessions'
+import type { ISessionRepository } from '@src/types/session'
 import { SessionDomain } from '../session'
 import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
 

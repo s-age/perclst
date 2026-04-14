@@ -1,10 +1,5 @@
-import type { AnalyzeResult } from '@src/types/analysis'
-import type { ISessionDomain } from '@src/domains/session'
-import type { IClaudeSessionRepository } from '@src/repositories/claudeSessions'
-
-export type IAnalyzeDomain = {
-  analyze(sessionId: string): Promise<AnalyzeResult>
-}
+import type { AnalyzeResult, IAnalyzeDomain, IClaudeSessionRepository } from '@src/types/analysis'
+import type { ISessionDomain } from '@src/types/session'
 
 export class AnalyzeDomain implements IAnalyzeDomain {
   constructor(

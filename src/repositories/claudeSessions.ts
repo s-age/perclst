@@ -1,8 +1,12 @@
 import { join } from 'path'
-import { homedir } from 'os'
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs'
-import type { AnalysisSummary, ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
-import { fileExists } from '@src/infrastructures/fs'
+import type {
+  AnalysisSummary,
+  ClaudeCodeTurn,
+  ToolCall,
+  IClaudeSessionRepository
+} from '@src/types/analysis'
+import { fileExists, homeDir } from '@src/infrastructures/fs'
 
 type RawUserEntry = {
   type: 'user'
@@ -44,7 +48,7 @@ function encodeWorkingDir(workingDir: string): string {
 
 function resolveJsonlPath(claudeSessionId: string, workingDir: string): string {
   const encoded = encodeWorkingDir(workingDir)
-  return join(homedir(), '.claude', 'projects', encoded, `${claudeSessionId}.jsonl`)
+  return join(homeDir(), '.claude', 'projects', encoded, `${claudeSessionId}.jsonl`)
 }
 
 function extractToolResultText(content: string | RawContentBlock[]): string | null {
@@ -218,13 +222,6 @@ function buildSummaryStats(turns: ClaudeCodeTurn[]): {
  * Returns the decoded path, or null if no unique real path can be found.
  * `ambiguous` is true when multiple valid paths exist (caller should require --cwd).
  */
-export type IClaudeSessionRepository = {
-  findEncodedDirBySessionId(claudeSessionId: string): string
-  decodeWorkingDir(encoded: string): { path: string | null; ambiguous: boolean }
-  validateSessionAtDir(claudeSessionId: string, workingDir: string): void
-  readSession(claudeSessionId: string, workingDir: string): AnalysisSummary
-}
-
 export class ClaudeSessionRepository implements IClaudeSessionRepository {
   findEncodedDirBySessionId(claudeSessionId: string): string {
     return findEncodedDirBySessionId(claudeSessionId)
@@ -280,7 +277,7 @@ export function decodeWorkingDir(encoded: string): { path: string | null; ambigu
  * Returns the encoded project directory name, or throws if not found / ambiguous.
  */
 export function findEncodedDirBySessionId(claudeSessionId: string): string {
-  const projectsDir = join(homedir(), '.claude', 'projects')
+  const projectsDir = join(homeDir(), '.claude', 'projects')
   if (!existsSync(projectsDir)) {
     throw new Error(`Claude Code projects directory not found: ${projectsDir}`)
   }

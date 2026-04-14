@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { unlink } from 'fs/promises'
+import { homedir } from 'os'
 
 export function readJson<T>(path: string): T {
   const content = readFileSync(path, 'utf-8')
@@ -27,4 +28,8 @@ export function ensureDir(dir: string): void {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
+}
+
+export function homeDir(): string {
+  return homedir()
 }

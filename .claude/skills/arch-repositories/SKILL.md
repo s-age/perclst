@@ -72,20 +72,18 @@ export class ConfigRepository {
 }
 ```
 
-**Port type placement** — same file vs. `src/types/`
+**Port type placement** — always `src/types/`
+
+All port types (`IXxx`) live in `src/types/`, co-located with related data types. Never define them in repository files.
 
 ```ts
-// Good — ISessionRepository is used by repositories/ and domains/ but implemented
-// only in this layer → define in the same file as the class
-export type ISessionRepository = { save(session: Session): void; ... }
+// Good — ISessionRepository is defined in src/types/session.ts; import it here
+import type { ISessionRepository } from '@src/types/session'
 export class SessionRepository implements ISessionRepository { ... }
 
-// Good — IClaudeCodeRepository bridges domains (caller) and infrastructures (implementor)
-// → it lives in src/types/claudeCode.ts, not in any repository file
-import type { IClaudeCodeRepository } from '@src/types/claudeCode'
-
-// Bad — putting a repository-only interface in src/types/ when only this layer uses it
-// src/types/sessionRepository.ts  ← NG: unnecessary indirection
+// Bad — defining the port type in the repository file
+export type ISessionRepository = { ... }  // NG: belongs in src/types/session.ts
+export class SessionRepository implements ISessionRepository { ... }
 ```
 
 **Extend `fs.ts` when an operation is missing, do not bypass it**
@@ -110,5 +108,5 @@ import { readFileSync } from 'fs'  // NG: bypasses the infrastructure adapter
 - Never call raw Node.js `fs` functions (`readFileSync`, `writeFileSync`, `readdirSync`, etc.) when `infrastructures/fs` provides the equivalent; if `fs.ts` lacks the operation, extend it there first
 - Never add business logic (validation, branching on domain rules, cross-entity orchestration) — keep every exported function atomic and mechanical
 - Never instantiate a domain class — dependency flows downward only (`domains → repositories`, never the reverse)
-- Never define a port type (`IXxxRepository`) in `src/types/` when it is only consumed by repositories/ and domains/ — place it in the same file as the implementing class
+- Never define a port type (`IXxx`) in a repository file — all port types belong in `src/types/`
 - Never import from sibling repository files — each file is independent; shared utilities belong in `utils/` or `constants/`

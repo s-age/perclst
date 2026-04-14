@@ -1,24 +1,13 @@
-import type { AgentResponse } from '@src/types/agent'
+import type {
+  AgentResponse,
+  IAgentDomain,
+  ExecuteOptions,
+  IProcedureRepository
+} from '@src/types/agent'
 import type { Session } from '@src/types/session'
 import type { IClaudeCodeRepository } from '@src/types/claudeCode'
-import type { IProcedureRepository } from '@src/repositories/procedures'
 import { logger } from '@src/utils/logger'
 import { APIError } from '@src/errors/apiError'
-
-export type ExecuteOptions = {
-  allowedTools?: string[]
-  model?: string
-  sessionFilePath?: string
-}
-
-export type IAgentDomain = {
-  run(
-    session: Session,
-    instruction: string,
-    isResume: boolean,
-    options?: ExecuteOptions
-  ): Promise<AgentResponse>
-}
 
 export class AgentDomain implements IAgentDomain {
   constructor(

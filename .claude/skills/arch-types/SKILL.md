@@ -7,19 +7,19 @@ paths:
 
 ## Role
 
-Holds data types and port interfaces that are referenced by two or more layers. Acts as a shared vocabulary layer — no logic, no I/O, no layer-specific concerns. Every type here must be genuinely cross-layer; single-layer types stay in the file that owns them.
+Holds **all** data types and port interfaces (`IXxx`) for the codebase. Acts as a shared vocabulary layer — no logic, no I/O, no layer-specific concerns. Port types always live here regardless of how many layers reference them; this eliminates the decision of "where does this interface go?" entirely.
 
 ## Files
 
 | File | Role |
 |------|------|
 | `common.ts` | `ThinkingBlock`, `ToolUseRecord` — low-level primitives shared across agent, infrastructure, and display logic |
-| `session.ts` | `Session`, `CreateSessionParams`, `ResumeSessionParams` — core session data shapes used by domains, repositories, services, and CLI |
-| `claudeCode.ts` | `StartAction`, `ResumeAction`, `ClaudeAction`, `RawOutput`, `IClaudeCodeRepository` — the port type bridging `domains/` (caller) and `infrastructures/` (implementor) |
-| `agent.ts` | `AgentResponse` — shaped output returned from the agent layer; used by services and CLI |
+| `session.ts` | Session data types + port interfaces: `Session`, `CreateSessionParams`, `ResumeSessionParams`, `ISessionRepository`, `ISessionDomain`, `IImportDomain` |
+| `claudeCode.ts` | Claude CLI types + port interface: `ClaudeAction`, `RawOutput`, `IClaudeCodeRepository` |
+| `agent.ts` | Agent types + port interfaces: `AgentResponse`, `ExecuteOptions`, `IAgentDomain`, `IProcedureRepository` |
 | `config.ts` | `DisplayConfig`, `AgentLimitsConfig`, `Config` — configuration shape used across CLI, services, and repositories |
 | `display.ts` | `DisplayOptions` — display flag set shared between CLI commands and display helpers |
-| `analysis.ts` | `AnalyzeResult`, `ToolCall`, `ClaudeCodeTurn`, `AnalysisSummary` — analysis output types used by domains, services, and CLI |
+| `analysis.ts` | Analysis types + port interfaces: `AnalyzeResult`, `ToolCall`, `ClaudeCodeTurn`, `AnalysisSummary`, `IClaudeSessionRepository`, `IAnalyzeDomain` |
 
 ## Import Rules
 
@@ -51,18 +51,21 @@ export type RawOutput = {
 }
 ```
 
-**Port type for bridging two layers** — define in `src/types/` when caller and implementor are in different layers
+**Port types always live here** — no placement decision required
 
 ```ts
-// Good — IClaudeCodeRepository: domains/ calls it, infrastructures/ implements it
-// → lives in src/types/claudeCode.ts alongside the related data types
-export type IClaudeCodeRepository = {
-  dispatch(action: ClaudeAction): Promise<RawOutput>
-}
+// Good — all IXxx interfaces belong in src/types/, co-located with related data types
+// types/session.ts
+export type ISessionRepository = { save(session: Session): void; ... }
+export type ISessionDomain = { create(params: CreateSessionParams): Promise<Session>; ... }
 
-// Bad — defining a port type here when only one layer ever uses it
-// src/types/sessionDomain.ts  ← NG: ISessionDomain is only used within domains/
-//                                   define it in src/domains/session.ts instead
+// types/agent.ts
+export type IAgentDomain = { run(session: Session, ...): Promise<AgentResponse> }
+export type IProcedureRepository = { load(name: string): string; ... }
+
+// Bad — defining a port type inside a domain or repository file
+// src/domains/session.ts
+export type ISessionDomain = { ... }  // NG: port types always go in src/types/
 ```
 
 **`type` not `interface`** — consistent with the project-wide rule
@@ -85,7 +88,6 @@ export interface Session {   // NG: use type, not interface
 
 - Never import from any other `src/` layer (`cli`, `services`, `domains`, `repositories`, `infrastructures`, `errors`, `utils`, `constants`)
 - Never import `zod` or any npm package — this layer has zero runtime dependencies
-- Never add a type that is only used by a single layer — it belongs in that layer's own file
 - Never use `interface` — always use `type`
 - Never add logic, helper functions, or constants — pure type declarations only
-- Never define a port type (`IXxx`) here when both the caller and the implementor are in the same layer — place it in the same file as the implementing class
+- Never define a port type (`IXxx`) outside of `src/types/` — all interfaces belong here, co-located with their related data types

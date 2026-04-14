@@ -1,5 +1,4 @@
-import type { IAnalyzeDomain } from '@src/domains/analyze'
-import type { AnalyzeResult } from '@src/types/analysis'
+import type { IAnalyzeDomain, AnalyzeResult } from '@src/types/analysis'
 
 export type { AnalyzeResult }
 

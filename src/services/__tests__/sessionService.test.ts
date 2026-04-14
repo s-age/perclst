@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { SessionService } from '../sessionService'
-import type { ISessionDomain } from '@src/domains/session'
+import type { ISessionDomain } from '@src/types/session'
 import type { Session } from '@src/types/session'
 
 const mockSession: Session = {

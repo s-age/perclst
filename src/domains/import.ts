@@ -1,9 +1,5 @@
-import type { IClaudeSessionRepository } from '@src/repositories/claudeSessions'
-
-export type IImportDomain = {
-  resolveWorkingDir(claudeSessionId: string): string
-  validateSession(claudeSessionId: string, workingDir: string): void
-}
+import type { IImportDomain } from '@src/types/session'
+import type { IClaudeSessionRepository } from '@src/types/analysis'
 
 export class ImportDomain implements IImportDomain {
   constructor(private claudeSessionRepo: IClaudeSessionRepository) {}

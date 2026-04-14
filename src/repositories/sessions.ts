@@ -1,5 +1,5 @@
 import { join } from 'path'
-import type { Session } from '@src/types/session'
+import type { Session, ISessionRepository } from '@src/types/session'
 import { toTimestamp } from '@src/utils/date'
 import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
 import {
@@ -10,15 +10,6 @@ import {
   listJsonFiles,
   ensureDir
 } from '@src/infrastructures/fs'
-
-export type ISessionRepository = {
-  save(session: Session): void
-  load(sessionId: string): Session
-  exists(sessionId: string): boolean
-  delete(sessionId: string): Promise<void>
-  list(): Session[]
-  getPath(sessionId: string): string
-}
 
 export class SessionRepository implements ISessionRepository {
   constructor(private sessionsDir: string) {}

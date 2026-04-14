@@ -7,13 +7,15 @@ paths:
 
 ## Role
 
-The lowest layer — the only place that may import Node.js built-ins for I/O (`fs`, `fs/promises`, `child_process`, `os`, `path`). Provides raw adapters that repositories compose into atomic operations. Contains no business logic; every function is a mechanical translation between application types and the underlying system call.
+The lowest layer — the only place that may import Node.js I/O built-ins (`fs`, `fs/promises`, `child_process`, `os`, `path`). Provides raw adapters that repositories compose into atomic operations. Contains no business logic; every function is a mechanical translation between application types and the underlying system call.
+
+> **`utils` vs `infrastructures`**: Non-I/O built-ins used as pure-function equivalents (e.g. `crypto.randomUUID`) belong in `utils`, not here. Only built-ins that perform file, process, or network I/O go in `infrastructures`.
 
 ## Files
 
 | File | Role |
 |------|------|
-| `fs.ts` | Filesystem adapter — wraps Node.js `fs`/`fs/promises` into typed helpers: `readJson`, `writeJson`, `fileExists`, `removeFile`, `listJsonFiles`, `ensureDir` |
+| `fs.ts` | Filesystem adapter — wraps Node.js `fs`/`fs/promises` and `os` into typed helpers: `readJson`, `writeJson`, `fileExists`, `removeFile`, `listJsonFiles`, `ensureDir`, `homeDir` |
 | `claudeCode.ts` | Claude CLI adapter — spawns `claude -p` via `child_process.spawn`, builds CLI args from a `ClaudeAction` discriminated union, parses stream-json output into `RawOutput`; exports `ClaudeCodeRepository` implementing `IClaudeCodeRepository` |
 
 ## Import Rules

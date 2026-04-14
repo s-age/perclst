@@ -1,8 +1,7 @@
 import { join } from 'path'
-import { homedir } from 'os'
 import type { Config } from '@src/types/config'
 import { DEFAULT_CONFIG, CONFIG_DIR_NAME } from '@src/constants/config'
-import { readJson, fileExists } from '@src/infrastructures/fs'
+import { readJson, fileExists, homeDir } from '@src/infrastructures/fs'
 
 function loadFromPath(path: string): Partial<Config> {
   if (!fileExists(path)) return {}
@@ -22,7 +21,7 @@ function resolvePath(path: string): string {
 
 export function loadConfig(): Config {
   const localConfig = loadFromPath(join(`./${CONFIG_DIR_NAME}`, 'config.json'))
-  const globalConfig = loadFromPath(join(homedir(), CONFIG_DIR_NAME, 'config.json'))
+  const globalConfig = loadFromPath(join(homeDir(), CONFIG_DIR_NAME, 'config.json'))
   return { ...DEFAULT_CONFIG, ...globalConfig, ...localConfig }
 }
 

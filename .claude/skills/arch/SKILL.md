@@ -34,7 +34,7 @@ paths:
 | `src/infrastructures/` | Raw I/O adapters (file, process, API) — used by `repositories/`                                       |
 | `src/types/`           | Shared data types; types referenced across 2+ layers                                                  |
 | `src/errors/`          | Error classes — one class per file                                                                    |
-| `src/utils/`           | General utilities (logger, etc.)                                                                      |
+| `src/utils/`           | Pure functions and library wrappers (e.g. dayjs → `date.ts`); no I/O — that belongs in `infrastructures/` |
 | `src/constants/`       | App constants and default values                                                                      |
 | `src/core/di/`         | DI container wiring                                                                                   |
 | `src/mcp/`             | MCP server and tools                                                                                  |
@@ -59,6 +59,7 @@ mcp ──┼→ validators → services → domains → repositories → infras
 | `domains`          | `repositories`, `types`, `errors`, `utils`, `constants`                 | `cli`, `services`, `infrastructures`                |
 | `repositories`     | `infrastructures`, `types`, `errors`, `utils`, `constants`              | `cli`, `services`, `domains`                        |
 | `infrastructures`  | `types`, `errors`, `utils`, `constants`                                 | `cli`, `services`, `domains`, `repositories`        |
+| `utils`            | external libraries (e.g. `dayjs`); Node.js non-I/O built-ins (e.g. `crypto`) | all `src/` layers                             |
 | `types`            | nothing                                                                 | all other layers                                    |
 | `core/di/setup.ts` | all layers                                                              | — (sole exception: DI wiring is its responsibility) |
 
@@ -100,9 +101,10 @@ npm run test:unit  # Vitest unit tests
 - Use `type` instead of `interface` everywhere
 - Types referenced by 2+ layers belong in `src/types/`
 - Files within `src/types/` may import from sibling `src/types/` files (intra-layer imports are permitted to avoid duplication; there is no circular-dependency risk within a single leaf layer)
-- Port types (`type IXxx`) follow the same rule:
-  - Defined and implemented **within the same layer** (e.g. `ISessionDomain` alongside `SessionDomain` in `domains/`) → same file as the class
-  - Bridging **two different layers** (e.g. domain depends on it, infrastructure implements it) → `src/types/` alongside the related data types
+- Port types (`type IXxx`) always live in `src/types/`, co-located with their related data types — no placement decision required
+  - Example: `ISessionRepository`, `ISessionDomain`, `IImportDomain` → `src/types/session.ts`
+  - Example: `IAgentDomain`, `IProcedureRepository` → `src/types/agent.ts`
+  - Example: `IAnalyzeDomain`, `IClaudeSessionRepository` → `src/types/analysis.ts`
 
 ### File & Directory Naming
 

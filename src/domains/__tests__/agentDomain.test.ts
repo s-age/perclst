@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { IClaudeCodeRepository } from '@src/types/claudeCode'
-import type { IProcedureRepository } from '@src/repositories/procedures'
+import type { IProcedureRepository } from '@src/types/agent'
 import { AgentDomain } from '../agent'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6'

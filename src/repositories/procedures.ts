@@ -1,5 +1,6 @@
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import type { IProcedureRepository } from '@src/types/agent'
 import { ProcedureNotFoundError } from '@src/errors/procedureNotFoundError'
 import { fileExists } from '@src/infrastructures/fs'
 import { readFileSync } from 'fs'
@@ -7,11 +8,6 @@ import { readFileSync } from 'fs'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const PROCEDURES_DIR = join(__dirname, '../../../procedures')
-
-export type IProcedureRepository = {
-  load(name: string): string
-  exists(name: string): boolean
-}
 
 export class ProcedureRepository implements IProcedureRepository {
   load(name: string): string {

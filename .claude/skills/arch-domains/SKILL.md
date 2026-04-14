@@ -32,7 +32,7 @@ Intra-domain imports are permitted: a domain class may accept another domain's p
 
 **Style A — interface injection** (use when the repository is class-based with `IXxx`)
 
-Port type lives in `src/types/` when it bridges domains ↔ infrastructures; lives in the same file as the class when it is used only within this layer.
+Port type placement rule: define in the same file as the implementing class. Move to `src/types/` only when multiple external layers must both import the type (see rule in `arch/SKILL.md`).
 
 ```ts
 // Good — IClaudeCodeRepository is in src/types/claudeCode.ts because it bridges
@@ -81,23 +81,18 @@ export class SessionDomain implements ISessionDomain {
 import { readFileSync } from 'fs'   // NG: raw I/O belongs in infrastructures/
 ```
 
-**Port type placement** — same file vs. `src/types/`
+**Port type placement** — always `src/types/`
+
+All port types (`IXxx`) live in `src/types/`, co-located with related data types. Never define them in domain files.
 
 ```ts
-// Good — ISessionDomain is used only within domains/ → same file as the class
-export type ISessionDomain = {
-  create(params: CreateSessionParams): Promise<Session>
-  save(session: Session): Promise<void>
-  get(sessionId: string): Promise<Session>
-  ...
-}
+// Good — ISessionDomain is defined in src/types/session.ts; import it here
+import type { ISessionDomain, ISessionRepository } from '@src/types/session'
 export class SessionDomain implements ISessionDomain { ... }
 
-// Good — IClaudeCodeRepository bridges domains and infrastructures → src/types/claudeCode.ts
-// (defined there, not in agent.ts)
-
-// Bad — moving a domain-only interface to src/types/ adds unnecessary indirection
-// src/types/sessionDomain.ts  ← NG if only domains/ ever uses this type
+// Bad — defining the port type in the domain file
+export type ISessionDomain = { ... }  // NG: belongs in src/types/session.ts
+export class SessionDomain implements ISessionDomain { ... }
 ```
 
 **Intra-domain composition** — inject another domain's port type, not the concrete class
@@ -123,6 +118,6 @@ export class AnalyzeDomain {
 - Never import from `cli`, `services`, or `infrastructures` — `infrastructures` access must go through `repositories`
 - Never import `zod` — validation is the validators layer's exclusive responsibility
 - Never access the file system, spawn processes, or call external APIs directly — delegate to repository functions or injected repository interfaces
-- Never place a port type (`IXxxDomain`) in `src/types/` when it is only used within `domains/` — define it in the same file as the class
+- Never define a port type (`IXxx`) in a domain file — all port types belong in `src/types/`
 - Never import a concrete repository class — inject the interface or call exported functions; never `new XxxRepository()` inside a domain
 - Never call `services` — domains sit below services in the dependency chain
