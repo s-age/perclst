@@ -1,4 +1,5 @@
-import type { Session, CreateSessionParams, ISessionDomain } from '@src/types/session'
+import type { Session, CreateSessionParams } from '@src/types/session'
+import type { ISessionDomain } from '@src/domains/ports/session'
 
 export class SessionService {
   constructor(private domain: ISessionDomain) {}

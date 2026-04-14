@@ -45,14 +45,3 @@ export type AnalysisSummary = {
     totalCacheCreation: number
   }
 }
-
-export type IClaudeSessionRepository = {
-  findEncodedDirBySessionId(claudeSessionId: string): string
-  decodeWorkingDir(encoded: string): { path: string | null; ambiguous: boolean }
-  validateSessionAtDir(claudeSessionId: string, workingDir: string): void
-  readSession(claudeSessionId: string, workingDir: string): AnalysisSummary
-}
-
-export type IAnalyzeDomain = {
-  analyze(sessionId: string): Promise<AnalyzeResult>
-}

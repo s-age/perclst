@@ -1,5 +1,4 @@
 import type { ThinkingBlock, ToolUseRecord } from './common.js'
-import type { Session } from './session.js'
 
 export type AgentResponse = {
   content: string
@@ -25,18 +24,4 @@ export type ExecuteOptions = {
   allowedTools?: string[]
   model?: string
   sessionFilePath?: string
-}
-
-export type IAgentDomain = {
-  run(
-    session: Session,
-    instruction: string,
-    isResume: boolean,
-    options?: ExecuteOptions
-  ): Promise<AgentResponse>
-}
-
-export type IProcedureRepository = {
-  load(name: string): string
-  exists(name: string): boolean
 }

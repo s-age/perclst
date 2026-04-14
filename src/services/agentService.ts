@@ -1,5 +1,7 @@
-import type { AgentResponse, IAgentDomain } from '@src/types/agent'
-import type { CreateSessionParams, ISessionDomain } from '@src/types/session'
+import type { AgentResponse } from '@src/types/agent'
+import type { CreateSessionParams } from '@src/types/session'
+import type { IAgentDomain } from '@src/domains/ports/agent'
+import type { ISessionDomain } from '@src/domains/ports/session'
 import { logger } from '@src/utils/logger'
 
 const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Please:

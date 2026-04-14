@@ -1,5 +1,6 @@
 import { join } from 'path'
-import type { Session, ISessionRepository } from '@src/types/session'
+import type { Session } from '@src/types/session'
+import type { ISessionRepository } from '@src/repositories/ports/session'
 import { toTimestamp } from '@src/utils/date'
 import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
 import {

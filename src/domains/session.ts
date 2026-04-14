@@ -1,9 +1,6 @@
-import type {
-  Session,
-  CreateSessionParams,
-  ISessionDomain,
-  ISessionRepository
-} from '@src/types/session'
+import type { Session, CreateSessionParams } from '@src/types/session'
+import type { ISessionDomain } from '@src/domains/ports/session'
+import type { ISessionRepository } from '@src/repositories/ports/session'
 import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
 import { toISO } from '@src/utils/date'

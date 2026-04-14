@@ -1,5 +1,5 @@
-import type { IImportDomain } from '@src/types/session'
-import type { IClaudeSessionRepository } from '@src/types/analysis'
+import type { IImportDomain } from '@src/domains/ports/session'
+import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 
 export class ImportDomain implements IImportDomain {
   constructor(private claudeSessionRepo: IClaudeSessionRepository) {}

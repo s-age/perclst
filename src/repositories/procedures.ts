@@ -1,6 +1,6 @@
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { IProcedureRepository } from '@src/types/agent'
+import type { IProcedureRepository } from '@src/repositories/ports/agent'
 import { ProcedureNotFoundError } from '@src/errors/procedureNotFoundError'
 import { fileExists } from '@src/infrastructures/fs'
 import { readFileSync } from 'fs'

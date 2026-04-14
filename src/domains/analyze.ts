@@ -1,5 +1,7 @@
-import type { AnalyzeResult, IAnalyzeDomain, IClaudeSessionRepository } from '@src/types/analysis'
-import type { ISessionDomain } from '@src/types/session'
+import type { AnalyzeResult } from '@src/types/analysis'
+import type { IAnalyzeDomain } from '@src/domains/ports/analysis'
+import type { ISessionDomain } from '@src/domains/ports/session'
+import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 
 export class AnalyzeDomain implements IAnalyzeDomain {
   constructor(

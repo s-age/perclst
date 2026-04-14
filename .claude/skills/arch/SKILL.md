@@ -30,7 +30,9 @@ paths:
 | `src/validators/cli/`  | CLI-specific validators; future entry points get their own subdirectory (e.g. `validators/mcp/`)      |
 | `src/services/`        | Use-case orchestration                                                                                |
 | `src/domains/`         | Business rules — session lifecycle, agent execution 等                                                |
-| `src/repositories/`    | Translates infrastructure primitives into atomic domain operations (e.g. `startSession`, `getTurns`); holds port types for DI |
+| `src/repositories/`    | Translates infrastructure primitives into atomic domain operations (e.g. `startSession`, `getTurns`) |
+| `src/repositories/ports/` | Port contracts (e.g. `ISessionRepository`) consumed by `domains/` and implemented by `repositories/` |
+| `src/domains/ports/`   | Port contracts (e.g. `ISessionDomain`) consumed by `services/` and implemented by `domains/`         |
 | `src/infrastructures/` | Wraps raw external I/O primitives (HTTP verbs, CLI commands, file ops) — no domain knowledge; consumed by `repositories/` |
 | `src/types/`           | Shared data types; types referenced across 2+ layers                                                  |
 | `src/errors/`          | Error classes — one class per file                                                                    |
@@ -55,9 +57,9 @@ mcp ──┼→ validators → services → domains → repositories → infras
 | `validators`       | `errors`, `types`, `constants`                                          | `cli`, `services`, `domains`, `repositories`, `infrastructures` |
 | `validators/rules` | `zod` only                                                              | all `src/` layers                                   |
 | `validators/schema.ts` | `zod`, `errors`                                                     | all other `src/` layers                             |
-| `services`         | `domains`, `types`, `errors`, `utils`, `constants`                      | `repositories`, `infrastructures`                   |
-| `domains`          | `repositories`, `types`, `errors`, `utils`, `constants`                 | `cli`, `services`, `infrastructures`                |
-| `repositories`     | `infrastructures`, `types`, `errors`, `utils`, `constants`              | `cli`, `services`, `domains`                        |
+| `services`         | `domains/ports`, `types`, `errors`, `utils`, `constants`                | `repositories`, `infrastructures`                   |
+| `domains`          | `domains/ports` (intra), `repositories/ports`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `infrastructures`   |
+| `repositories`     | `repositories/ports` (intra), `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains`        |
 | `infrastructures`  | `types`, `errors`, `utils`, `constants`                                 | `cli`, `services`, `domains`, `repositories`        |
 | `utils`            | external libraries (e.g. `dayjs`); Node.js non-I/O built-ins (e.g. `crypto`) | all `src/` layers                             |
 | `types`            | nothing                                                                 | all other layers                                    |
@@ -101,10 +103,15 @@ npm run test:unit  # Vitest unit tests
 - Use `type` instead of `interface` everywhere
 - Types referenced by 2+ layers belong in `src/types/`
 - Files within `src/types/` may import from sibling `src/types/` files (intra-layer imports are permitted to avoid duplication; there is no circular-dependency risk within a single leaf layer)
-- Port types (`type IXxx`) always live in `src/types/`, co-located with their related data types — no placement decision required
-  - Example: `ISessionRepository`, `ISessionDomain`, `IImportDomain` → `src/types/session.ts`
-  - Example: `IAgentDomain`, `IProcedureRepository` → `src/types/agent.ts`
-  - Example: `IAnalyzeDomain`, `IClaudeSessionRepository` → `src/types/analysis.ts`
+- Port types (`type IXxx`) live in the `ports/` subdirectory of the layer that **consumes** the port — no placement decision required
+  - Repository ports (consumed by `domains`, implemented by `repositories`): `src/repositories/ports/`
+    - Example: `ISessionRepository` → `src/repositories/ports/session.ts`
+    - Example: `IProcedureRepository` → `src/repositories/ports/agent.ts`
+    - Example: `IClaudeSessionRepository` → `src/repositories/ports/analysis.ts`
+  - Domain ports (consumed by `services`, implemented by `domains`): `src/domains/ports/`
+    - Example: `ISessionDomain`, `IImportDomain` → `src/domains/ports/session.ts`
+    - Example: `IAgentDomain` → `src/domains/ports/agent.ts`
+    - Example: `IAnalyzeDomain` → `src/domains/ports/analysis.ts`
 
 ### File & Directory Naming
 

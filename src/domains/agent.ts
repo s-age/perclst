@@ -1,9 +1,6 @@
-import type {
-  AgentResponse,
-  IAgentDomain,
-  ExecuteOptions,
-  IProcedureRepository
-} from '@src/types/agent'
+import type { AgentResponse, ExecuteOptions } from '@src/types/agent'
+import type { IAgentDomain } from '@src/domains/ports/agent'
+import type { IProcedureRepository } from '@src/repositories/ports/agent'
 import type { Session } from '@src/types/session'
 import type { IClaudeCodeRepository } from '@src/types/claudeCode'
 import { logger } from '@src/utils/logger'

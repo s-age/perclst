@@ -1,11 +1,7 @@
 import { join } from 'path'
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs'
-import type {
-  AnalysisSummary,
-  ClaudeCodeTurn,
-  ToolCall,
-  IClaudeSessionRepository
-} from '@src/types/analysis'
+import type { AnalysisSummary, ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
+import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import { fileExists, homeDir } from '@src/infrastructures/fs'
 
 type RawUserEntry = {

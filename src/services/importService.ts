@@ -1,4 +1,5 @@
-import type { Session, ISessionDomain, IImportDomain } from '@src/types/session'
+import type { Session } from '@src/types/session'
+import type { ISessionDomain, IImportDomain } from '@src/domains/ports/session'
 import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
 import { toISO } from '@src/utils/date'

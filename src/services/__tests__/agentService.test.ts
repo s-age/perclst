@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AgentService } from '../agentService'
-import type { IAgentDomain } from '@src/types/agent'
-import type { ISessionDomain } from '@src/types/session'
 import type { Session } from '@src/types/session'
+import type { IAgentDomain } from '@src/domains/ports/agent'
+import type { ISessionDomain } from '@src/domains/ports/session'
 
 const mockSession: Session = {
   id: 'test-session',
