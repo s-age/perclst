@@ -281,6 +281,17 @@ export function findEncodedDirBySessionId(claudeSessionId: string): string {
   return matches[0]
 }
 
+/**
+ * Validate that a Claude Code session JSONL file exists at the given working directory.
+ * Throws if the file is not found.
+ */
+export function validateSessionAtDir(claudeSessionId: string, workingDir: string): void {
+  const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
+  if (!existsSync(jsonlPath)) {
+    throw new Error(`Claude Code session not found: ${jsonlPath}`)
+  }
+}
+
 export function readClaudeSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
   const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
 

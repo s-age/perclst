@@ -2,7 +2,11 @@ import type { Session } from '@src/types/session'
 import type { ISessionDomain } from '@src/domains/session'
 import { generateId } from '@src/utils/uuid'
 import { logger } from '@src/utils/logger'
-import { findEncodedDirBySessionId, decodeWorkingDir } from '@src/repositories/claudeSessions'
+import {
+  findEncodedDirBySessionId,
+  decodeWorkingDir,
+  validateSessionAtDir
+} from '@src/repositories/claudeSessions'
 
 export type ImportOptions = {
   name?: string
@@ -14,6 +18,10 @@ export class ImportService {
 
   async import(claudeSessionId: string, options: ImportOptions = {}): Promise<Session> {
     const workingDir = options.cwd ?? this.resolveWorkingDir(claudeSessionId)
+
+    if (options.cwd) {
+      validateSessionAtDir(claudeSessionId, workingDir)
+    }
 
     const now = new Date().toISOString()
     const session: Session = {
