@@ -9,15 +9,16 @@ paths:
 
 ## Language & Libraries
 
-- **Language**: TypeScript 5, ESM (`"type": "module"`)
+- **Language**: TypeScript **v5**, ESM (`"type": "module"`)
 - **Runtime**: Node.js ≥ 18
-- **CLI framework**: `commander`
-- **AI client**: `@anthropic-ai/sdk`
-- **TypeScript analysis**: `ts-morph`
-- **Validation**: `zod` — confined to `src/validators/` only
-- **Build**: `tsup`
-- **Test**: `vitest`
-- **Lint / Format**: `eslint` + `prettier`
+- **CLI framework**: `commander` **v12**
+- **AI client**: `@anthropic-ai/sdk` **v0.27**
+- **TypeScript analysis**: `ts-morph` **v27**
+- **Validation**: `zod` **v4** — confined to `src/validators/` only
+  - Use `ZodError.issues` (not `.errors` — removed in v4)
+- **Build**: `tsup` **v8**
+- **Test**: `vitest` **v4**
+- **Lint / Format**: `eslint` **v10** + `prettier` **v3**
 
 ## Directory Structure
 
