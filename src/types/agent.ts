@@ -22,6 +22,7 @@ export type AgentResponse = {
 
 export type ExecuteOptions = {
   allowedTools?: string[]
+  disallowedTools?: string[]
   model?: string
   sessionFilePath?: string
 }

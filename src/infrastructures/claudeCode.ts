@@ -229,6 +229,10 @@ async function dispatch(action: ClaudeAction): Promise<RawOutput> {
     args.push('--allowedTools', ...action.allowedTools)
   }
 
+  if (action.disallowedTools?.length) {
+    args.push('--disallowedTools', ...action.disallowedTools)
+  }
+
   const mcpConfigPath = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
   writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
   args.push('--mcp-config', mcpConfigPath)

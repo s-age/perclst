@@ -9,6 +9,7 @@ const resumeSchema = schema({
   sessionId: stringRule({ required: true }),
   instruction: stringRule({ required: true }),
   allowedTools: stringArrayRule().optional(),
+  disallowedTools: stringArrayRule().optional(),
   model: stringRule().optional(),
   maxTurns: intRule().optional(),
   maxContextTokens: intRule().optional(),

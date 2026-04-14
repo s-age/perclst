@@ -77,6 +77,30 @@ perclst import <claude-session-id> --name "My session"
 perclst import <claude-session-id> --cwd /path/to/working/dir
 ```
 
+### Tool Permissions
+
+Use `--allowed-tools` and `--disallowed-tools` to control which Claude Code built-in tools the agent can use without prompting.
+
+```bash
+# Allow specific tools (no permission prompt for these)
+perclst start "read and analyze code" --allowed-tools Read Glob Grep
+
+# Deny specific tools entirely
+perclst start "read-only task" --disallowed-tools Bash Edit Write
+
+# Both options work on resume as well
+perclst resume <session-id> "continue" --allowed-tools WebFetch --disallowed-tools Bash
+```
+
+Defaults can be set in config (CLI flags override config values for that invocation):
+
+```json
+{
+  "allowed_tools": ["WebFetch", "WebSearch"],
+  "disallowed_tools": ["Bash"]
+}
+```
+
 ### Graceful Termination
 
 Use `--max-turns` or `--max-context-tokens` to automatically stop an agent run and request a summary when limits are reached.
@@ -156,6 +180,8 @@ Sessions are stored in `~/.perclst/sessions/` by default (absolute path, indepen
   "sessions_dir": "~/.perclst/sessions",
   "logs_dir": "~/.perclst/logs",
   "model": "claude-sonnet-4-5",
+  "allowed_tools": [],
+  "disallowed_tools": [],
   "limits": {
     "max_turns": -1,
     "max_context_tokens": -1

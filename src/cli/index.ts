@@ -29,6 +29,10 @@ program
     '--allowed-tools <tools...>',
     'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)'
   )
+  .option(
+    '--disallowed-tools <tools...>',
+    'Claude Code built-in tools to deny (e.g. Bash Edit Write)'
+  )
   .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
   .option('--silent-thoughts', 'Hide thinking blocks from output')
   .option('--silent-tool-response', 'Hide tool call details from output')
@@ -51,6 +55,10 @@ program
   .option(
     '--allowed-tools <tools...>',
     'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)'
+  )
+  .option(
+    '--disallowed-tools <tools...>',
+    'Claude Code built-in tools to deny (e.g. Bash Edit Write)'
   )
   .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
   .option('--silent-thoughts', 'Hide thinking blocks from output')

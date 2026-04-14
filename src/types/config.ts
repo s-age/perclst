@@ -17,6 +17,10 @@ export type Config = {
   logs_dir?: string
   model?: string
   api_key_env?: string
+  /** Default list of tools to allow without prompting (overridable per-invocation) */
+  allowed_tools?: string[]
+  /** Default list of tools to deny (overridable per-invocation) */
+  disallowed_tools?: string[]
   display?: DisplayConfig
   limits?: AgentLimitsConfig
 }

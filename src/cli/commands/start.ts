@@ -13,6 +13,7 @@ type RawStartOptions = {
   name?: string
   tags?: string[]
   allowedTools?: string[]
+  disallowedTools?: string[]
   model?: string
   maxTurns?: string
   maxContextTokens?: string
@@ -34,11 +35,13 @@ export async function startCommand(task: string, options: RawStartOptions) {
 
     const maxTurns = input.maxTurns ?? config.limits?.max_turns ?? -1
     const maxContextTokens = input.maxContextTokens ?? config.limits?.max_context_tokens ?? -1
+    const allowedTools = input.allowedTools ?? config.allowed_tools
+    const disallowedTools = input.disallowedTools ?? config.disallowed_tools
 
     const { sessionId, response } = await agentService.start(
       input.task,
       { name: input.name, procedure: input.procedure, tags: input.tags },
-      { allowedTools: input.allowedTools, model: input.model, maxTurns, maxContextTokens }
+      { allowedTools, disallowedTools, model: input.model, maxTurns, maxContextTokens }
     )
 
     logger.print(`Session created: ${sessionId}`)

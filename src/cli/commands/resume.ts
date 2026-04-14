@@ -10,6 +10,7 @@ import { parseResumeSession } from '@src/validators/cli/resumeSession'
 
 type RawResumeOptions = {
   allowedTools?: string[]
+  disallowedTools?: string[]
   model?: string
   maxTurns?: string
   maxContextTokens?: string
@@ -35,9 +36,12 @@ export async function resumeCommand(
 
     const maxTurns = input.maxTurns ?? config.limits?.max_turns ?? -1
     const maxContextTokens = input.maxContextTokens ?? config.limits?.max_context_tokens ?? -1
+    const allowedTools = input.allowedTools ?? config.allowed_tools
+    const disallowedTools = input.disallowedTools ?? config.disallowed_tools
 
     const response = await agentService.resume(input.sessionId, input.instruction, {
-      allowedTools: input.allowedTools,
+      allowedTools,
+      disallowedTools,
       model: input.model,
       maxTurns,
       maxContextTokens

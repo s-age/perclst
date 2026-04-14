@@ -11,6 +11,7 @@ const startSchema = schema({
   name: stringRule().optional(),
   tags: stringArrayRule().optional(),
   allowedTools: stringArrayRule().optional(),
+  disallowedTools: stringArrayRule().optional(),
   model: stringRule().optional(),
   maxTurns: intRule().optional(),
   maxContextTokens: intRule().optional(),

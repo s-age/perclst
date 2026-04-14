@@ -11,6 +11,7 @@ Then provide your final response.`
 
 export type AgentRunOptions = {
   allowedTools?: string[]
+  disallowedTools?: string[]
   model?: string
   maxTurns?: number
   maxContextTokens?: number

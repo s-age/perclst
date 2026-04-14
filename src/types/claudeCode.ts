@@ -7,6 +7,7 @@ export type StartAction = {
   system?: string
   model?: string
   allowedTools?: string[]
+  disallowedTools?: string[]
   workingDir: string
   sessionFilePath?: string
 }
@@ -17,6 +18,7 @@ export type ResumeAction = {
   prompt: string
   model?: string
   allowedTools?: string[]
+  disallowedTools?: string[]
   workingDir: string
   sessionFilePath?: string
 }

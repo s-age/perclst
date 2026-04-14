@@ -30,6 +30,7 @@ export class AgentDomain implements IAgentDomain {
       prompt: instruction,
       model: options.model ?? this.model,
       allowedTools: options.allowedTools,
+      disallowedTools: options.disallowedTools,
       workingDir: session.working_dir,
       sessionFilePath: options.sessionFilePath
     }
