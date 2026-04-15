@@ -1,6 +1,7 @@
 import type { Session, CreateSessionParams } from '@src/types/session'
 import type { ISessionDomain } from '@src/domains/ports/session'
-import { toTimestamp } from '@src/utils/date'
+import { toTimestamp, toISO } from '@src/utils/date'
+import { generateId } from '@src/utils/uuid'
 
 export type SweepFilter = {
   from?: string
@@ -42,6 +43,33 @@ export class SessionService {
 
   async rename(sessionId: string, name: string): Promise<Session> {
     return this.domain.rename(sessionId, name)
+  }
+
+  async createRewindSession(
+    originalSessionId: string,
+    messageId: string | undefined,
+    name?: string
+  ): Promise<Session> {
+    const original = await this.domain.get(originalSessionId)
+    const id = generateId()
+    const now = toISO()
+    const session: Session = {
+      id,
+      ...(name !== undefined ? { name } : {}),
+      created_at: now,
+      updated_at: now,
+      claude_session_id: id,
+      working_dir: original.working_dir,
+      rewind_source_claude_session_id: original.claude_session_id,
+      ...(messageId !== undefined ? { rewind_to_message_id: messageId } : {}),
+      metadata: {
+        parent_session_id: originalSessionId,
+        tags: [],
+        status: 'active'
+      }
+    }
+    await this.domain.save(session)
+    return session
   }
 
   async sweep(filter: SweepFilter, dryRun: boolean): Promise<Session[]> {

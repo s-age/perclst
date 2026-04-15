@@ -68,6 +68,7 @@ export class AgentDomain implements IAgentDomain {
       originalWorkingDir: originalSession.working_dir,
       sessionId: newSession.claude_session_id,
       prompt: instruction,
+      resumeSessionAt: options.resumeSessionAt,
       model: options.model ?? this.model,
       allowedTools: options.allowedTools,
       disallowedTools: options.disallowedTools,

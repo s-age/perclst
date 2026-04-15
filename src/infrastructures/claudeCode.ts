@@ -222,6 +222,9 @@ async function dispatch(action: ClaudeAction): Promise<RawOutput> {
     args.push('--resume', action.originalClaudeSessionId)
     args.push('--fork-session')
     args.push('--session-id', action.sessionId)
+    if (action.resumeSessionAt) {
+      args.push('--resume-session-at', action.resumeSessionAt)
+    }
   } else {
     args.push('--session-id', action.sessionId)
     if (action.system) {

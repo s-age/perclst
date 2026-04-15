@@ -1,6 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
+import { SessionService } from '@src/services/sessionService'
 import { logger } from '@src/utils/logger'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
@@ -30,6 +31,7 @@ export async function forkCommand(
   try {
     logger.info('Forking session', { original_session_id: originalSessionId })
 
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
     const config = container.resolve<Config>(TOKENS.Config)
 
@@ -40,18 +42,25 @@ export async function forkCommand(
     const allowedTools = input.allowedTools ?? config.allowed_tools
     const disallowedTools = input.disallowedTools ?? config.disallowed_tools
 
-    const { sessionId, response } = await agentService.fork(
+    const newSession = await sessionService.createRewindSession(
       input.originalSessionId,
-      input.prompt,
-      { name: input.name },
-      { allowedTools, disallowedTools, model: input.model, maxTurns, maxContextTokens }
+      undefined,
+      input.name
     )
 
-    logger.print(`Session forked: ${sessionId}`)
+    const response = await agentService.resume(newSession.id, input.prompt, {
+      allowedTools,
+      disallowedTools,
+      model: input.model,
+      maxTurns,
+      maxContextTokens
+    })
 
-    printResponse(response, input, config.display, { sessionId })
+    logger.print(`Session forked: ${newSession.id}`)
 
-    logger.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
+    printResponse(response, input, config.display, { sessionId: newSession.id })
+
+    logger.print(`\nTo resume: perclst resume ${newSession.id} "<instruction>"`)
   } catch (error) {
     if (error instanceof ValidationError) {
       logger.error(`Invalid arguments: ${error.message}`)

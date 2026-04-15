@@ -1,5 +1,5 @@
 import type { AgentResponse } from '@src/types/agent'
-import type { CreateSessionParams } from '@src/types/session'
+import type { Session, CreateSessionParams } from '@src/types/session'
 import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import { logger } from '@src/utils/logger'
@@ -82,43 +82,6 @@ export class AgentService {
     return { sessionId: session.id, response }
   }
 
-  async fork(
-    originalSessionId: string,
-    instruction: string,
-    createParams: CreateSessionParams,
-    options: AgentRunOptions = {}
-  ): Promise<StartResult> {
-    const originalSession = await this.sessionDomain.get(originalSessionId)
-    const defaultName = `fork of ${originalSession.name ?? originalSession.id}`
-    const newSession = await this.sessionDomain.create({
-      ...createParams,
-      name: createParams.name ?? defaultName,
-      parent_session_id: originalSessionId
-    })
-    const sessionFilePath = this.sessionDomain.getPath(newSession.id)
-    const executeOptions = { ...options, sessionFilePath }
-
-    let response = await this.agentDomain.fork(
-      originalSession,
-      newSession,
-      instruction,
-      executeOptions
-    )
-
-    if (this.isLimitExceeded(response, options)) {
-      response = await this.agentDomain.run(
-        newSession,
-        GRACEFUL_TERMINATION_PROMPT,
-        true,
-        executeOptions
-      )
-    }
-
-    await this.sessionDomain.updateStatus(newSession.id, 'active')
-
-    return { sessionId: newSession.id, response }
-  }
-
   async resume(
     sessionId: string,
     instruction: string,
@@ -126,10 +89,25 @@ export class AgentService {
   ): Promise<AgentResponse> {
     const session = await this.sessionDomain.get(sessionId)
     const sessionFilePath = this.sessionDomain.getPath(session.id)
-
     const executeOptions = { ...options, sessionFilePath }
 
-    let response = await this.agentDomain.run(session, instruction, true, executeOptions)
+    let response: AgentResponse
+
+    if (session.rewind_source_claude_session_id) {
+      const pseudoOriginal: Session = {
+        ...session,
+        claude_session_id: session.rewind_source_claude_session_id
+      }
+      response = await this.agentDomain.fork(pseudoOriginal, session, instruction, {
+        ...executeOptions,
+        resumeSessionAt: session.rewind_to_message_id
+      })
+      session.rewind_source_claude_session_id = undefined
+      session.rewind_to_message_id = undefined
+      await this.sessionDomain.save(session)
+    } else {
+      response = await this.agentDomain.run(session, instruction, true, executeOptions)
+    }
 
     if (this.isLimitExceeded(response, options)) {
       response = await this.agentDomain.run(
@@ -141,7 +119,6 @@ export class AgentService {
     }
 
     await this.sessionDomain.updateStatus(session.id, 'active')
-
     return response
   }
 }

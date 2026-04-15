@@ -1,5 +1,9 @@
 import type { Session } from './session.js'
 
+export type AssistantTurnEntry = { uuid: string; text: string }
+
+export type RewindTurn = { index: number; uuid: string; text: string }
+
 export type AnalyzeResult = {
   session: Session
   summary: AnalysisSummary

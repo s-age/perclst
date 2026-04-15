@@ -6,6 +6,8 @@ export type Session = {
   procedure?: string
   claude_session_id: string
   working_dir: string
+  rewind_source_claude_session_id?: string
+  rewind_to_message_id?: string
 
   metadata: {
     parent_session_id?: string

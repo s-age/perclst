@@ -11,6 +11,7 @@ import { analyzeCommand } from './commands/analyze'
 import { renameCommand } from './commands/rename'
 import { importCommand } from './commands/import'
 import { sweepCommand } from './commands/sweep'
+import { rewindCommand } from './commands/rewind'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -146,6 +147,16 @@ program
   .option('-n, --name <name>', 'Name for the imported session')
   .option('--cwd <path>', 'Working directory of the Claude Code session (auto-detected if omitted)')
   .action(importCommand)
+
+// Rewind command
+program
+  .command('rewind')
+  .description('List or create a rewind point for a session')
+  .argument('[session-id]', 'Session ID')
+  .argument('[index]', 'Turn index to rewind to (0 = most recent, no truncation)')
+  .option('--list', 'List available rewind points')
+  .option('--length <n>', 'Characters of response to show per turn (with --list)', '120')
+  .action(rewindCommand)
 
 // Sweep command
 program

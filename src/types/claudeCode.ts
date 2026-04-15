@@ -29,6 +29,7 @@ export type ForkAction = {
   originalWorkingDir: string
   sessionId: string
   prompt: string
+  resumeSessionAt?: string
   model?: string
   allowedTools?: string[]
   disallowedTools?: string[]

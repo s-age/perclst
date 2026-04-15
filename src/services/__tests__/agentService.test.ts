@@ -30,6 +30,7 @@ describe('AgentService', () => {
   beforeEach(() => {
     sessionDomain = {
       create: vi.fn().mockResolvedValue(mockSession),
+      save: vi.fn().mockResolvedValue(undefined),
       get: vi.fn().mockResolvedValue(mockSession),
       getPath: vi.fn().mockReturnValue(SESSION_FILE_PATH),
       list: vi.fn(),
@@ -40,7 +41,10 @@ describe('AgentService', () => {
         metadata: { ...mockSession.metadata, status: 'active' }
       })
     }
-    agentDomain = { run: vi.fn().mockResolvedValue(mockResponse) }
+    agentDomain = {
+      run: vi.fn().mockResolvedValue(mockResponse),
+      fork: vi.fn().mockResolvedValue(mockResponse)
+    }
     service = new AgentService(sessionDomain, agentDomain)
   })
 

@@ -25,4 +25,5 @@ export type ExecuteOptions = {
   disallowedTools?: string[]
   model?: string
   sessionFilePath?: string
+  resumeSessionAt?: string
 }

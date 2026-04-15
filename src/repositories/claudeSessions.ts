@@ -1,6 +1,11 @@
 import { join } from 'path'
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs'
-import type { AnalysisSummary, ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
+import type {
+  AnalysisSummary,
+  AssistantTurnEntry,
+  ClaudeCodeTurn,
+  ToolCall
+} from '@src/types/analysis'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import { fileExists, homeDir } from '@src/infrastructures/fs'
 
@@ -13,6 +18,7 @@ type RawUserEntry = {
 
 type RawAssistantEntry = {
   type: 'assistant'
+  uuid: string
   message: {
     content: RawContentBlock[]
     usage?: {
@@ -234,6 +240,10 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
   readSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
     return readClaudeSession(claudeSessionId, workingDir)
   }
+
+  getAssistantTurns(claudeSessionId: string, workingDir: string): AssistantTurnEntry[] {
+    return getAssistantTurns(claudeSessionId, workingDir)
+  }
 }
 
 export function decodeWorkingDir(encoded: string): { path: string | null; ambiguous: boolean } {
@@ -308,6 +318,35 @@ export function validateSessionAtDir(claudeSessionId: string, workingDir: string
   if (!existsSync(jsonlPath)) {
     throw new Error(`Claude Code session not found: ${jsonlPath}`)
   }
+}
+
+export function getAssistantTurns(
+  claudeSessionId: string,
+  workingDir: string
+): AssistantTurnEntry[] {
+  const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
+  if (!fileExists(jsonlPath)) {
+    throw new Error(`Claude Code session file not found: ${jsonlPath}`)
+  }
+
+  const entries = parseRawEntries(readFileSync(jsonlPath, 'utf-8'))
+  const result: AssistantTurnEntry[] = []
+
+  for (const entry of entries) {
+    if (entry.type !== 'assistant') continue
+    const assistantEntry = entry as RawAssistantEntry
+    const content = assistantEntry.message.content ?? []
+    if (content.length > 0 && content.every((b) => b.type === 'thinking')) continue
+    const text = content
+      .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
+      .map((b) => b.text)
+      .join(' ')
+      .trim()
+    if (!text) continue
+    result.push({ uuid: assistantEntry.uuid, text })
+  }
+
+  return result
 }
 
 export function readClaudeSession(claudeSessionId: string, workingDir: string): AnalysisSummary {

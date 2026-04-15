@@ -34,6 +34,27 @@ perclst fork <session-id> "Try a different fix" --name "hotfix-attempt-2"
 
 > For all options: `perclst fork -h`
 
+## `rewind`
+
+Create a new session branching from a past point in a session's conversation history.
+
+Due to Claude Code's session design, rewind always creates a fork — the original session is never modified.
+
+```bash
+# List available rewind points (0 = most recent)
+perclst rewind --list <session-id>
+perclst rewind --list <session-id> --length 200   # show more chars per turn
+
+# Create a rewind session at a given index
+perclst rewind <session-id> 0   # fork at current tip (equivalent to fork with no prompt)
+perclst rewind <session-id> 2   # discard the 2 most recent turns
+
+# Then continue from the rewind point
+perclst resume <new-session-id> "Try a different approach"
+```
+
+**Index semantics**: `--list` displays turns in descending order. Index `0` is the most recent assistant turn (no history is discarded). Index `N` discards the `N` most recent turns.
+
 ## `list`
 
 List all sessions.
