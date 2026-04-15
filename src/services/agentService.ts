@@ -82,6 +82,43 @@ export class AgentService {
     return { sessionId: session.id, response }
   }
 
+  async fork(
+    originalSessionId: string,
+    instruction: string,
+    createParams: CreateSessionParams,
+    options: AgentRunOptions = {}
+  ): Promise<StartResult> {
+    const originalSession = await this.sessionDomain.get(originalSessionId)
+    const defaultName = `fork of ${originalSession.name ?? originalSession.id}`
+    const newSession = await this.sessionDomain.create({
+      name: defaultName,
+      ...createParams,
+      parent_session_id: originalSessionId
+    })
+    const sessionFilePath = this.sessionDomain.getPath(newSession.id)
+    const executeOptions = { ...options, sessionFilePath }
+
+    let response = await this.agentDomain.fork(
+      originalSession,
+      newSession,
+      instruction,
+      executeOptions
+    )
+
+    if (this.isLimitExceeded(response, options)) {
+      response = await this.agentDomain.run(
+        newSession,
+        GRACEFUL_TERMINATION_PROMPT,
+        true,
+        executeOptions
+      )
+    }
+
+    await this.sessionDomain.updateStatus(newSession.id, 'active')
+
+    return { sessionId: newSession.id, response }
+  }
+
   async resume(
     sessionId: string,
     instruction: string,

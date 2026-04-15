@@ -8,4 +8,10 @@ export type IAgentDomain = {
     isResume: boolean,
     options?: ExecuteOptions
   ): Promise<AgentResponse>
+  fork(
+    originalSession: Session,
+    newSession: Session,
+    instruction: string,
+    options?: ExecuteOptions
+  ): Promise<AgentResponse>
 }

@@ -3,6 +3,7 @@
 import { Command } from 'commander'
 import { startCommand } from './commands/start'
 import { resumeCommand } from './commands/resume'
+import { forkCommand } from './commands/fork'
 import { listCommand } from './commands/list'
 import { showCommand } from './commands/show'
 import { deleteCommand } from './commands/delete'
@@ -72,6 +73,34 @@ program
   )
   .option('-f, --format <format>', 'Output format (text|json)', 'text')
   .action(resumeCommand)
+
+// Fork command
+program
+  .command('fork')
+  .description('Fork an existing session into a new independent session')
+  .argument('<session-id>', 'Original session ID to fork from')
+  .argument('<prompt>', 'Prompt to run in the forked session')
+  .option('-n, --name <name>', 'Name for the new forked session')
+  .option(
+    '--allowed-tools <tools...>',
+    'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)'
+  )
+  .option(
+    '--disallowed-tools <tools...>',
+    'Claude Code built-in tools to deny (e.g. Bash Edit Write)'
+  )
+  .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
+  .option('--silent-thoughts', 'Hide thinking blocks from output')
+  .option('--silent-tool-response', 'Hide tool call details from output')
+  .option('--silent-usage', 'Hide token usage from output')
+  .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
+  .option('--max-turns <n>', 'Max message count before graceful termination (-1 = disabled)')
+  .option(
+    '--max-context-tokens <n>',
+    'Max context window tokens before graceful termination (-1 = disabled)'
+  )
+  .option('-f, --format <format>', 'Output format (text|json)', 'text')
+  .action(forkCommand)
 
 // List command
 program.command('list').description('List all sessions').action(listCommand)

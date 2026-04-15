@@ -55,4 +55,38 @@ export class AgentDomain implements IAgentDomain {
       tool_history: raw.tool_history.length > 0 ? raw.tool_history : undefined
     }
   }
+
+  async fork(
+    originalSession: Session,
+    newSession: Session,
+    instruction: string,
+    options: ExecuteOptions = {}
+  ): Promise<AgentResponse> {
+    const raw = await this.claudeCodeRepo.dispatch({
+      type: 'fork',
+      originalClaudeSessionId: originalSession.claude_session_id,
+      originalWorkingDir: originalSession.working_dir,
+      sessionId: newSession.claude_session_id,
+      prompt: instruction,
+      model: options.model ?? this.model,
+      allowedTools: options.allowedTools,
+      disallowedTools: options.disallowedTools,
+      workingDir: newSession.working_dir,
+      sessionFilePath: options.sessionFilePath
+    })
+
+    if (!raw.content) {
+      throw new APIError('Empty response from Claude CLI')
+    }
+
+    return {
+      content: raw.content,
+      model: 'claude-cli',
+      usage: raw.usage,
+      last_assistant_usage: raw.last_assistant_usage,
+      message_count: raw.message_count,
+      thoughts: raw.thoughts.length > 0 ? raw.thoughts : undefined,
+      tool_history: raw.tool_history.length > 0 ? raw.tool_history : undefined
+    }
+  }
 }

@@ -23,7 +23,20 @@ export type ResumeAction = {
   sessionFilePath?: string
 }
 
-export type ClaudeAction = StartAction | ResumeAction
+export type ForkAction = {
+  type: 'fork'
+  originalClaudeSessionId: string
+  originalWorkingDir: string
+  sessionId: string
+  prompt: string
+  model?: string
+  allowedTools?: string[]
+  disallowedTools?: string[]
+  workingDir: string
+  sessionFilePath?: string
+}
+
+export type ClaudeAction = StartAction | ResumeAction | ForkAction
 
 export type RawOutput = {
   content: string

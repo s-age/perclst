@@ -218,6 +218,10 @@ async function dispatch(action: ClaudeAction): Promise<RawOutput> {
 
   if (action.type === 'resume') {
     args.push('--resume', action.sessionId)
+  } else if (action.type === 'fork') {
+    args.push('--resume', action.originalClaudeSessionId)
+    args.push('--fork-session')
+    args.push('--session-id', action.sessionId)
   } else {
     args.push('--session-id', action.sessionId)
     if (action.system) {
@@ -238,7 +242,10 @@ async function dispatch(action: ClaudeAction): Promise<RawOutput> {
   args.push('--mcp-config', mcpConfigPath)
   args.push('--permission-prompt-tool', `mcp__${MCP_SERVER_NAME}__ask_permission`)
 
-  const jsonlBaseline = countJsonlLines(resolveJsonlPath(action.sessionId, action.workingDir))
+  const baselineSessionId =
+    action.type === 'fork' ? action.originalClaudeSessionId : action.sessionId
+  const baselineWorkingDir = action.type === 'fork' ? action.originalWorkingDir : action.workingDir
+  const jsonlBaseline = countJsonlLines(resolveJsonlPath(baselineSessionId, baselineWorkingDir))
 
   try {
     return await runClaude(
