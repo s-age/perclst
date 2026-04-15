@@ -91,8 +91,8 @@ export class AgentService {
     const originalSession = await this.sessionDomain.get(originalSessionId)
     const defaultName = `fork of ${originalSession.name ?? originalSession.id}`
     const newSession = await this.sessionDomain.create({
-      name: defaultName,
       ...createParams,
+      name: createParams.name ?? defaultName,
       parent_session_id: originalSessionId
     })
     const sessionFilePath = this.sessionDomain.getPath(newSession.id)

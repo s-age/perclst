@@ -10,7 +10,7 @@ CLI tool for managing Claude Code sub-agents.
 
 ## Features
 
-- **Session Management**: Create, resume, and manage agent sessions
+- **Session Management**: Create, resume, fork, and manage agent sessions
 - **Session Analysis**: Inspect turn breakdown, tool usage, and token stats from Claude Code's jsonl history
 - **Local Storage**: Sessions stored in `~/.perclst/sessions/` by default
 - **MCP Server**: TypeScript analysis tools for Claude Code
@@ -52,6 +52,10 @@ perclst start "Implement feature X" --procedure conductor
 
 # Resume existing session
 perclst resume <session-id> "Continue the task"
+
+# Fork a session (branch into a new independent session)
+perclst fork <session-id> "Explore an alternative approach"
+perclst fork <session-id> "Try a different fix" --name "hotfix-attempt-2"
 
 # List sessions
 perclst list
