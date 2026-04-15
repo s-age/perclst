@@ -1,0 +1,226 @@
+# Usage
+
+## `start`
+
+Start a new agent session.
+
+```bash
+perclst start "Implement feature X"
+perclst start "task" --procedure conductor
+perclst start "task" --name "my-session" --model opus
+```
+
+> For all options (procedures, tool permissions, output flags, etc.): `perclst start -h`
+
+## `resume`
+
+Resume an existing session with an additional instruction.
+
+```bash
+perclst resume <session-id> "Continue the task"
+perclst resume <session-id> "quick follow-up" --model haiku
+```
+
+> For all options: `perclst resume -h`
+
+## `fork`
+
+Branch a session into a new independent session.
+
+```bash
+perclst fork <session-id> "Explore an alternative approach"
+perclst fork <session-id> "Try a different fix" --name "hotfix-attempt-2"
+```
+
+> For all options: `perclst fork -h`
+
+## `list`
+
+List all sessions.
+
+```bash
+perclst list
+```
+
+## `show`
+
+Show session details.
+
+```bash
+perclst show <session-id>
+perclst show <session-id> --format json   # includes thoughts and tool_history
+```
+
+## `analyze`
+
+Turn breakdown, tool usage, and token stats from a Claude Code jsonl session.
+
+```bash
+perclst analyze <session-id>
+perclst analyze <session-id> --print-detail   # full turn content
+perclst analyze <session-id> --format json
+```
+
+## `rename`
+
+Set a display name for a session.
+
+```bash
+perclst rename <session-id> "new-name"
+```
+
+## `delete`
+
+Delete a single session.
+
+```bash
+perclst delete <session-id>
+```
+
+## `sweep`
+
+Bulk-delete sessions matching a set of filters. At least one filter option is required. Date filters operate on `created_at`.
+
+```bash
+# Preview what would be deleted (no changes made)
+perclst sweep --from 2025-01-01 --to 2025-03-31 --dry-run
+
+# Delete by date range
+perclst sweep --from 2025-01-01 --to 2025-03-31
+
+# Open-ended range (--to omitted) requires --force
+perclst sweep --from 2025-01-01 --force
+
+# Filter by status
+perclst sweep --from 2025-01-01 --to 2025-03-31 --status completed
+
+# Filter by name (partial match)
+perclst sweep --from 2025-01-01 --to 2025-03-31 --like "experiment"
+
+# Delete all anonymous sessions (no name set)
+perclst sweep --anon-only --dry-run
+perclst sweep --anon-only --force
+
+# Combine filters
+perclst sweep --to 2025-03-31 --status completed --anon-only
+```
+
+| Option | Description |
+|---|---|
+| `--from <YYYY-MM-DD>` | Sessions created on or after this date |
+| `--to <YYYY-MM-DD>` | Sessions created on or before this date |
+| `--status <status>` | Filter by status: `active`, `completed`, `failed` |
+| `--like <pattern>` | Filter by name (partial match) |
+| `--anon-only` | Only sessions with no name (incompatible with `--like`) |
+| `--dry-run` | Preview matched sessions without deleting |
+| `--force` | Required when `--to` is omitted |
+
+## `import`
+
+Import an existing Claude Code session into perclst management.
+
+```bash
+perclst import <claude-session-id>
+perclst import <claude-session-id> --name "My session"
+perclst import <claude-session-id> --cwd /path/to/working/dir
+```
+
+---
+
+## Tool Permissions
+
+Use `--allowed-tools` and `--disallowed-tools` to control which Claude Code built-in tools the agent can use without prompting. Available on `start`, `resume`, and `fork`.
+
+```bash
+perclst start "read and analyze code" --allowed-tools Read Glob Grep
+perclst start "read-only task" --disallowed-tools Bash Edit Write
+perclst resume <session-id> "continue" --allowed-tools WebFetch --disallowed-tools Bash
+```
+
+Defaults can be set in config (CLI flags override config values for that invocation):
+
+```json
+{
+  "allowed_tools": ["WebFetch", "WebSearch"],
+  "disallowed_tools": ["Bash"]
+}
+```
+
+---
+
+## Graceful Termination
+
+Use `--max-turns` or `--max-context-tokens` to automatically stop an agent run and request a summary when limits are reached. Available on `start`, `resume`, and `fork`.
+
+```bash
+perclst start "long task" --max-turns 20
+perclst start "long task" --max-context-tokens 150000
+perclst resume <session-id> "continue" --max-turns 20 --max-context-tokens 150000
+```
+
+When a limit is reached, perclst automatically sends a follow-up prompt asking the agent to summarize what was completed and what remains unfinished.
+
+Defaults can be set in config (`-1` = disabled):
+
+```json
+{
+  "limits": {
+    "max_turns": -1,
+    "max_context_tokens": -1
+  }
+}
+```
+
+---
+
+## Output
+
+Each `start` / `resume` run prints an output block like this:
+
+```
+--- Thoughts ---
+<thinking content>
+
+--- Tool Calls ---
+[mcp__perclst__ts_checker] input: {}
+         result: { "ok": true, ... }
+
+--- Agent Response ---
+<final response text>
+
+--- Token Usage ---
+  Messages:         4
+  Input:            18
+  Output:           626
+  Cache read:       51,631
+  Cache creation:   9,096
+  Context window:   30,635 / 200,000 (15%)
+```
+
+**Token Usage notes**:
+- **Messages** — number of API messages exchanged (user prompts + assistant responses + tool round-trips)
+- **Input / Output / Cache read / Cache creation** — cumulative token counts across all API calls in the run
+- **Context window** — token count of the final API call's context (input side only). Claude Code's
+  built-in tool infrastructure consumes a fixed baseline of approximately **30,000 tokens** regardless
+  of task content. On `resume`, the context window is structurally smaller (~20K) due to a known
+  Claude Code bug — see [context-window-on-resume.md](context-window-on-resume.md) for details.
+
+---
+
+## Configuration
+
+**Priority**: `./.perclst/config.json` > `~/.perclst/config.json` > defaults
+
+```json
+{
+  "sessions_dir": "~/.perclst/sessions",
+  "logs_dir": "~/.perclst/logs",
+  "model": "claude-sonnet-4-5",
+  "allowed_tools": [],
+  "disallowed_tools": [],
+  "limits": {
+    "max_turns": -1,
+    "max_context_tokens": -1
+  }
+}
+```

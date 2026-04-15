@@ -10,6 +10,7 @@ import { deleteCommand } from './commands/delete'
 import { analyzeCommand } from './commands/analyze'
 import { renameCommand } from './commands/rename'
 import { importCommand } from './commands/import'
+import { sweepCommand } from './commands/sweep'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -145,5 +146,18 @@ program
   .option('-n, --name <name>', 'Name for the imported session')
   .option('--cwd <path>', 'Working directory of the Claude Code session (auto-detected if omitted)')
   .action(importCommand)
+
+// Sweep command
+program
+  .command('sweep')
+  .description('Bulk-delete sessions within a date range')
+  .option('--from <date>', 'Delete sessions created on or after this date (YYYY-MM-DD)')
+  .option('--to <date>', 'Delete sessions created on or before this date (YYYY-MM-DD)')
+  .option('--status <status>', 'Only delete sessions with this status (active|completed|failed)')
+  .option('--like <pattern>', 'Only delete sessions whose name contains this string')
+  .option('--anon-only', 'Only delete sessions with no name')
+  .option('--dry-run', 'Preview matching sessions without deleting')
+  .option('--force', 'Required when --to is omitted (confirms open-ended deletion)')
+  .action(sweepCommand)
 
 program.parse()
