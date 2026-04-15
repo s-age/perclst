@@ -8,16 +8,19 @@ export const TOKENS = {
   AnalyzeDomain: Symbol.for('AnalyzeDomain'),
   ImportDomain: Symbol.for('ImportDomain'),
   CheckerDomain: Symbol.for('CheckerDomain'),
+  TestStrategyDomain: Symbol.for('TestStrategyDomain'),
   // Services
   SessionService: Symbol.for('SessionService'),
   AgentService: Symbol.for('AgentService'),
   AnalyzeService: Symbol.for('AnalyzeService'),
   ImportService: Symbol.for('ImportService'),
   CheckerService: Symbol.for('CheckerService'),
+  TestStrategistService: Symbol.for('TestStrategistService'),
   // Repositories
   ClaudeCodeRepository: Symbol.for('ClaudeCodeRepository'),
   SessionRepository: Symbol.for('SessionRepository'),
   ClaudeSessionRepository: Symbol.for('ClaudeSessionRepository'),
   ProcedureRepository: Symbol.for('ProcedureRepository'),
-  CheckerRepository: Symbol.for('CheckerRepository')
+  CheckerRepository: Symbol.for('CheckerRepository'),
+  TestStrategyRepository: Symbol.for('TestStrategyRepository')
 } as const

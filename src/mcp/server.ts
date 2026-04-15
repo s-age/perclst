@@ -16,6 +16,7 @@ import { executeTsAnalyze } from './tools/tsAnalyze'
 import { executeTsGetReferences } from './tools/tsGetReferences'
 import { executeTsGetTypes } from './tools/tsGetTypes'
 import { executeTsChecker } from './tools/tsChecker'
+import { executeTsTestStrategist } from './tools/tsTestStrategist'
 import { setupContainer } from '@src/core/di/setup'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
@@ -98,6 +99,26 @@ const TOOLS = [
         }
       },
       required: ['file_path', 'symbol_name']
+    }
+  },
+  {
+    name: 'ts_test_strategist',
+    description:
+      'Formulate a unit test strategy for a TypeScript file — identifies untested functions, ' +
+      'calculates cyclomatic complexity, and suggests mocks for dependencies.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        target_file_path: {
+          type: 'string',
+          description: 'Path to the target TypeScript implementation file (.ts or .tsx)'
+        },
+        test_file_path: {
+          type: 'string',
+          description: 'Path to the corresponding test file (auto-discovered if omitted)'
+        }
+      },
+      required: ['target_file_path']
     }
   },
   {
@@ -229,6 +250,11 @@ async function handleToolsCall(id: number | string | null, params: unknown): Pro
         break
       case 'ts_get_types':
         result = await executeTsGetTypes(p.arguments as { file_path: string; symbol_name: string })
+        break
+      case 'ts_test_strategist':
+        result = await executeTsTestStrategist(
+          p.arguments as { target_file_path: string; test_file_path?: string }
+        )
         break
       case 'ts_checker':
         result = await executeTsChecker(

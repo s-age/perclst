@@ -88,6 +88,36 @@ async function handleToolsCall(id, params) {
 // or adding to TOOLS without a switch case (dispatch silently sends "Unknown tool" error)
 ```
 
+**Layered tool implementation — services → domains → infrastructures**
+
+Tools that do more than delegate to `TypeScriptProject` must route through the full service stack. External I/O (file system, shell commands, ts-morph parsing) belongs in `infrastructures/`; business logic (rules, calculations, recommendations) belongs in `domains/`. Tool files only call a service via DI.
+
+```ts
+// Good — ts_test_strategist: tool → service → domain → repository → infrastructure
+// infrastructures/tsParser.ts   raw AST traversal, returns structural counts (no domain logic)
+// domains/testStrategy.ts       calcComplexity(), buildStrategy(), buildRecommendation()
+// services/testStrategistService.ts  thin orchestration wrapper
+// tools/tsTestStrategist.ts     resolves service, calls analyze(), wraps result
+
+export async function executeTsTestStrategist(args: { target_file_path: string }) {
+  const service = container.resolve<TestStrategistService>(TOKENS.TestStrategistService)
+  const result = service.analyze({ targetFilePath: args.target_file_path })
+  return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+}
+
+// Bad — computing cyclomatic complexity inside the infrastructure (business logic leak)
+// infrastructures/tsParser.ts
+export function parseFunctions(filePath: string) {
+  // ...
+  complexity = 1 + branches + loops  // NG: this formula is a business rule; belongs in domains/
+}
+
+// Bad — calling infrastructure directly from the tool file
+export async function executeTsTestStrategist(args: { target_file_path: string }) {
+  const funcs = parseFunctions(args.target_file_path)  // NG: bypasses service/domain layers
+}
+```
+
 **DI container access in tool execute functions** — resolve the singleton, never instantiate directly
 
 ```ts
@@ -128,6 +158,20 @@ async function askPermission(args: { tool_name: string; input: Record<string, un
 // Bad — moving ask_permission to tools/askPermission.ts
 // NG: TTY interaction is server-level I/O, not a delegatable unit; tool files must not import 'fs' for I/O
 ```
+
+## Verification
+
+MCP tools cannot be called directly from the main Claude Code session — they run inside the MCP server process. After adding or modifying a tool:
+
+1. **Build first**: `npm run build` — catches type errors before testing.
+
+2. **Test via sub-agent**: MCP tools are only reachable from within a `claude -p` session that has the perclst MCP server configured. Ask the user to run:
+
+```bash
+perclst start "ts_test_strategist ツールを <対象ファイルパス> に対して実行して結果を報告してください。" --allowed-tools ts_test_strategist --output-only
+```
+
+Replace `ts_test_strategist` with the tool name being tested, and pass any additional tools the agent needs (e.g. `Read`) in `--allowed-tools`. Present this command to the user and ask them to execute it — do not attempt to run MCP tools yourself from the main session.
 
 ## Prohibitions
 
