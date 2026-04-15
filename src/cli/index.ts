@@ -160,4 +160,12 @@ program
   .option('--force', 'Required when --to is omitted (confirms open-ended deletion)')
   .action(sweepCommand)
 
+// Reject single-dash multi-character options (e.g. -name instead of --name)
+for (const arg of process.argv.slice(2)) {
+  if (/^-[a-zA-Z]{2,}/.test(arg)) {
+    console.error(`error: invalid option '${arg}' — did you mean '-${arg}'?`)
+    process.exit(1)
+  }
+}
+
 program.parse()
