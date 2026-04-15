@@ -10,6 +10,7 @@ CLI tool for managing Claude Code sub-agents.
 
 ## Features
 
+- **Skills in Headless Mode**: Claude Code's auto-injected Skills (`.claude/skills/`) are unavailable in headless mode (`claude -p`) — perclst re-enables them via a `PreToolUse` hook that injects matching skill content as `additionalContext`, so sub-agents get the same contextual rules as interactive sessions
 - **Session Management**: Create, resume, fork, and manage agent sessions
 - **Session Analysis**: Inspect turn breakdown, tool usage, and token stats from Claude Code's jsonl history
 - **Local Storage**: Sessions stored in `~/.perclst/sessions/` by default
@@ -31,12 +32,6 @@ perclst's design maps onto Docker's execution model:
 **Skills vs Procedures**:
 - **Skills** carry *how* rules — coding conventions, import constraints, layer responsibilities. They are baked into the project (like binaries in an image) and activated automatically based on which files the agent touches.
 - **Procedures** carry *what* steps — task orchestration, workflow sequences, agent roles. A procedure is the entrypoint that shapes how every prompt in the session is interpreted.
-
-> **Note**: Claude Code's auto-injected Skills (`.claude/skills/`) are not available in headless
-> mode (`claude -p`), which makes role modularization brittle in multi-agent setups. perclst
-> re-enables them by running a `PreToolUse` hook that injects matching skill content as
-> `additionalContext` before each relevant tool call — so sub-agents get the same contextual
-> rules as interactive sessions.
 
 ## Installation
 
