@@ -154,27 +154,27 @@ Two task types are supported: `agent` and `script`.
   "tasks": [
     {
       "type": "agent",
-      "name": "implementer",
-      "task": "Implement the feature described in SPEC.md",
-      "procedure": "default",
-      "allowed_tools": ["Read", "Edit", "Bash"]
+      "name": "unit-test-utils-date",
+      "task": "Write unit tests for src/utils/date.ts using vitest. Place the test file at src/utils/__tests__/date.test.ts.",
+      "allowed_tools": ["Read", "Write", "Bash"]
     },
     {
       "type": "agent",
-      "name": "tester",
-      "task": "Write unit tests for the implementation",
-      "allowed_tools": ["Read", "Edit", "Bash"]
+      "name": "unit-test-utils-logger",
+      "task": "Write unit tests for src/utils/logger.ts using vitest. Place the test file at src/utils/__tests__/logger.test.ts.",
+      "allowed_tools": ["Read", "Write", "Bash"]
     },
     {
       "type": "agent",
-      "name": "implementer",
-      "task": "Fix any issues raised by the tester"
+      "name": "unit-test-utils-uuid",
+      "task": "Write unit tests for src/utils/uuid.ts using vitest. Place the test file at src/utils/__tests__/uuid.test.ts.",
+      "allowed_tools": ["Read", "Write", "Bash"]
     }
   ]
 }
 ```
 
-The third task resumes the `implementer` session created by the first task. Session lookup uses the most recently updated session with the given name.
+Session lookup uses the most recently updated session with the given name — a second run of this pipeline resumes each session instead of starting fresh.
 
 **Agent task fields** (all optional except `type` and `task`):
 
@@ -190,36 +190,42 @@ The third task resumes the `implementer` session created by the first task. Sess
 
 ---
 
-**Script task** — runs a shell command. If it fails (non-zero exit code) and `rejects_to` is set, the pipeline loops back to the named agent task with the script output as feedback:
+**Script task** — runs a shell command. If it fails (non-zero exit code) and `rejected` is set, the pipeline loops back to the named agent task with the script output as feedback:
 
 ```json
 {
   "tasks": [
     {
       "type": "agent",
-      "name": "implementer",
-      "task": "Implement the feature",
-      "allowed_tools": ["Read", "Edit", "Bash"]
+      "name": "unit-test-utils-date",
+      "task": "Write unit tests for src/utils/date.ts using vitest. Place the test file at src/utils/__tests__/date.test.ts.",
+      "allowed_tools": ["Read", "Write", "Bash"]
     },
     {
       "type": "agent",
-      "name": "tester",
-      "task": "Write unit tests",
-      "allowed_tools": ["Read", "Edit", "Bash"]
+      "name": "unit-test-utils-logger",
+      "task": "Write unit tests for src/utils/logger.ts using vitest. Place the test file at src/utils/__tests__/logger.test.ts.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "unit-test-utils-uuid",
+      "task": "Write unit tests for src/utils/uuid.ts using vitest. Place the test file at src/utils/__tests__/uuid.test.ts.",
+      "allowed_tools": ["Read", "Write", "Bash"]
     },
     {
       "type": "script",
-      "command": "npm test",
+      "command": "npm run test:unit",
       "rejected": {
-        "to": "implementer",
-        "max_retries": 3
+        "to": "unit-test-utils-logger",
+        "max_retries": 2
       }
     }
   ]
 }
 ```
 
-When `npm test` fails, the pipeline loops back to `implementer` and resumes that session with a `[Retry N]` instruction containing the test output. After `max_retries` exhausted, the pipeline stops with a non-zero exit code.
+When `npm run test:unit` fails, the pipeline loops back to `unit-test-utils-logger` and resumes that session with a `[Retry N]` instruction containing the test output. After `max_retries` exhausted, the pipeline stops with a non-zero exit code.
 
 **Script task fields**:
 
