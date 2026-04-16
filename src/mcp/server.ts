@@ -17,6 +17,7 @@ import { executeTsGetReferences } from './tools/tsGetReferences'
 import { executeTsGetTypes } from './tools/tsGetTypes'
 import { executeTsChecker } from './tools/tsChecker'
 import { executeTsTestStrategist } from './tools/tsTestStrategist'
+import { executeKnowledgeSearch } from './tools/knowledgeSearch'
 import { setupContainer } from '@src/core/di/setup'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
@@ -119,6 +120,30 @@ const TOOLS = [
         }
       },
       required: ['target_file_path']
+    }
+  },
+  {
+    name: 'knowledge_search',
+    description:
+      'Search the perclst knowledge base by keyword. ' +
+      'Matches against the **Keywords:** field declared in each knowledge file. ' +
+      'Space-separated terms are ANDed; use OR between groups for OR logic. ' +
+      'Examples: "fork session", "zod OR validation", "fork OR resume session"',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description:
+            'Search query. Supports AND (space or "AND") and OR ("OR") operators. ' +
+            'Example: "fork session" → both terms must appear; "zod OR validation" → either term.'
+        },
+        include_draft: {
+          type: 'boolean',
+          description: 'Include knowledge/draft/ files in the search. Defaults to false.'
+        }
+      },
+      required: ['query']
     }
   },
   {
@@ -254,6 +279,11 @@ async function handleToolsCall(id: number | string | null, params: unknown): Pro
       case 'ts_test_strategist':
         result = await executeTsTestStrategist(
           p.arguments as { target_file_path: string; test_file_path?: string }
+        )
+        break
+      case 'knowledge_search':
+        result = await executeKnowledgeSearch(
+          p.arguments as { query: string; include_draft?: boolean }
         )
         break
       case 'ts_checker':

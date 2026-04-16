@@ -25,5 +25,10 @@ export const TOKENS = {
   ProcedureRepository: Symbol.for('ProcedureRepository'),
   CheckerRepository: Symbol.for('CheckerRepository'),
   TestStrategyRepository: Symbol.for('TestStrategyRepository'),
-  ShellRepository: Symbol.for('ShellRepository')
+  ShellRepository: Symbol.for('ShellRepository'),
+  KnowledgeSearchRepository: Symbol.for('KnowledgeSearchRepository'),
+  // Domains
+  KnowledgeSearchDomain: Symbol.for('KnowledgeSearchDomain'),
+  // Services
+  KnowledgeSearchService: Symbol.for('KnowledgeSearchService')
 } as const
