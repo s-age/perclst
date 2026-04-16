@@ -45,6 +45,10 @@ export class SessionService {
     return this.domain.rename(sessionId, name)
   }
 
+  async findByName(name: string): Promise<Session | null> {
+    return this.domain.findByName(name)
+  }
+
   async createRewindSession(
     originalSessionId: string,
     messageId: string | undefined,

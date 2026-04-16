@@ -80,4 +80,8 @@ export class SessionDomain implements ISessionDomain {
 
     return session
   }
+
+  async findByName(name: string): Promise<Session | null> {
+    return this.sessionRepo.findByName(name)
+  }
 }

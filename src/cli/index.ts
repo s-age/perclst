@@ -12,6 +12,7 @@ import { renameCommand } from './commands/rename'
 import { importCommand } from './commands/import'
 import { sweepCommand } from './commands/sweep'
 import { rewindCommand } from './commands/rewind'
+import { runCommand } from './commands/run'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -170,6 +171,15 @@ program
   .option('--dry-run', 'Preview matching sessions without deleting')
   .option('--force', 'Required when --to is omitted (confirms open-ended deletion)')
   .action(sweepCommand)
+
+// Run command
+program
+  .command('run')
+  .description('Execute a pipeline of agent tasks from a JSON file')
+  .argument('<pipeline-path>', 'Path to the pipeline JSON file')
+  .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
+  .option('-f, --format <format>', 'Output format (text|json)', 'text')
+  .action(runCommand)
 
 // Reject single-dash multi-character options (e.g. -name instead of --name)
 for (const arg of process.argv.slice(2)) {

@@ -9,6 +9,7 @@ export type ISessionDomain = {
   delete(sessionId: string): Promise<void>
   updateStatus(sessionId: string, status: 'active' | 'completed' | 'failed'): Promise<Session>
   rename(sessionId: string, name: string): Promise<Session>
+  findByName(name: string): Promise<Session | null>
 }
 
 export type IImportDomain = {
