@@ -31,7 +31,10 @@ function isComponent(name: string): boolean {
 }
 
 function findMatchingTest(functionName: string, testFunctions: string[]): string | null {
-  const words = functionName.replace(/([A-Z])/g, ' $1').trim().toLowerCase()
+  const words = functionName
+    .replace(/([A-Z])/g, ' $1')
+    .trim()
+    .toLowerCase()
   for (const tf of testFunctions) {
     const lower = tf.toLowerCase()
     if (lower.includes(words) || lower.includes(functionName.toLowerCase())) return tf
@@ -125,9 +128,7 @@ export class TestStrategyDomain implements ITestStrategyDomain {
     }
 
     const resolvedTestFile = testFilePath ?? this.repo.findTestFile(targetFilePath)
-    const testFunctions = resolvedTestFile
-      ? this.repo.extractTestFunctions(resolvedTestFile)
-      : []
+    const testFunctions = resolvedTestFile ? this.repo.extractTestFunctions(resolvedTestFile) : []
     const framework = this.repo.detectFramework(targetFilePath)
     const strategies = functions.map((raw) => buildStrategy(raw, framework, testFunctions))
 
