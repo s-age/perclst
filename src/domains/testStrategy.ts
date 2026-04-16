@@ -17,6 +17,11 @@ function calcComplexity(raw: RawFunctionInfo): number {
   return 1 + raw.branchCount + raw.loopCount + raw.logicalOpCount + raw.catchCount
 }
 
+function calcSuggestedTestCaseCount(raw: RawFunctionInfo): number {
+  // 1 happy-path + 1 per branch + 1 empty-collection if loops exist + 1 per error path
+  return 1 + raw.branchCount + (raw.loopCount > 0 ? 1 : 0) + raw.catchCount
+}
+
 function isCustomHook(name: string): boolean {
   return name.startsWith('use') && name.length > 3
 }
@@ -39,8 +44,8 @@ function buildStrategy(
   framework: TestFramework,
   testFunctions: string[]
 ): FunctionStrategy {
-  const hook = isCustomHook(raw.name)
-  const component = isComponent(raw.name)
+  const hook = !raw.class_name && isCustomHook(raw.name)
+  const component = !raw.class_name && isComponent(raw.name)
   const complexity = calcComplexity(raw)
   const existingTest = findMatchingTest(raw.name, testFunctions)
 
@@ -56,9 +61,11 @@ function buildStrategy(
 
   return {
     function_name: raw.name,
+    class_name: raw.class_name,
     recommended_framework: framework,
     existing_test_function: existingTest,
     complexity,
+    suggested_test_case_count: calcSuggestedTestCaseCount(raw),
     missing_coverage: missingCoverage,
     suggested_mocks: raw.referencedImports,
     is_custom_hook: hook,

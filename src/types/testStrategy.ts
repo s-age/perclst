@@ -2,6 +2,7 @@ export type TestFramework = 'jest' | 'vitest'
 
 export type RawFunctionInfo = {
   name: string
+  class_name?: string      // set for class methods; absent for top-level functions
   lineno: number
   branchCount: number      // if / ternary / case clauses
   loopCount: number        // for / for-in / for-of / while / do
@@ -18,9 +19,11 @@ export type MissingCoverage = {
 
 export type FunctionStrategy = {
   function_name: string
+  class_name?: string      // set for class methods; absent for top-level functions
   recommended_framework: TestFramework
   existing_test_function: string | null
   complexity: number
+  suggested_test_case_count: number
   missing_coverage: MissingCoverage[]
   suggested_mocks: string[]
   is_custom_hook: boolean

@@ -60,7 +60,10 @@ export function parseFunctions(filePath: string): RawFunctionInfo[] | null {
 
   const importedNames = new Set<string>()
   sf.getImportDeclarations().forEach((d) => {
-    d.getNamedImports().forEach((ni) => importedNames.add(ni.getName()))
+    if (d.isTypeOnly()) return  // skip `import type { ... }`
+    d.getNamedImports().forEach((ni) => {
+      if (!ni.isTypeOnly()) importedNames.add(ni.getName())  // skip `import { type Foo }`
+    })
     const def = d.getDefaultImport()
     if (def) importedNames.add(def.getText())
     const ns = d.getNamespaceImport()
@@ -102,6 +105,20 @@ export function parseFunctions(filePath: string): RawFunctionInfo[] | null {
         referencedImports: referencedImportsIn(init)
       })
     })
+
+  sf.getClasses().forEach((cls) => {
+    const className = cls.getName()
+    if (!className) return
+    cls.getMethods().forEach((method) => {
+      funcs.push({
+        name: method.getName(),
+        class_name: className,
+        lineno: sf.getLineAndColumnAtPos(method.getStart()).line,
+        ...countStructure(method),
+        referencedImports: referencedImportsIn(method)
+      })
+    })
+  })
 
   return funcs
 }
