@@ -16,9 +16,11 @@ perclst start "task" --name "my-session" --model opus
 
 Resume an existing session with an additional instruction.
 
+`<session>` can be a session ID or session name.
+
 ```bash
-perclst resume <session-id> "Continue the task"
-perclst resume <session-id> "quick follow-up" --model haiku
+perclst resume <session> "Continue the task"
+perclst resume <session> "quick follow-up" --model haiku
 ```
 
 > For all options: `perclst resume -h`
@@ -27,9 +29,11 @@ perclst resume <session-id> "quick follow-up" --model haiku
 
 Branch a session into a new independent session.
 
+`<session>` can be a session ID or session name.
+
 ```bash
-perclst fork <session-id> "Explore an alternative approach"
-perclst fork <session-id> "Try a different fix" --name "hotfix-attempt-2"
+perclst fork <session> "Explore an alternative approach"
+perclst fork <session> "Try a different fix" --name "hotfix-attempt-2"
 ```
 
 > For all options: `perclst fork -h`
@@ -40,17 +44,19 @@ Create a new session branching from a past point in a session's conversation his
 
 Due to Claude Code's session design, rewind always creates a fork — the original session is never modified.
 
+`<session>` can be a session ID or session name.
+
 ```bash
 # List available rewind points (0 = most recent)
-perclst rewind --list <session-id>
-perclst rewind --list <session-id> --length 200   # show more chars per turn
+perclst rewind --list <session>
+perclst rewind --list <session> --length 200   # show more chars per turn
 
 # Create a rewind session at a given index
-perclst rewind <session-id> 0   # fork at current tip (equivalent to fork with no prompt)
-perclst rewind <session-id> 2   # discard the 2 most recent turns
+perclst rewind <session> 0   # fork at current tip (equivalent to fork with no prompt)
+perclst rewind <session> 2   # discard the 2 most recent turns
 
 # Then continue from the rewind point
-perclst resume <new-session-id> "Try a different approach"
+perclst resume <session> "Try a different approach"
 ```
 
 **Index semantics**: `--list` displays turns in descending order. Index `0` is the most recent assistant turn (no history is discarded). Index `N` discards the `N` most recent turns.
@@ -67,19 +73,23 @@ perclst list
 
 Show session details.
 
+`<session>` can be a session ID or session name.
+
 ```bash
-perclst show <session-id>
-perclst show <session-id> --format json   # includes thoughts and tool_history
+perclst show <session>
+perclst show <session> --format json   # includes thoughts and tool_history
 ```
 
 ## `analyze`
 
 Turn breakdown, tool usage, and token stats from a Claude Code jsonl session.
 
+`<session>` can be a session ID or session name.
+
 ```bash
-perclst analyze <session-id>
-perclst analyze <session-id> --print-detail   # full turn content
-perclst analyze <session-id> --format json
+perclst analyze <session>
+perclst analyze <session> --print-detail   # full turn content
+perclst analyze <session> --format json
 ```
 
 ## `rename`
