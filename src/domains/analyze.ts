@@ -11,9 +11,12 @@ export class AnalyzeDomain implements IAnalyzeDomain {
 
   async analyze(sessionId: string): Promise<AnalyzeResult> {
     const session = await this.sessionDomain.get(sessionId)
+    const effectiveClaudeSessionId =
+      session.rewind_source_claude_session_id ?? session.claude_session_id
     const summary = this.claudeSessionRepo.readSession(
-      session.claude_session_id,
-      session.working_dir
+      effectiveClaudeSessionId,
+      session.working_dir,
+      session.rewind_to_message_id
     )
     return { session, summary }
   }

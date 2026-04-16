@@ -237,8 +237,8 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     validateSessionAtDir(claudeSessionId, workingDir)
   }
 
-  readSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
-    return readClaudeSession(claudeSessionId, workingDir)
+  readSession(claudeSessionId: string, workingDir: string, upToMessageId?: string): AnalysisSummary {
+    return readClaudeSession(claudeSessionId, workingDir, upToMessageId)
   }
 
   getAssistantTurns(claudeSessionId: string, workingDir: string): AssistantTurnEntry[] {
@@ -349,14 +349,37 @@ export function getAssistantTurns(
   return result
 }
 
-export function readClaudeSession(claudeSessionId: string, workingDir: string): AnalysisSummary {
+function filterEntriesUpTo(entries: RawEntry[], messageId: string): RawEntry[] {
+  const cutoffIdx = entries.findIndex(
+    (e) => e.type === 'assistant' && (e as RawAssistantEntry).uuid === messageId
+  )
+  if (cutoffIdx === -1) return entries
+  // Include the tool_result user entry immediately following the cutoff, if present
+  let end = cutoffIdx + 1
+  if (end < entries.length && entries[end].type === 'user') {
+    const content = (entries[end] as RawUserEntry).message.content
+    if (Array.isArray(content) && content.some((b) => b.type === 'tool_result')) {
+      end++
+    }
+  }
+  return entries.slice(0, end)
+}
+
+export function readClaudeSession(
+  claudeSessionId: string,
+  workingDir: string,
+  upToMessageId?: string
+): AnalysisSummary {
   const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
 
   if (!fileExists(jsonlPath)) {
     throw new Error(`Claude Code session file not found: ${jsonlPath}`)
   }
 
-  const entries = parseRawEntries(readFileSync(jsonlPath, 'utf-8'))
+  let entries = parseRawEntries(readFileSync(jsonlPath, 'utf-8'))
+  if (upToMessageId) {
+    entries = filterEntriesUpTo(entries, upToMessageId)
+  }
   const toolResultMap = buildToolResultMap(entries)
   const { turns, tokens } = buildTurns(entries, toolResultMap)
   const { turnsBreakdown, toolUses } = buildSummaryStats(turns)
