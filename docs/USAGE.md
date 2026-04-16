@@ -154,21 +154,24 @@ Two task types are supported: `agent` and `script`.
   "tasks": [
     {
       "type": "agent",
-      "name": "unit-test-utils-date",
-      "task": "Write unit tests for src/utils/date.ts using vitest. Place the test file at src/utils/__tests__/date.test.ts.",
-      "allowed_tools": ["Read", "Write", "Bash"]
+      "name": "unit-test-domains-analyze",
+      "task": "target_file_path: src/domains/analyze.ts",
+      "procedure": "test-unit",
+      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     },
     {
       "type": "agent",
-      "name": "unit-test-utils-logger",
-      "task": "Write unit tests for src/utils/logger.ts using vitest. Place the test file at src/utils/__tests__/logger.test.ts.",
-      "allowed_tools": ["Read", "Write", "Bash"]
+      "name": "unit-test-domains-checker",
+      "task": "target_file_path: src/domains/checker.ts",
+      "procedure": "test-unit",
+      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     },
     {
       "type": "agent",
-      "name": "unit-test-utils-uuid",
-      "task": "Write unit tests for src/utils/uuid.ts using vitest. Place the test file at src/utils/__tests__/uuid.test.ts.",
-      "allowed_tools": ["Read", "Write", "Bash"]
+      "name": "unit-test-domains-import",
+      "task": "target_file_path: src/domains/import.ts",
+      "procedure": "test-unit",
+      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     }
   ]
 }
@@ -197,27 +200,30 @@ Session lookup uses the most recently updated session with the given name — a 
   "tasks": [
     {
       "type": "agent",
-      "name": "unit-test-utils-date",
-      "task": "Write unit tests for src/utils/date.ts using vitest. Place the test file at src/utils/__tests__/date.test.ts.",
-      "allowed_tools": ["Read", "Write", "Bash"]
+      "name": "unit-test-domains-analyze",
+      "task": "target_file_path: src/domains/analyze.ts",
+      "procedure": "test-unit",
+      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     },
     {
       "type": "agent",
-      "name": "unit-test-utils-logger",
-      "task": "Write unit tests for src/utils/logger.ts using vitest. Place the test file at src/utils/__tests__/logger.test.ts.",
-      "allowed_tools": ["Read", "Write", "Bash"]
+      "name": "unit-test-domains-checker",
+      "task": "target_file_path: src/domains/checker.ts",
+      "procedure": "test-unit",
+      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     },
     {
       "type": "agent",
-      "name": "unit-test-utils-uuid",
-      "task": "Write unit tests for src/utils/uuid.ts using vitest. Place the test file at src/utils/__tests__/uuid.test.ts.",
-      "allowed_tools": ["Read", "Write", "Bash"]
+      "name": "unit-test-domains-import",
+      "task": "target_file_path: src/domains/import.ts",
+      "procedure": "test-unit",
+      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     },
     {
       "type": "script",
       "command": "npm run test:unit",
       "rejected": {
-        "to": "unit-test-utils-logger",
+        "to": "unit-test-domains-checker",
         "max_retries": 2
       }
     }
@@ -225,7 +231,7 @@ Session lookup uses the most recently updated session with the given name — a 
 }
 ```
 
-When `npm run test:unit` fails, the pipeline loops back to `unit-test-utils-logger` and resumes that session with a `[Retry N]` instruction containing the test output. After `max_retries` exhausted, the pipeline stops with a non-zero exit code.
+When `npm run test:unit` fails, the pipeline loops back to `unit-test-domains-checker` and resumes that session with a `[Retry N]` instruction containing the test output. After `max_retries` exhausted, the pipeline stops with a non-zero exit code.
 
 **Script task fields**:
 
