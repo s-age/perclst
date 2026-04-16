@@ -13,6 +13,7 @@ import { importCommand } from './commands/import'
 import { sweepCommand } from './commands/sweep'
 import { rewindCommand } from './commands/rewind'
 import { runCommand } from './commands/run'
+import { curateCommand } from './commands/curate'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -171,6 +172,12 @@ program
   .option('--dry-run', 'Preview matching sessions without deleting')
   .option('--force', 'Required when --to is omitted (confirms open-ended deletion)')
   .action(sweepCommand)
+
+// Curate command
+program
+  .command('curate')
+  .description('Promote all knowledge/draft/ entries into structured knowledge/ files')
+  .action(curateCommand)
 
 // Run command
 program
