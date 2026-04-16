@@ -10,6 +10,8 @@ CLI tool for managing Claude Code sub-agents.
 
 ## Features
 
+- **Named Sessions**: Assign human-readable names at creation (`--name`) or later (`rename`). Session state is managed by Claude Code itself — perclst adds a thin naming layer on top so you can identify and resume the right session without replacing Claude Code's own session model.
+- **Rewind by Number**: Branch from any past assistant response by count rather than UUID — `--list` previews each turn so you can pinpoint where to diverge. Index `0` forks at the latest turn (no truncation); higher indices step further back.
 - **Skills in Headless Mode**: Claude Code's auto-injected Skills (`.claude/skills/`) are unavailable in headless mode (`claude -p`) — perclst re-enables them via a `PreToolUse` hook that injects matching skill content as `additionalContext`, so sub-agents get the same contextual rules as interactive sessions
 - **Session Management**: Create, resume, fork, and manage agent sessions
 - **Session Analysis**: Inspect turn breakdown, tool usage, and token stats from Claude Code's jsonl history
