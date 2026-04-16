@@ -26,10 +26,12 @@ export async function rewindCommand(
       length: options.length
     })
 
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const analyzeService = container.resolve<AnalyzeService>(TOKENS.AnalyzeService)
+    const resolvedId = await sessionService.resolveId(input.sessionId)
 
     if (input.list) {
-      const turns = await analyzeService.getRewindTurns(input.sessionId)
+      const turns = await analyzeService.getRewindTurns(resolvedId)
 
       if (turns.length === 0) {
         logger.print('No assistant turns found.')
@@ -50,11 +52,9 @@ export async function rewindCommand(
       process.exit(1)
     }
 
-    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-
     let messageId: string | undefined
     if (input.index > 0) {
-      const turns = await analyzeService.getRewindTurns(input.sessionId)
+      const turns = await analyzeService.getRewindTurns(resolvedId)
       const turn = turns[input.index]
       if (!turn) {
         logger.error(
@@ -65,7 +65,7 @@ export async function rewindCommand(
       messageId = turn.uuid
     }
 
-    const newSession = await sessionService.createRewindSession(input.sessionId, messageId)
+    const newSession = await sessionService.createRewindSession(resolvedId, messageId)
 
     logger.print(`\nRewind session created: ${newSession.id}`)
     logger.print(`To continue: perclst resume ${newSession.id} "<instruction>"`)

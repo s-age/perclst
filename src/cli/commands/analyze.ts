@@ -1,6 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AnalyzeService } from '@src/services/analyzeService'
+import { SessionService } from '@src/services/sessionService'
 import { logger } from '@src/utils/logger'
 import type { Session } from '@src/types/session'
 import type { AnalysisSummary } from '@src/types/analysis'
@@ -147,8 +148,10 @@ export async function analyzeCommand(sessionId: string, options: RawAnalyzeOptio
   try {
     const input = parseAnalyzeSession({ sessionId, ...options })
 
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const analyzeService = container.resolve<AnalyzeService>(TOKENS.AnalyzeService)
-    const { session, summary } = await analyzeService.analyze(input.sessionId)
+    const resolvedId = await sessionService.resolveId(input.sessionId)
+    const { session, summary } = await analyzeService.analyze(resolvedId)
 
     if (input.format === 'json') {
       printJsonOutput(session, summary, input.printDetail ?? false)

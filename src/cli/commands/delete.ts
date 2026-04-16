@@ -9,9 +9,10 @@ export async function deleteCommand(sessionId: string) {
     const input = parseDeleteSession({ sessionId })
 
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-    await sessionService.delete(input.sessionId)
+    const resolvedId = await sessionService.resolveId(input.sessionId)
+    await sessionService.delete(resolvedId)
 
-    logger.print(`Session deleted: ${input.sessionId}`)
+    logger.print(`Session deleted: ${resolvedId}`)
   } catch (error) {
     logger.error('Failed to delete session', error as Error)
     process.exit(1)

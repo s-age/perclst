@@ -1,5 +1,6 @@
 import type { Session, CreateSessionParams } from '@src/types/session'
 import type { ISessionDomain } from '@src/domains/ports/session'
+import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
 import { toTimestamp, toISO } from '@src/utils/date'
 import { generateId } from '@src/utils/uuid'
 
@@ -47,6 +48,18 @@ export class SessionService {
 
   async findByName(name: string): Promise<Session | null> {
     return this.domain.findByName(name)
+  }
+
+  async resolveId(nameOrId: string): Promise<string> {
+    try {
+      await this.domain.get(nameOrId)
+      return nameOrId
+    } catch (e) {
+      if (!(e instanceof SessionNotFoundError)) throw e
+      const session = await this.domain.findByName(nameOrId)
+      if (session) return session.id
+      throw new SessionNotFoundError(nameOrId)
+    }
   }
 
   async createRewindSession(

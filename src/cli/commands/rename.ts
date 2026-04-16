@@ -9,7 +9,8 @@ export async function renameCommand(sessionId: string, name: string) {
     const input = parseRenameSession({ sessionId, name })
 
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-    const session = await sessionService.rename(input.sessionId, input.name)
+    const resolvedId = await sessionService.resolveId(input.sessionId)
+    const session = await sessionService.rename(resolvedId, input.name)
 
     logger.print(`Session renamed: ${session.id}`)
     logger.print(`  Name: ${session.name}`)

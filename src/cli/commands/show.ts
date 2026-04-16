@@ -14,7 +14,8 @@ export async function showCommand(sessionId: string, options: RawShowOptions) {
     const input = parseShowSession({ sessionId, ...options })
 
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-    const session = await sessionService.get(input.sessionId)
+    const resolvedId = await sessionService.resolveId(input.sessionId)
+    const session = await sessionService.get(resolvedId)
 
     if (input.format === 'json') {
       logger.print(JSON.stringify(session, null, 2))

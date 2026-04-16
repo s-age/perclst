@@ -1,6 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
+import { SessionService } from '@src/services/sessionService'
 import { logger } from '@src/utils/logger'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
@@ -29,17 +30,19 @@ export async function resumeCommand(
   try {
     logger.info('Resuming session', { session_id: sessionId })
 
+    const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
     const config = container.resolve<Config>(TOKENS.Config)
 
     const input = parseResumeSession({ sessionId, instruction, ...options })
+    const resolvedId = await sessionService.resolveId(input.sessionId)
 
     const maxTurns = input.maxTurns ?? config.limits?.max_turns ?? -1
     const maxContextTokens = input.maxContextTokens ?? config.limits?.max_context_tokens ?? -1
     const allowedTools = input.allowedTools ?? config.allowed_tools
     const disallowedTools = input.disallowedTools ?? config.disallowed_tools
 
-    const response = await agentService.resume(input.sessionId, input.instruction, {
+    const response = await agentService.resume(resolvedId, input.instruction, {
       allowedTools,
       disallowedTools,
       model: input.model,
@@ -47,9 +50,9 @@ export async function resumeCommand(
       maxContextTokens
     })
 
-    printResponse(response, input, config.display, { sessionId: input.sessionId })
+    printResponse(response, input, config.display, { sessionId: resolvedId })
 
-    logger.print(`\nTo resume: perclst resume ${input.sessionId} "<instruction>"`)
+    logger.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)
   } catch (error) {
     if (error instanceof ValidationError) {
       logger.error(`Invalid arguments: ${error.message}`)
