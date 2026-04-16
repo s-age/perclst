@@ -237,7 +237,11 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     validateSessionAtDir(claudeSessionId, workingDir)
   }
 
-  readSession(claudeSessionId: string, workingDir: string, upToMessageId?: string): AnalysisSummary {
+  readSession(
+    claudeSessionId: string,
+    workingDir: string,
+    upToMessageId?: string
+  ): AnalysisSummary {
     return readClaudeSession(claudeSessionId, workingDir, upToMessageId)
   }
 

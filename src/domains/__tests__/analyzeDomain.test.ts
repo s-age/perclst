@@ -62,7 +62,8 @@ describe('AnalyzeDomain', () => {
       expect(mockSessionDomain.get).toHaveBeenCalledWith('session-1')
       expect(mockClaudeSessionRepo.readSession).toHaveBeenCalledWith(
         session.claude_session_id,
-        session.working_dir
+        session.working_dir,
+        undefined
       )
       expect(result).toEqual({ session, summary })
     })

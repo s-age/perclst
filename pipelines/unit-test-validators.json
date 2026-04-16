@@ -1,0 +1,67 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "unit-test-validators-fork-session",
+      "task": "target_file_path: src/validators/cli/forkSession.ts",
+      "procedure": "test-unit",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__ts_test_strategist",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "script",
+      "command": "npm run test:unit",
+      "rejected": {
+        "to": "unit-test-validators-fork-session",
+        "max_retries": 3
+      }
+    },
+    {
+      "type": "agent",
+      "name": "unit-test-validators-rewind-session",
+      "task": "target_file_path: src/validators/cli/rewindSession.ts",
+      "procedure": "test-unit",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__ts_test_strategist",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "script",
+      "command": "npm run test:unit",
+      "rejected": {
+        "to": "unit-test-validators-rewind-session",
+        "max_retries": 3
+      }
+    },
+    {
+      "type": "agent",
+      "name": "unit-test-validators-sweep-session",
+      "task": "target_file_path: src/validators/cli/sweepSession.ts",
+      "procedure": "test-unit",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__ts_test_strategist",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "script",
+      "command": "npm run test:unit",
+      "rejected": {
+        "to": "unit-test-validators-sweep-session",
+        "max_retries": 3
+      }
+    }
+  ]
+}
