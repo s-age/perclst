@@ -136,6 +136,23 @@ perclst sweep --to 2025-03-31 --status completed --anon-only
 | `--dry-run` | Preview matched sessions without deleting |
 | `--force` | Required when `--to` is omitted |
 
+## `curate`
+
+Promote all `knowledge/draft/` entries into structured `knowledge/` files. Shorthand for running the `meta-curate-knowledge` procedure with the required tool permissions.
+
+```bash
+perclst curate
+```
+
+Equivalent to:
+
+```bash
+perclst start "Promote all entries in knowledge/draft/ into structured knowledge/ files." \
+  --procedure meta-curate-knowledge \
+  --allowed-tools Write Read Bash \
+  --output-only
+```
+
 ## `run`
 
 Execute a pipeline of agent tasks defined in a JSON file. Tasks run serially. If a task specifies a `name` and a session with that name already exists, the task resumes that session; otherwise a new session is created.

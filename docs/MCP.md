@@ -3,6 +3,7 @@
 perclst ships a built-in MCP server that provides two categories of tools:
 
 - **Permission routing** (`ask_permission`) — intercepts permission prompts in headless sessions and routes them to the terminal interactively.
+- **Knowledge search** (`knowledge_search`) — keyword search over the `knowledge/` directory, matching against each file's `**Keywords:**` field.
 - **TypeScript analysis** (`ts_*`) — code structure, references, types, lint/build/test, and test strategy. Used for developing perclst itself; you can add your own tools to `src/mcp/tools/` and register them in `src/mcp/server.ts`.
 
 ## Setup
@@ -33,6 +34,26 @@ Called automatically by Claude Code — you do not invoke it directly.
 | `tool_name` | string | yes | The tool requesting permission |
 | `input` | object | yes | The input arguments for that tool call |
 | `tool_use_id` | string | no | The unique tool use request ID |
+
+---
+
+### `knowledge_search`
+
+Search the `knowledge/` directory by keyword. Matches against the `**Keywords:**` field declared at the bottom of each knowledge file. Files without a Keywords field fall back to full-content search.
+
+**Query syntax:**
+
+| Pattern | Meaning |
+|---|---|
+| `fork session` | Both terms must appear (AND) |
+| `fork AND session` | Same as above (explicit AND) |
+| `zod OR validation` | Either term must appear (OR) |
+| `fork OR resume session` | `fork` OR (`resume` AND `session`) |
+
+| Input | Type | Required | Description |
+|---|---|---|---|
+| `query` | string | yes | Search query with AND/OR support |
+| `include_draft` | boolean | no | Include `knowledge/draft/` files (default: `false`) |
 
 ---
 
