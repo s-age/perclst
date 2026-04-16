@@ -27,10 +27,7 @@ export const knowledge_search = {
   }
 }
 
-export async function executeKnowledgeSearch(args: {
-  query: string
-  include_draft?: boolean
-}) {
+export async function executeKnowledgeSearch(args: { query: string; include_draft?: boolean }) {
   const service = container.resolve<KnowledgeSearchService>(TOKENS.KnowledgeSearchService)
   const result = service.search({
     query: args.query,

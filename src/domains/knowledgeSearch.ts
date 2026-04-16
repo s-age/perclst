@@ -1,6 +1,13 @@
 import type { IKnowledgeSearchDomain } from './ports/knowledgeSearch'
-import type { IKnowledgeSearchRepository, KnowledgeFileEntry } from '@src/repositories/ports/knowledgeSearch'
-import type { KnowledgeMatch, KnowledgeSearchOptions, KnowledgeSearchResult } from '@src/types/knowledgeSearch'
+import type {
+  IKnowledgeSearchRepository,
+  KnowledgeFileEntry
+} from '@src/repositories/ports/knowledgeSearch'
+import type {
+  KnowledgeMatch,
+  KnowledgeSearchOptions,
+  KnowledgeSearchResult
+} from '@src/types/knowledgeSearch'
 
 // ---------------------------------------------------------------------------
 // Query parsing
@@ -61,8 +68,7 @@ function extractKeywords(content: string): string[] {
  */
 function matchFile(file: KnowledgeFileEntry, orGroups: string[][]): string[] | null {
   const keywords = extractKeywords(file.content)
-  const searchTarget =
-    keywords.length > 0 ? keywords.join(' ') : file.content.toLowerCase()
+  const searchTarget = keywords.length > 0 ? keywords.join(' ') : file.content.toLowerCase()
 
   for (const andTerms of orGroups) {
     if (andTerms.every((term) => searchTarget.includes(term))) {
@@ -90,11 +96,7 @@ function extractExcerpt(content: string, matchedTerms: string[]): string {
     if (matchedTerms.some((t) => lineLower.includes(t))) {
       const start = Math.max(0, i - 1)
       const end = Math.min(lines.length, i + 4)
-      return lines
-        .slice(start, end)
-        .join('\n')
-        .trim()
-        .slice(0, 300)
+      return lines.slice(start, end).join('\n').trim().slice(0, 300)
     }
   }
   return content.slice(0, 200).trim()
