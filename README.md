@@ -49,28 +49,9 @@ See [docs/USAGE.md](docs/USAGE.md) for the full command reference.
 
 The MCP server exists primarily to handle permission prompts in headless (`claude -p`) sessions. In headless mode there is no interactive UI, so permission requests would silently block. The bundled `ask_permission` tool intercepts these requests and routes them to the terminal via `/dev/tty`, letting you approve or deny each tool call with a `[y/N]` prompt without pre-approving everything upfront.
 
-The TypeScript analysis tools (`ts_analyze`, `ts_get_references`, `ts_get_types`, `ts_checker`, `ts_test_strategist`) are used for developing perclst itself. You can add your own project-specific tools to `src/mcp/tools/` and register them in `src/mcp/server.ts`.
+The TypeScript analysis tools are used for developing perclst itself. You can add your own project-specific tools to `src/mcp/tools/` and register them in `src/mcp/server.ts`.
 
-Add to `~/.claude/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "perclst": {
-      "command": "node",
-      "args": ["/path/to/perclst/dist/src/mcp/server.js"]
-    }
-  }
-}
-```
-
-**Available tools**:
-- `ask_permission`: Route permission prompts to the terminal in headless sessions
-- `ts_analyze`: Analyze TypeScript code structure
-- `ts_get_references`: Find symbol references
-- `ts_get_types`: Get type definitions
-- `ts_checker`: Run lint, build, and tests in one shot
-- `ts_test_strategist`: Formulate a unit test strategy for a TypeScript file
+See [docs/MCP.md](docs/MCP.md) for setup instructions and the full tool reference.
 
 ## License
 
