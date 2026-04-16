@@ -38,6 +38,10 @@ export class SessionRepository implements ISessionRepository {
   getPath(sessionId: string): string {
     return getSessionPath(this.sessionsDir, sessionId)
   }
+
+  findByName(name: string): Session | null {
+    return findSessionByName(this.sessionsDir, name)
+  }
 }
 
 export function getSessionPath(sessionsDir: string, sessionId: string): string {
@@ -67,6 +71,11 @@ export async function deleteSession(sessionsDir: string, sessionId: string): Pro
     throw new SessionNotFoundError(sessionId)
   }
   await removeFile(path)
+}
+
+export function findSessionByName(sessionsDir: string, name: string): Session | null {
+  const sessions = listSessions(sessionsDir)
+  return sessions.find((s) => s.name === name) ?? null
 }
 
 export function listSessions(sessionsDir: string): Session[] {

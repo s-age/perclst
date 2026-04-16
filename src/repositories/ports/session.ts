@@ -7,4 +7,5 @@ export type ISessionRepository = {
   delete(sessionId: string): Promise<void>
   list(): Session[]
   getPath(sessionId: string): string
+  findByName(name: string): Session | null
 }

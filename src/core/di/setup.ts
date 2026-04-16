@@ -18,7 +18,10 @@ import { AnalyzeService } from '@src/services/analyzeService'
 import { ImportService } from '@src/services/importService'
 import { CheckerService } from '@src/services/checkerService'
 import { TestStrategistService } from '@src/services/testStrategistService'
+import { PipelineService } from '@src/services/pipelineService'
 import { ClaudeCodeRepository } from '@src/infrastructures/claudeCode'
+import { ShellRepository } from '@src/repositories/shell'
+import { ScriptDomain } from '@src/domains/script'
 import { DEFAULT_MODEL } from '@src/constants/config'
 
 export function setupContainer(): void {
@@ -27,12 +30,14 @@ export function setupContainer(): void {
   const model = config.model ?? DEFAULT_MODEL
 
   const claudeCodeRepo = new ClaudeCodeRepository()
+  const shellRepo = new ShellRepository()
   const sessionRepo = new SessionRepository(sessionsDir)
   const claudeSessionRepo = new ClaudeSessionRepository()
   const procedureRepo = new ProcedureRepository()
   const checkerRepo = new CheckerRepository()
   const testStrategyRepo = new TestStrategyRepository()
 
+  const scriptDomain = new ScriptDomain(shellRepo)
   const sessionDomain = new SessionDomain(sessionRepo)
   const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
   const analyzeDomain = new AnalyzeDomain(sessionDomain, claudeSessionRepo)
@@ -41,12 +46,14 @@ export function setupContainer(): void {
   const testStrategyDomain = new TestStrategyDomain(testStrategyRepo)
 
   container.register(TOKENS.Config, config)
+  container.register(TOKENS.ShellRepository, shellRepo)
   container.register(TOKENS.ClaudeCodeRepository, claudeCodeRepo)
   container.register(TOKENS.SessionRepository, sessionRepo)
   container.register(TOKENS.ClaudeSessionRepository, claudeSessionRepo)
   container.register(TOKENS.ProcedureRepository, procedureRepo)
   container.register(TOKENS.CheckerRepository, checkerRepo)
   container.register(TOKENS.TestStrategyRepository, testStrategyRepo)
+  container.register(TOKENS.ScriptDomain, scriptDomain)
   container.register(TOKENS.SessionDomain, sessionDomain)
   container.register(TOKENS.AgentDomain, agentDomain)
   container.register(TOKENS.AnalyzeDomain, analyzeDomain)
@@ -56,6 +63,10 @@ export function setupContainer(): void {
 
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
+  container.register(
+    TOKENS.PipelineService,
+    new PipelineService(sessionDomain, agentDomain, scriptDomain)
+  )
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
   container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))
   container.register(TOKENS.CheckerService, new CheckerService(checkerDomain))

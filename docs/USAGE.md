@@ -136,6 +136,101 @@ perclst sweep --to 2025-03-31 --status completed --anon-only
 | `--dry-run` | Preview matched sessions without deleting |
 | `--force` | Required when `--to` is omitted |
 
+## `run`
+
+Execute a pipeline of agent tasks defined in a JSON file. Tasks run serially. If a task specifies a `name` and a session with that name already exists, the task resumes that session; otherwise a new session is created.
+
+```bash
+perclst run pipeline.json
+perclst run pipeline.json --output-only
+```
+
+Two task types are supported: `agent` and `script`.
+
+**Agent task** — runs a Claude agent session:
+
+```json
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "implementer",
+      "task": "Implement the feature described in SPEC.md",
+      "procedure": "default",
+      "allowed_tools": ["Read", "Edit", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "tester",
+      "task": "Write unit tests for the implementation",
+      "allowed_tools": ["Read", "Edit", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "implementer",
+      "task": "Fix any issues raised by the tester"
+    }
+  ]
+}
+```
+
+The third task resumes the `implementer` session created by the first task. Session lookup uses the most recently updated session with the given name.
+
+**Agent task fields** (all optional except `type` and `task`):
+
+| Field | Description |
+|---|---|
+| `name` | Session name. Found → resume. Not found → start with this name. Omitted → always start new. |
+| `procedure` | Procedure name (only applied on start, ignored on resume) |
+| `model` | Model override for this task |
+| `allowed_tools` | Tools to allow without prompting |
+| `disallowed_tools` | Tools to deny |
+| `max_turns` | Turn limit before graceful termination |
+| `max_context_tokens` | Context token limit before graceful termination |
+
+---
+
+**Script task** — runs a shell command. If it fails (non-zero exit code) and `rejects_to` is set, the pipeline loops back to the named agent task with the script output as feedback:
+
+```json
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "implementer",
+      "task": "Implement the feature",
+      "allowed_tools": ["Read", "Edit", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "tester",
+      "task": "Write unit tests",
+      "allowed_tools": ["Read", "Edit", "Bash"]
+    },
+    {
+      "type": "script",
+      "command": "npm test",
+      "rejected": {
+        "to": "implementer",
+        "max_retries": 3
+      }
+    }
+  ]
+}
+```
+
+When `npm test` fails, the pipeline loops back to `implementer` and resumes that session with a `[Retry N]` instruction containing the test output. After `max_retries` exhausted, the pipeline stops with a non-zero exit code.
+
+**Script task fields**:
+
+| Field | Description |
+|---|---|
+| `command` | Shell command to run (executed in the current working directory) |
+| `rejected.to` | Name of the agent task to loop back to on failure |
+| `rejected.max_retries` | Maximum number of rejection loops before aborting (default: 1) |
+
+> For all options: `perclst run -h`
+
 ## `import`
 
 Import an existing Claude Code session into perclst management.
