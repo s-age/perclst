@@ -6,15 +6,21 @@ CLI tool for managing Claude Code sub-agents.
 
 **Name**: *per**cl**st* — "persist" with "si" replaced by "**cl**" (from **Cl**aude Code). Pronounced "persist" or "perclst".
 
+## The Problem
 
+When you start running Claude Code seriously with `claude -p` (headless mode), you hit these walls:
+
+- **Skills silently disappear**: `.claude/skills/` are auto-injected in interactive sessions but completely ignored in headless mode — sub-agents lose all your coding conventions and constraints without any warning.
+- **UUIDs are unmanageable**: Every session gets a UUID. Resuming the right session means copying IDs from list output or keeping notes. There is no way to say "resume the implementer session."
+- **Feedback loops require manual work**: When tests fail after an agent makes changes, you have to find the session, resume it with the error output, wait, and check again — by hand, every time.
 
 ## Features
 
-- **Pipeline Execution**: Define multi-agent workflows as a JSON file and run them with `perclst run pipeline.json`. Tasks execute serially; name a task to resume an existing session rather than start a new one — making it easy to route work to a dedicated implementer, tester, or reviewer agent across pipeline steps. Script tasks can verify agent output (e.g. run tests) and automatically loop back to a named agent with the failure output as feedback, up to a configurable retry limit.
-- **Named Sessions**: Assign human-readable names at creation (`--name`) or later (`rename`). Session state is managed by Claude Code itself — perclst adds a thin naming layer on top so you can identify and resume the right session without replacing Claude Code's own session model.
+- **Skills in Headless Mode**: Restores `.claude/skills/` in headless sessions via a `PreToolUse` hook that injects matching skill content as `additionalContext` — sub-agents get the same contextual rules as interactive sessions.
+- **Named Sessions**: Assign human-readable names at creation (`--name`) or later (`rename`). Identify and resume the right session by name without touching UUIDs.
+- **Pipeline Execution**: Define multi-agent workflows as a JSON file and run them with `perclst run pipeline.json`. Tasks execute serially; name a task to resume an existing session rather than start a new one — routing work to a dedicated implementer, tester, or reviewer agent across steps. Script tasks can verify agent output (e.g. run tests) and automatically loop back to a named agent with the failure output as feedback, up to a configurable retry limit.
 - **Rewind by Number**: Branch from any past assistant response by count rather than UUID — `--list` previews each turn so you can pinpoint where to diverge. Index `0` forks at the latest turn (no truncation); higher indices step further back.
 - **Permission Prompts in Headless Mode**: In headless (`claude -p`) sessions, permission requests have no UI to surface them. The bundled `ask_permission` MCP tool intercepts these requests and routes them to the terminal via `/dev/tty`, so you can approve or deny each tool call interactively without pre-approving everything upfront.
-- **Skills in Headless Mode**: Claude Code's auto-injected Skills (`.claude/skills/`) are unavailable in headless mode (`claude -p`) — perclst re-enables them via a `PreToolUse` hook that injects matching skill content as `additionalContext`, so sub-agents get the same contextual rules as interactive sessions
 - **Session Management**: Create, resume, fork, and manage agent sessions
 - **Session Analysis**: Inspect turn breakdown, tool usage, and token stats from Claude Code's jsonl history
 - **Local Storage**: Sessions stored in `~/.perclst/sessions/` by default
