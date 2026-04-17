@@ -8,6 +8,7 @@
       "allowed_tools": [
         "Read",
         "Write",
+        "Edit",
         "Bash",
         "mcp__perclst__ts_test_strategist",
         "mcp__perclst__ts_checker"
@@ -29,6 +30,7 @@
       "allowed_tools": [
         "Read",
         "Write",
+        "Edit",
         "Bash",
         "mcp__perclst__ts_test_strategist",
         "mcp__perclst__ts_checker"
@@ -50,6 +52,7 @@
       "allowed_tools": [
         "Read",
         "Write",
+        "Edit",
         "Bash",
         "mcp__perclst__ts_test_strategist",
         "mcp__perclst__ts_checker"

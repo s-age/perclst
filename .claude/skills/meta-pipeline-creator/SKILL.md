@@ -30,7 +30,7 @@ Omit `name` only when the task must always start fresh (stateless or one-shot).
 
 Start from the minimum set the agent needs, then add:
 
-1. Standard tools the procedure reads/writes with: `Read`, `Write`, `Bash`
+1. Standard tools the procedure reads/writes with: `Read`, `Write`, `Edit`, `Bash`
 2. **MCP tools the procedure calls** — list each by full name `mcp__<server>__<tool>`.
    Without this, the run stalls on a permission prompt mid-automation.
    Check the procedure's flowchart for tool names (e.g. `ts_test_strategist` → `mcp__perclst__ts_test_strategist`).
