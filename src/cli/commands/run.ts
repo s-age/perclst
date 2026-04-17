@@ -12,6 +12,7 @@ import { parseRunOptions, parsePipeline } from '@src/validators/cli/runPipeline'
 import type { Config } from '@src/types/config'
 
 type RawRunOptions = {
+  model?: string
   outputOnly?: boolean
   format?: string
 }
@@ -36,7 +37,7 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
 
     logger.print(`Running pipeline: ${pipeline.tasks.length} task(s)`)
 
-    const { results } = await pipelineService.run(pipeline)
+    const { results } = await pipelineService.run(pipeline, { model: input.model })
 
     for (const result of results) {
       if (result.kind === 'script') {
