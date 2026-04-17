@@ -101,6 +101,14 @@ it('should throw ValidationError when raw input is a number', () => {
 })
 ```
 
+## Pipeline rejection protocol
+
+Review agents signal failure via a temp file, not exit codes or stdout.
+
+- The task field includes `ng_output_path: .claude/tmp/<task-name>` — the procedure writes plain-text feedback there **only on failure**.
+- `PipelineService` checks `existsSync` after each agent run: file present → rejection (content becomes feedback, file deleted, engine jumps to rejection target); absent → pass.
+- Always delete the file immediately after reading to prevent stale false rejections on retries.
+
 ## No redundant happy-path tests
 
 A default-value assertion already present in an earlier `it` must not be repeated in a later one. Before adding a new happy-path test, scan the file for assertions that cover the same field and input.
