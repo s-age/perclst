@@ -44,6 +44,7 @@ const scriptTaskSchema = z.object({
   rejected: rejectedConfigSchema.optional()
 })
 
+// eslint-disable-next-line prefer-const
 let pipelineTaskSchema: z.ZodType<PipelineTask>
 
 const nestedPipelineTaskSchema: z.ZodType<NestedPipelineTask> = z.object({
