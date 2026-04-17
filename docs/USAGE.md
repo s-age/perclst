@@ -265,8 +265,92 @@ When `npm run test:unit` fails, the pipeline loops back to `unit-test-domains-ch
 | Field | Description |
 |---|---|
 | `command` | Shell command to run (executed in the current working directory) |
-| `rejected.to` | Name of the agent task to loop back to on failure |
+| `rejected.to` | Name of the agent or pipeline task to loop back to on failure |
 | `rejected.max_retries` | Maximum number of rejection loops before aborting (default: 1) |
+
+---
+
+**Pipeline task** — a named group of tasks that runs as a unit. Useful when a `script` rejection needs to retry a multi-agent sequence rather than a single agent:
+
+```json
+{
+  "type": "pipeline",
+  "name": "unit-test-analyze-service",
+  "tasks": [...]
+}
+```
+
+`rejected.to` on a script task can reference a pipeline `name`, causing the entire nested pipeline to re-run on failure.
+
+**Agent-level rejection** inside a nested pipeline is done via `ng_output_path`: the review agent writes rejection feedback to a temp file, and the pipeline loops back to the implement agent when that file is present.
+
+**Real-world example** (`pipelines/unit-test-services-analyze.json`):
+
+```json
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "npm run test:unit"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-analyze-service",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-analyze-service",
+          "task": "target_file_path: src/services/analyzeService.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-analyze-service",
+          "task": "target_file_path: src/services/analyzeService.ts\nng_output_path: .claude/tmp/review-unit-test-analyze-service",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash", "mcp__perclst__ts_test_strategist"],
+          "rejected": {
+            "to": "implement-unit-test-analyze-service",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "script",
+      "command": "npm run test:unit",
+      "rejected": {
+        "to": "unit-test-analyze-service",
+        "max_retries": 3
+      }
+    },
+    {
+      "type": "agent",
+      "name": "implement-unit-test-analyze-service",
+      "task": "All tests pass and the review is complete. Commit your changes.",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Write", "Edit", "Bash"]
+    }
+  ]
+}
+```
+
+This pipeline runs as follows:
+
+1. **Pre-check** — `npm run test:unit` runs first. If it already passes (e.g. tests were written in a prior run), the implement/review loop is skipped.
+2. **Nested pipeline** — implement → review loop. The review agent signals rejection via `ng_output_path`; if rejected, it loops back to the implement agent (up to 3 times).
+3. **Post-check** — `npm run test:unit` re-runs. If it fails, the entire nested pipeline re-runs (up to 3 times).
+4. **Commit** — once tests pass, the implement agent commits the changes.
+
+**Pipeline task fields**:
+
+| Field | Description |
+|---|---|
+| `name` | Identifier for the pipeline group — used as the target for `rejected.to` |
+| `tasks` | Array of agent and/or script tasks to run in order |
 
 > For all options: `perclst run -h`
 

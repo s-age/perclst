@@ -41,24 +41,75 @@ Start from the minimum set the agent needs, then add:
 - Keep `task` minimal when a procedure is set — pass only what the procedure needs as input (e.g. `target_file_path: src/foo.ts`).
 - `procedure` is applied on session **start** only; it is ignored on resume.
 
+## Nested pipeline tasks
+
+Use `type: "pipeline"` to group a sequence of tasks under a single named unit:
+
+```json
+{
+  "type": "pipeline",
+  "name": "unit-test-foo-service",
+  "tasks": [...]
+}
+```
+
+`name` is required — it doubles as the `rejected.to` target for outer script tasks.
+
+**When to use a nested pipeline:**
+
+- An outer `script` rejection needs to re-run a multi-agent sequence (implement → review → commit), not just a single agent.
+- Multiple independent targets (e.g. one service file each) should each get their own named pipeline so failures are isolated and `rejected.to` is unambiguous.
+
+**Multiple independent targets** — place each as a sibling `pipeline` task at the top level:
+
+```json
+{
+  "tasks": [
+    { "type": "pipeline", "name": "unit-test-foo-service", "tasks": [...] },
+    { "type": "pipeline", "name": "unit-test-bar-service", "tasks": [...] }
+  ]
+}
+```
+
+## Agent-level rejection via `ng_output_path`
+
+When a review agent should reject the preceding implement agent (within a nested pipeline), use the `ng_output_path` pattern:
+
+- Pass `ng_output_path: .claude/tmp/<review-agent-name>` in the review agent's `task` field.
+- The review agent writes rejection feedback to that file; perclst loops back to the implement agent with the file contents as feedback.
+- Set `rejected` on the review agent task (not the script task) pointing to the implement agent.
+
+```json
+{
+  "type": "agent",
+  "name": "review-unit-test-foo-service",
+  "task": "target_file_path: src/services/fooService.ts\nng_output_path: .claude/tmp/review-unit-test-foo-service",
+  "procedure": "review-unit-test",
+  "rejected": {
+    "to": "implement-unit-test-foo-service",
+    "max_retries": 3
+  }
+}
+```
+
 ## Script tasks and rejection loops
 
 Add a `script` task after agent tasks when external validation (e.g. `npm run test:unit`) should gate progress:
 
-- Set `rejected.to` to the agent task name that should fix the failure.
+- Set `rejected.to` to the **agent or pipeline** task name that should fix the failure.
 - Set `rejected.max_retries` (default 1); 2–3 is usually enough before aborting.
-- The named agent task must appear **before** the script task in the array.
+- The named task must appear **before** the script task in the array.
 
 ## Quality check gates
 
-Place a `script` gate immediately after each agent task that produces testable output (e.g. a test file writer). Use `npm run test:unit` — not `npm run test` — as the validation command.
+Place a `script` gate immediately after each agent task (or nested pipeline) that produces testable output. Use `npm run test:unit` — not `npm run test` — as the validation command.
 
 ```json
 {
   "type": "script",
   "command": "npm run test:unit",
   "rejected": {
-    "to": "<preceding-agent-name>",
+    "to": "<preceding-agent-or-pipeline-name>",
     "max_retries": 3
   }
 }
@@ -71,7 +122,9 @@ When a pipeline has multiple independent agent tasks (e.g. one per file), give e
 Before writing the file:
 
 - [ ] Every MCP tool called by a procedure is listed in `allowed_tools`
-- [ ] `rejected.to` references an existing `name` in the same `tasks` array
+- [ ] `rejected.to` references an existing `name` (agent or pipeline) visible in the same `tasks` array scope
 - [ ] Task names are unique and follow `<stem>-<target>` convention
 - [ ] `task` text is minimal when a `procedure` is set
 - [ ] Each agent task that produces testable output is followed by a `npm run test:unit` gate
+- [ ] Review agents that use `ng_output_path` have `rejected` set pointing to the implement agent
+- [ ] Nested pipeline `name` is set (required for `rejected.to` targeting)
