@@ -5,10 +5,11 @@ import { booleanRule } from '../rules/boolean'
 import { formatRule } from '../rules/format'
 import { stringArrayRule } from '../rules/stringArray'
 import { ValidationError } from '@src/errors/validationError'
-import type { Pipeline } from '@src/types/pipeline'
+import type { Pipeline, PipelineTask, NestedPipelineTask } from '@src/types/pipeline'
 
 const runOptionsSchema = schema({
   pipelinePath: stringRule({ required: true }),
+  model: stringRule().optional(),
   outputOnly: booleanRule().optional(),
   format: formatRule()
 })
@@ -19,6 +20,11 @@ export function parseRunOptions(raw: unknown): RunPipelineInput {
   return safeParse(runOptionsSchema, raw)
 }
 
+const rejectedConfigSchema = z.object({
+  to: z.string().min(1),
+  max_retries: z.number().int().min(1).optional()
+})
+
 const agentTaskSchema = z.object({
   type: z.literal('agent'),
   name: z.string().optional(),
@@ -28,22 +34,28 @@ const agentTaskSchema = z.object({
   allowed_tools: stringArrayRule().optional(),
   disallowed_tools: stringArrayRule().optional(),
   max_turns: z.number().int().optional(),
-  max_context_tokens: z.number().int().optional()
+  max_context_tokens: z.number().int().optional(),
+  rejected: rejectedConfigSchema.optional()
 })
 
 const scriptTaskSchema = z.object({
   type: z.literal('script'),
   command: z.string().min(1),
-  rejected: z
-    .object({
-      to: z.string().min(1),
-      max_retries: z.number().int().min(1).optional()
-    })
-    .optional()
+  rejected: rejectedConfigSchema.optional()
 })
 
+let pipelineTaskSchema: z.ZodType<PipelineTask>
+
+const nestedPipelineTaskSchema: z.ZodType<NestedPipelineTask> = z.object({
+  type: z.literal('pipeline'),
+  name: z.string().min(1),
+  tasks: z.array(z.lazy((): z.ZodType<PipelineTask> => pipelineTaskSchema)).min(1)
+})
+
+pipelineTaskSchema = z.union([agentTaskSchema, scriptTaskSchema, nestedPipelineTaskSchema])
+
 const pipelineSchema = z.object({
-  tasks: z.array(z.discriminatedUnion('type', [agentTaskSchema, scriptTaskSchema])).min(1)
+  tasks: z.array(pipelineTaskSchema).min(1)
 })
 
 export function parsePipeline(raw: unknown): Pipeline {

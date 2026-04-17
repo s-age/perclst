@@ -14,6 +14,7 @@ export type AgentPipelineTask = {
   disallowed_tools?: string[]
   max_turns?: number
   max_context_tokens?: number
+  rejected?: ScriptRejectedConfig
 }
 
 export type ScriptRejectedConfig = {
@@ -27,7 +28,13 @@ export type ScriptPipelineTask = {
   rejected?: ScriptRejectedConfig
 }
 
-export type PipelineTask = AgentPipelineTask | ScriptPipelineTask
+export type NestedPipelineTask = {
+  type: 'pipeline'
+  name: string
+  tasks: PipelineTask[]
+}
+
+export type PipelineTask = AgentPipelineTask | ScriptPipelineTask | NestedPipelineTask
 
 export type Pipeline = {
   tasks: PipelineTask[]

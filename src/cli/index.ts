@@ -184,6 +184,7 @@ program
   .command('run')
   .description('Execute a pipeline of agent tasks from a JSON file')
   .argument('<pipeline-path>', 'Path to the pipeline JSON file')
+  .option('--model <model>', 'Default model for all agent tasks (e.g. sonnet, opus, haiku)')
   .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
   .option('-f, --format <format>', 'Output format (text|json)', 'text')
   .action(runCommand)
