@@ -4,21 +4,21 @@
       "type": "agent",
       "name": "unit-test-domains-analyze",
       "task": "target_file_path: src/domains/analyze.ts",
-      "procedure": "test-unit",
+      "procedure": "implement-unit-test",
       "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     },
     {
       "type": "agent",
       "name": "unit-test-domains-checker",
       "task": "target_file_path: src/domains/checker.ts",
-      "procedure": "test-unit",
+      "procedure": "implement-unit-test",
       "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     },
     {
       "type": "agent",
       "name": "unit-test-domains-import",
       "task": "target_file_path: src/domains/import.ts",
-      "procedure": "test-unit",
+      "procedure": "implement-unit-test",
       "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
     }
   ]
