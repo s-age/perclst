@@ -30,7 +30,7 @@ Omit `name` only when the task must always start fresh (stateless or one-shot).
 
 Start from the minimum set the agent needs, then add:
 
-1. Standard tools the procedure reads/writes with: `Read`, `Write`, `Bash`
+1. Standard tools the procedure reads/writes with: `Read`, `Write`, `Edit`, `Bash`
 2. **MCP tools the procedure calls** — list each by full name `mcp__<server>__<tool>`.
    Without this, the run stalls on a permission prompt mid-automation.
    Check the procedure's flowchart for tool names (e.g. `ts_test_strategist` → `mcp__perclst__ts_test_strategist`).
@@ -49,6 +49,23 @@ Add a `script` task after agent tasks when external validation (e.g. `npm run te
 - Set `rejected.max_retries` (default 1); 2–3 is usually enough before aborting.
 - The named agent task must appear **before** the script task in the array.
 
+## Quality check gates
+
+Place a `script` gate immediately after each agent task that produces testable output (e.g. a test file writer). Use `npm run test:unit` — not `npm run test` — as the validation command.
+
+```json
+{
+  "type": "script",
+  "command": "npm run test:unit",
+  "rejected": {
+    "to": "<preceding-agent-name>",
+    "max_retries": 3
+  }
+}
+```
+
+When a pipeline has multiple independent agent tasks (e.g. one per file), give each its own gate so a failure is caught and fixed before the next agent starts.
+
 ## Verification checklist
 
 Before writing the file:
@@ -57,3 +74,4 @@ Before writing the file:
 - [ ] `rejected.to` references an existing `name` in the same `tasks` array
 - [ ] Task names are unique and follow `<stem>-<target>` convention
 - [ ] `task` text is minimal when a `procedure` is set
+- [ ] Each agent task that produces testable output is followed by a `npm run test:unit` gate

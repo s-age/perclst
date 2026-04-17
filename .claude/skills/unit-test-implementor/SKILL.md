@@ -76,3 +76,45 @@ expect(mock.save).toHaveBeenCalledTimes(1)
 - Never import from `node_modules` internals
 - Never test implementation details — test observable behavior
 - Never duplicate tests already present in the file (read first if file exists)
+
+## One assertion per `it`
+
+Each `it` block must test exactly one input variant. Never bundle multiple `expect` calls for different inputs in a single `it` — a failure hides the remaining cases.
+
+```ts
+// BAD — three cases in one it
+it('should throw for non-object inputs', () => {
+  expect(() => parse(null)).toThrow(ValidationError)
+  expect(() => parse('string')).toThrow(ValidationError)
+  expect(() => parse(42)).toThrow(ValidationError)
+})
+
+// GOOD — one case each
+it('should throw ValidationError when raw input is null', () => {
+  expect(() => parse(null)).toThrow(ValidationError)
+})
+it('should throw ValidationError when raw input is a string', () => {
+  expect(() => parse('string')).toThrow(ValidationError)
+})
+it('should throw ValidationError when raw input is a number', () => {
+  expect(() => parse(42)).toThrow(ValidationError)
+})
+```
+
+## No redundant happy-path tests
+
+A default-value assertion already present in an earlier `it` must not be repeated in a later one. Before adding a new happy-path test, scan the file for assertions that cover the same field and input.
+
+## Cover all optional field types in error paths
+
+For each optional field that has a type constraint (boolean, integer, enum…), add at least one negative test that passes the wrong type. 100 % line coverage does not guarantee this — a `stringRule` path inside `booleanRule` may be reachable only through a direct wrong-type call.
+
+```ts
+it('should throw ValidationError when a boolean field receives a string', () => {
+  expect(() => parse({ ...minimal, silentThoughts: 'yes' })).toThrow(ValidationError)
+})
+```
+
+## Cover all schema-valid combinations in happy paths
+
+When a schema has cross-field logic (e.g. `superRefine`), derive all valid filter combinations from the implementation and write a happy-path `it` for each. Missing a valid combination leaves a gap even at 100 % coverage.

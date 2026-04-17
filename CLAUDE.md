@@ -184,3 +184,6 @@ Edit `src/lib/config/types.ts` → `DEFAULT_CONFIG.model`
 **Add MCP tools**:
 1. Create `src/mcp/tools/<tool-name>.ts`
 2. Register in `src/mcp/server.ts`
+
+**Create a pipeline**:
+Create `pipelines/<name>.json` — a JSON file with a `tasks` array of `agent` and/or `script` steps.
