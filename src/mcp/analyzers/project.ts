@@ -1,4 +1,4 @@
-import { Project, SourceFile } from 'ts-morph'
+import { Project, SourceFile, SyntaxKind } from 'ts-morph'
 import {
   TypeScriptAnalysis,
   SymbolInfo,
@@ -81,7 +81,7 @@ export class TypeScriptProject {
       properties: classDecl.getProperties().map(
         (p): PropertyInfo => ({
           name: p.getName(),
-          type: p.getType().getText(),
+          type: p.getTypeNode()?.getText() ?? p.getType().getText(),
           isStatic: p.isStatic(),
           isReadonly: p.isReadonly()
         })
@@ -91,8 +91,8 @@ export class TypeScriptProject {
           name: m.getName(),
           parameters: m
             .getParameters()
-            .map((p): ParameterInfo => ({ name: p.getName(), type: p.getType().getText() })),
-          returnType: m.getReturnType().getText(),
+            .map((p): ParameterInfo => ({ name: p.getName(), type: p.getTypeNode()?.getText() ?? p.getType().getText() })),
+          returnType: m.getReturnTypeNode()?.getText() ?? m.getReturnType().getText(),
           isStatic: m.isStatic()
         })
       )
@@ -110,7 +110,7 @@ export class TypeScriptProject {
       type: 'interface',
       properties: interfaceDecl
         .getProperties()
-        .map((p): PropertyInfo => ({ name: p.getName(), type: p.getType().getText() }))
+        .map((p): PropertyInfo => ({ name: p.getName(), type: p.getTypeNode()?.getText() ?? p.getType().getText() }))
     }
   }
 
@@ -120,7 +120,7 @@ export class TypeScriptProject {
   ): TypeDefinition | null {
     const typeAlias = sourceFile.getTypeAlias(symbolName)
     if (!typeAlias) return null
-    return { name: symbolName, type: 'type', returnType: typeAlias.getType().getText() }
+    return { name: symbolName, type: 'type', returnType: typeAlias.getTypeNode()?.getText() ?? typeAlias.getType().getText() }
   }
 
   private extractFunctionDefinition(
@@ -134,8 +134,8 @@ export class TypeScriptProject {
       type: 'function',
       parameters: functionDecl
         .getParameters()
-        .map((p): ParameterInfo => ({ name: p.getName(), type: p.getType().getText() })),
-      returnType: functionDecl.getReturnType().getText()
+        .map((p): ParameterInfo => ({ name: p.getName(), type: p.getTypeNode()?.getText() ?? p.getType().getText() })),
+      returnType: functionDecl.getReturnTypeNode()?.getText() ?? functionDecl.getReturnType().getText()
     }
   }
 
@@ -165,10 +165,38 @@ export class TypeScriptProject {
 
     // Classes
     sourceFile.getClasses().forEach((c) => {
+      const ctor = c.getConstructors()[0]
+      const constructorParams = ctor?.getParameters().map((p) => ({
+        name: p.getName(),
+        type: p.getTypeNode()?.getText() ?? p.getType().getText()
+      }))
+      const methods = c
+        .getMethods()
+        .filter((m) => !m.hasModifier(SyntaxKind.PrivateKeyword) && !m.hasModifier(SyntaxKind.ProtectedKeyword))
+        .map((m) => ({
+          name: m.getName(),
+          parameters: m
+            .getParameters()
+            .map((p) => ({ name: p.getName(), type: p.getTypeNode()?.getText() ?? p.getType().getText() })),
+          returnType: m.getReturnTypeNode()?.getText() ?? m.getReturnType().getText(),
+          isStatic: m.isStatic()
+        }))
       symbols.push({
         name: c.getName() || '<anonymous>',
         kind: 'class',
-        line: sourceFile.getLineAndColumnAtPos(c.getStart()).line
+        line: sourceFile.getLineAndColumnAtPos(c.getStart()).line,
+        ...(constructorParams?.length ? { constructorParams } : {}),
+        ...(methods.length ? { methods } : {})
+      })
+    })
+
+    // Variable declarations
+    sourceFile.getVariableDeclarations().forEach((v) => {
+      symbols.push({
+        name: v.getName(),
+        kind: 'variable',
+        line: sourceFile.getLineAndColumnAtPos(v.getStart()).line,
+        type: v.getType().getText()
       })
     })
 

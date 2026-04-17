@@ -13,6 +13,8 @@ export type SymbolInfo = {
   kind: string
   line: number
   type?: string
+  constructorParams?: ParameterInfo[]
+  methods?: MethodInfo[]
 }
 
 export type ImportInfo = {

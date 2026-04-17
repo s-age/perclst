@@ -4,7 +4,7 @@ import { TypeScriptProject } from '@src/mcp/analyzers/project'
 
 export const ts_analyze = {
   name: 'ts_analyze',
-  description: 'Analyze TypeScript code structure (symbols, imports, exports)',
+  description: 'Analyze TypeScript code structure (symbols with constructor params and public methods, imports, exports, variable declarations)',
   inputSchema: {
     type: 'object',
     properties: {
