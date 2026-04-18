@@ -9,8 +9,12 @@ export class TsAnalysisRepository implements ITsAnalysisRepository {
     return this.infra.analyzeFile(filePath)
   }
 
-  getReferences(filePath: string, symbolName: string): ReferenceInfo[] {
-    return this.infra.getReferences(filePath, symbolName)
+  getReferences(
+    filePath: string,
+    symbolName: string,
+    options?: { includeTest?: boolean }
+  ): ReferenceInfo[] {
+    return this.infra.getReferences(filePath, symbolName, options)
   }
 
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {

@@ -31,15 +31,30 @@ export class TsAnalyzer {
     }
   }
 
-  getReferences(filePath: string, symbolName: string): ReferenceInfo[] {
+  getReferences(
+    filePath: string,
+    symbolName: string,
+    options?: { includeTest?: boolean }
+  ): ReferenceInfo[] {
     const sourceFile = this.project.addSourceFileAtPath(filePath)
 
-    const symbol =
-      sourceFile.getFunction(symbolName) ||
-      sourceFile.getClass(symbolName) ||
-      sourceFile.getVariableDeclaration(symbolName) ||
-      sourceFile.getInterface(symbolName) ||
-      sourceFile.getTypeAlias(symbolName)
+    let symbol = null
+    if (symbolName.includes('.')) {
+      // Handle "ClassName.methodName" format
+      const [className, methodName] = symbolName.split('.', 2)
+      const classDecl = sourceFile.getClass(className)
+      if (classDecl) {
+        symbol = classDecl.getMethod(methodName)
+      }
+    } else {
+      // Handle top-level symbols
+      symbol =
+        sourceFile.getFunction(symbolName) ||
+        sourceFile.getClass(symbolName) ||
+        sourceFile.getVariableDeclaration(symbolName) ||
+        sourceFile.getInterface(symbolName) ||
+        sourceFile.getTypeAlias(symbolName)
+    }
 
     if (!symbol) return []
 
@@ -48,9 +63,15 @@ export class TsAnalyzer {
       for (const reference of referencedSymbol.getReferences()) {
         const node = reference.getNode()
         const sf = node.getSourceFile()
+        const filePath = sf.getFilePath()
+
+        if (!options?.includeTest && filePath.includes('__tests__')) {
+          continue
+        }
+
         const pos = sf.getLineAndColumnAtPos(node.getStart())
         references.push({
-          file_path: sf.getFilePath(),
+          file_path: filePath,
           line: pos.line,
           column: pos.column,
           snippet: node.getText()

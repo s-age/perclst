@@ -15,15 +15,26 @@ export const ts_get_references = {
       symbol_name: {
         type: 'string',
         description: 'Name of the symbol to find references for'
+      },
+      include_test: {
+        type: 'boolean',
+        description: 'Include references from __tests__ directories (default: false)',
+        default: false
       }
     },
     required: ['file_path', 'symbol_name']
   }
 }
 
-export async function executeTsGetReferences(args: { file_path: string; symbol_name: string }) {
+export async function executeTsGetReferences(args: {
+  file_path: string
+  symbol_name: string
+  include_test?: boolean
+}) {
   const service = container.resolve<TsAnalysisService>(TOKENS.TsAnalysisService)
-  const references = service.getReferences(args.file_path, args.symbol_name)
+  const references = service.getReferences(args.file_path, args.symbol_name, {
+    includeTest: args.include_test
+  })
 
   return {
     content: [

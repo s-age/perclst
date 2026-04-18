@@ -9,8 +9,12 @@ export class TsAnalysisDomain implements ITsAnalysisDomain {
     return this.repo.analyzeFile(filePath)
   }
 
-  getReferences(filePath: string, symbolName: string): ReferenceInfo[] {
-    return this.repo.getReferences(filePath, symbolName)
+  getReferences(
+    filePath: string,
+    symbolName: string,
+    options?: { includeTest?: boolean }
+  ): ReferenceInfo[] {
+    return this.repo.getReferences(filePath, symbolName, options)
   }
 
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {
