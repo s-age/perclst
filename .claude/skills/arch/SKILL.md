@@ -36,8 +36,10 @@ paths:
 | `src/domains/`         | Business rules — session lifecycle, agent execution 等                                                |
 | `src/repositories/`    | Translates infrastructure primitives into atomic domain operations (e.g. `startSession`, `getTurns`) |
 | `src/repositories/ports/` | Port contracts (e.g. `ISessionRepository`) consumed by `domains/` and implemented by `repositories/` |
+| `src/repositories/parsers/` | Pure format converters used internally by repositories — stateless functions only, no I/O |
 | `src/domains/ports/`   | Port contracts (e.g. `ISessionDomain`) consumed by `services/` and implemented by `domains/`         |
 | `src/infrastructures/` | Wraps raw external I/O primitives (HTTP verbs, CLI commands, file ops) — no domain knowledge; consumed by `repositories/` |
+| `src/infrastructures/parsers/` | Pure AST/format converters used internally by infrastructure adapters — stateless functions only, no I/O |
 | `src/types/`           | Shared data types; types referenced across 2+ layers                                                  |
 | `src/errors/`          | Error classes — one class per file                                                                    |
 | `src/utils/`           | Pure functions and library wrappers (e.g. dayjs → `date.ts`); no I/O — that belongs in `infrastructures/` |

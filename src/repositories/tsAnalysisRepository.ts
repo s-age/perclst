@@ -17,6 +17,14 @@ export class TsAnalysisRepository implements ITsAnalysisRepository {
     return this.infra.getReferences(filePath, symbolName, options)
   }
 
+  findContainingSymbol(
+    filePath: string,
+    line: number,
+    column: number
+  ): { symbol_name: string; file_path: string; line: number } | null {
+    return this.infra.findContainingSymbol(filePath, line, column)
+  }
+
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {
     return this.infra.getTypeDefinitions(filePath, symbolName)
   }
