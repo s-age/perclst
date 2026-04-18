@@ -151,25 +151,29 @@ export function printResponse(
   stdout.print(greyBlock(response.content))
 
   if (!silentUsage && response.usage) {
-    const u = response.usage
-    const cu = response.last_assistant_usage ?? u
-    stdout.print(header('Token Usage'))
-    if (response.message_count !== undefined) {
-      stdout.print(`  Messages:         ${response.message_count}`)
-    }
-    stdout.print(`  Input:            ${u.input_tokens}`)
-    stdout.print(`  Output:           ${u.output_tokens}`)
-    if (u.cache_read_input_tokens !== undefined) {
-      stdout.print(`  Cache read:       ${u.cache_read_input_tokens}`)
-    }
-    if (u.cache_creation_input_tokens !== undefined) {
-      stdout.print(`  Cache creation:   ${u.cache_creation_input_tokens}`)
-    }
-    const contextTokens =
-      cu.input_tokens + (cu.cache_read_input_tokens ?? 0) + (cu.cache_creation_input_tokens ?? 0)
-    const pct = Math.round((contextTokens / CONTEXT_WINDOW_SIZE) * 100)
-    stdout.print(
-      `  Context window:   ${contextTokens.toLocaleString()} / ${CONTEXT_WINDOW_SIZE.toLocaleString()} (${pct}%)`
-    )
+    printUsageBlock(header, response)
   }
+}
+
+function printUsageBlock(header: (text: string) => string, response: AgentResponse): void {
+  const u = response.usage!
+  const cu = response.last_assistant_usage ?? u
+  stdout.print(header('Token Usage'))
+  if (response.message_count !== undefined) {
+    stdout.print(`  Messages:         ${response.message_count}`)
+  }
+  stdout.print(`  Input:            ${u.input_tokens}`)
+  stdout.print(`  Output:           ${u.output_tokens}`)
+  if (u.cache_read_input_tokens !== undefined) {
+    stdout.print(`  Cache read:       ${u.cache_read_input_tokens}`)
+  }
+  if (u.cache_creation_input_tokens !== undefined) {
+    stdout.print(`  Cache creation:   ${u.cache_creation_input_tokens}`)
+  }
+  const contextTokens =
+    cu.input_tokens + (cu.cache_read_input_tokens ?? 0) + (cu.cache_creation_input_tokens ?? 0)
+  const pct = Math.round((contextTokens / CONTEXT_WINDOW_SIZE) * 100)
+  stdout.print(
+    `  Context window:   ${contextTokens.toLocaleString()} / ${CONTEXT_WINDOW_SIZE.toLocaleString()} (${pct}%)`
+  )
 }
