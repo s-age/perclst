@@ -183,6 +183,7 @@ This project exposes MCP tools for TypeScript analysis. Use them proactively whe
 | `ts_get_references` | Finds all call sites of a named symbol across the codebase | Refactoring a function, assessing blast radius of a change, or understanding how a public API is actually used |
 | `ts_test_strategist` | Identifies untested functions, calculates cyclomatic complexity, and suggests mocks | Starting point for any unit test task — tells you what to test and how many cases to write |
 | `ts_checker` | Runs lint, build, and unit tests in one shot | After any TypeScript change — verifies correctness before reporting a task complete |
+| `knowledge_search` | Searches the knowledge base by keyword (AND/OR supported) | Before starting any non-trivial task — check if a past problem, gotcha, or design decision is already documented |
 
 ### Recommended sequences
 
@@ -194,6 +195,9 @@ This project exposes MCP tools for TypeScript analysis. Use them proactively whe
 
 **Reviewing an unfamiliar file**:
 `ts_analyze` → `ts_get_types` on key symbols → Read file
+
+**Looking up external information**:
+`knowledge_search` → Read local docs/code → `WebFetch` (only if still needed)
 
 ## Common Tasks
 
