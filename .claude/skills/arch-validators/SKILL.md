@@ -9,7 +9,7 @@ paths:
 
 Owns all input validation for every entry point (CLI, MCP, etc.). Zod is confined entirely to this layer — no other layer may import it. Exposes typed `parseXxx()` functions that throw `ValidationError` on bad input, so callers never touch raw Zod types.
 
-**Exception**: `src/mcp/server.ts` imports `zod` directly to define tool parameter schemas for `@modelcontextprotocol/sdk`. The SDK requires Zod schemas at the call site of `server.tool()` — there is no way to route this through the validators layer. This is the only permitted out-of-layer Zod import.
+`validators/mcp/` files export Zod shape objects (`{ field: z.string() }`) consumed directly by `server.ts` for `server.tool()` registration. Unlike `cli/` validators, they do not use `safeParse()` or expose `parseXxx()` functions — the MCP SDK handles validation internally.
 
 ## Files
 
@@ -28,6 +28,13 @@ Owns all input validation for every entry point (CLI, MCP, etc.). Zod is confine
 | `cli/renameSession.ts` | Validates `rename` command options → `RenameSessionInput` |
 | `cli/analyzeSession.ts` | Validates `analyze` command options → `AnalyzeSessionInput` |
 | `cli/importSession.ts` | Validates `import` command options → `ImportSessionInput` |
+| `mcp/askPermission.ts` | Zod shape for `ask_permission` tool params |
+| `mcp/tsAnalyze.ts` | Zod shape for `ts_analyze` tool params |
+| `mcp/tsGetReferences.ts` | Zod shape for `ts_get_references` tool params |
+| `mcp/tsGetTypes.ts` | Zod shape for `ts_get_types` tool params |
+| `mcp/tsTestStrategist.ts` | Zod shape for `ts_test_strategist` tool params |
+| `mcp/knowledgeSearch.ts` | Zod shape for `knowledge_search` tool params |
+| `mcp/tsChecker.ts` | Zod shape for `ts_checker` tool params |
 
 ## Import Rules
 
@@ -36,6 +43,7 @@ Owns all input validation for every entry point (CLI, MCP, etc.). Zod is confine
 | `rules/*.ts` | `zod` only | all `src/` layers |
 | `schema.ts` | `zod`, `errors` | all other `src/` layers |
 | `cli/*.ts` | `../schema`, `../rules/*`, `types`, `errors`, `constants` | `cli`, `services`, `domains`, `repositories`, `infrastructures` |
+| `mcp/*.ts` | `zod` only | all `src/` layers |
 
 ## Patterns
 
@@ -100,7 +108,7 @@ error.errors.map(...)
 
 ## Prohibitions
 
-- Never import `zod` outside of `rules/` and `schema.ts` — not in `cli/`, not in other layers — except `src/mcp/server.ts` (see Exception above)
+- Never import `zod` outside of `rules/`, `schema.ts`, and `mcp/*.ts` — not in `cli/`, not in other layers
 - Never expose raw Zod types (`ZodSchema`, `ZodObject`, etc.) across the layer boundary — only the inferred `Input` type and the `parseXxx()` function are public
 - Never catch `ZodError` in `cli/` files — that is `schema.ts`'s exclusive responsibility
 - Never use `ZodError.errors` — it was removed in Zod v4; always use `ZodError.issues`
