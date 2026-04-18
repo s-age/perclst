@@ -2,7 +2,7 @@
   "mcpServers": {
     "perclst": {
       "command": "node",
-      "args": ["/Users/s-age/gitrepos/perclst/dist/src/mcp/server.js"]
+      "args": ["./dist/src/mcp/server.js"]
     }
   }
 }
