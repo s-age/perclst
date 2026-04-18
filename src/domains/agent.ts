@@ -3,7 +3,7 @@ import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { IProcedureRepository } from '@src/repositories/ports/agent'
 import type { Session } from '@src/types/session'
 import type { IClaudeCodeRepository } from '@src/types/claudeCode'
-import { logger } from '@src/utils/logger'
+import { debug } from '@src/utils/output'
 import { APIError } from '@src/errors/apiError'
 
 export class AgentDomain implements IAgentDomain {
@@ -22,7 +22,7 @@ export class AgentDomain implements IAgentDomain {
     let systemPrompt: string | undefined
     if (session.procedure) {
       systemPrompt = this.procedureRepo.load(session.procedure)
-      logger.debug('Loaded procedure', { procedure: session.procedure })
+      debug.print('Loaded procedure', { procedure: session.procedure })
     }
 
     const baseArgs = {

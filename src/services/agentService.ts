@@ -2,7 +2,7 @@ import type { AgentResponse } from '@src/types/agent'
 import type { Session, CreateSessionParams } from '@src/types/session'
 import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { ISessionDomain } from '@src/domains/ports/session'
-import { logger } from '@src/utils/logger'
+import { debug } from '@src/utils/output'
 
 const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Please:
 1. Summarize what was completed successfully
@@ -39,7 +39,7 @@ export class AgentService {
     if (maxTurns > 0) {
       const messageCount = response.message_count ?? 0
       if (messageCount >= maxTurns) {
-        logger.info(`Turn limit reached: ${messageCount} >= ${maxTurns}`)
+        debug.print(`Turn limit reached: ${messageCount} >= ${maxTurns}`)
         return true
       }
     }
@@ -48,7 +48,7 @@ export class AgentService {
     if (maxContextTokens > 0) {
       const contextTokens = getContextTokens(response)
       if (contextTokens >= maxContextTokens) {
-        logger.info(`Context token limit reached: ${contextTokens} >= ${maxContextTokens}`)
+        debug.print(`Context token limit reached: ${contextTokens} >= ${maxContextTokens}`)
         return true
       }
     }

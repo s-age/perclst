@@ -1,7 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { SessionService } from '@src/services/sessionService'
-import { logger } from '@src/utils/logger'
+import { stdout, stderr } from '@src/utils/output'
 import { parseDeleteSession } from '@src/validators/cli/deleteSession'
 
 export async function deleteCommand(sessionId: string) {
@@ -12,9 +12,9 @@ export async function deleteCommand(sessionId: string) {
     const resolvedId = await sessionService.resolveId(input.sessionId)
     await sessionService.delete(resolvedId)
 
-    logger.print(`Session deleted: ${resolvedId}`)
+    stdout.print(`Session deleted: ${resolvedId}`)
   } catch (error) {
-    logger.error('Failed to delete session', error as Error)
+    stderr.print('Failed to delete session', error as Error)
     process.exit(1)
   }
 }

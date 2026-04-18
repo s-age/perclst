@@ -11,18 +11,15 @@ vi.mock('@src/utils/date', () => ({
   toISO: vi.fn()
 }))
 
-vi.mock('@src/utils/logger', () => ({
-  logger: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn()
-  }
+vi.mock('@src/utils/output', () => ({
+  debug: { print: vi.fn() },
+  stdout: { print: vi.fn() },
+  stderr: { print: vi.fn() }
 }))
 
 import { generateId } from '@src/utils/uuid'
 import { toISO } from '@src/utils/date'
-import { logger } from '@src/utils/logger'
+import { debug } from '@src/utils/output'
 
 describe('ImportService', () => {
   let importService: ImportService
@@ -126,7 +123,7 @@ describe('ImportService', () => {
 
       await importService.import(claudeSessionId)
 
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(debug.print).toHaveBeenCalledWith(
         'Session imported',
         expect.objectContaining({
           session_id: 'test-session-id-123',

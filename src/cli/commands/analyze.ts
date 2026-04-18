@@ -1,8 +1,9 @@
+import Table from 'cli-table3'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AnalyzeService } from '@src/services/analyzeService'
 import { SessionService } from '@src/services/sessionService'
-import { logger } from '@src/utils/logger'
+import { stdout, stderr } from '@src/utils/output'
 import type { Session } from '@src/types/session'
 import type { AnalysisSummary } from '@src/types/analysis'
 import { parseAnalyzeSession } from '@src/validators/cli/analyzeSession'
@@ -44,10 +45,10 @@ function formatToolInput(name: string, input: Record<string, unknown>): string {
 
 function printJsonOutput(session: Session, summary: AnalysisSummary, printDetail: boolean): void {
   if (printDetail) {
-    logger.print(JSON.stringify({ session, summary }, null, 2))
+    stdout.print(JSON.stringify({ session, summary }, null, 2))
     return
   }
-  logger.print(
+  stdout.print(
     JSON.stringify(
       {
         session_id: session.id,
@@ -81,65 +82,78 @@ function printJsonOutput(session: Session, summary: AnalysisSummary, printDetail
 function printTextSummary(session: Session, summary: AnalysisSummary): void {
   const { turnsBreakdown: bd, toolUses, tokens } = summary
 
-  logger.print(`\n  Session: ${session.id}`)
-  logger.print(`  Status: ${session.metadata.status}  /  Working dir: ${session.working_dir}`)
+  stdout.print(`\n  Session: ${session.id}`)
+  stdout.print(`  Status: ${session.metadata.status}  /  Working dir: ${session.working_dir}`)
   if (session.procedure) {
-    logger.print(`  Procedure: ${session.procedure}`)
+    stdout.print(`  Procedure: ${session.procedure}`)
   }
 
-  logger.print(`\n  Turns breakdown:`)
-  logger.print(`    User Instructions:  ${bd.userInstructions}`)
-  logger.print(`    Tool Use:          ${bd.toolUse} × 2`)
-  logger.print(`    Assistant Response: ${bd.assistantResponse}`)
-  logger.print(`    Turns:             ${bd.total}`)
+  const turnsTable = new Table({ style: { head: [], border: [] } })
+  turnsTable.push(
+    ['User Instructions', bd.userInstructions],
+    ['Tool Use', `${bd.toolUse} × 2`],
+    ['Assistant Response', bd.assistantResponse],
+    ['Turns (total)', bd.total]
+  )
+  stdout.print(`\n  Turns breakdown:`)
+  stdout.print(turnsTable.toString())
 
-  logger.print(`\n  Tool uses:`)
+  stdout.print(`\n  Tool uses:`)
   if (toolUses.length === 0) {
-    logger.print(`    (none)`)
+    stdout.print(`    (none)`)
   } else {
+    const toolTable = new Table({
+      head: ['', 'Tool'],
+      style: { head: [], border: [] }
+    })
     for (const t of toolUses) {
-      const mark = t.isError ? '✗' : '✓'
-      logger.print(`    ${mark}  ${formatToolInput(t.name, t.input)}`)
+      toolTable.push([t.isError ? '✗' : '✓', formatToolInput(t.name, t.input)])
     }
+    stdout.print(toolTable.toString())
   }
 
-  logger.print(`\n  Tokens:`)
-  logger.print(`    Input:   ${tokens.totalInput.toLocaleString()}`)
-  logger.print(`    Output:  ${tokens.totalOutput.toLocaleString()}`)
+  const tokenRows: [string, string][] = [
+    ['Input', tokens.totalInput.toLocaleString()],
+    ['Output', tokens.totalOutput.toLocaleString()]
+  ]
   if (tokens.totalCacheRead > 0) {
-    logger.print(`    Cache read (total): ${tokens.totalCacheRead.toLocaleString()}`)
+    tokenRows.push(['Cache read', tokens.totalCacheRead.toLocaleString()])
   }
   if (tokens.totalCacheCreation > 0) {
-    logger.print(`    Cache created:      ${tokens.totalCacheCreation.toLocaleString()}`)
+    tokenRows.push(['Cache created', tokens.totalCacheCreation.toLocaleString()])
   }
-  logger.print('')
+  const tokensTable = new Table({ style: { head: [], border: [] } })
+  tokensTable.push(...tokenRows)
+  stdout.print(`\n  Tokens:`)
+  stdout.print(tokensTable.toString())
+  stdout.print('')
 }
 
 function printDetailedTurns(turns: AnalysisSummary['turns']): void {
-  logger.print(`\n  Detail:`)
+  stdout.print(`\n  Detail:`)
   for (const turn of turns) {
     if (turn.userMessage !== undefined) {
-      logger.print(`\n  ─── User ───`)
-      logger.print(`  ${turn.userMessage}`)
+      stdout.print(`\n  ─── User ───`)
+      stdout.print(`  ${turn.userMessage}`)
     }
     if (turn.thinkingBlocks && turn.thinkingBlocks.length > 0) {
       for (const t of turn.thinkingBlocks) {
-        logger.print(`\n  [Thinking] ${t}`)
+        stdout.print(`\n  [Thinking] ${t}`)
       }
     }
     if (turn.toolCalls.length > 0) {
       for (const tc of turn.toolCalls) {
-        logger.print(`\n  ▶ ${formatToolInput(tc.name, tc.input)}`)
+        stdout.print(`\n  ▶ ${formatToolInput(tc.name, tc.input)}`)
         if (tc.result !== null) {
-          logger.print(`    → ${tc.result}`)
+          stdout.print(`    → ${tc.result}`)
         } else {
-          logger.print(`    → (no result)`)
+          stdout.print(`    → (no result)`)
         }
       }
     }
     if (turn.assistantText !== undefined) {
-      logger.print(`\n  ─── Assistant ───`)
-      logger.print(`  ${turn.assistantText}`)
+      stdout.print(`\n  ─── Assistant ───`)
+      stdout.print(`  ${turn.assistantText}`)
     }
   }
 }
@@ -163,7 +177,7 @@ export async function analyzeCommand(sessionId: string, options: RawAnalyzeOptio
       printDetailedTurns(summary.turns)
     }
   } catch (error) {
-    logger.error('Failed to analyze session', error as Error)
+    stderr.print('Failed to analyze session', error as Error)
     process.exit(1)
   }
 }

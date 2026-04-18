@@ -2,7 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AnalyzeService } from '@src/services/analyzeService'
 import { SessionService } from '@src/services/sessionService'
-import { logger } from '@src/utils/logger'
+import { stdout, stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
 import { parseRewindSession } from '@src/validators/cli/rewindSession'
 
@@ -34,7 +34,7 @@ export async function rewindCommand(
       const turns = await analyzeService.getRewindTurns(resolvedId)
 
       if (turns.length === 0) {
-        logger.print('No assistant turns found.')
+        stdout.print('No assistant turns found.')
         return
       }
 
@@ -42,13 +42,13 @@ export async function rewindCommand(
       for (const turn of turns) {
         const preview =
           turn.text.length > displayLength ? turn.text.slice(0, displayLength) + '…' : turn.text
-        logger.print(`  ${turn.index}: ${preview}`)
+        stdout.print(`  ${turn.index}: ${preview}`)
       }
       return
     }
 
     if (input.index === undefined) {
-      logger.error('Either --list or an index argument is required')
+      stderr.print('Either --list or an index argument is required')
       process.exit(1)
     }
 
@@ -57,7 +57,7 @@ export async function rewindCommand(
       const turns = await analyzeService.getRewindTurns(resolvedId)
       const turn = turns[input.index]
       if (!turn) {
-        logger.error(
+        stderr.print(
           `Index ${input.index} is out of range (session has ${turns.length} assistant turns)`
         )
         process.exit(1)
@@ -67,13 +67,13 @@ export async function rewindCommand(
 
     const newSession = await sessionService.createRewindSession(resolvedId, messageId)
 
-    logger.print(`\nRewind session created: ${newSession.id}`)
-    logger.print(`To continue: perclst resume ${newSession.id} "<instruction>"`)
+    stdout.print(`\nRewind session created: ${newSession.id}`)
+    stdout.print(`To continue: perclst resume ${newSession.id} "<instruction>"`)
   } catch (error) {
     if (error instanceof ValidationError) {
-      logger.error(`Invalid arguments: ${error.message}`)
+      stderr.print(`Invalid arguments: ${error.message}`)
     } else {
-      logger.error('Failed to rewind session', error as Error)
+      stderr.print('Failed to rewind session', error as Error)
     }
     process.exit(1)
   }

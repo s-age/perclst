@@ -13,7 +13,7 @@ import type { ISessionDomain } from '@src/domains/ports/session'
 import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
-import { logger } from '@src/utils/logger'
+import { debug } from '@src/utils/output'
 
 const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Please:
 1. Summarize what was completed successfully
@@ -55,11 +55,11 @@ function isLimitExceeded(
   maxContextTokens: number
 ): boolean {
   if (maxTurns > 0 && (response.message_count ?? 0) >= maxTurns) {
-    logger.info(`Turn limit reached: ${response.message_count} >= ${maxTurns}`)
+    debug.print(`Turn limit reached: ${response.message_count} >= ${maxTurns}`)
     return true
   }
   if (maxContextTokens > 0 && getContextTokens(response) >= maxContextTokens) {
-    logger.info(`Context token limit reached`)
+    debug.print(`Context token limit reached`)
     return true
   }
   return false
@@ -102,7 +102,7 @@ export class PipelineService {
     let i = 0
     while (i < pipeline.tasks.length) {
       const task = pipeline.tasks[i]
-      logger.info(`Pipeline task ${i + 1}/${pipeline.tasks.length}`, { type: task.type })
+      debug.print(`Pipeline task ${i + 1}/${pipeline.tasks.length}`, { type: task.type })
 
       if (task.type === 'agent') {
         const rejection = pendingRejections.get(i)
@@ -140,7 +140,7 @@ export class PipelineService {
               feedback
             })
 
-            logger.info(
+            debug.print(
               `Agent rejected — rejecting to '${task.rejected.to}' (retry ${rejectCount}/${maxRetries})`
             )
             i = targetIndex
@@ -190,7 +190,7 @@ export class PipelineService {
           retryCount.set(i, count)
           pendingRejections.set(targetIndex, rejectedContext)
 
-          logger.info(
+          debug.print(
             `Script failed — rejecting to '${task.rejected.to}' (retry ${count}/${maxRetries})`
           )
           i = targetIndex
@@ -290,7 +290,7 @@ export class PipelineService {
     options: PipelineRunOptions,
     outerRejection?: RejectedContext
   ): Promise<PipelineResult> {
-    logger.info(`Running nested pipeline: ${task.name}`)
+    debug.print(`Running nested pipeline: ${task.name}`)
     return this.run({ tasks: task.tasks }, options, outerRejection)
   }
 
@@ -298,7 +298,7 @@ export class PipelineService {
     task: ScriptPipelineTask,
     index: number
   ): Promise<PipelineTaskResult & { kind: 'script' }> {
-    logger.info(`Running script: ${task.command}`)
+    debug.print(`Running script: ${task.command}`)
     const result = await this.scriptDomain.run(task.command, process.cwd())
     return { kind: 'script', taskIndex: index, command: task.command, result }
   }

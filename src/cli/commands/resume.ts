@@ -2,7 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { AgentService } from '@src/services/agentService'
 import { SessionService } from '@src/services/sessionService'
-import { logger } from '@src/utils/logger'
+import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
 import { printResponse } from '@src/cli/display'
@@ -28,7 +28,7 @@ export async function resumeCommand(
   options: RawResumeOptions
 ) {
   try {
-    logger.info('Resuming session', { session_id: sessionId })
+    debug.print('Resuming session', { session_id: sessionId })
 
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
@@ -52,15 +52,15 @@ export async function resumeCommand(
 
     printResponse(response, input, config.display, { sessionId: resolvedId })
 
-    logger.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)
+    stdout.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)
   } catch (error) {
     if (error instanceof ValidationError) {
-      logger.error(`Invalid arguments: ${error.message}`)
+      stderr.print(`Invalid arguments: ${error.message}`)
     } else if (error instanceof RateLimitError) {
       const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
-      logger.error(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
+      stderr.print(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
     } else {
-      logger.error('Failed to resume session', error as Error)
+      stderr.print('Failed to resume session', error as Error)
     }
     process.exit(1)
   }

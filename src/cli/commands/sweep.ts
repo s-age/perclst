@@ -1,7 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { SessionService } from '@src/services/sessionService'
-import { logger } from '@src/utils/logger'
+import { stdout, stderr } from '@src/utils/output'
 import { parseSweepSession } from '@src/validators/cli/sweepSession'
 import { ValidationError } from '@src/errors/validationError'
 
@@ -44,25 +44,25 @@ export async function sweepCommand(options: RawSweepOptions) {
     )
 
     if (targets.length === 0) {
-      logger.print('No sessions matched the given filters')
+      stdout.print('No sessions matched the given filters')
       return
     }
 
     if (input.dryRun) {
-      logger.print(`\n[dry-run] ${targets.length} session(s) would be deleted:\n`)
+      stdout.print(`\n[dry-run] ${targets.length} session(s) would be deleted:\n`)
     } else {
-      logger.print(`\nDeleted ${targets.length} session(s):\n`)
+      stdout.print(`\nDeleted ${targets.length} session(s):\n`)
     }
 
     for (const s of targets) {
       const label = `${s.name ?? 'anonymous'}(${s.id})`
-      logger.print(`  [${s.metadata.status}] ${label}  created: ${s.created_at.slice(0, 10)}`)
+      stdout.print(`  [${s.metadata.status}] ${label}  created: ${s.created_at.slice(0, 10)}`)
     }
   } catch (error) {
     if (error instanceof ValidationError) {
-      logger.error(`Invalid arguments: ${error.message}`)
+      stderr.print(`Invalid arguments: ${error.message}`)
     } else {
-      logger.error('Failed to sweep sessions', error as Error)
+      stderr.print('Failed to sweep sessions', error as Error)
     }
     process.exit(1)
   }
