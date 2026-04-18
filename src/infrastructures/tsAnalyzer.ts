@@ -31,7 +31,11 @@ export class TsAnalyzer {
     }
   }
 
-  getReferences(filePath: string, symbolName: string): ReferenceInfo[] {
+  getReferences(
+    filePath: string,
+    symbolName: string,
+    options?: { includeTest?: boolean }
+  ): ReferenceInfo[] {
     const sourceFile = this.project.addSourceFileAtPath(filePath)
 
     let symbol = null
@@ -59,9 +63,15 @@ export class TsAnalyzer {
       for (const reference of referencedSymbol.getReferences()) {
         const node = reference.getNode()
         const sf = node.getSourceFile()
+        const filePath = sf.getFilePath()
+
+        if (!options?.includeTest && filePath.includes('__tests__')) {
+          continue
+        }
+
         const pos = sf.getLineAndColumnAtPos(node.getStart())
         references.push({
-          file_path: sf.getFilePath(),
+          file_path: filePath,
           line: pos.line,
           column: pos.column,
           snippet: node.getText()

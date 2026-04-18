@@ -8,8 +8,12 @@ export class TsAnalysisService {
     return this.domain.analyze(filePath)
   }
 
-  getReferences(filePath: string, symbolName: string): ReferenceInfo[] {
-    return this.domain.getReferences(filePath, symbolName)
+  getReferences(
+    filePath: string,
+    symbolName: string,
+    options?: { includeTest?: boolean }
+  ): ReferenceInfo[] {
+    return this.domain.getReferences(filePath, symbolName, options)
   }
 
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {

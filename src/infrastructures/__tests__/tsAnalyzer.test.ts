@@ -38,5 +38,34 @@ describe('TsAnalyzer', () => {
       const refs = analyzer.getReferences('src/domains/analyze.ts', 'AnalyzeDomain')
       expect(refs.length).toBeGreaterThan(0)
     })
+
+    it('should exclude __tests__ by default', () => {
+      const refsWithTests = analyzer.getReferences('src/domains/analyze.ts', 'AnalyzeDomain', {
+        includeTest: true
+      })
+      const refsWithoutTests = analyzer.getReferences('src/domains/analyze.ts', 'AnalyzeDomain', {
+        includeTest: false
+      })
+
+      expect(refsWithTests.length).toBeGreaterThan(refsWithoutTests.length)
+      expect(refsWithoutTests.some((r) => r.file_path.includes('__tests__'))).toBe(false)
+    })
+
+    it('should include __tests__ when includeTest is true', () => {
+      const refs = analyzer.getReferences('src/domains/analyze.ts', 'AnalyzeDomain', {
+        includeTest: true
+      })
+      expect(refs.some((r) => r.file_path.includes('__tests__'))).toBe(true)
+    })
+
+    it('should default to excluding tests when includeTest is not specified', () => {
+      const refsDefault = analyzer.getReferences('src/domains/analyze.ts', 'AnalyzeDomain')
+      const refsExplicitFalse = analyzer.getReferences('src/domains/analyze.ts', 'AnalyzeDomain', {
+        includeTest: false
+      })
+
+      expect(refsDefault.length).toBe(refsExplicitFalse.length)
+      expect(refsDefault.some((r) => r.file_path.includes('__tests__'))).toBe(false)
+    })
   })
 })
