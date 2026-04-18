@@ -135,7 +135,7 @@ for (const { name, paths, body } of skills) {
   const matches = paths.some(pattern => matchesGlob(relPath, pattern))
   if (!matches) continue
 
-  context += `\n=== Skill: ${name} ===\n${body}`
+  context += `\n=== Skill: ${name} ===\n> HEADLESS MODE: The Skill tool is not available. Execute these instructions directly without invoking Skill().\n\n${body}`
   newSkills.push(name)
 }
 
