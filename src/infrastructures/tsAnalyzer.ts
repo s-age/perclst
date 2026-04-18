@@ -34,12 +34,23 @@ export class TsAnalyzer {
   getReferences(filePath: string, symbolName: string): ReferenceInfo[] {
     const sourceFile = this.project.addSourceFileAtPath(filePath)
 
-    const symbol =
-      sourceFile.getFunction(symbolName) ||
-      sourceFile.getClass(symbolName) ||
-      sourceFile.getVariableDeclaration(symbolName) ||
-      sourceFile.getInterface(symbolName) ||
-      sourceFile.getTypeAlias(symbolName)
+    let symbol = null
+    if (symbolName.includes('.')) {
+      // Handle "ClassName.methodName" format
+      const [className, methodName] = symbolName.split('.', 2)
+      const classDecl = sourceFile.getClass(className)
+      if (classDecl) {
+        symbol = classDecl.getMethod(methodName)
+      }
+    } else {
+      // Handle top-level symbols
+      symbol =
+        sourceFile.getFunction(symbolName) ||
+        sourceFile.getClass(symbolName) ||
+        sourceFile.getVariableDeclaration(symbolName) ||
+        sourceFile.getInterface(symbolName) ||
+        sourceFile.getTypeAlias(symbolName)
+    }
 
     if (!symbol) return []
 
