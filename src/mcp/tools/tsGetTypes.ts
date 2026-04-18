@@ -1,6 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { TypeScriptProject } from '@src/mcp/analyzers/project'
+import type { TsAnalysisService } from '@src/services/tsAnalysisService'
 
 export const ts_get_types = {
   name: 'ts_get_types',
@@ -22,8 +22,8 @@ export const ts_get_types = {
 }
 
 export async function executeTsGetTypes(args: { file_path: string; symbol_name: string }) {
-  const project = container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)
-  const definition = project.getTypeDefinitions(args.file_path, args.symbol_name)
+  const service = container.resolve<TsAnalysisService>(TOKENS.TsAnalysisService)
+  const definition = service.getTypeDefinitions(args.file_path, args.symbol_name)
 
   if (!definition) {
     return {

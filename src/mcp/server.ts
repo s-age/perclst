@@ -19,12 +19,8 @@ import { executeTsChecker } from './tools/tsChecker'
 import { executeTsTestStrategist } from './tools/tsTestStrategist'
 import { executeKnowledgeSearch } from './tools/knowledgeSearch'
 import { setupContainer } from '@src/core/di/setup'
-import { container } from '@src/core/di/container'
-import { TOKENS } from '@src/core/di/identifiers'
-import { TypeScriptProject } from './analyzers/project'
 
 setupContainer()
-container.register(TOKENS.TypeScriptProject, new TypeScriptProject())
 
 // ---------------------------------------------------------------------------
 // JSON-RPC 2.0 types

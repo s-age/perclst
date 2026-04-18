@@ -1,5 +1,3 @@
-// TypeScript analysis result types used by ts_* MCP tools
-
 export type TypeScriptAnalysis = {
   file_path: string
   symbols?: SymbolInfo[]

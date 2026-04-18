@@ -1,5 +1,4 @@
 export const TOKENS = {
-  TypeScriptProject: Symbol.for('TypeScriptProject'),
   // Config
   Config: Symbol.for('Config'),
   // Domains
@@ -18,6 +17,7 @@ export const TOKENS = {
   ImportService: Symbol.for('ImportService'),
   CheckerService: Symbol.for('CheckerService'),
   TestStrategistService: Symbol.for('TestStrategistService'),
+  TsAnalysisService: Symbol.for('TsAnalysisService'),
   // Repositories
   ClaudeCodeRepository: Symbol.for('ClaudeCodeRepository'),
   SessionRepository: Symbol.for('SessionRepository'),
@@ -27,8 +27,10 @@ export const TOKENS = {
   TestStrategyRepository: Symbol.for('TestStrategyRepository'),
   ShellRepository: Symbol.for('ShellRepository'),
   KnowledgeSearchRepository: Symbol.for('KnowledgeSearchRepository'),
+  TsAnalysisRepository: Symbol.for('TsAnalysisRepository'),
   // Domains
   KnowledgeSearchDomain: Symbol.for('KnowledgeSearchDomain'),
+  TsAnalysisDomain: Symbol.for('TsAnalysisDomain'),
   // Services
   KnowledgeSearchService: Symbol.for('KnowledgeSearchService')
 } as const
