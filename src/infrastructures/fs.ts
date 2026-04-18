@@ -3,8 +3,7 @@ import { unlink } from 'fs/promises'
 import { homedir } from 'os'
 
 export function readJson<T>(path: string): T {
-  const content = readFileSync(path, 'utf-8')
-  return JSON.parse(content) as T
+  return JSON.parse(readFileSync(path, 'utf-8')) as T
 }
 
 export function writeJson(path: string, data: unknown): void {
@@ -19,15 +18,13 @@ export function removeFile(path: string): Promise<void> {
   return unlink(path)
 }
 
-export function listJsonFiles(dir: string): string[] {
+export function listFiles(dir: string, ext: string): string[] {
   if (!existsSync(dir)) return []
-  return readdirSync(dir).filter((f) => f.endsWith('.json'))
+  return readdirSync(dir).filter((f) => f.endsWith(ext))
 }
 
 export function ensureDir(dir: string): void {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true })
-  }
+  mkdirSync(dir, { recursive: true })
 }
 
 export function homeDir(): string {
