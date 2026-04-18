@@ -172,6 +172,33 @@ Drop a freeform `.md` file in `knowledge/draft/` with whatever detail you have. 
 
 > Run `perclst start "Curate all draft knowledge" --procedure meta-curate-knowledge --allowed-tools Write Read Bash --output-only` to promote drafts.
 
+## MCP Tools
+
+This project exposes MCP tools for TypeScript analysis. Use them proactively when working in `src/`.
+
+| Tool | What it does | When to use |
+|------|-------------|-------------|
+| `ts_analyze` | Returns all symbols (functions, variables, types), imports, and exports of a file | First step before writing tests or reviewing a file — gives a complete surface map without reading line by line |
+| `ts_get_types` | Returns parameter types and return type for a named symbol | When you need the exact signature of a function before calling or testing it |
+| `ts_get_references` | Finds all call sites of a named symbol across the codebase | Refactoring a function, assessing blast radius of a change, or understanding how a public API is actually used |
+| `ts_test_strategist` | Identifies untested functions, calculates cyclomatic complexity, and suggests mocks | Starting point for any unit test task — tells you what to test and how many cases to write |
+| `ts_checker` | Runs lint, build, and unit tests in one shot | After any TypeScript change — verifies correctness before reporting a task complete |
+| `knowledge_search` | Searches the knowledge base by keyword (AND/OR supported) | Before starting any non-trivial task — check if a past problem, gotcha, or design decision is already documented |
+
+### Recommended sequences
+
+**Writing tests**:
+`ts_test_strategist` → `ts_analyze` → Read target file → write tests → `ts_checker`
+
+**Refactoring a function**:
+`ts_get_references` → assess blast radius → make changes → `ts_checker`
+
+**Reviewing an unfamiliar file**:
+`ts_analyze` → `ts_get_types` on key symbols → Read file
+
+**Looking up external information**:
+`knowledge_search` → Read local docs/code → `WebFetch` (only if still needed)
+
 ## Common Tasks
 
 **Add a new procedure**:

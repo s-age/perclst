@@ -10,7 +10,9 @@ flowchart TD
 
     Strategy --> HasFunctions{strategies\npresent?}
     HasFunctions -- No --> Done([Done: nothing to test])
-    HasFunctions -- Yes --> ReadCode[Read target file]
+    HasFunctions -- Yes --> Analyze[Run ts_analyze\non target_file_path]
+
+    Analyze --> ReadCode[Read target file]
 
     ReadCode --> AnalyzeMocks[Analyze mock requirements]
     AnalyzeMocks --> MockNote["- class_name set → read constructor params → mock injected deps with vi.fn()\n- suggested_mocks non-empty → mock those modules with vi.mock()\n- suggested_mocks empty and no class_name → no mocks needed"]
