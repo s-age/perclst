@@ -1,4 +1,5 @@
 import Table from 'cli-table3'
+import ansis from 'ansis'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { SessionService } from '@src/services/sessionService'
@@ -17,7 +18,7 @@ type RawShowOptions = {
 type TurnRow = { n: number; role: string; content: string }
 
 function truncate(text: string): string {
-  const single = text.replace(/\n/g, ' ')
+  const single = ansis.strip(text).replace(/\n/g, ' ')
   return single.length > CONTENT_MAX ? single.slice(0, CONTENT_MAX - 1) + '…' : single
 }
 
