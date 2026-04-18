@@ -42,12 +42,12 @@ export async function startCommand(task: string, options: RawStartOptions) {
     const config = container.resolve<Config>(TOKENS.Config)
     const input = parseStartSession({ task, ...options })          // validate first
     const { sessionId, response } = await agentService.start(...)
-    logger.print(`Session created: ${sessionId}`)
+    stdout.print(`Session created: ${sessionId}`)
     printResponse(response, input, config.display, { sessionId })
   } catch (error) {
-    if (error instanceof ValidationError) { logger.error(`Invalid arguments: ${error.message}`) }
-    else if (error instanceof RateLimitError) { logger.error(`...`) }
-    else { logger.error('Failed to start session', error as Error) }
+    if (error instanceof ValidationError) { stderr.print(`Invalid arguments: ${error.message}`) }
+    else if (error instanceof RateLimitError) { stderr.print(`...`) }
+    else { stderr.print('Failed to start session', error as Error) }
     process.exit(1)
   }
 }
@@ -83,7 +83,7 @@ if (opts.outputOnly) { /* only hides one thing */ }
 
 ## Prohibitions
 
-- Never use `console.log` / `console.error` — always `logger.print()` / `logger.error()`
+- Never use `console.log` / `console.error` — always `stdout.print()` (normal output) / `stderr.print()` (errors), both from `@src/utils/output`
 - Never import from `repositories/` or `infrastructures/` — route through a service
 - Never skip `parseXxx()` — always validate raw `options.*` before passing to services
 - Never call `setupContainer()` inside command handlers — it belongs only in `index.ts`
