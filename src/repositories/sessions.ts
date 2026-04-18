@@ -8,7 +8,7 @@ import {
   writeJson,
   fileExists,
   removeFile,
-  listJsonFiles,
+  listFiles,
   ensureDir
 } from '@src/infrastructures/fs'
 
@@ -79,7 +79,7 @@ export function findSessionByName(sessionsDir: string, name: string): Session | 
 }
 
 export function listSessions(sessionsDir: string): Session[] {
-  const files = listJsonFiles(sessionsDir)
+  const files = listFiles(sessionsDir, '.json')
   const sessions: Session[] = []
 
   for (const file of files) {
