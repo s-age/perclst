@@ -23,9 +23,9 @@ function makeMockRepo(
 ): ICheckerRepository {
   return {
     findProjectRoot: vi.fn(() => '/auto/root'),
-    runLint: vi.fn(() => passingResult()),
-    runBuild: vi.fn(() => passingResult()),
-    runTest: vi.fn(() => passingResult()),
+    runLint: vi.fn(() => Promise.resolve(passingResult())),
+    runBuild: vi.fn(() => Promise.resolve(passingResult())),
+    runTest: vi.fn(() => Promise.resolve(passingResult())),
     ...partials
   }
 }
@@ -43,15 +43,15 @@ describe('CheckerDomain.check', () => {
 
   // ── happy path ─────────────────────────────────────────────────────────────
 
-  it('returns ok=true and all results when all commands pass', () => {
+  it('returns ok=true and all results when all commands pass', async () => {
     const lintRes = passingResult({ warnings: ['w'] })
     const buildRes = passingResult()
     const testRes = passingResult()
-    repo.runLint = vi.fn(() => lintRes)
-    repo.runBuild = vi.fn(() => buildRes)
-    repo.runTest = vi.fn(() => testRes)
+    repo.runLint = vi.fn(() => Promise.resolve(lintRes))
+    repo.runBuild = vi.fn(() => Promise.resolve(buildRes))
+    repo.runTest = vi.fn(() => Promise.resolve(testRes))
 
-    const result = domain.check({ projectRoot: '/my/root' })
+    const result = await domain.check({ projectRoot: '/my/root' })
 
     expect(result.ok).toBe(true)
     expect(result.lint).toBe(lintRes)
@@ -61,8 +61,8 @@ describe('CheckerDomain.check', () => {
 
   // ── projectRoot branch ─────────────────────────────────────────────────────
 
-  it('uses the provided projectRoot as cwd for all repo calls', () => {
-    domain.check({ projectRoot: '/explicit/root', lintCommand: 'lint-cmd' })
+  it('uses the provided projectRoot as cwd for all repo calls', async () => {
+    await domain.check({ projectRoot: '/explicit/root', lintCommand: 'lint-cmd' })
 
     expect(repo.runLint).toHaveBeenCalledWith('/explicit/root', 'lint-cmd')
     expect(repo.runBuild).toHaveBeenCalledWith('/explicit/root', undefined)
@@ -70,8 +70,8 @@ describe('CheckerDomain.check', () => {
     expect(repo.findProjectRoot).not.toHaveBeenCalled()
   })
 
-  it('falls back to findProjectRoot() when projectRoot is not provided', () => {
-    domain.check({})
+  it('falls back to findProjectRoot() when projectRoot is not provided', async () => {
+    await domain.check({})
 
     expect(repo.findProjectRoot).toHaveBeenCalledOnce()
     expect(repo.runLint).toHaveBeenCalledWith('/auto/root', undefined)
@@ -81,46 +81,46 @@ describe('CheckerDomain.check', () => {
 
   // ── ok=false branches ──────────────────────────────────────────────────────
 
-  it('returns ok=false when lint fails', () => {
-    repo.runLint = vi.fn(() => failingResult())
+  it('returns ok=false when lint fails', async () => {
+    repo.runLint = vi.fn(() => Promise.resolve(failingResult()))
 
-    const result = domain.check({ projectRoot: '/root' })
+    const result = await domain.check({ projectRoot: '/root' })
 
     expect(result.ok).toBe(false)
     expect(result.lint.exitCode).toBe(1)
   })
 
-  it('returns ok=false when build fails', () => {
-    repo.runBuild = vi.fn(() => failingResult())
+  it('returns ok=false when build fails', async () => {
+    repo.runBuild = vi.fn(() => Promise.resolve(failingResult()))
 
-    const result = domain.check({ projectRoot: '/root' })
+    const result = await domain.check({ projectRoot: '/root' })
 
     expect(result.ok).toBe(false)
     expect(result.build.exitCode).toBe(1)
   })
 
-  it('returns ok=false when test fails', () => {
-    repo.runTest = vi.fn(() => failingResult())
+  it('returns ok=false when test fails', async () => {
+    repo.runTest = vi.fn(() => Promise.resolve(failingResult()))
 
-    const result = domain.check({ projectRoot: '/root' })
+    const result = await domain.check({ projectRoot: '/root' })
 
     expect(result.ok).toBe(false)
     expect(result.test.exitCode).toBe(1)
   })
 
-  it('returns ok=false when multiple commands fail', () => {
-    repo.runLint = vi.fn(() => failingResult())
-    repo.runBuild = vi.fn(() => failingResult())
+  it('returns ok=false when multiple commands fail', async () => {
+    repo.runLint = vi.fn(() => Promise.resolve(failingResult()))
+    repo.runBuild = vi.fn(() => Promise.resolve(failingResult()))
 
-    const result = domain.check({ projectRoot: '/root' })
+    const result = await domain.check({ projectRoot: '/root' })
 
     expect(result.ok).toBe(false)
   })
 
   // ── optional command forwarding ────────────────────────────────────────────
 
-  it('forwards custom command strings to each repo method', () => {
-    domain.check({
+  it('forwards custom command strings to each repo method', async () => {
+    await domain.check({
       projectRoot: '/root',
       lintCommand: 'my-lint',
       buildCommand: 'my-build',

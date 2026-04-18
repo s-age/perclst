@@ -1,3 +1,9 @@
+export type RawCommandOutput = {
+  stdout: string
+  stderr: string
+  exitCode: number
+}
+
 export type CommandResult = {
   errors: string[]
   warnings: string[]

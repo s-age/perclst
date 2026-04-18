@@ -38,7 +38,7 @@ export async function executeTsChecker(args: {
   test_command?: string
 }) {
   const service = container.resolve<CheckerService>(TOKENS.CheckerService)
-  const result = service.check({
+  const result = await service.check({
     projectRoot: args.project_root,
     lintCommand: args.lint_command,
     buildCommand: args.build_command,

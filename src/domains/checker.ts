@@ -5,11 +5,13 @@ import type { CheckerOptions, CheckerResult } from '@src/types/checker'
 export class CheckerDomain implements ICheckerDomain {
   constructor(private readonly checkerRepo: ICheckerRepository) {}
 
-  check(options: CheckerOptions): CheckerResult {
+  async check(options: CheckerOptions): Promise<CheckerResult> {
     const cwd = options.projectRoot ?? this.checkerRepo.findProjectRoot()
-    const lint = this.checkerRepo.runLint(cwd, options.lintCommand)
-    const build = this.checkerRepo.runBuild(cwd, options.buildCommand)
-    const test = this.checkerRepo.runTest(cwd, options.testCommand)
+    const [lint, build, test] = await Promise.all([
+      this.checkerRepo.runLint(cwd, options.lintCommand),
+      this.checkerRepo.runBuild(cwd, options.buildCommand),
+      this.checkerRepo.runTest(cwd, options.testCommand)
+    ])
     const ok = lint.exitCode === 0 && build.exitCode === 0 && test.exitCode === 0
     return { ok, lint, build, test }
   }

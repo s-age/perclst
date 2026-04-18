@@ -7,14 +7,14 @@ import { join, resolve, dirname } from 'path'
 import { homedir } from 'os'
 import { fileURLToPath } from 'url'
 import { createInterface } from 'readline'
-import { logger } from '../src/utils/logger.js'
+import { stdout } from '../src/utils/output.js'
 
 const YES = process.argv.includes('--yes') || process.argv.includes('-y')
 
-logger.print('Note: By default, perclst stores session data and logs under ~/.perclst/')
-logger.print('      You can override this in .perclst/config.json or ~/.perclst/config.json')
-logger.print('      e.g. { "sessions_dir": "./sessions", "logs_dir": "./logs" }')
-logger.print('')
+stdout.print('Note: By default, perclst stores session data and logs under ~/.perclst/')
+stdout.print('      You can override this in .perclst/config.json or ~/.perclst/config.json')
+stdout.print('      e.g. { "sessions_dir": "./sessions", "logs_dir": "./logs" }')
+stdout.print('')
 
 const repoDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const templatePath = join(repoDir, '.claude', 'settings.json')
@@ -60,17 +60,17 @@ merged.hooks[hookEvent].push(...template.hooks[hookEvent])
 const before = JSON.stringify(dest, null, 2)
 const after = JSON.stringify(merged, null, 2)
 
-logger.print(`destination: ${destPath}`)
+stdout.print(`destination: ${destPath}`)
 if (!destExists) {
-  logger.print('  (file does not exist — will be created)')
+  stdout.print('  (file does not exist — will be created)')
 } else if (before === after) {
-  logger.print('  no changes needed')
+  stdout.print('  no changes needed')
   process.exit(0)
 } else {
-  logger.print('\nbefore:')
-  logger.print(before)
-  logger.print('\nafter:')
-  logger.print(after)
+  stdout.print('\nbefore:')
+  stdout.print(before)
+  stdout.print('\nafter:')
+  stdout.print(after)
 }
 
 // --- Confirm ---
@@ -80,7 +80,7 @@ if (!YES) {
     rl.question('\nApply changes? [y/N] ', (answer) => {
       rl.close()
       if (answer.trim().toLowerCase() !== 'y') {
-        logger.print('aborted')
+        stdout.print('aborted')
         reject(new Error('aborted'))
       } else {
         resolve()
@@ -92,16 +92,16 @@ if (!YES) {
 // --- Backup existing file ---
 if (destExists) {
   copyFileSync(destPath, backupPath)
-  logger.print(`backup:  ${backupPath}`)
+  stdout.print(`backup:  ${backupPath}`)
 }
 
 // --- Write ---
 mkdirSync(dirname(destPath), { recursive: true })
 writeFileSync(destPath, after + '\n')
-logger.print(`updated: ${destPath}`)
-logger.print('  hook -> $CLAUDE_PROJECT_DIR/hooks/skill-inject.mjs')
+stdout.print(`updated: ${destPath}`)
+stdout.print('  hook -> $CLAUDE_PROJECT_DIR/hooks/skill-inject.mjs')
 if (destExists) {
-  logger.print(`\nnote: original settings saved to ${backupPath}`)
-  logger.print('      you can restore it with:')
-  logger.print(`        cp ${backupPath} ${destPath}`)
+  stdout.print(`\nnote: original settings saved to ${backupPath}`)
+  stdout.print('      you can restore it with:')
+  stdout.print(`        cp ${backupPath} ${destPath}`)
 }

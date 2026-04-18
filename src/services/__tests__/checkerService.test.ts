@@ -29,13 +29,13 @@ describe('CheckerService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     checkerDomain = {
-      check: vi.fn().mockReturnValue(mockCheckerResult)
+      check: vi.fn().mockResolvedValue(mockCheckerResult)
     }
     service = new CheckerService(checkerDomain)
   })
 
   describe('check', () => {
-    it('delegates to domain.check and returns result', () => {
+    it('delegates to domain.check and returns result', async () => {
       const options: CheckerOptions = {
         projectRoot: '/test/project',
         lintCommand: 'npm run lint',
@@ -43,33 +43,33 @@ describe('CheckerService', () => {
         testCommand: 'npm run test'
       }
 
-      const result = service.check(options)
+      const result = await service.check(options)
 
       expect(checkerDomain.check).toHaveBeenCalledWith(options)
       expect(result).toBe(mockCheckerResult)
     })
 
-    it('works with partial options', () => {
+    it('works with partial options', async () => {
       const options: CheckerOptions = {
         projectRoot: '/test/project'
       }
 
-      const result = service.check(options)
+      const result = await service.check(options)
 
       expect(checkerDomain.check).toHaveBeenCalledWith(options)
       expect(result).toBe(mockCheckerResult)
     })
 
-    it('works with empty options', () => {
+    it('works with empty options', async () => {
       const options: CheckerOptions = {}
 
-      const result = service.check(options)
+      const result = await service.check(options)
 
       expect(checkerDomain.check).toHaveBeenCalledWith(options)
       expect(result).toBe(mockCheckerResult)
     })
 
-    it('returns result with failing checks', () => {
+    it('returns result with failing checks', async () => {
       const failingResult: CheckerResult = {
         ok: false,
         lint: {
@@ -88,15 +88,15 @@ describe('CheckerService', () => {
           exitCode: 1
         }
       }
-      vi.mocked(checkerDomain.check).mockReturnValue(failingResult)
+      vi.mocked(checkerDomain.check).mockResolvedValue(failingResult)
 
-      const result = service.check({})
+      const result = await service.check({})
 
       expect(result).toBe(failingResult)
       expect(result.ok).toBe(false)
     })
 
-    it('returns result with warnings only', () => {
+    it('returns result with warnings only', async () => {
       const warningResult: CheckerResult = {
         ok: true,
         lint: {
@@ -115,9 +115,9 @@ describe('CheckerService', () => {
           exitCode: 0
         }
       }
-      vi.mocked(checkerDomain.check).mockReturnValue(warningResult)
+      vi.mocked(checkerDomain.check).mockResolvedValue(warningResult)
 
-      const result = service.check({})
+      const result = await service.check({})
 
       expect(result).toBe(warningResult)
       expect(result.ok).toBe(true)
