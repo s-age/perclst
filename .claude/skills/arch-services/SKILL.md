@@ -99,3 +99,4 @@ export class ImportService {
 - Never instantiate a domain class — receive injected domain interfaces via the constructor
 - Never add validation logic that belongs in `validators/` — services receive already-validated inputs from CLI
 - Never define port types (`IXxxService`) unless another layer needs to mock the service in tests; if needed, define in the same file as the class
+- Never hold business logic (conditional rules, domain-specific constants, instruction-building) in the service layer — if a service method grows beyond pure orchestration, extract the logic to a new or existing domain and delegate to it

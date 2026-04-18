@@ -8,6 +8,7 @@ import { CheckerRepository } from '@src/repositories/checkerRepository'
 import { TestStrategyRepository } from '@src/repositories/testStrategyRepository'
 import { SessionDomain } from '@src/domains/session'
 import { AgentDomain } from '@src/domains/agent'
+import { PipelineDomain } from '@src/domains/pipeline'
 import { AnalyzeDomain } from '@src/domains/analyze'
 import { ImportDomain } from '@src/domains/import'
 import { CheckerDomain } from '@src/domains/checker'
@@ -46,6 +47,7 @@ type Domains = {
   scriptDomain: ScriptDomain
   sessionDomain: SessionDomain
   agentDomain: AgentDomain
+  pipelineDomain: PipelineDomain
   analyzeDomain: AnalyzeDomain
   importDomain: ImportDomain
   checkerDomain: CheckerDomain
@@ -81,10 +83,12 @@ function buildDomains(model: string, repos: Repos): Domains {
     tsAnalysisRepo
   } = repos
   const sessionDomain = new SessionDomain(sessionRepo)
+  const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
   return {
     scriptDomain: new ScriptDomain(shellRepo),
     sessionDomain,
-    agentDomain: new AgentDomain(model, claudeCodeRepo, procedureRepo),
+    agentDomain,
+    pipelineDomain: new PipelineDomain(agentDomain),
     analyzeDomain: new AnalyzeDomain(sessionDomain, claudeSessionRepo),
     importDomain: new ImportDomain(claudeSessionRepo),
     checkerDomain: new CheckerDomain(checkerRepo),
@@ -112,6 +116,7 @@ function registerReposAndDomains(
   container.register(TOKENS.ScriptDomain, domains.scriptDomain)
   container.register(TOKENS.SessionDomain, domains.sessionDomain)
   container.register(TOKENS.AgentDomain, domains.agentDomain)
+  container.register(TOKENS.PipelineDomain, domains.pipelineDomain)
   container.register(TOKENS.AnalyzeDomain, domains.analyzeDomain)
   container.register(TOKENS.ImportDomain, domains.importDomain)
   container.register(TOKENS.CheckerDomain, domains.checkerDomain)
@@ -124,6 +129,7 @@ function registerServices(domains: Domains): void {
   const {
     sessionDomain,
     agentDomain,
+    pipelineDomain,
     scriptDomain,
     analyzeDomain,
     importDomain,
@@ -136,7 +142,7 @@ function registerServices(domains: Domains): void {
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
   container.register(
     TOKENS.PipelineService,
-    new PipelineService(sessionDomain, agentDomain, scriptDomain)
+    new PipelineService(sessionDomain, pipelineDomain, scriptDomain)
   )
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
   container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))

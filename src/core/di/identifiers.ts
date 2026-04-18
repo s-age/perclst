@@ -4,6 +4,7 @@ export const TOKENS = {
   // Domains
   SessionDomain: Symbol.for('SessionDomain'),
   AgentDomain: Symbol.for('AgentDomain'),
+  PipelineDomain: Symbol.for('PipelineDomain'),
   AnalyzeDomain: Symbol.for('AnalyzeDomain'),
   ImportDomain: Symbol.for('ImportDomain'),
   CheckerDomain: Symbol.for('CheckerDomain'),
