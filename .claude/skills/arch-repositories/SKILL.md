@@ -20,12 +20,13 @@ Wraps infrastructure adapters into atomic, domain-meaningful operations. Exposes
 | `ports/session.ts` | `ISessionRepository` — port contract consumed by `domains/` |
 | `ports/agent.ts` | `IProcedureRepository` — port contract consumed by `domains/` |
 | `ports/analysis.ts` | `IClaudeSessionRepository` — port contract consumed by `domains/` |
+| `parsers/claudeSessionParser.ts` | Raw JSONL types and pure parsing helpers for `claudeSessions.ts` — not a repository; lives under `parsers/` to distinguish it from peer repository files |
 
 ## Import Rules
 
 | May import | Must NOT import |
 |-----------|----------------|
-| `repositories/ports` (intra), `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains` |
+| `repositories/ports` (intra), `repositories/parsers` (intra), `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains` |
 
 ## Patterns
 
@@ -112,4 +113,4 @@ import { readFileSync } from 'fs'  // NG: bypasses the infrastructure adapter
 - Never add business logic (validation, branching on domain rules, cross-entity orchestration) — keep every exported function atomic and mechanical
 - Never instantiate a domain class — dependency flows downward only (`domains → repositories`, never the reverse)
 - Never define a port type (`IXxx`) in a repository implementation file — port types belong in `src/repositories/ports/`
-- Never import from sibling repository implementation files — each file is independent; shared utilities belong in `utils/` or `constants/`
+- Never import from sibling repository implementation files — each file is independent; shared utilities belong in `utils/` or `constants/`; format-specific parsing helpers belong in `parsers/`
