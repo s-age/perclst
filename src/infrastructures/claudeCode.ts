@@ -1,10 +1,9 @@
 import { spawn } from 'child_process'
-import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'fs'
-import { tmpdir, homedir } from 'os'
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
+import { homedir, tmpdir } from 'os'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
-import type { ClaudeAction, RawOutput, IClaudeCodeRepository } from '@src/types/claudeCode'
+import type { ClaudeAction } from '@src/types/claudeCode'
 import { APIError } from '@src/errors/apiError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
@@ -13,275 +12,123 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const MCP_SERVER_PATH = resolve(__dirname, '../mcp/server.js')
 
-function buildMcpConfig(): string {
-  return JSON.stringify({
-    mcpServers: {
-      [MCP_SERVER_NAME]: {
-        command: 'node',
-        args: [MCP_SERVER_PATH]
-      }
-    }
-  })
-}
-
-type ContentBlock =
-  | { type: 'text'; text: string }
-  | { type: 'thinking'; thinking: string }
-  | { type: 'tool_use'; id: string; name: string; input: unknown }
-  | { type: 'tool_result'; tool_use_id: string; content: unknown }
-
-type StreamEvent = {
-  type: 'assistant' | 'user' | 'system' | 'result'
-  subtype?: string
-  parent_tool_use_id?: string
-  message?: {
-    role: string
-    content: ContentBlock[]
-    usage?: {
-      input_tokens: number
-      output_tokens: number
-      cache_read_input_tokens?: number
-      cache_creation_input_tokens?: number
-    }
+function throwIfExitError(code: number | null, stderr: string): void {
+  if (code === 0) return
+  const rateLimitMatch = stderr.match(/resets?\s+([^\n\r]+)/i)
+  if (
+    stderr.toLowerCase().includes("you've hit your limit") ||
+    stderr.toLowerCase().includes('you have hit your limit')
+  ) {
+    throw new RateLimitError(rateLimitMatch?.[1]?.trim())
   }
-  result?: string
-  usage?: {
-    input_tokens: number
-    output_tokens: number
-    cache_read_input_tokens?: number
-    cache_creation_input_tokens?: number
+  if (stderr) process.stderr.write(stderr)
+  throw new APIError(`claude exited with code ${code}`)
+}
+
+// Internal infrastructure adapter — consumed exclusively by ClaudeCodeRepository in agentRepository.ts
+export class ClaudeCodeInfra {
+  resolveJsonlPath(sessionId: string, workingDir: string): string {
+    const encoded = workingDir.replace(/\//g, '-')
+    return join(homedir(), '.claude', 'projects', encoded, `${sessionId}.jsonl`)
   }
-}
 
-function resolveJsonlPath(sessionId: string, workingDir: string): string {
-  const encoded = workingDir.replace(/\//g, '-')
-  return join(homedir(), '.claude', 'projects', encoded, `${sessionId}.jsonl`)
-}
-
-function countJsonlLines(path: string): number {
-  if (!existsSync(path)) return 0
-  return readFileSync(path, 'utf-8')
-    .split('\n')
-    .filter((l) => l.trim()).length
-}
-
-const PERMISSION_TOOL_NAME = `mcp__${MCP_SERVER_NAME}__ask_permission`
-
-type ParseState = {
-  thoughts: ThinkingBlock[]
-  toolMap: Map<string, ToolUseRecord>
-  permissionToolIds: Set<string>
-  finalContent: string
-  usage: RawOutput['usage']
-  lastAssistantUsage: RawOutput['last_assistant_usage'] | undefined
-  assistantEventCount: number
-  userToolResultEventCount: number
-}
-
-function processAssistantEvent(event: StreamEvent, state: ParseState): void {
-  if (!event.message) return
-  if (event.message.usage) {
-    state.lastAssistantUsage = {
-      input_tokens: event.message.usage.input_tokens,
-      output_tokens: event.message.usage.output_tokens,
-      cache_read_input_tokens: event.message.usage.cache_read_input_tokens,
-      cache_creation_input_tokens: event.message.usage.cache_creation_input_tokens
-    }
+  countJsonlLines(path: string): number {
+    if (!existsSync(path)) return 0
+    return readFileSync(path, 'utf-8')
+      .split('\n')
+      .filter((l) => l.trim()).length
   }
-  let hasCountableContent = false
-  for (const block of event.message.content) {
-    if (block.type === 'thinking') {
-      state.thoughts.push({ type: 'thinking', thinking: block.thinking })
-    } else if (block.type === 'tool_use') {
-      if (block.name === PERMISSION_TOOL_NAME) {
-        state.permissionToolIds.add(block.id)
-      } else {
-        state.toolMap.set(block.id, { id: block.id, name: block.name, input: block.input })
-        hasCountableContent = true
-      }
+
+  buildArgs(action: ClaudeAction): string[] {
+    const args: string[] = ['-p', '--output-format', 'stream-json', '--verbose']
+    if (action.model) args.push('--model', action.model)
+    if (action.type === 'resume') {
+      args.push('--resume', action.sessionId)
+    } else if (action.type === 'fork') {
+      args.push('--resume', action.originalClaudeSessionId)
+      args.push('--fork-session')
+      args.push('--session-id', action.sessionId)
+      if (action.resumeSessionAt) args.push('--resume-session-at', action.resumeSessionAt)
     } else {
-      hasCountableContent = true
+      args.push('--session-id', action.sessionId)
+      if (action.system) args.push('--system-prompt', action.system)
     }
-  }
-  if (hasCountableContent) state.assistantEventCount++
-}
-
-function processUserEvent(event: StreamEvent, state: ParseState): void {
-  if (!event.message) return
-  let hasRealToolResult = false
-  for (const block of event.message.content) {
-    if (block.type === 'tool_result') {
-      if (state.permissionToolIds.has(block.tool_use_id)) continue
-      hasRealToolResult = true
-      const record = state.toolMap.get(block.tool_use_id)
-      if (record) {
-        record.result =
-          typeof block.content === 'string' ? block.content : JSON.stringify(block.content, null, 2)
-      }
-    }
-  }
-  if (hasRealToolResult) state.userToolResultEventCount++
-}
-
-function parseStreamJson(raw: string, jsonlBaseline: number): RawOutput {
-  const state: ParseState = {
-    thoughts: [],
-    toolMap: new Map(),
-    permissionToolIds: new Set(),
-    finalContent: '',
-    usage: { input_tokens: 0, output_tokens: 0 },
-    lastAssistantUsage: undefined,
-    assistantEventCount: 0,
-    userToolResultEventCount: 0
+    if (action.allowedTools?.length) args.push('--allowedTools', ...action.allowedTools)
+    if (action.disallowedTools?.length) args.push('--disallowedTools', ...action.disallowedTools)
+    return args
   }
 
-  for (const line of raw.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    let event: StreamEvent
-    try {
-      event = JSON.parse(trimmed) as StreamEvent
-    } catch {
-      continue
-    }
-    if (event.type === 'assistant') processAssistantEvent(event, state)
-    else if (event.type === 'user') processUserEvent(event, state)
-    else if (event.type === 'result') {
-      state.finalContent = event.result ?? ''
-      if (event.usage) {
-        state.usage = {
-          input_tokens: event.usage.input_tokens,
-          output_tokens: event.usage.output_tokens,
-          cache_read_input_tokens: event.usage.cache_read_input_tokens,
-          cache_creation_input_tokens: event.usage.cache_creation_input_tokens
-        }
-      }
-    }
+  private writeMcpConfig(): string {
+    const path = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
+    writeFileSync(
+      path,
+      JSON.stringify({
+        mcpServers: { [MCP_SERVER_NAME]: { command: 'node', args: [MCP_SERVER_PATH] } }
+      }),
+      'utf-8'
+    )
+    return path
   }
 
-  const messageCount =
-    jsonlBaseline + 1 + state.assistantEventCount + state.userToolResultEventCount
-  return {
-    content: state.finalContent,
-    thoughts: state.thoughts,
-    tool_history: Array.from(state.toolMap.values()),
-    usage: state.usage,
-    last_assistant_usage: state.lastAssistantUsage,
-    message_count: messageCount
-  }
-}
+  async *runClaude(
+    args: string[],
+    prompt: string,
+    workingDir: string,
+    sessionFilePath?: string
+  ): AsyncGenerator<string> {
+    const mcpConfigPath = this.writeMcpConfig()
+    const fullArgs = [
+      ...args,
+      '--mcp-config',
+      mcpConfigPath,
+      '--permission-prompt-tool',
+      `mcp__${MCP_SERVER_NAME}__ask_permission`
+    ]
 
-function runClaude(
-  args: string[],
-  prompt: string,
-  workingDir: string,
-  jsonlBaseline: number,
-  sessionFilePath?: string
-): Promise<RawOutput> {
-  return new Promise((resolve, reject) => {
     const env: NodeJS.ProcessEnv = { ...process.env }
-    if (sessionFilePath) {
-      env.PERCLST_SESSION_FILE = sessionFilePath
-    }
-    const child = spawn('claude', args, {
+    if (sessionFilePath) env.PERCLST_SESSION_FILE = sessionFilePath
+    const child = spawn('claude', fullArgs, {
       env,
       cwd: workingDir,
       stdio: ['pipe', 'pipe', 'pipe']
     })
-
-    let stdout = ''
     let stderr = ''
-    child.stdout.on('data', (chunk: Buffer) => {
-      stdout += chunk.toString()
+    let spawnError: Error | null = null
+    const closePromise = new Promise<number | null>((res) => {
+      child.on('close', (code) => res(code))
+    })
+    child.on('error', (err) => {
+      spawnError = new APIError(`Failed to spawn claude: ${err.message}`)
     })
     child.stderr.on('data', (chunk: Buffer) => {
       stderr += chunk.toString()
     })
-
-    child.on('error', (err) => reject(new APIError(`Failed to spawn claude: ${err.message}`)))
-    child.on('close', (code) => {
-      if (code !== 0) {
-        const combined = stderr + stdout
-        const rateLimitMatch = combined.match(/resets?\s+([^\n\r]+)/i)
-        if (
-          combined.toLowerCase().includes("you've hit your limit") ||
-          combined.toLowerCase().includes('you have hit your limit')
-        ) {
-          reject(new RateLimitError(rateLimitMatch?.[1]?.trim()))
-        } else {
-          if (stderr) process.stderr.write(stderr)
-          reject(new APIError(`claude exited with code ${code}`))
-        }
-      } else {
-        resolve(parseStreamJson(stdout, jsonlBaseline))
-      }
-    })
-
     child.stdin.write(prompt, 'utf-8')
     child.stdin.end()
-  })
-}
-
-async function dispatch(action: ClaudeAction): Promise<RawOutput> {
-  const args: string[] = ['-p', '--output-format', 'stream-json', '--verbose']
-
-  if (action.model) {
-    args.push('--model', action.model)
-  }
-
-  if (action.type === 'resume') {
-    args.push('--resume', action.sessionId)
-  } else if (action.type === 'fork') {
-    args.push('--resume', action.originalClaudeSessionId)
-    args.push('--fork-session')
-    args.push('--session-id', action.sessionId)
-    if (action.resumeSessionAt) {
-      args.push('--resume-session-at', action.resumeSessionAt)
-    }
-  } else {
-    args.push('--session-id', action.sessionId)
-    if (action.system) {
-      args.push('--system-prompt', action.system)
-    }
-  }
-
-  if (action.allowedTools?.length) {
-    args.push('--allowedTools', ...action.allowedTools)
-  }
-
-  if (action.disallowedTools?.length) {
-    args.push('--disallowedTools', ...action.disallowedTools)
-  }
-
-  const mcpConfigPath = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
-  writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
-  args.push('--mcp-config', mcpConfigPath)
-  args.push('--permission-prompt-tool', `mcp__${MCP_SERVER_NAME}__ask_permission`)
-
-  const baselineSessionId =
-    action.type === 'fork' ? action.originalClaudeSessionId : action.sessionId
-  const baselineWorkingDir = action.type === 'fork' ? action.originalWorkingDir : action.workingDir
-  const jsonlBaseline = countJsonlLines(resolveJsonlPath(baselineSessionId, baselineWorkingDir))
-
-  try {
-    return await runClaude(
-      args,
-      action.prompt,
-      action.workingDir,
-      jsonlBaseline,
-      action.sessionFilePath
-    )
-  } finally {
     try {
-      unlinkSync(mcpConfigPath)
-    } catch {
-      /* ignore */
+      yield* this.streamStdout(child.stdout)
+    } finally {
+      if (child.exitCode === null && !child.killed) child.kill()
+      try {
+        unlinkSync(mcpConfigPath)
+      } catch {
+        /* ignore */
+      }
     }
+    if (spawnError) throw spawnError
+    throwIfExitError(await closePromise, stderr)
   }
-}
 
-export class ClaudeCodeRepository implements IClaudeCodeRepository {
-  async dispatch(action: ClaudeAction): Promise<RawOutput> {
-    return dispatch(action)
+  private async *streamStdout(stdout: NodeJS.ReadableStream): AsyncGenerator<string> {
+    let buffer = ''
+    for await (const chunk of stdout) {
+      buffer += (chunk as Buffer).toString()
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+      for (const line of lines) {
+        if (line.trim()) yield line
+      }
+    }
+    if (buffer.trim()) yield buffer
   }
 }

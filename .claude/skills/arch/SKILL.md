@@ -36,10 +36,9 @@ paths:
 | `src/domains/`         | Business rules — session lifecycle, agent execution 等                                                |
 | `src/repositories/`    | Translates infrastructure primitives into atomic domain operations (e.g. `startSession`, `getTurns`) |
 | `src/repositories/ports/` | Port contracts (e.g. `ISessionRepository`) consumed by `domains/` and implemented by `repositories/` |
-| `src/repositories/parsers/` | Pure format converters used internally by repositories — stateless functions only, no I/O |
+| `src/repositories/parsers/` | Pure format/shape converters used internally by repositories — stateless functions only, no I/O; covers both protocol-level (stream-json, JSONL) and library-output (ts-morph AST) conversions |
 | `src/domains/ports/`   | Port contracts (e.g. `ISessionDomain`) consumed by `services/` and implemented by `domains/`         |
-| `src/infrastructures/` | Wraps raw external I/O primitives (HTTP verbs, CLI commands, file ops) — no domain knowledge; consumed by `repositories/` |
-| `src/infrastructures/parsers/` | Pure AST/format converters used internally by infrastructure adapters — stateless functions only, no I/O |
+| `src/infrastructures/` | Pure I/O adapters only — spawns processes, reads files, loads AST; yields raw output without shaping; consumed by `repositories/` |
 | `src/types/`           | Shared data types; types referenced across 2+ layers                                                  |
 | `src/errors/`          | Error classes — one class per file                                                                    |
 | `src/utils/`           | Pure functions and library wrappers (e.g. dayjs → `date.ts`); no I/O — that belongs in `infrastructures/` |
@@ -118,6 +117,8 @@ npm run test:unit  # Vitest unit tests
     - Example: `ISessionDomain`, `IImportDomain` → `src/domains/ports/session.ts`
     - Example: `IAgentDomain` → `src/domains/ports/agent.ts`
     - Example: `IAnalyzeDomain` → `src/domains/ports/analysis.ts`
+
+> **`IClaudeCodeRepository` placement note**: This port is consumed by `domains/` and implemented by `repositories/`; it belongs in `src/repositories/ports/agent.ts`. It is no longer defined in `src/types/` because it does not bridge infrastructure — it bridges `domains → repositories` only.
 
 ### File & Directory Naming
 
