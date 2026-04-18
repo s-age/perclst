@@ -13,6 +13,38 @@ type RawRewindOptions = {
   length?: string
 }
 
+async function handleListMode(
+  analyzeService: AnalyzeService,
+  resolvedId: string,
+  displayLength: number
+): Promise<void> {
+  const turns = await analyzeService.getRewindTurns(resolvedId)
+  if (turns.length === 0) {
+    stdout.print('No assistant turns found.')
+    return
+  }
+  for (const turn of turns) {
+    const preview =
+      turn.text.length > displayLength ? turn.text.slice(0, displayLength) + '…' : turn.text
+    stdout.print(`  ${turn.index}: ${preview}`)
+  }
+}
+
+async function resolveMessageId(
+  analyzeService: AnalyzeService,
+  resolvedId: string,
+  index: number
+): Promise<string | undefined> {
+  if (index === 0) return undefined
+  const turns = await analyzeService.getRewindTurns(resolvedId)
+  const turn = turns[index]
+  if (!turn) {
+    stderr.print(`Index ${index} is out of range (session has ${turns.length} assistant turns)`)
+    process.exit(1)
+  }
+  return turn.uuid
+}
+
 export async function rewindCommand(
   sessionId: string | undefined,
   indexStr: string | undefined,
@@ -31,19 +63,7 @@ export async function rewindCommand(
     const resolvedId = await sessionService.resolveId(input.sessionId)
 
     if (input.list) {
-      const turns = await analyzeService.getRewindTurns(resolvedId)
-
-      if (turns.length === 0) {
-        stdout.print('No assistant turns found.')
-        return
-      }
-
-      const displayLength = input.length ?? DEFAULT_LENGTH
-      for (const turn of turns) {
-        const preview =
-          turn.text.length > displayLength ? turn.text.slice(0, displayLength) + '…' : turn.text
-        stdout.print(`  ${turn.index}: ${preview}`)
-      }
+      await handleListMode(analyzeService, resolvedId, input.length ?? DEFAULT_LENGTH)
       return
     }
 
@@ -52,19 +72,7 @@ export async function rewindCommand(
       process.exit(1)
     }
 
-    let messageId: string | undefined
-    if (input.index > 0) {
-      const turns = await analyzeService.getRewindTurns(resolvedId)
-      const turn = turns[input.index]
-      if (!turn) {
-        stderr.print(
-          `Index ${input.index} is out of range (session has ${turns.length} assistant turns)`
-        )
-        process.exit(1)
-      }
-      messageId = turn.uuid
-    }
-
+    const messageId = await resolveMessageId(analyzeService, resolvedId, input.index)
     const newSession = await sessionService.createRewindSession(resolvedId, messageId)
 
     stdout.print(`\nRewind session created: ${newSession.id}`)

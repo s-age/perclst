@@ -44,5 +44,5 @@ export async function executeTsChecker(args: {
     buildCommand: args.build_command,
     testCommand: args.test_command
   })
-  return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+  return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] }
 }

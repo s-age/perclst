@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import { dirname, join, basename, extname } from 'path'
-import { Project, Node, SyntaxKind } from 'ts-morph'
+import { Project, Node, SyntaxKind, type SourceFile } from 'ts-morph'
 import type { RawFunctionInfo, TestFramework } from '@src/types/testStrategy'
 
 // ---------------------------------------------------------------------------
@@ -53,24 +53,23 @@ function countStructure(
 // Public: parse functions from a TypeScript file
 // ---------------------------------------------------------------------------
 
-export function parseFunctions(filePath: string): RawFunctionInfo[] | null {
-  const project = new Project({ skipAddingFilesFromTsConfig: true })
-  const sf = project.addSourceFileAtPathIfExists(filePath)
-  if (!sf) return null
-
-  const importedNames = new Set<string>()
+function collectImportedNames(sf: SourceFile): Set<string> {
+  const names = new Set<string>()
   sf.getImportDeclarations().forEach((d) => {
-    if (d.isTypeOnly()) return // skip `import type { ... }`
+    if (d.isTypeOnly()) return
     d.getNamedImports().forEach((ni) => {
-      if (!ni.isTypeOnly()) importedNames.add(ni.getName()) // skip `import { type Foo }`
+      if (!ni.isTypeOnly()) names.add(ni.getName())
     })
     const def = d.getDefaultImport()
-    if (def) importedNames.add(def.getText())
+    if (def) names.add(def.getText())
     const ns = d.getNamespaceImport()
-    if (ns) importedNames.add(ns.getText())
+    if (ns) names.add(ns.getText())
   })
+  return names
+}
 
-  const referencedImportsIn = (node: Node): string[] => {
+function makeReferencedImportsIn(importedNames: Set<string>) {
+  return (node: Node): string[] => {
     const used = new Set<string>()
     node.forEachDescendant((child) => {
       if (Node.isIdentifier(child) && importedNames.has(child.getText())) {
@@ -79,48 +78,76 @@ export function parseFunctions(filePath: string): RawFunctionInfo[] | null {
     })
     return Array.from(used)
   }
+}
 
-  const funcs: RawFunctionInfo[] = []
-
-  sf.getFunctions().forEach((func) => {
-    const name = func.getName()
-    if (!name) return
-    funcs.push({
-      name,
+function collectStandaloneFunctions(
+  sf: SourceFile,
+  referencedImportsIn: (node: Node) => string[]
+): RawFunctionInfo[] {
+  return sf
+    .getFunctions()
+    .filter((func) => func.getName() != null)
+    .map((func) => ({
+      name: func.getName()!,
       lineno: sf.getLineAndColumnAtPos(func.getStart()).line,
       ...countStructure(func),
       referencedImports: referencedImportsIn(func)
-    })
-  })
+    }))
+}
 
-  sf.getVariableStatements()
+function collectVariableFunctions(
+  sf: SourceFile,
+  referencedImportsIn: (node: Node) => string[]
+): RawFunctionInfo[] {
+  return sf
+    .getVariableStatements()
     .flatMap((vs) => vs.getDeclarations())
-    .forEach((varDecl) => {
+    .filter((varDecl) => {
       const init = varDecl.getInitializer()
-      if (!init || (!Node.isArrowFunction(init) && !Node.isFunctionExpression(init))) return
-      funcs.push({
+      return init && (Node.isArrowFunction(init) || Node.isFunctionExpression(init))
+    })
+    .map((varDecl) => {
+      const init = varDecl.getInitializer()!
+      return {
         name: varDecl.getName(),
         lineno: sf.getLineAndColumnAtPos(varDecl.getStart()).line,
         ...countStructure(init),
         referencedImports: referencedImportsIn(init)
-      })
+      }
     })
+}
 
-  sf.getClasses().forEach((cls) => {
-    const className = cls.getName()
-    if (!className) return
-    cls.getMethods().forEach((method) => {
-      funcs.push({
+function collectClassMethods(
+  sf: SourceFile,
+  referencedImportsIn: (node: Node) => string[]
+): RawFunctionInfo[] {
+  return sf
+    .getClasses()
+    .filter((cls) => cls.getName() != null)
+    .flatMap((cls) =>
+      cls.getMethods().map((method) => ({
         name: method.getName(),
-        class_name: className,
+        class_name: cls.getName()!,
         lineno: sf.getLineAndColumnAtPos(method.getStart()).line,
         ...countStructure(method),
         referencedImports: referencedImportsIn(method)
-      })
-    })
-  })
+      }))
+    )
+}
 
-  return funcs
+export function parseFunctions(filePath: string): RawFunctionInfo[] | null {
+  const project = new Project({ skipAddingFilesFromTsConfig: true })
+  const sf = project.addSourceFileAtPathIfExists(filePath)
+  if (!sf) return null
+
+  const importedNames = collectImportedNames(sf)
+  const referencedImportsIn = makeReferencedImportsIn(importedNames)
+
+  return [
+    ...collectStandaloneFunctions(sf, referencedImportsIn),
+    ...collectVariableFunctions(sf, referencedImportsIn),
+    ...collectClassMethods(sf, referencedImportsIn)
+  ]
 }
 
 // ---------------------------------------------------------------------------

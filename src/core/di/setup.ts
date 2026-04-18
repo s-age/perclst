@@ -8,6 +8,7 @@ import { CheckerRepository } from '@src/repositories/checkerRepository'
 import { TestStrategyRepository } from '@src/repositories/testStrategyRepository'
 import { SessionDomain } from '@src/domains/session'
 import { AgentDomain } from '@src/domains/agent'
+import { PipelineDomain } from '@src/domains/pipeline'
 import { AnalyzeDomain } from '@src/domains/analyze'
 import { ImportDomain } from '@src/domains/import'
 import { CheckerDomain } from '@src/domains/checker'
@@ -30,56 +31,118 @@ import { TsAnalysisDomain } from '@src/domains/tsAnalysis'
 import { TsAnalysisService } from '@src/services/tsAnalysisService'
 import { DEFAULT_MODEL } from '@src/constants/config'
 
-export function setupContainer(): void {
-  const config = loadConfig()
-  const sessionsDir = resolveSessionsDir(config)
-  const model = config.model ?? DEFAULT_MODEL
+type Repos = {
+  claudeCodeRepo: ClaudeCodeRepository
+  shellRepo: ShellRepository
+  sessionRepo: SessionRepository
+  claudeSessionRepo: ClaudeSessionRepository
+  procedureRepo: ProcedureRepository
+  checkerRepo: CheckerRepository
+  testStrategyRepo: TestStrategyRepository
+  knowledgeSearchRepo: KnowledgeSearchRepository
+  tsAnalysisRepo: TsAnalysisRepository
+}
 
-  const claudeCodeRepo = new ClaudeCodeRepository()
-  const shellRepo = new ShellRepository()
-  const sessionRepo = new SessionRepository(sessionsDir)
-  const claudeSessionRepo = new ClaudeSessionRepository()
-  const procedureRepo = new ProcedureRepository()
-  const checkerRepo = new CheckerRepository()
-  const testStrategyRepo = new TestStrategyRepository()
-  const knowledgeSearchRepo = new KnowledgeSearchRepository()
-  const tsAnalysisRepo = new TsAnalysisRepository()
+type Domains = {
+  scriptDomain: ScriptDomain
+  sessionDomain: SessionDomain
+  agentDomain: AgentDomain
+  pipelineDomain: PipelineDomain
+  analyzeDomain: AnalyzeDomain
+  importDomain: ImportDomain
+  checkerDomain: CheckerDomain
+  testStrategyDomain: TestStrategyDomain
+  knowledgeSearchDomain: KnowledgeSearchDomain
+  tsAnalysisDomain: TsAnalysisDomain
+}
 
-  const scriptDomain = new ScriptDomain(shellRepo)
+function buildRepos(sessionsDir: string): Repos {
+  return {
+    claudeCodeRepo: new ClaudeCodeRepository(),
+    shellRepo: new ShellRepository(),
+    sessionRepo: new SessionRepository(sessionsDir),
+    claudeSessionRepo: new ClaudeSessionRepository(),
+    procedureRepo: new ProcedureRepository(),
+    checkerRepo: new CheckerRepository(),
+    testStrategyRepo: new TestStrategyRepository(),
+    knowledgeSearchRepo: new KnowledgeSearchRepository(),
+    tsAnalysisRepo: new TsAnalysisRepository()
+  }
+}
+
+function buildDomains(model: string, repos: Repos): Domains {
+  const {
+    claudeCodeRepo,
+    shellRepo,
+    sessionRepo,
+    claudeSessionRepo,
+    procedureRepo,
+    checkerRepo,
+    testStrategyRepo,
+    knowledgeSearchRepo,
+    tsAnalysisRepo
+  } = repos
   const sessionDomain = new SessionDomain(sessionRepo)
   const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
-  const analyzeDomain = new AnalyzeDomain(sessionDomain, claudeSessionRepo)
-  const importDomain = new ImportDomain(claudeSessionRepo)
-  const checkerDomain = new CheckerDomain(checkerRepo)
-  const testStrategyDomain = new TestStrategyDomain(testStrategyRepo)
-  const knowledgeSearchDomain = new KnowledgeSearchDomain(knowledgeSearchRepo)
-  const tsAnalysisDomain = new TsAnalysisDomain(tsAnalysisRepo)
+  return {
+    scriptDomain: new ScriptDomain(shellRepo),
+    sessionDomain,
+    agentDomain,
+    pipelineDomain: new PipelineDomain(agentDomain),
+    analyzeDomain: new AnalyzeDomain(sessionDomain, claudeSessionRepo),
+    importDomain: new ImportDomain(claudeSessionRepo),
+    checkerDomain: new CheckerDomain(checkerRepo),
+    testStrategyDomain: new TestStrategyDomain(testStrategyRepo),
+    knowledgeSearchDomain: new KnowledgeSearchDomain(knowledgeSearchRepo),
+    tsAnalysisDomain: new TsAnalysisDomain(tsAnalysisRepo)
+  }
+}
 
+function registerReposAndDomains(
+  config: ReturnType<typeof loadConfig>,
+  repos: Repos,
+  domains: Domains
+): void {
   container.register(TOKENS.Config, config)
-  container.register(TOKENS.ShellRepository, shellRepo)
-  container.register(TOKENS.ClaudeCodeRepository, claudeCodeRepo)
-  container.register(TOKENS.SessionRepository, sessionRepo)
-  container.register(TOKENS.ClaudeSessionRepository, claudeSessionRepo)
-  container.register(TOKENS.ProcedureRepository, procedureRepo)
-  container.register(TOKENS.CheckerRepository, checkerRepo)
-  container.register(TOKENS.TestStrategyRepository, testStrategyRepo)
-  container.register(TOKENS.KnowledgeSearchRepository, knowledgeSearchRepo)
-  container.register(TOKENS.TsAnalysisRepository, tsAnalysisRepo)
-  container.register(TOKENS.ScriptDomain, scriptDomain)
-  container.register(TOKENS.SessionDomain, sessionDomain)
-  container.register(TOKENS.AgentDomain, agentDomain)
-  container.register(TOKENS.AnalyzeDomain, analyzeDomain)
-  container.register(TOKENS.ImportDomain, importDomain)
-  container.register(TOKENS.CheckerDomain, checkerDomain)
-  container.register(TOKENS.TestStrategyDomain, testStrategyDomain)
-  container.register(TOKENS.KnowledgeSearchDomain, knowledgeSearchDomain)
-  container.register(TOKENS.TsAnalysisDomain, tsAnalysisDomain)
+  container.register(TOKENS.ShellRepository, repos.shellRepo)
+  container.register(TOKENS.ClaudeCodeRepository, repos.claudeCodeRepo)
+  container.register(TOKENS.SessionRepository, repos.sessionRepo)
+  container.register(TOKENS.ClaudeSessionRepository, repos.claudeSessionRepo)
+  container.register(TOKENS.ProcedureRepository, repos.procedureRepo)
+  container.register(TOKENS.CheckerRepository, repos.checkerRepo)
+  container.register(TOKENS.TestStrategyRepository, repos.testStrategyRepo)
+  container.register(TOKENS.KnowledgeSearchRepository, repos.knowledgeSearchRepo)
+  container.register(TOKENS.TsAnalysisRepository, repos.tsAnalysisRepo)
+  container.register(TOKENS.ScriptDomain, domains.scriptDomain)
+  container.register(TOKENS.SessionDomain, domains.sessionDomain)
+  container.register(TOKENS.AgentDomain, domains.agentDomain)
+  container.register(TOKENS.PipelineDomain, domains.pipelineDomain)
+  container.register(TOKENS.AnalyzeDomain, domains.analyzeDomain)
+  container.register(TOKENS.ImportDomain, domains.importDomain)
+  container.register(TOKENS.CheckerDomain, domains.checkerDomain)
+  container.register(TOKENS.TestStrategyDomain, domains.testStrategyDomain)
+  container.register(TOKENS.KnowledgeSearchDomain, domains.knowledgeSearchDomain)
+  container.register(TOKENS.TsAnalysisDomain, domains.tsAnalysisDomain)
+}
 
+function registerServices(domains: Domains): void {
+  const {
+    sessionDomain,
+    agentDomain,
+    pipelineDomain,
+    scriptDomain,
+    analyzeDomain,
+    importDomain,
+    checkerDomain,
+    testStrategyDomain,
+    knowledgeSearchDomain,
+    tsAnalysisDomain
+  } = domains
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
   container.register(
     TOKENS.PipelineService,
-    new PipelineService(sessionDomain, agentDomain, scriptDomain)
+    new PipelineService(sessionDomain, pipelineDomain, scriptDomain)
   )
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
   container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))
@@ -90,4 +153,14 @@ export function setupContainer(): void {
     new KnowledgeSearchService(knowledgeSearchDomain)
   )
   container.register(TOKENS.TsAnalysisService, new TsAnalysisService(tsAnalysisDomain))
+}
+
+export function setupContainer(): void {
+  const config = loadConfig()
+  const sessionsDir = resolveSessionsDir(config)
+  const model = config.model ?? DEFAULT_MODEL
+  const repos = buildRepos(sessionsDir)
+  const domains = buildDomains(model, repos)
+  registerReposAndDomains(config, repos, domains)
+  registerServices(domains)
 }

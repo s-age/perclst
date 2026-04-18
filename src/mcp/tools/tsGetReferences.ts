@@ -39,7 +39,7 @@ export async function executeTsGetReferences(args: {
   return {
     content: [
       {
-        type: 'text',
+        type: 'text' as const,
         text: JSON.stringify({ symbol: args.symbol_name, references }, null, 2)
       }
     ]

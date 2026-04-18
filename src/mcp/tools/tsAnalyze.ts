@@ -25,7 +25,7 @@ export async function executeTsAnalyze(args: { file_path: string }) {
   return {
     content: [
       {
-        type: 'text',
+        type: 'text' as const,
         text: JSON.stringify(analysis, null, 2)
       }
     ]

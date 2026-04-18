@@ -92,19 +92,17 @@ export class TsAnalyzer {
     )
   }
 
-  private extractSymbols(sourceFile: SourceFile): SymbolInfo[] {
-    const symbols: SymbolInfo[] = []
+  private extractFunctionSymbols(sourceFile: SourceFile): SymbolInfo[] {
+    return sourceFile.getFunctions().map((f) => ({
+      name: f.getName() || '<anonymous>',
+      kind: 'function' as const,
+      line: sourceFile.getLineAndColumnAtPos(f.getStart()).line,
+      type: f.getReturnType().getText()
+    }))
+  }
 
-    sourceFile.getFunctions().forEach((f) => {
-      symbols.push({
-        name: f.getName() || '<anonymous>',
-        kind: 'function',
-        line: sourceFile.getLineAndColumnAtPos(f.getStart()).line,
-        type: f.getReturnType().getText()
-      })
-    })
-
-    sourceFile.getClasses().forEach((c) => {
+  private extractClassSymbols(sourceFile: SourceFile): SymbolInfo[] {
+    return sourceFile.getClasses().map((c) => {
       const ctor = c.getConstructors()[0]
       const constructorParams = ctor?.getParameters().map(
         (p): ParameterInfo => ({
@@ -131,15 +129,18 @@ export class TsAnalyzer {
             isStatic: m.isStatic()
           })
         )
-      symbols.push({
+      return {
         name: c.getName() || '<anonymous>',
-        kind: 'class',
+        kind: 'class' as const,
         line: sourceFile.getLineAndColumnAtPos(c.getStart()).line,
         ...(constructorParams?.length ? { constructorParams } : {}),
         ...(methods.length ? { methods } : {})
-      })
+      }
     })
+  }
 
+  private extractScalarSymbols(sourceFile: SourceFile): SymbolInfo[] {
+    const symbols: SymbolInfo[] = []
     sourceFile.getVariableDeclarations().forEach((v) => {
       symbols.push({
         name: v.getName(),
@@ -148,7 +149,6 @@ export class TsAnalyzer {
         type: v.getType().getText()
       })
     })
-
     sourceFile.getInterfaces().forEach((i) => {
       symbols.push({
         name: i.getName(),
@@ -156,7 +156,6 @@ export class TsAnalyzer {
         line: sourceFile.getLineAndColumnAtPos(i.getStart()).line
       })
     })
-
     sourceFile.getTypeAliases().forEach((t) => {
       symbols.push({
         name: t.getName(),
@@ -164,8 +163,15 @@ export class TsAnalyzer {
         line: sourceFile.getLineAndColumnAtPos(t.getStart()).line
       })
     })
-
     return symbols
+  }
+
+  private extractSymbols(sourceFile: SourceFile): SymbolInfo[] {
+    return [
+      ...this.extractFunctionSymbols(sourceFile),
+      ...this.extractClassSymbols(sourceFile),
+      ...this.extractScalarSymbols(sourceFile)
+    ]
   }
 
   private extractImports(sourceFile: SourceFile): ImportInfo[] {

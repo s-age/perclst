@@ -1,25 +1,25 @@
 ---
 name: arch-mcp
-description: "Required for any work in src/mcp/. Load before creating, editing, reviewing, or investigating files in this layer. Covers MCP server registration pattern, tool file structure, DI container usage, JSON-RPC result format, and the ask_permission inline tool."
+description: "Required for any work in src/mcp/. Load before creating, editing, reviewing, or investigating files in this layer. Covers MCP server registration pattern (SDK-based), tool file structure, DI container usage, result format, and the ask_permission inline tool."
 paths:
   - 'src/mcp/**/*.ts'
 ---
 
 ## Role
 
-Implements the perclst MCP server as a standalone process communicating over JSON-RPC 2.0 / stdio. `server.ts` owns protocol handling, DI bootstrapping, and tool dispatch. Each tool lives in `tools/` as a pair of exported schema object + execute function. `analyzers/` provides the `TypeScriptProject` singleton injected via DI. `types.ts` holds shared result types used only within this layer.
+Implements the perclst MCP server as a standalone process using `@modelcontextprotocol/sdk` over stdio. `server.ts` owns DI bootstrapping, tool registration via `McpServer`, and the `ask_permission` inline implementation. Each tool lives in `tools/` as a single `executeXxx()` function. `analyzers/` provides the `TypeScriptProject` singleton injected via DI. `types.ts` holds shared result types used only within this layer.
 
 ## Files
 
 | File | Role |
 |------|------|
-| `server.ts` | Entry point — calls `setupContainer()`, registers `TypeScriptProject`, defines `TOOLS` array, implements JSON-RPC dispatch loop (`initialize`, `tools/list`, `tools/call`), contains `ask_permission` inline implementation |
+| `server.ts` | Entry point — calls `setupContainer()`, creates `McpServer`, registers all tools via `server.tool()`, connects `StdioServerTransport`, contains `ask_permission` inline implementation |
 | `types.ts` | Shared TypeScript analysis result types (`TypeScriptAnalysis`, `SymbolInfo`, `ReferenceInfo`, `TypeDefinition`, etc.) — used only within `src/mcp/` |
 | `analyzers/project.ts` | `TypeScriptProject` class — wraps `ts-morph` `Project`; methods: `analyze()`, `getReferences()`, `getTypeDefinitions()` |
-| `tools/tsAnalyze.ts` | Schema object `ts_analyze` + `executeTsAnalyze()` — delegates to `TypeScriptProject.analyze()` |
-| `tools/tsGetReferences.ts` | Schema object `ts_get_references` + `executeTsGetReferences()` — delegates to `TypeScriptProject.getReferences()` |
-| `tools/tsGetTypes.ts` | Schema object `ts_get_types` + `executeTsGetTypes()` — delegates to `TypeScriptProject.getTypeDefinitions()` |
-| `tools/tsChecker.ts` | Schema object `ts_checker` + `executeTsChecker()` — delegates to `CheckerService` via DI |
+| `tools/tsAnalyze.ts` | `executeTsAnalyze()` — delegates to `TypeScriptProject.analyze()` |
+| `tools/tsGetReferences.ts` | `executeTsGetReferences()` — delegates to `TypeScriptProject.getReferences()` |
+| `tools/tsGetTypes.ts` | `executeTsGetTypes()` — delegates to `TypeScriptProject.getTypeDefinitions()` |
+| `tools/tsChecker.ts` | `executeTsChecker()` — delegates to `CheckerService` via DI |
 
 ## Import Rules
 
@@ -31,61 +31,39 @@ Node.js built-ins (`fs`, `child_process`, `path`, `url`) are permitted only in `
 
 ## Patterns
 
-**Tool file structure** — one schema object + one execute function per file; result always wrapped in `content[]`
+**Tool file structure** — one execute function per file; result always wrapped in `content[]` with `type: 'text' as const`
 
 ```ts
-// Good — tools/tsAnalyze.ts: named export for schema, named export for executor
-export const ts_analyze = {
-  name: 'ts_analyze',
-  description: 'Analyze TypeScript code structure (symbols, imports, exports)',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      file_path: { type: 'string', description: 'Path to the TypeScript file to analyze' }
-    },
-    required: ['file_path']
-  }
-}
-
+// Good — tools/tsAnalyze.ts: single named export for executor
 export async function executeTsAnalyze(args: { file_path: string }) {
   const project = container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)
   const analysis = project.analyze(args.file_path)
-  return { content: [{ type: 'text', text: JSON.stringify(analysis, null, 2) }] }
+  return { content: [{ type: 'text' as const, text: JSON.stringify(analysis, null, 2) }] }
 }
+
+// Bad — omitting `as const` on type: 'text' causes TS2769 against the SDK's CallToolResult
+return { content: [{ type: 'text', text: '...' }] }  // NG: type inferred as string, not "text"
 
 // Bad — returning a plain object without the content wrapper
-export async function executeTsAnalyze(args: { file_path: string }) {
-  const project = container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)
-  return project.analyze(args.file_path)  // NG: MCP protocol requires content[] wrapper
-}
+return project.analyze(args.file_path)  // NG: SDK requires content[] wrapper
 ```
 
-**Registering a new tool in server.ts** — three edits always go together: TOOLS entry, switch case, import
+**Registering a new tool in server.ts** — two edits: import + `server.tool()` call
 
 ```ts
-// Good — add to TOOLS array (1), add import at top (2), add case in handleToolsCall (3)
+// Good — import the execute function and call server.tool() with name, description, Zod schema, handler
 import { executeMyTool } from './tools/myTool'
 
-const TOOLS = [
-  // ... existing tools ...
-  {
-    name: 'my_tool',
-    description: 'Does something useful',
-    inputSchema: { type: 'object', properties: { value: { type: 'string' } }, required: ['value'] }
-  }
-]
+server.tool(
+  'my_tool',
+  'Does something useful',
+  { value: z.string().describe('The value to process') },
+  ({ value }) => executeMyTool({ value })
+)
 
-async function handleToolsCall(id, params) {
-  switch (p.name) {
-    // ... existing cases ...
-    case 'my_tool':
-      result = await executeMyTool(p.arguments as { value: string })
-      break
-  }
-}
-
-// Bad — adding the execute function without updating TOOLS (tool stays invisible to callers)
-// or adding to TOOLS without a switch case (dispatch silently sends "Unknown tool" error)
+// Bad — creating a TOOLS array and a switch dispatcher (old manual pattern; SDK handles this)
+const TOOLS = [{ name: 'my_tool', ... }]
+switch (p.name) { case 'my_tool': ... }  // NG: SDK renders this unnecessary
 ```
 
 **Layered tool implementation — services → domains → infrastructures**
@@ -176,8 +154,9 @@ Replace `ts_test_strategist` with the tool name being tested, and pass any addit
 ## Prohibitions
 
 - Never import from `cli`, `domains`, `repositories`, or `infrastructures` — MCP is a peer of `cli`; business logic is accessed via `validators` and `services`, not through lower layers directly
-- Never return a raw object from an execute function — always wrap in `{ content: [{ type: 'text', text: string }] }`
-- Never add a tool to `TOOLS` without a matching `case` in `handleToolsCall`, and vice versa — the two must stay in sync
+- Never return a raw object from an execute function — always wrap in `{ content: [{ type: 'text' as const, text: string }] }`
+- Never write `type: 'text'` without `as const` in a tool return — TypeScript widens it to `string`, which fails against the SDK's `CallToolResult` type (`TS2769`)
+- Never create a `TOOLS` array or a `handleToolsCall` switch — `server.tool()` from the SDK replaces both
 - Never instantiate `TypeScriptProject` directly in a tool file — always resolve via `container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)`
 - Never use Node.js built-ins (`fs`, `child_process`, etc.) in `tools/` files — those files must stay I/O-free; I/O belongs in `infrastructures/` and is accessed via services
 - Never add a second `setupContainer()` call — it is called exactly once at the top of `server.ts`

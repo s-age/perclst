@@ -31,6 +31,8 @@ Owns all business rules — session lifecycle, agent execution, import resolutio
 
 Intra-domain imports are permitted: a domain class may accept another domain's port type from `domains/ports/` via constructor injection (see `AnalyzeDomain`).
 
+**Repository access is not required.** A domain that owns pure business logic — rules, constants, instruction-building — and composes only with other domains via intra-domain injection is fully valid. Example: `PipelineDomain` holds limit-checking rules and graceful-termination logic, injecting `IAgentDomain` only; it touches no repository.
+
 ## Patterns
 
 **Style A — interface injection** (use when the repository is class-based with `IXxx`)
