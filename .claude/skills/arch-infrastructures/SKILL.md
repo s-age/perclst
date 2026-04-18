@@ -1,6 +1,6 @@
 ---
 name: arch-infrastructures
-description: "Required for any work in src/infrastructures/. Load before creating, editing, reviewing, or investigating files in this layer. Covers raw I/O adapter patterns, stateless function vs. class form, port type placement, and process/stream handling."
+description: "Required for any work in src/infrastructures/. Load before creating, editing, reviewing, or investigating files in this layer. Covers raw I/O adapter patterns, stateless function vs. class form, port type placement, process/stream handling, and the parsers/ subdirectory pattern."
 paths:
   - 'src/infrastructures/**/*.ts'
 ---
@@ -17,6 +17,9 @@ The lowest layer — the only place that may import Node.js I/O built-ins (`fs`,
 |------|------|
 | `fs.ts` | Filesystem adapter — wraps Node.js `fs`/`fs/promises` and `os` into typed helpers: `readJson`, `writeJson`, `fileExists`, `removeFile`, `listJsonFiles`, `ensureDir`, `homeDir` |
 | `claudeCode.ts` | Claude CLI adapter — spawns `claude -p` via `child_process.spawn`, builds CLI args from a `ClaudeAction` discriminated union, parses stream-json output into `RawOutput`; exports `ClaudeCodeRepository` implementing `IClaudeCodeRepository` |
+| `tsAnalyzer.ts` | ts-morph adapter — manages the `Project` singleton, resolves `SourceFile` handles, and delegates to `parsers/` for all AST extraction logic |
+| `parsers/tsSymbolExtractor.ts` | Pure AST-to-type converters — stateless exported functions (`extractSymbols`, `extractImports`, `extractExports`, `extractTypeDefinition`) that translate `SourceFile` nodes into `@src/types/tsAnalysis` types |
+| `parsers/tsAstTraverser.ts` | AST upward traversal — `findContainingSymbol` walks ancestor nodes to identify the enclosing function/method/arrow-function for a given source position |
 
 ## Import Rules
 
@@ -125,6 +128,35 @@ async dispatch(action: ClaudeAction, mcpConfigPath: string): Promise<RawOutput> 
 // NG: caller should never need to know about MCP config files
 ```
 
+**`parsers/` subdirectory** — split large adapters into pure AST/format converters when the adapter file would exceed the line limit
+
+`parsers/` files are intra-infrastructure helpers: stateless exported functions only, no class, no I/O. The parent adapter owns the `Project`/`SourceFile` lifecycle and passes handles into parsers.
+
+```ts
+// Good — tsAnalyzer.ts delegates extraction; parsers stay I/O-free
+import { extractSymbols, extractImports, extractExports } from './parsers/tsSymbolExtractor'
+import { findContainingSymbol } from './parsers/tsAstTraverser'
+
+analyzeFile(filePath: string): TypeScriptAnalysis {
+  const sourceFile = this.project.addSourceFileAtPath(filePath)  // I/O here, in adapter
+  return {
+    file_path: filePath,
+    symbols: extractSymbols(sourceFile),   // pure transform; no I/O inside
+    imports: extractImports(sourceFile),
+    exports: extractExports(sourceFile),
+  }
+}
+
+// Bad — parser file opens its own Project instance (duplicates the singleton, adds I/O to a pure module)
+// parsers/tsSymbolExtractor.ts
+import { Project } from 'ts-morph'
+export function extractSymbols(filePath: string) {
+  const project = new Project(...)          // NG: I/O in a parsers/ file
+  const sf = project.addSourceFileAtPath(filePath)
+  // ...
+}
+```
+
 ## Prohibitions
 
 - Never import from `cli`, `services`, `domains`, or `repositories` — this layer has no upward dependencies
@@ -132,3 +164,4 @@ async dispatch(action: ClaudeAction, mcpConfigPath: string): Promise<RawOutput> 
 - Never define a port type (`IXxx`) in this file when it bridges two layers — port types that callers in `domains/` depend on belong in `src/types/`
 - Never call raw Node.js I/O (`fs`, `child_process`, etc.) from any layer above this one — extend this layer's adapters instead
 - Never add a domain-specific method to a general adapter (`readSession()` on `fs.ts`, `startSession()` on `claudeCode.ts`) — keep adapters generic; atomic operations belong in `repositories/`
+- Never perform I/O inside `parsers/` files — they receive already-resolved handles (`SourceFile`, parsed objects) from the parent adapter and must stay pure

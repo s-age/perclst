@@ -20,6 +20,12 @@ export const ts_get_references = {
         type: 'boolean',
         description: 'Include references from __tests__ directories (default: false)',
         default: false
+      },
+      recursive: {
+        type: 'boolean',
+        description:
+          'Recursively follow callers up the call chain until no more references are found (default: true). Set to false for direct references only.',
+        default: true
       }
     },
     required: ['file_path', 'symbol_name']
@@ -30,11 +36,15 @@ export async function executeTsGetReferences(args: {
   file_path: string
   symbol_name: string
   include_test?: boolean
+  recursive?: boolean
 }) {
   const service = container.resolve<TsAnalysisService>(TOKENS.TsAnalysisService)
-  const references = service.getReferences(args.file_path, args.symbol_name, {
-    includeTest: args.include_test
-  })
+  const options = { includeTest: args.include_test }
+
+  const references =
+    args.recursive !== false
+      ? service.getReferencesRecursive(args.file_path, args.symbol_name, options)
+      : service.getReferences(args.file_path, args.symbol_name, options)
 
   return {
     content: [

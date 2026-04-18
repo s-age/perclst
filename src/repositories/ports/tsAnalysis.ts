@@ -7,5 +7,10 @@ export type ITsAnalysisRepository = {
     symbolName: string,
     options?: { includeTest?: boolean }
   ): ReferenceInfo[]
+  findContainingSymbol(
+    filePath: string,
+    line: number,
+    column: number
+  ): { symbol_name: string; file_path: string; line: number } | null
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null
 }

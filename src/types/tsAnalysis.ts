@@ -32,6 +32,19 @@ export type ReferenceInfo = {
   snippet: string
 }
 
+export type RecursiveReferenceInfo = {
+  file_path: string
+  line: number
+  column: number
+  snippet: string
+  caller?: {
+    symbol_name: string
+    file_path: string
+    line: number
+    references: RecursiveReferenceInfo[]
+  }
+}
+
 export type TypeDefinition = {
   name: string
   type: string
