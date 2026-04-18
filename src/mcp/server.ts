@@ -15,8 +15,14 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { z } from 'zod'
 import { openSync, readSync, writeSync, closeSync } from 'fs'
+import { askPermissionParams } from '@src/validators/mcp/askPermission'
+import { tsAnalyzeParams } from '@src/validators/mcp/tsAnalyze'
+import { tsGetReferencesParams } from '@src/validators/mcp/tsGetReferences'
+import { tsGetTypesParams } from '@src/validators/mcp/tsGetTypes'
+import { tsTestStrategistParams } from '@src/validators/mcp/tsTestStrategist'
+import { knowledgeSearchParams } from '@src/validators/mcp/knowledgeSearch'
+import { tsCheckerParams } from '@src/validators/mcp/tsChecker'
 import { executeTsAnalyze } from './tools/tsAnalyze'
 import { executeTsGetReferences } from './tools/tsGetReferences'
 import { executeTsGetTypes } from './tools/tsGetTypes'
@@ -86,11 +92,7 @@ server.tool(
   'ask_permission',
   'Ask the user whether to allow a tool call. ' +
     'Called by Claude Code when it needs permission to use a built-in tool in headless (-p) mode.',
-  {
-    tool_name: z.string().describe('The name of the tool requesting permission'),
-    input: z.record(z.string(), z.unknown()).describe('The input arguments for the tool'),
-    tool_use_id: z.string().optional().describe('The unique tool use request ID')
-  },
+  askPermissionParams,
   async ({ tool_name, input, tool_use_id }) => ({
     content: [
       {
@@ -104,27 +106,14 @@ server.tool(
 server.tool(
   'ts_analyze',
   'Analyze TypeScript code structure (symbols, imports, exports)',
-  { file_path: z.string().describe('Path to the TypeScript file to analyze') },
+  tsAnalyzeParams,
   ({ file_path }) => executeTsAnalyze({ file_path })
 )
 
 server.tool(
   'ts_get_references',
   'Find all references to a TypeScript symbol',
-  {
-    file_path: z.string().describe('Path to the TypeScript file'),
-    symbol_name: z.string().describe('Name of the symbol to find references for'),
-    include_test: z
-      .boolean()
-      .optional()
-      .describe('Include references from __tests__ directories (default: false)'),
-    recursive: z
-      .boolean()
-      .optional()
-      .describe(
-        'Recursively follow callers up the call chain until no more references are found (default: true). Set to false for direct references only.'
-      )
-  },
+  tsGetReferencesParams,
   ({ file_path, symbol_name, include_test, recursive }) =>
     executeTsGetReferences({ file_path, symbol_name, include_test, recursive })
 )
@@ -132,10 +121,7 @@ server.tool(
 server.tool(
   'ts_get_types',
   'Get type definitions for a TypeScript symbol',
-  {
-    file_path: z.string().describe('Path to the TypeScript file'),
-    symbol_name: z.string().describe('Name of the symbol to get type information for')
-  },
+  tsGetTypesParams,
   ({ file_path, symbol_name }) => executeTsGetTypes({ file_path, symbol_name })
 )
 
@@ -143,15 +129,7 @@ server.tool(
   'ts_test_strategist',
   'Formulate a unit test strategy for a TypeScript file — identifies untested functions, ' +
     'calculates cyclomatic complexity, and suggests mocks for dependencies.',
-  {
-    target_file_path: z
-      .string()
-      .describe('Path to the target TypeScript implementation file (.ts or .tsx)'),
-    test_file_path: z
-      .string()
-      .optional()
-      .describe('Path to the corresponding test file (auto-discovered if omitted)')
-  },
+  tsTestStrategistParams,
   ({ target_file_path, test_file_path }) =>
     executeTsTestStrategist({ target_file_path, test_file_path })
 )
@@ -162,18 +140,7 @@ server.tool(
     'Matches against the **Keywords:** field declared in each knowledge file. ' +
     'Space-separated terms are ANDed; use OR between groups for OR logic. ' +
     'Examples: "fork session", "zod OR validation", "fork OR resume session"',
-  {
-    query: z
-      .string()
-      .describe(
-        'Search query. Supports AND (space or "AND") and OR ("OR") operators. ' +
-          'Example: "fork session" → both terms must appear; "zod OR validation" → either term.'
-      ),
-    include_draft: z
-      .boolean()
-      .optional()
-      .describe('Include knowledge/draft/ files in the search. Defaults to false.')
-  },
+  knowledgeSearchParams,
   ({ query, include_draft }) => executeKnowledgeSearch({ query, include_draft })
 )
 
@@ -181,15 +148,7 @@ server.tool(
   'ts_checker',
   'Run lint (lint:fix), build, and unit tests in one shot and report errors/warnings for each. ' +
     'Use this after making TypeScript changes to verify correctness before completing a task.',
-  {
-    project_root: z
-      .string()
-      .optional()
-      .describe('Absolute path to the project root. Auto-detected when omitted.'),
-    lint_command: z.string().optional().describe('Lint command. Defaults to "npm run lint:fix".'),
-    build_command: z.string().optional().describe('Build command. Defaults to "npm run build".'),
-    test_command: z.string().optional().describe('Test command. Defaults to "npm run test:unit".')
-  },
+  tsCheckerParams,
   ({ project_root, lint_command, build_command, test_command }) =>
     executeTsChecker({ project_root, lint_command, build_command, test_command })
 )
