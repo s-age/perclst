@@ -25,6 +25,9 @@ import { ScriptDomain } from '@src/domains/script'
 import { KnowledgeSearchDomain } from '@src/domains/knowledgeSearch'
 import { KnowledgeSearchRepository } from '@src/repositories/knowledgeSearchRepository'
 import { KnowledgeSearchService } from '@src/services/knowledgeSearchService'
+import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
+import { TsAnalysisDomain } from '@src/domains/tsAnalysis'
+import { TsAnalysisService } from '@src/services/tsAnalysisService'
 import { DEFAULT_MODEL } from '@src/constants/config'
 
 export function setupContainer(): void {
@@ -40,6 +43,7 @@ export function setupContainer(): void {
   const checkerRepo = new CheckerRepository()
   const testStrategyRepo = new TestStrategyRepository()
   const knowledgeSearchRepo = new KnowledgeSearchRepository()
+  const tsAnalysisRepo = new TsAnalysisRepository()
 
   const scriptDomain = new ScriptDomain(shellRepo)
   const sessionDomain = new SessionDomain(sessionRepo)
@@ -49,6 +53,7 @@ export function setupContainer(): void {
   const checkerDomain = new CheckerDomain(checkerRepo)
   const testStrategyDomain = new TestStrategyDomain(testStrategyRepo)
   const knowledgeSearchDomain = new KnowledgeSearchDomain(knowledgeSearchRepo)
+  const tsAnalysisDomain = new TsAnalysisDomain(tsAnalysisRepo)
 
   container.register(TOKENS.Config, config)
   container.register(TOKENS.ShellRepository, shellRepo)
@@ -59,6 +64,7 @@ export function setupContainer(): void {
   container.register(TOKENS.CheckerRepository, checkerRepo)
   container.register(TOKENS.TestStrategyRepository, testStrategyRepo)
   container.register(TOKENS.KnowledgeSearchRepository, knowledgeSearchRepo)
+  container.register(TOKENS.TsAnalysisRepository, tsAnalysisRepo)
   container.register(TOKENS.ScriptDomain, scriptDomain)
   container.register(TOKENS.SessionDomain, sessionDomain)
   container.register(TOKENS.AgentDomain, agentDomain)
@@ -67,6 +73,7 @@ export function setupContainer(): void {
   container.register(TOKENS.CheckerDomain, checkerDomain)
   container.register(TOKENS.TestStrategyDomain, testStrategyDomain)
   container.register(TOKENS.KnowledgeSearchDomain, knowledgeSearchDomain)
+  container.register(TOKENS.TsAnalysisDomain, tsAnalysisDomain)
 
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
@@ -82,4 +89,5 @@ export function setupContainer(): void {
     TOKENS.KnowledgeSearchService,
     new KnowledgeSearchService(knowledgeSearchDomain)
   )
+  container.register(TOKENS.TsAnalysisService, new TsAnalysisService(tsAnalysisDomain))
 }

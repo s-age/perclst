@@ -1,6 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { TypeScriptProject } from '@src/mcp/analyzers/project'
+import type { TsAnalysisService } from '@src/services/tsAnalysisService'
 
 export const ts_get_references = {
   name: 'ts_get_references',
@@ -22,21 +22,14 @@ export const ts_get_references = {
 }
 
 export async function executeTsGetReferences(args: { file_path: string; symbol_name: string }) {
-  const project = container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)
-  const references = project.getReferences(args.file_path, args.symbol_name)
+  const service = container.resolve<TsAnalysisService>(TOKENS.TsAnalysisService)
+  const references = service.getReferences(args.file_path, args.symbol_name)
 
   return {
     content: [
       {
         type: 'text',
-        text: JSON.stringify(
-          {
-            symbol: args.symbol_name,
-            references
-          },
-          null,
-          2
-        )
+        text: JSON.stringify({ symbol: args.symbol_name, references }, null, 2)
       }
     ]
   }
