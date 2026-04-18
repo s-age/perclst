@@ -57,7 +57,3 @@ export type RawOutput = {
   }
   message_count: number
 }
-
-export type IClaudeCodeRepository = {
-  dispatch(action: ClaudeAction): Promise<RawOutput>
-}

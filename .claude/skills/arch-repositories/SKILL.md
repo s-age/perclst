@@ -15,7 +15,7 @@ Wraps infrastructure adapters into atomic, domain-meaningful operations. Exposes
 |------|------|
 | `sessions.ts` | Atomic CRUD for perclst sessions — `saveSession`, `loadSession`, `existsSession`, `deleteSession`, `listSessions`, `getSessionPath`; also exports `SessionRepository` |
 | `claudeSessions.ts` | Reads and parses Claude Code JSONL session files — `findEncodedDirBySessionId`, `decodeWorkingDir`, `validateSessionAtDir`, `readClaudeSession`; also exports `ClaudeSessionRepository` |
-| `agentRepository.ts` | Claude CLI adapter for domain use — consumes `claudeCode.ts` infrastructure generator, pipes lines through `claudeCodeParser.ts`, returns `RawOutput`; exports `AgentRepository` implementing `IClaudeCodeRepository` |
+| `agentRepository.ts` | Claude CLI adapter for domain use — consumes `ClaudeCodeInfra.runClaude()` generator, pipes lines through `claudeCodeParser.ts`, returns `RawOutput`; exports `ClaudeCodeRepository` implementing `IClaudeCodeRepository` |
 | `tsAnalysisRepository.ts` | TypeScript analysis — calls `TsAnalyzer.getSourceFile()`, delegates extraction to `parsers/tsAnalysisParser.ts` and `parsers/tsAstParser.ts`; exports `TsAnalysisRepository` |
 | `config.ts` | Config loading and path resolution — `loadConfig()`, `resolveSessionsDir()`, `resolveLogsDir()` (standalone functions only, no class) |
 | `procedures.ts` | Procedure markdown loader — `loadProcedure()`, `procedureExists()`; also exports `ProcedureRepository` |
@@ -95,28 +95,38 @@ export type ISessionRepository = { ... }  // NG: belongs in src/repositories/por
 export class SessionRepository implements ISessionRepository { ... }
 ```
 
-**Consuming an `AsyncGenerator` from infrastructure** — collect raw lines, then parse in one shot
+**Consuming an `AsyncGenerator` from infrastructure** — collect raw lines via class instance, then parse in one shot
 
-Infrastructure adapters that stream process output yield raw `string` lines. The repository is responsible for collecting them and delegating to a `parsers/` function.
+Infrastructure adapters that stream process output yield raw `string` lines. The repository holds an instance of the infrastructure class and delegates to a `parsers/` function.
 
 ```ts
-// Good — agentRepository.ts: collect lines, then convert
-import { runClaude } from '@src/infrastructures/claudeCode'
+// Good — agentRepository.ts: class instance, collect lines, then convert
+import { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
 import { parseStreamEvents } from '@src/repositories/parsers/claudeCodeParser'
 
-export async function dispatch(action: ClaudeAction): Promise<RawOutput> {
-  const lines: string[] = []
-  for await (const line of runClaude(args, action.prompt, action.workingDir)) {
-    lines.push(line)
+export class ClaudeCodeRepository implements IClaudeCodeRepository {
+  private infra = new ClaudeCodeInfra()
+
+  async dispatch(action: ClaudeAction): Promise<RawOutput> {
+    const args = this.infra.buildArgs(action)
+    const lines: string[] = []
+    for await (const line of this.infra.runClaude(args, action.prompt, action.workingDir)) {
+      lines.push(line)
+    }
+    return parseStreamEvents(lines, jsonlBaseline)
   }
-  return parseStreamEvents(lines, jsonlBaseline)
 }
 
 // Bad — parsing inside the infrastructure adapter
 // claudeCode.ts
-export async function runClaude(...): Promise<RawOutput> {
+async *runClaude(...): Promise<RawOutput> {
   // collects stdout and calls parseStreamJson() here — NG
 }
+
+// Bad — calling raw fs from repository (infrastructure setup leaking up)
+// agentRepository.ts
+import { writeFileSync } from 'fs'  // NG: raw I/O belongs in infrastructures/
+writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
 ```
 
 **Extend `fs.ts` when an operation is missing, do not bypass it**

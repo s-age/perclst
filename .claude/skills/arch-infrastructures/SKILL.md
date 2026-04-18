@@ -9,6 +9,8 @@ paths:
 
 The lowest layer — the only place that may import Node.js I/O built-ins (`fs`, `fs/promises`, `child_process`, `os`, `path`). Provides raw adapters that repositories compose into atomic operations. Contains no business logic and **no data shaping**: every adapter yields or returns raw output exactly as it arrives from the underlying system; all conversion into typed domain values happens in `repositories/parsers/`.
 
+> **Communication only, data-agnostic**: Each adapter is responsible solely for the I/O operation itself — it has no concern for the meaning or structure of the data it transports. A `SourceFile` returned by `TsAnalyzer`, raw stdout lines yielded by `ClaudeCodeInfra`, or bytes read by `fs.ts` are all opaque payloads from the adapter's perspective. The repository layer decides what they mean.
+
 > **`utils` vs `infrastructures`**: Non-I/O built-ins used as pure-function equivalents (e.g. `crypto.randomUUID`) belong in `utils`, not here. Only built-ins that perform file, process, or network I/O go in `infrastructures`.
 
 ## Files
@@ -88,21 +90,27 @@ export async function runClaude(...): Promise<RawOutput> {
 }
 ```
 
-**Temp-file setup/teardown** — infrastructure-level side effects (MCP config) stay inside the adapter, invisible to callers
+**Temp-file setup/teardown** — infrastructure-level side effects (MCP config) stay inside `runClaude`, invisible to callers
 
 ```ts
-// Good — write temp file before spawn, delete in finally; caller sees only dispatch()
-const mcpConfigPath = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
-writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
-try {
-  return await runClaude(args, prompt, workingDir, ...)
-} finally {
-  try { unlinkSync(mcpConfigPath) } catch { /* ignore */ }
+// Good — write temp file before spawn, delete in finally inside runClaude; repository sees only lines
+async *runClaude(args: string[], prompt: string, workingDir: string): AsyncGenerator<string> {
+  const mcpConfigPath = join(tmpdir(), `${APP_NAME}-mcp-${process.pid}.json`)
+  writeFileSync(mcpConfigPath, mcpConfig, 'utf-8')
+  const fullArgs = [...args, '--mcp-config', mcpConfigPath, ...]
+  const child = spawn('claude', fullArgs, ...)
+  try {
+    // yield stdout lines...
+  } finally {
+    if (child.exitCode === null && !child.killed) child.kill()
+    try { unlinkSync(mcpConfigPath) } catch { /* ignore */ }
+  }
 }
 
-// Bad — exposing temp file path or MCP setup to the caller
-async dispatch(action: ClaudeAction, mcpConfigPath: string): Promise<RawOutput> { ... }
-// NG: caller should never need to know about MCP config files
+// Bad — exposing temp file path or MCP setup to the caller (repository)
+// agentRepository.ts
+writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')  // NG: raw fs in repository
+args.push('--mcp-config', mcpConfigPath)                 // NG: infrastructure detail leaking up
 ```
 
 **ts-morph adapter** — expose `SourceFile` handles; let the repository do the extraction

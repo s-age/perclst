@@ -1,12 +1,6 @@
 import { Project } from 'ts-morph'
-import type { TypeScriptAnalysis, ReferenceInfo, TypeDefinition } from '@src/types/tsAnalysis'
-import {
-  extractSymbols,
-  extractImports,
-  extractExports,
-  extractTypeDefinition
-} from './parsers/tsSymbolExtractor'
-import { findContainingSymbol } from './parsers/tsAstTraverser'
+import type { SourceFile } from 'ts-morph'
+import type { ReferenceInfo } from '@src/types/tsAnalysis'
 
 export class TsAnalyzer {
   private project: Project
@@ -18,16 +12,11 @@ export class TsAnalyzer {
     })
   }
 
-  analyzeFile(filePath: string): TypeScriptAnalysis {
-    const sourceFile = this.project.addSourceFileAtPath(filePath)
-    return {
-      file_path: filePath,
-      symbols: extractSymbols(sourceFile),
-      imports: extractImports(sourceFile),
-      exports: extractExports(sourceFile)
-    }
+  getSourceFile(filePath: string): SourceFile {
+    return this.project.addSourceFileAtPath(filePath)
   }
 
+  // Scans the entire project to find references — filesystem I/O, not pure transformation
   getReferences(
     filePath: string,
     symbolName: string,
@@ -74,19 +63,5 @@ export class TsAnalyzer {
       }
     }
     return references
-  }
-
-  findContainingSymbol(
-    filePath: string,
-    line: number,
-    column: number
-  ): { symbol_name: string; file_path: string; line: number } | null {
-    const sourceFile = this.project.addSourceFileAtPath(filePath)
-    return findContainingSymbol(sourceFile, filePath, line, column)
-  }
-
-  getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {
-    const sourceFile = this.project.addSourceFileAtPath(filePath)
-    return extractTypeDefinition(sourceFile, symbolName)
   }
 }
