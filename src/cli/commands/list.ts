@@ -1,7 +1,8 @@
+import Table from 'cli-table3'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { SessionService } from '@src/services/sessionService'
-import { logger } from '@src/utils/logger'
+import { stdout, stderr } from '@src/utils/output'
 
 export async function listCommand() {
   try {
@@ -9,25 +10,28 @@ export async function listCommand() {
     const sessions = await sessionService.list()
 
     if (sessions.length === 0) {
-      logger.print('No sessions found')
+      stdout.print('No sessions found')
       return
     }
 
-    logger.print(`\nFound ${sessions.length} session(s):\n`)
+    const table = new Table({
+      head: ['Status', 'Name', 'ID', 'Working Dir', 'Procedure'],
+      style: { head: [], border: [] }
+    })
 
     for (const session of sessions) {
-      const status = session.metadata.status
-
-      const label = `${session.name ?? 'anonymous'}(${session.id})`
-      logger.print(`[${status}] ${label}`)
-      logger.print(`  Working dir: ${session.working_dir}`)
-      if (session.procedure) {
-        logger.print(`  Procedure: ${session.procedure}`)
-      }
-      logger.print('')
+      table.push([
+        session.metadata.status,
+        session.name ?? '—',
+        session.id,
+        session.working_dir,
+        session.procedure ?? '—'
+      ])
     }
+
+    stdout.print(table.toString())
   } catch (error) {
-    logger.error('Failed to list sessions', error as Error)
+    stderr.print('Failed to list sessions', error as Error)
     process.exit(1)
   }
 }

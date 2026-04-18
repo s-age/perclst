@@ -2,12 +2,12 @@ import type { Session, CreateSessionParams } from '@src/types/session'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import type { ISessionRepository } from '@src/repositories/ports/session'
 import { generateId } from '@src/utils/uuid'
-import { logger } from '@src/utils/logger'
+import { debug } from '@src/utils/output'
 import { toISO } from '@src/utils/date'
 
 export class SessionDomain implements ISessionDomain {
   constructor(private sessionRepo: ISessionRepository) {
-    logger.debug('SessionDomain initialized')
+    debug.print('SessionDomain initialized')
   }
 
   async save(session: Session): Promise<void> {
@@ -32,7 +32,7 @@ export class SessionDomain implements ISessionDomain {
     }
 
     this.sessionRepo.save(session)
-    logger.info('Session created', { session_id: session.id })
+    debug.print('Session created', { session_id: session.id })
 
     return session
   }
@@ -51,7 +51,7 @@ export class SessionDomain implements ISessionDomain {
 
   async delete(sessionId: string): Promise<void> {
     await this.sessionRepo.delete(sessionId)
-    logger.info('Session deleted', { session_id: sessionId })
+    debug.print('Session deleted', { session_id: sessionId })
   }
 
   async updateStatus(
@@ -64,7 +64,7 @@ export class SessionDomain implements ISessionDomain {
     session.updated_at = toISO()
 
     this.sessionRepo.save(session)
-    logger.info('Session status updated', { session_id: sessionId, status })
+    debug.print('Session status updated', { session_id: sessionId, status })
 
     return session
   }
@@ -76,7 +76,7 @@ export class SessionDomain implements ISessionDomain {
     session.updated_at = toISO()
 
     this.sessionRepo.save(session)
-    logger.info('Session renamed', { session_id: sessionId, name })
+    debug.print('Session renamed', { session_id: sessionId, name })
 
     return session
   }

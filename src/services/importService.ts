@@ -1,7 +1,7 @@
 import type { Session } from '@src/types/session'
 import type { ISessionDomain, IImportDomain } from '@src/domains/ports/session'
 import { generateId } from '@src/utils/uuid'
-import { logger } from '@src/utils/logger'
+import { debug } from '@src/utils/output'
 import { toISO } from '@src/utils/date'
 
 export type ImportOptions = {
@@ -37,7 +37,7 @@ export class ImportService {
     }
 
     await this.sessionDomain.save(session)
-    logger.info('Session imported', { session_id: session.id, claude_session_id: claudeSessionId })
+    debug.print('Session imported', { session_id: session.id, claude_session_id: claudeSessionId })
     return session
   }
 }
