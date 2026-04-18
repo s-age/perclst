@@ -29,7 +29,7 @@ export async function executeTsGetTypes(args: { file_path: string; symbol_name: 
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: `Type definition not found for symbol: ${args.symbol_name}`
         }
       ]
@@ -39,7 +39,7 @@ export async function executeTsGetTypes(args: { file_path: string; symbol_name: 
   return {
     content: [
       {
-        type: 'text',
+        type: 'text' as const,
         text: JSON.stringify(definition, null, 2)
       }
     ]

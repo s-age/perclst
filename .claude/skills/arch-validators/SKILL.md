@@ -9,6 +9,8 @@ paths:
 
 Owns all input validation for every entry point (CLI, MCP, etc.). Zod is confined entirely to this layer — no other layer may import it. Exposes typed `parseXxx()` functions that throw `ValidationError` on bad input, so callers never touch raw Zod types.
 
+**Exception**: `src/mcp/server.ts` imports `zod` directly to define tool parameter schemas for `@modelcontextprotocol/sdk`. The SDK requires Zod schemas at the call site of `server.tool()` — there is no way to route this through the validators layer. This is the only permitted out-of-layer Zod import.
+
 ## Files
 
 | File | Role |
@@ -98,7 +100,7 @@ error.errors.map(...)
 
 ## Prohibitions
 
-- Never import `zod` outside of `rules/` and `schema.ts` — not in `cli/`, not anywhere in other layers
+- Never import `zod` outside of `rules/` and `schema.ts` — not in `cli/`, not in other layers — except `src/mcp/server.ts` (see Exception above)
 - Never expose raw Zod types (`ZodSchema`, `ZodObject`, etc.) across the layer boundary — only the inferred `Input` type and the `parseXxx()` function are public
 - Never catch `ZodError` in `cli/` files — that is `schema.ts`'s exclusive responsibility
 - Never use `ZodError.errors` — it was removed in Zod v4; always use `ZodError.issues`

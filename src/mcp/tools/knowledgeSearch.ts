@@ -33,5 +33,5 @@ export async function executeKnowledgeSearch(args: { query: string; include_draf
     query: args.query,
     include_draft: args.include_draft ?? false
   })
-  return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+  return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] }
 }

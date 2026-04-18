@@ -32,5 +32,5 @@ export async function executeTsTestStrategist(args: {
     targetFilePath: args.target_file_path,
     testFilePath: args.test_file_path
   })
-  return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+  return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] }
 }
