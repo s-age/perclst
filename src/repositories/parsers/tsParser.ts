@@ -159,7 +159,8 @@ export function extractTestFunctions(testFilePath: string): string[] {
       s.startsWith('it(') ||
       s.startsWith('test(') ||
       s.startsWith('it.skip(') ||
-      s.startsWith('test.skip(')
+      s.startsWith('test.skip(') ||
+      s.startsWith('describe(')
     ) {
       for (const q of ["'", '"', '`']) {
         if (s.includes(q)) {
