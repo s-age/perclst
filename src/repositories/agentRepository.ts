@@ -1,6 +1,7 @@
 import { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
-import { parseStreamEvents } from '@src/repositories/parsers/claudeCodeParser'
+import { parseStreamEvents, classifyExitError } from '@src/repositories/parsers/claudeCodeParser'
 import type { IClaudeCodeRepository } from '@src/repositories/ports/agent'
+import { RawExitError } from '@src/errors/rawExitError'
 import type { ClaudeAction, RawOutput } from '@src/types/claudeCode'
 import type { AgentStreamEvent } from '@src/types/agent'
 import { MCP_SERVER_NAME } from '@src/constants/config'
@@ -42,14 +43,19 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
     const lines: string[] = []
     const toolNameMap = new Map<string, string>()
 
-    for await (const line of this.infra.runClaude(
-      args,
-      action.prompt,
-      action.workingDir,
-      action.sessionFilePath
-    )) {
-      lines.push(line)
-      if (onStreamEvent) emitStreamEvents(line, toolNameMap, onStreamEvent)
+    try {
+      for await (const line of this.infra.runClaude(
+        args,
+        action.prompt,
+        action.workingDir,
+        action.sessionFilePath
+      )) {
+        lines.push(line)
+        if (onStreamEvent) emitStreamEvents(line, toolNameMap, onStreamEvent)
+      }
+    } catch (err) {
+      if (err instanceof RawExitError) classifyExitError(err)
+      throw err
     }
 
     return parseStreamEvents(lines, jsonlBaseline)

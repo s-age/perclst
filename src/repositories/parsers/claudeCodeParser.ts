@@ -1,6 +1,9 @@
 import type { ThinkingBlock, ToolUseRecord } from '@src/types/common'
 import type { RawOutput } from '@src/types/claudeCode'
 import { MCP_SERVER_NAME } from '@src/constants/config'
+import { APIError } from '@src/errors/apiError'
+import { RateLimitError } from '@src/errors/rateLimitError'
+import type { RawExitError } from '@src/errors/rawExitError'
 
 type ContentBlock =
   | { type: 'text'; text: string }
@@ -87,6 +90,19 @@ function processUserEvent(event: StreamEvent, state: ParseState): void {
     }
   }
   if (hasRealToolResult) state.userToolResultEventCount++
+}
+
+export function classifyExitError(err: RawExitError): never {
+  const { code, stderr } = err
+  const rateLimitMatch = stderr.match(/resets?\s+([^\n\r]+)/i)
+  if (
+    stderr.toLowerCase().includes("you've hit your limit") ||
+    stderr.toLowerCase().includes('you have hit your limit')
+  ) {
+    throw new RateLimitError(rateLimitMatch?.[1]?.trim())
+  }
+  if (stderr) process.stderr.write(stderr)
+  throw new APIError(`claude exited with code ${code}`)
 }
 
 export function parseStreamEvents(lines: string[], jsonlBaseline: number): RawOutput {
