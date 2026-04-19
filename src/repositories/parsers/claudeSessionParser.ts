@@ -133,6 +133,60 @@ export function processAssistantEntry(
   }
 }
 
+type MergeAccumulator = {
+  thinking: string[]
+  toolCalls: ToolCall[]
+  text: string | undefined
+  usage: ClaudeCodeTurn['usage'] | undefined
+  tokens: TokenTotals
+}
+
+function mergeAssistantGroup(
+  pending: RawAssistantEntry[],
+  toolResultMap: Map<string, { text: string | null; isError: boolean }>
+): { turn: ClaudeCodeTurn; tokens: TokenTotals } | null {
+  const acc: MergeAccumulator = {
+    thinking: [],
+    toolCalls: [],
+    text: undefined,
+    usage: undefined,
+    tokens: { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0 }
+  }
+
+  for (const e of pending) {
+    // Extract thinking from all entries, including thinking-only ones that processAssistantEntry skips.
+    for (const block of e.message.content ?? []) {
+      if (block.type === 'thinking') acc.thinking.push(block.thinking)
+    }
+    const result = processAssistantEntry(e, toolResultMap)
+    if (!result) continue
+    // thinkingBlocks already collected above; only take text, tools, usage, and tokens.
+    if (result.turn.assistantText)
+      acc.text =
+        acc.text !== undefined ? acc.text + result.turn.assistantText : result.turn.assistantText
+    acc.toolCalls.push(...result.turn.toolCalls)
+    if (result.turn.usage) acc.usage = result.turn.usage
+    acc.tokens.totalInput += result.tokenDeltas.totalInput
+    acc.tokens.totalOutput += result.tokenDeltas.totalOutput
+    acc.tokens.totalCacheRead += result.tokenDeltas.totalCacheRead
+    acc.tokens.totalCacheCreation += result.tokenDeltas.totalCacheCreation
+  }
+
+  if (acc.text === undefined && acc.toolCalls.length === 0) return null
+  return {
+    turn: {
+      toolCalls: acc.toolCalls,
+      assistantText: acc.text?.trim() || undefined,
+      thinkingBlocks: acc.thinking.length > 0 ? acc.thinking : undefined,
+      usage: acc.usage
+    },
+    tokens: acc.tokens
+  }
+}
+
+// Claude Code emits thinking/text/tool_use as separate JSONL entries.
+// Buffer consecutive assistant entries and flush them as a single logical turn
+// when a user entry (or end-of-stream) is reached.
 export function buildTurns(
   entries: RawEntry[],
   toolResultMap: Map<string, { text: string | null; isError: boolean }>
@@ -142,9 +196,24 @@ export function buildTurns(
   let totalOutput = 0
   let totalCacheRead = 0
   let totalCacheCreation = 0
+  let pending: RawAssistantEntry[] = []
+
+  const flush = () => {
+    if (pending.length === 0) return
+    const merged = mergeAssistantGroup(pending, toolResultMap)
+    if (merged) {
+      turns.push(merged.turn)
+      totalInput += merged.tokens.totalInput
+      totalOutput += merged.tokens.totalOutput
+      totalCacheRead += merged.tokens.totalCacheRead
+      totalCacheCreation += merged.tokens.totalCacheCreation
+    }
+    pending = []
+  }
 
   for (const entry of entries) {
     if (entry.type === 'user') {
+      flush()
       const content = (entry as RawUserEntry).message.content
       if (typeof content === 'string') {
         turns.push({ userMessage: content, toolCalls: [] })
@@ -155,16 +224,10 @@ export function buildTurns(
         if (texts.length > 0) turns.push({ userMessage: texts.join('\n'), toolCalls: [] })
       }
     } else if (entry.type === 'assistant') {
-      const result = processAssistantEntry(entry as RawAssistantEntry, toolResultMap)
-      if (result) {
-        turns.push(result.turn)
-        totalInput += result.tokenDeltas.totalInput
-        totalOutput += result.tokenDeltas.totalOutput
-        totalCacheRead += result.tokenDeltas.totalCacheRead
-        totalCacheCreation += result.tokenDeltas.totalCacheCreation
-      }
+      pending.push(entry as RawAssistantEntry)
     }
   }
+  flush()
 
   return { turns, tokens: { totalInput, totalOutput, totalCacheRead, totalCacheCreation } }
 }
@@ -174,25 +237,32 @@ export function buildSummaryStats(turns: ClaudeCodeTurn[]): {
   toolUses: AnalysisSummary['toolUses']
 } {
   let userInstructions = 0
-  let toolUse = 0
+  let thinking = 0
+  let toolCalls = 0
   let assistantResponse = 0
   const allToolUses: AnalysisSummary['toolUses'] = []
 
   for (const turn of turns) {
     if (turn.userMessage !== undefined) userInstructions++
-    if (turn.assistantText !== undefined || turn.toolCalls.length > 0) assistantResponse++
-    toolUse += turn.toolCalls.length
-    for (const tc of turn.toolCalls) {
-      allToolUses.push({ name: tc.name, input: tc.input, isError: tc.isError })
+    if (turn.toolCalls.length > 0) {
+      thinking++
+      toolCalls += turn.toolCalls.length
+      for (const tc of turn.toolCalls) {
+        allToolUses.push({ name: tc.name, input: tc.input, isError: tc.isError })
+      }
+    } else if (turn.assistantText !== undefined) {
+      assistantResponse++
     }
   }
 
   return {
     turnsBreakdown: {
       userInstructions,
-      toolUse,
+      thinking,
+      toolCalls,
+      toolResults: toolCalls,
       assistantResponse,
-      total: userInstructions + toolUse * 2 + assistantResponse
+      total: userInstructions + thinking + toolCalls + toolCalls + assistantResponse
     },
     toolUses: allToolUses
   }

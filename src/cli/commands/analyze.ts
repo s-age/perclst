@@ -58,7 +58,9 @@ function printJsonOutput(session: Session, summary: AnalysisSummary, printDetail
         status: session.metadata.status,
         turns_breakdown: {
           user_instructions: summary.turnsBreakdown.userInstructions,
-          tool_use: summary.turnsBreakdown.toolUse,
+          thinking: summary.turnsBreakdown.thinking,
+          tool_calls: summary.turnsBreakdown.toolCalls,
+          tool_results: summary.turnsBreakdown.toolResults,
           assistant_response: summary.turnsBreakdown.assistantResponse,
           total: summary.turnsBreakdown.total
         },
@@ -91,7 +93,9 @@ function printTextSummary(session: Session, summary: AnalysisSummary): void {
   const turnsTable = new Table({ style: { head: [], border: [] } })
   turnsTable.push(
     ['User Instructions', bd.userInstructions],
-    ['Tool Use', `${bd.toolUse} × 2`],
+    ['Thinking', bd.thinking],
+    ['Tool Calls', bd.toolCalls],
+    ['Tool Results', bd.toolResults],
     ['Assistant Response', bd.assistantResponse],
     ['Turns (total)', bd.total]
   )
@@ -103,11 +107,11 @@ function printTextSummary(session: Session, summary: AnalysisSummary): void {
     stdout.print(`    (none)`)
   } else {
     const toolTable = new Table({
-      head: ['', 'Tool'],
+      head: ['', '', 'Tool'],
       style: { head: [], border: [] }
     })
-    for (const t of toolUses) {
-      toolTable.push([t.isError ? '✗' : '✓', formatToolInput(t.name, t.input)])
+    for (const [i, t] of toolUses.entries()) {
+      toolTable.push([String(i + 1), t.isError ? '✗' : '✓', formatToolInput(t.name, t.input)])
     }
     stdout.print(toolTable.toString())
   }
