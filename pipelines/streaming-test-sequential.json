@@ -1,0 +1,16 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "task": "mcp__perclst__ts_get_references を src/infrastructures/tsParser.ts(detectFramework) に対して実行して結果をそのまま出力してください。",
+      "model": "haiku",
+      "allowed_tools": ["mcp__perclst__ts_analyze", "mcp__perclst__ts_get_references"]
+    },
+    {
+      "type": "agent",
+      "task": "mcp__perclst__ts_analyze を src/infrastructures/tsParser.ts(detectFramework) に対して実行して結果をそのまま出力してください。",
+      "model": "haiku",
+      "allowed_tools": ["mcp__perclst__ts_analyze", "mcp__perclst__ts_get_references"]
+    }
+  ]
+}

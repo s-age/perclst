@@ -19,6 +19,7 @@ import type { AgentStreamEvent } from '@src/types/agent'
 type RawRunOptions = {
   model?: string
   outputOnly?: boolean
+  batch?: boolean
   format?: string
 }
 
@@ -139,7 +140,44 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
 
     const input = parseRunOptions({ pipelinePath, ...options })
     const headBefore = getGitHead()
-    await executePipeline(input)
+
+    const useTUI = process.stdout.isTTY && !input.batch
+    if (useTUI) {
+      const absolutePath = resolve(input.pipelinePath)
+      let raw: unknown
+      try {
+        raw = JSON.parse(readFileSync(absolutePath, 'utf-8'))
+      } catch {
+        stderr.print(`Failed to read pipeline file: ${absolutePath}`)
+        process.exit(1)
+      }
+      const pipeline = parsePipeline(raw)
+      const { render } = await import('ink')
+      const React = (await import('react')).default
+      const { PipelineRunner } = await import('@src/cli/components/PipelineRunner.js')
+      const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)
+      const config = container.resolve<Config>(TOKENS.Config)
+      await new Promise<void>((resolve, reject) => {
+        const app = render(
+          React.createElement(PipelineRunner, {
+            pipeline,
+            options: { model: input.model },
+            pipelineService,
+            config,
+            onDone: () => {
+              app.unmount()
+              resolve()
+            },
+            onError: (err) => {
+              app.unmount()
+              reject(err)
+            }
+          })
+        )
+      })
+    } else {
+      await executePipeline(input)
+    }
     const headAfter = getGitHead()
     if (headBefore && headAfter && headBefore !== headAfter) {
       printGitDiffSummary(headBefore, headAfter)
