@@ -60,6 +60,22 @@ perclst
     └── TypeScript analysis tools (ts_analyze, ts_get_references, ts_get_types)
 ```
 
+## Architecture Rules
+
+> **MANDATORY — read `.claude/skills/arch/SKILL.md` before touching any file in `src/`.**
+>
+> That file defines the authoritative layer structure and unidirectional import rules for this codebase.
+> You are required to understand it, not just skim it.
+> Specifically, before writing or reviewing any code you must be able to answer:
+>
+> - Which layer owns this change (`cli` / `validators` / `services` / `domains` / `repositories` / `infrastructures`)?
+> - What may and must NOT this layer import?
+> - Does this change introduce a cross-layer import that the rules forbid?
+>
+> **Do not write a single line of code if you cannot answer all three.**
+> Ignorance of the import rules is not an excuse — violations are not fixable after the fact without
+> cascading refactors.
+
 ## How It Works
 
 1. **No API Key Required**: Uses `claude -p` internally
