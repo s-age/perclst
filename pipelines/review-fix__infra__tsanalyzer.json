@@ -1,6 +1,10 @@
 {
   "tasks": [
     {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-fix-infra-tsanalyzer"
+    },
+    {
       "type": "agent",
       "name": "review-initial-tsanalyzer",
       "task": "target_path: src/infrastructures/tsAnalyzer.ts\nng_output_path: .claude/tmp/review-fix-infra-tsanalyzer",
@@ -11,7 +15,8 @@
         "Bash",
         "mcp__perclst__ts_analyze",
         "mcp__perclst__ts_get_references",
-        "mcp__perclst__ts_get_types"
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
       ]
     },
     {
@@ -45,7 +50,8 @@
             "Bash",
             "mcp__perclst__ts_analyze",
             "mcp__perclst__ts_get_references",
-            "mcp__perclst__ts_get_types"
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
           ],
           "rejected": {
             "to": "implement-fix-tsanalyzer",

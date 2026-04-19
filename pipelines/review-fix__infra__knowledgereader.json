@@ -1,6 +1,10 @@
 {
   "tasks": [
     {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-fix-infra-knowledgereader"
+    },
+    {
       "type": "agent",
       "name": "review-initial-knowledgereader",
       "task": "target_path: src/infrastructures/knowledgeReader.ts\nng_output_path: .claude/tmp/review-fix-infra-knowledgereader",
@@ -11,7 +15,8 @@
         "Bash",
         "mcp__perclst__ts_analyze",
         "mcp__perclst__ts_get_references",
-        "mcp__perclst__ts_get_types"
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
       ]
     },
     {
@@ -45,7 +50,8 @@
             "Bash",
             "mcp__perclst__ts_analyze",
             "mcp__perclst__ts_get_references",
-            "mcp__perclst__ts_get_types"
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
           ],
           "rejected": {
             "to": "implement-fix-knowledgereader",
