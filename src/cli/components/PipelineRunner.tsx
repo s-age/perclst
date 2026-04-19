@@ -8,6 +8,7 @@ import type { AgentStreamEvent } from '@src/types/agent.js'
 
 type TaskState = {
   name?: string
+  command?: string
   taskType: 'agent' | 'script' | 'pipeline'
   status: 'pending' | 'running' | 'done' | 'failed' | 'retrying'
   retryCount?: number
@@ -23,7 +24,27 @@ type PipelineRunnerProps = {
   onError: (err: Error) => void
 }
 
-const MAX_STREAM_LINES = 15
+const MAX_STREAM_LINES = 20
+const SPINNER_INTERVAL_MS = 80
+
+function initTasks(pipeline: Pipeline): TaskState[] {
+  return pipeline.tasks.map((t) => ({
+    name: t.type !== 'script' ? t.name : undefined,
+    command: t.type === 'script' ? t.command : undefined,
+    taskType: t.type,
+    status: 'pending' as const
+  }))
+}
+
+function formatStreamLine(event: AgentStreamEvent): string {
+  if (event.type === 'thought') {
+    return `  ${event.thinking.slice(0, 100)}`
+  }
+  if (event.type === 'tool_use') {
+    return `  → ${event.name}`
+  }
+  return `  ← ${event.toolName}`
+}
 
 // eslint-disable-next-line max-lines-per-function
 export function PipelineRunner({
@@ -33,22 +54,22 @@ export function PipelineRunner({
   onDone,
   onError
 }: PipelineRunnerProps) {
-  const [tasks, setTasks] = useState<TaskState[]>([])
+  const [tasks, setTasks] = useState<TaskState[]>(() => initTasks(pipeline))
   const [streamLines, setStreamLines] = useState<string[]>([])
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [spinnerFrame, setSpinnerFrame] = useState(0)
 
-  // eslint-disable-next-line max-lines-per-function
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSpinnerFrame((f) => f + 1)
+    }, SPINNER_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     const onStreamEvent = (event: AgentStreamEvent) => {
-      let line: string
-      if (event.type === 'thought') {
-        line = `[thought] ${event.thinking.slice(0, 120)}`
-      } else if (event.type === 'tool_use') {
-        line = `[tool] ${event.name}`
-      } else {
-        line = `[result] ${event.toolName}`
-      }
+      const line = formatStreamLine(event)
       setStreamLines((prev) => [...prev.slice(-(MAX_STREAM_LINES - 1)), line])
     }
 
@@ -59,10 +80,9 @@ export function PipelineRunner({
         for await (const result of pipelineService.run(pipeline, runOptions, undefined as never)) {
           switch (result.kind) {
             case 'task_start':
-              setTasks((prev) => [
-                ...prev,
-                { name: result.name, taskType: result.taskType, status: 'running' }
-              ])
+              setTasks((prev) =>
+                prev.map((t, i) => (i === result.taskIndex ? { ...t, status: 'running' } : t))
+              )
               break
             case 'retry':
               setTasks((prev) =>
@@ -83,10 +103,10 @@ export function PipelineRunner({
               setTasks((prev) =>
                 prev.map((t, i) => (i === result.taskIndex ? { ...t, status: 'done' } : t))
               )
+              setStreamLines([])
               break
           }
         }
-        setStreamLines([])
         setDone(true)
         onDone()
       } catch (err) {
@@ -99,30 +119,56 @@ export function PipelineRunner({
     void run()
   }, [])
 
+  const runningIndex = tasks.findIndex((t) => t.status === 'running' || t.status === 'retrying')
+
   return (
-    <Box flexDirection="column">
-      <Text bold>Running pipeline — {pipeline.tasks.length} task(s)</Text>
-      {tasks.map((task, i) => (
-        <TaskRow
-          key={i}
-          name={task.name}
-          taskType={task.taskType}
-          status={task.status}
-          retryCount={task.retryCount}
-          maxRetries={task.maxRetries}
-        />
-      ))}
-      {!done && streamLines.length > 0 && (
-        <Box flexDirection="column" marginTop={1}>
-          {streamLines.map((line, i) => (
-            <Text key={i} color="gray">
-              {line}
-            </Text>
-          ))}
-        </Box>
-      )}
-      {done && <Text color="green">Pipeline complete.</Text>}
-      {error !== null && <Text color="red">Pipeline failed: {error}</Text>}
+    <Box flexDirection="row">
+      {/* Left 40%: Workflow overview */}
+      <Box flexDirection="column" width="40%" paddingRight={1}>
+        <Text bold>Workflow</Text>
+        <Text> </Text>
+        {tasks.map((task, i) => (
+          <TaskRow
+            key={i}
+            index={i}
+            name={task.name}
+            command={task.command}
+            taskType={task.taskType}
+            status={task.status}
+            retryCount={task.retryCount}
+            maxRetries={task.maxRetries}
+            spinnerFrame={spinnerFrame}
+          />
+        ))}
+        <Text> </Text>
+        {done && <Text color="green">✓ Complete ({tasks.length} tasks)</Text>}
+        {error !== null && <Text color="red">✗ Failed</Text>}
+      </Box>
+
+      {/* Right 60%: Execution output */}
+      <Box
+        flexDirection="column"
+        width="60%"
+        borderStyle="single"
+        borderTop={false}
+        borderBottom={false}
+        borderRight={false}
+        paddingLeft={1}
+      >
+        <Text bold>
+          Output
+          {runningIndex >= 0 && <Text color="gray"> — task {runningIndex + 1}</Text>}
+        </Text>
+        <Text> </Text>
+        {streamLines.length === 0 && !done && !error && <Text color="gray"> waiting...</Text>}
+        {streamLines.map((line, i) => (
+          <Text key={i} color="gray">
+            {line}
+          </Text>
+        ))}
+        {done && <Text color="green"> Pipeline complete.</Text>}
+        {error !== null && <Text color="red"> Error: {error}</Text>}
+      </Box>
     </Box>
   )
 }

@@ -1,41 +1,53 @@
 import React from 'react'
 import { Box, Text } from 'ink'
 
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+
 type TaskRowProps = {
+  index: number
   name?: string
+  command?: string
   taskType: 'agent' | 'script' | 'pipeline'
   status: 'pending' | 'running' | 'done' | 'failed' | 'retrying'
   retryCount?: number
   maxRetries?: number
+  spinnerFrame?: number
   depth?: number
 }
 
 export function TaskRow({
+  index,
   name,
+  command,
   taskType,
   status,
   retryCount,
   maxRetries,
+  spinnerFrame = 0,
   depth = 0
 }: TaskRowProps) {
   const indent = '  '.repeat(depth)
-  const label = name ? `${name} [${taskType}]` : `[${taskType}]`
+  const num = `${index + 1}.`
+  const label = name ?? command ?? `[${taskType}]`
+  const typeTag = `[${taskType}]`
 
   if (status === 'pending') {
     return (
       <Box>
         <Text color="gray">
-          {indent}○ {label}
+          {indent}○ {num} {label} {typeTag}
         </Text>
       </Box>
     )
   }
 
   if (status === 'running') {
+    const spinner = SPINNER_FRAMES[spinnerFrame % SPINNER_FRAMES.length]
     return (
       <Box>
         <Text color="yellow">
-          {indent}● {label} — running
+          {indent}
+          {spinner} {num} {label} {typeTag}
         </Text>
       </Box>
     )
@@ -45,7 +57,7 @@ export function TaskRow({
     return (
       <Box>
         <Text color="green">
-          {indent}✓ {label}
+          {indent}✓ {num} {label} {typeTag}
         </Text>
       </Box>
     )
@@ -55,7 +67,7 @@ export function TaskRow({
     return (
       <Box>
         <Text color="red">
-          {indent}✗ {label} — failed
+          {indent}✗ {num} {label} {typeTag}
         </Text>
       </Box>
     )
@@ -65,7 +77,10 @@ export function TaskRow({
   return (
     <Box>
       <Text color="yellow">
-        {indent}↺ {label} — retry {retryCount}/{maxRetries}
+        {indent}↺ {num} {label} {typeTag}{' '}
+        <Text color="gray">
+          retry {retryCount}/{maxRetries}
+        </Text>
       </Text>
     </Box>
   )
