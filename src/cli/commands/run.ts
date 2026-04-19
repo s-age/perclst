@@ -1,5 +1,7 @@
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
+import { execSync } from 'child_process'
+import * as readline from 'readline'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { PipelineService } from '@src/services/pipelineService'
@@ -50,40 +52,98 @@ function printTaskResult(
   }
 }
 
+function getGitDiffStat(): string | null {
+  try {
+    const staged = execSync('git diff --cached --stat', { encoding: 'utf-8' }).trim()
+    const unstaged = execSync('git diff --stat', { encoding: 'utf-8' }).trim()
+    const combined = [staged, unstaged].filter(Boolean).join('\n')
+    return combined || null
+  } catch {
+    return null
+  }
+}
+
+function getGitHead(): string | null {
+  try {
+    return execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim()
+  } catch {
+    return null
+  }
+}
+
+function printGitDiffSummary(fromHash: string, toHash: string): void {
+  try {
+    const stat = execSync(`git diff ${fromHash}...${toHash} --stat`, { encoding: 'utf-8' }).trim()
+    if (!stat) return
+    stdout.print(
+      `\nChanges committed during pipeline (${fromHash.slice(0, 7)}...${toHash.slice(0, 7)}):`
+    )
+    stdout.print(stat)
+    stdout.print(`\nTo inspect: git diff ${fromHash}...${toHash}`)
+  } catch {
+    // not in a git repo or no diff available
+  }
+}
+
+function confirm(question: string): Promise<boolean> {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stderr })
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close()
+      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes')
+    })
+  })
+}
+
+async function executePipeline(input: RunPipelineInput): Promise<void> {
+  const absolutePath = resolve(input.pipelinePath)
+  let raw: unknown
+  try {
+    raw = JSON.parse(readFileSync(absolutePath, 'utf-8'))
+  } catch {
+    stderr.print(`Failed to read pipeline file: ${absolutePath}`)
+    process.exit(1)
+  }
+
+  const pipeline = parsePipeline(raw)
+  const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)
+  const config = container.resolve<Config>(TOKENS.Config)
+
+  const streaming = !input.outputOnly && input.format !== 'json'
+  const onStreamEvent = streaming
+    ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+    : undefined
+
+  stdout.print(`Running pipeline: ${pipeline.tasks.length} task(s)`)
+
+  let count = 0
+  for await (const result of pipelineService.run(pipeline, { model: input.model, onStreamEvent })) {
+    count++
+    printTaskResult(result, input, config, streaming)
+  }
+
+  stdout.print(`\nPipeline complete. ${count} task(s) finished.`)
+}
+
 export async function runCommand(pipelinePath: string, options: RawRunOptions) {
   try {
+    const diffStat = getGitDiffStat()
+    if (diffStat) {
+      stderr.print(`\nUncommitted changes detected:\n${diffStat}\n`)
+      const ok = await confirm('Run pipeline with uncommitted changes? [y/N] ')
+      if (!ok) {
+        stdout.print('Aborted.')
+        process.exit(0)
+      }
+    }
+
     const input = parseRunOptions({ pipelinePath, ...options })
-
-    const absolutePath = resolve(input.pipelinePath)
-    let raw: unknown
-    try {
-      raw = JSON.parse(readFileSync(absolutePath, 'utf-8'))
-    } catch {
-      stderr.print(`Failed to read pipeline file: ${absolutePath}`)
-      process.exit(1)
+    const headBefore = getGitHead()
+    await executePipeline(input)
+    const headAfter = getGitHead()
+    if (headBefore && headAfter && headBefore !== headAfter) {
+      printGitDiffSummary(headBefore, headAfter)
     }
-
-    const pipeline = parsePipeline(raw)
-    const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)
-    const config = container.resolve<Config>(TOKENS.Config)
-
-    const streaming = !input.outputOnly && input.format !== 'json'
-    const onStreamEvent = streaming
-      ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
-      : undefined
-
-    stdout.print(`Running pipeline: ${pipeline.tasks.length} task(s)`)
-
-    let count = 0
-    for await (const result of pipelineService.run(pipeline, {
-      model: input.model,
-      onStreamEvent
-    })) {
-      count++
-      printTaskResult(result, input, config, streaming)
-    }
-
-    stdout.print(`\nPipeline complete. ${count} task(s) finished.`)
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)
