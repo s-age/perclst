@@ -5,6 +5,14 @@ import { dirname, join, basename, extname, resolve } from 'path'
 // Public: test file discovery — pure FS traversal
 // ---------------------------------------------------------------------------
 
+export function canonicalTestFilePath(targetFilePath: string): string {
+  const abs = resolve(targetFilePath)
+  const dir = dirname(abs)
+  const stem = basename(abs, extname(abs))
+  const ext = extname(abs)
+  return join(dir, '__tests__', `${stem}.test${ext}`)
+}
+
 export function findTestFile(targetFilePath: string): string | null {
   const abs = resolve(targetFilePath)
   const dir = dirname(abs)

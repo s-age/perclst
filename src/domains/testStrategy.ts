@@ -135,6 +135,8 @@ export class TestStrategyDomain implements ITestStrategyDomain {
     return {
       target_file_path: targetFilePath,
       corresponding_test_file: resolvedTestFile,
+      test_file_exists: resolvedTestFile !== null,
+      expected_test_file_path: resolvedTestFile ?? this.repo.canonicalTestFilePath(targetFilePath),
       strategies,
       overall_recommendation: buildRecommendation(strategies)
     }
@@ -144,6 +146,8 @@ export class TestStrategyDomain implements ITestStrategyDomain {
     return {
       target_file_path: targetFilePath,
       corresponding_test_file: null,
+      test_file_exists: false,
+      expected_test_file_path: '',
       strategies: [],
       overall_recommendation: '',
       error
