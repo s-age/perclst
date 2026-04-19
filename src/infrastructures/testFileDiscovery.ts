@@ -1,14 +1,15 @@
 import { existsSync, readdirSync } from 'fs'
-import { dirname, join, basename, extname } from 'path'
+import { dirname, join, basename, extname, resolve } from 'path'
 
 // ---------------------------------------------------------------------------
 // Public: test file discovery — pure FS traversal
 // ---------------------------------------------------------------------------
 
 export function findTestFile(targetFilePath: string): string | null {
-  const dir = dirname(targetFilePath)
-  const stem = basename(targetFilePath, extname(targetFilePath))
-  const ext = extname(targetFilePath)
+  const abs = resolve(targetFilePath)
+  const dir = dirname(abs)
+  const stem = basename(abs, extname(abs))
+  const ext = extname(abs)
 
   const nearby = [
     join(dir, `${stem}.test${ext}`),
