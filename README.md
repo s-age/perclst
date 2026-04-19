@@ -23,7 +23,7 @@ When you start running Claude Code seriously with `claude -p` (headless mode), y
 - **Rewind by Number**: Branch from any past assistant response by count rather than UUID — `--list` previews each turn so you can pinpoint where to diverge. Index `0` forks at the latest turn (no truncation); higher indices step further back.
 - **Permission Prompts in Headless Mode**: In headless (`claude -p`) sessions, permission requests have no UI to surface them. The bundled `ask_permission` MCP tool intercepts these requests and routes them to the terminal via `/dev/tty`, so you can approve or deny each tool call interactively without pre-approving everything upfront.
 - **Session Management**: Create, resume, fork, and manage agent sessions
-- **Session Analysis**: Inspect turn breakdown, tool usage, and token stats from Claude Code's jsonl history
+- **Session Analysis**: Inspect turn breakdown, tool usage, and token stats from Claude Code's jsonl history — the visibility layer that addresses [Agent behavior is opaque](#the-problem) above. See [Why Turn Count Matters](docs/why-turn-count-matters.md) for a concrete example of the feedback loop this enables.
 - **Local Storage**: Sessions stored in `~/.perclst/sessions/` by default
 - **MCP Server**: TypeScript analysis tools for Claude Code
 - **Procedure System**: Define agent behavior via system prompts
