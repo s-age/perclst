@@ -1,3 +1,8 @@
+export type KnowledgeFileEntry = {
+  relativePath: string
+  content: string
+}
+
 export type KnowledgeMatch = {
   file_path: string
   title: string

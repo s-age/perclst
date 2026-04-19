@@ -1,9 +1,7 @@
 import type { IKnowledgeSearchDomain } from './ports/knowledgeSearch'
+import type { IKnowledgeSearchRepository } from '@src/repositories/ports/knowledgeSearch'
 import type {
-  IKnowledgeSearchRepository,
-  KnowledgeFileEntry
-} from '@src/repositories/ports/knowledgeSearch'
-import type {
+  KnowledgeFileEntry,
   KnowledgeMatch,
   KnowledgeSearchOptions,
   KnowledgeSearchResult
