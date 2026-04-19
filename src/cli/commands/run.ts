@@ -8,10 +8,11 @@ import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 import { stdout, stderr } from '@src/utils/output'
-import { printResponse } from '@src/cli/display'
+import { printResponse, printStreamEvent } from '@src/cli/display'
 import { parseRunOptions, parsePipeline } from '@src/validators/cli/runPipeline'
 import type { RunPipelineInput } from '@src/validators/cli/runPipeline'
 import type { Config } from '@src/types/config'
+import type { AgentStreamEvent } from '@src/types/agent'
 
 type RawRunOptions = {
   model?: string
@@ -22,7 +23,8 @@ type RawRunOptions = {
 function printTaskResult(
   result: PipelineTaskResult,
   input: RunPipelineInput,
-  config: Config
+  config: Config,
+  streaming: boolean
 ): void {
   if (result.kind === 'script') {
     const status = result.result.exitCode === 0 ? 'ok' : `exit ${result.result.exitCode}`
@@ -36,7 +38,12 @@ function printTaskResult(
     stdout.print(`\n${label} — session: ${result.sessionId}`)
     printResponse(
       result.response,
-      { outputOnly: input.outputOnly, format: input.format },
+      {
+        outputOnly: input.outputOnly,
+        format: input.format,
+        silentThoughts: streaming,
+        silentToolResponse: streaming
+      },
       config.display,
       { sessionId: result.sessionId }
     )
@@ -60,12 +67,20 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
     const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)
     const config = container.resolve<Config>(TOKENS.Config)
 
+    const streaming = !input.outputOnly && input.format !== 'json'
+    const onStreamEvent = streaming
+      ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+      : undefined
+
     stdout.print(`Running pipeline: ${pipeline.tasks.length} task(s)`)
 
     let count = 0
-    for await (const result of pipelineService.run(pipeline, { model: input.model })) {
+    for await (const result of pipelineService.run(pipeline, {
+      model: input.model,
+      onStreamEvent
+    })) {
       count++
-      printTaskResult(result, input, config)
+      printTaskResult(result, input, config, streaming)
     }
 
     stdout.print(`\nPipeline complete. ${count} task(s) finished.`)

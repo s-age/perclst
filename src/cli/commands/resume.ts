@@ -5,8 +5,9 @@ import { SessionService } from '@src/services/sessionService'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
-import { printResponse } from '@src/cli/display'
+import { printResponse, printStreamEvent } from '@src/cli/display'
 import type { Config } from '@src/types/config'
+import type { AgentStreamEvent } from '@src/types/agent'
 import { parseResumeSession } from '@src/validators/cli/resumeSession'
 
 type RawResumeOptions = {
@@ -42,15 +43,26 @@ export async function resumeCommand(
     const allowedTools = input.allowedTools ?? config.allowed_tools
     const disallowedTools = input.disallowedTools ?? config.disallowed_tools
 
+    const streaming = !input.outputOnly && input.format !== 'json'
+    const onStreamEvent = streaming
+      ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+      : undefined
+
     const response = await agentService.resume(resolvedId, input.instruction, {
       allowedTools,
       disallowedTools,
       model: input.model,
       maxTurns,
-      maxContextTokens
+      maxContextTokens,
+      onStreamEvent
     })
 
-    printResponse(response, input, config.display, { sessionId: resolvedId })
+    printResponse(
+      response,
+      { ...input, silentThoughts: streaming, silentToolResponse: streaming },
+      config.display,
+      { sessionId: resolvedId }
+    )
 
     stdout.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)
   } catch (error) {

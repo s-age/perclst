@@ -20,10 +20,16 @@ export type AgentResponse = {
   tool_history?: ToolUseRecord[]
 }
 
+export type AgentStreamEvent =
+  | { type: 'thought'; thinking: string }
+  | { type: 'tool_use'; name: string; input: unknown }
+  | { type: 'tool_result'; toolName: string; result: string }
+
 export type ExecuteOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
   sessionFilePath?: string
   resumeSessionAt?: string
+  onStreamEvent?: (event: AgentStreamEvent) => void
 }

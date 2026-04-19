@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, unlinkSync } from 'fs'
 import { resolve } from 'path'
-import type { AgentResponse, ExecuteOptions } from '@src/types/agent'
+import type { AgentResponse, ExecuteOptions, AgentStreamEvent } from '@src/types/agent'
 import type {
   Pipeline,
   AgentPipelineTask,
@@ -20,6 +20,7 @@ export type PipelineRunOptions = {
   model?: string
   maxTurns?: number
   maxContextTokens?: number
+  onStreamEvent?: (event: AgentStreamEvent) => void
 }
 
 export type PipelineTaskResult =
@@ -179,7 +180,8 @@ export class PipelineService {
     return {
       allowedTools: task.allowed_tools ?? options.allowedTools,
       disallowedTools: task.disallowed_tools ?? options.disallowedTools,
-      model: task.model ?? options.model
+      model: task.model ?? options.model,
+      onStreamEvent: options.onStreamEvent
     }
   }
 

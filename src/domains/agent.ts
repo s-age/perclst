@@ -37,7 +37,8 @@ export class AgentDomain implements IAgentDomain {
     const raw = await this.claudeCodeRepo.dispatch(
       isResume
         ? { type: 'resume', ...baseArgs }
-        : { type: 'start', system: systemPrompt, ...baseArgs }
+        : { type: 'start', system: systemPrompt, ...baseArgs },
+      options.onStreamEvent
     )
 
     if (!raw.content) {
@@ -61,19 +62,22 @@ export class AgentDomain implements IAgentDomain {
     instruction: string,
     options: ExecuteOptions = {}
   ): Promise<AgentResponse> {
-    const raw = await this.claudeCodeRepo.dispatch({
-      type: 'fork',
-      originalClaudeSessionId: originalSession.claude_session_id,
-      originalWorkingDir: originalSession.working_dir,
-      sessionId: newSession.claude_session_id,
-      prompt: instruction,
-      resumeSessionAt: options.resumeSessionAt,
-      model: options.model ?? this.model,
-      allowedTools: options.allowedTools,
-      disallowedTools: options.disallowedTools,
-      workingDir: newSession.working_dir,
-      sessionFilePath: options.sessionFilePath
-    })
+    const raw = await this.claudeCodeRepo.dispatch(
+      {
+        type: 'fork',
+        originalClaudeSessionId: originalSession.claude_session_id,
+        originalWorkingDir: originalSession.working_dir,
+        sessionId: newSession.claude_session_id,
+        prompt: instruction,
+        resumeSessionAt: options.resumeSessionAt,
+        model: options.model ?? this.model,
+        allowedTools: options.allowedTools,
+        disallowedTools: options.disallowedTools,
+        workingDir: newSession.working_dir,
+        sessionFilePath: options.sessionFilePath
+      },
+      options.onStreamEvent
+    )
 
     if (!raw.content) {
       throw new APIError('Empty response from Claude CLI')
