@@ -170,7 +170,10 @@ Execute a pipeline of agent tasks defined in a JSON file. Tasks run serially. If
 ```bash
 perclst run pipeline.json
 perclst run pipeline.json --output-only
+perclst run pipeline.json --batch   # disable TUI (plain text output)
 ```
+
+By default, `run` opens an interactive TUI: the left pane tracks task progress, the right pane streams each task's output, and permission requests appear in the bottom pane. The TUI is automatically disabled when `--batch` is specified or when stdout is not a TTY (e.g. CI, piped output).
 
 Two task types are supported: `agent` and `script`.
 

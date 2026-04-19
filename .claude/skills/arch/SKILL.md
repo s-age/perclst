@@ -17,6 +17,7 @@ paths:
 - **TypeScript analysis**: `ts-morph` **v27**
 - **Validation**: `zod` **v4** — confined to `src/validators/` only
   - Use `ZodError.issues` (not `.errors` — removed in v4)
+- **TUI**: `ink` **v7** — React-based terminal UI renderer
 - **Colors**: `ansis` **v4**
 - **Tables**: `cli-table3` **v0.6**
 - **Date**: `dayjs` **v1.11** — wrapped via `src/utils/date.ts`
