@@ -11,6 +11,7 @@ const runOptionsSchema = schema({
   pipelinePath: stringRule({ required: true }),
   model: stringRule().optional(),
   outputOnly: booleanRule().optional(),
+  batch: booleanRule().optional(),
   format: formatRule()
 })
 

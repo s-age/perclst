@@ -45,6 +45,25 @@ describe('parseRunOptions', () => {
   it('should throw ValidationError when outputOnly receives a string', () => {
     expect(() => parseRunOptions({ ...minimal, outputOnly: 'yes' })).toThrow(ValidationError)
   })
+
+  it('should parse batch true when provided', () => {
+    const result = parseRunOptions({ ...minimal, batch: true })
+    expect(result.batch).toBe(true)
+  })
+
+  it('should parse batch false when provided', () => {
+    const result = parseRunOptions({ ...minimal, batch: false })
+    expect(result.batch).toBe(false)
+  })
+
+  it('should leave batch undefined when not provided', () => {
+    const result = parseRunOptions(minimal)
+    expect(result.batch).toBeUndefined()
+  })
+
+  it('should throw ValidationError when batch receives a string', () => {
+    expect(() => parseRunOptions({ ...minimal, batch: 'yes' })).toThrow(ValidationError)
+  })
 })
 
 describe('parsePipeline', () => {
