@@ -1,7 +1,4 @@
-export type KnowledgeFileEntry = {
-  relativePath: string
-  content: string
-}
+import type { KnowledgeFileEntry } from '@src/types/knowledgeSearch'
 
 export type IKnowledgeSearchRepository = {
   loadAll(includeDraft: boolean): KnowledgeFileEntry[]
