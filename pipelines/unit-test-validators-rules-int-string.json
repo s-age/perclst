@@ -1,0 +1,124 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "unit-test-validators-rules-int",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-validators-rules-int",
+          "task": "target_file_path: src/validators/rules/int.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-validators-rules-int",
+          "task": "target_file_path: src/validators/rules/int.ts\nng_output_path: .claude/tmp/review-unit-test-validators-rules-int",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-int",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-int",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-unit-test-validators-rules-int",
+          "task": "All tests pass and the review is complete. Commit your changes with an appropriate conventional commit message (e.g. test(validators): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-validators-rules-string",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-validators-rules-string",
+          "task": "target_file_path: src/validators/rules/string.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-validators-rules-string",
+          "task": "target_file_path: src/validators/rules/string.ts\nng_output_path: .claude/tmp/review-unit-test-validators-rules-string",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash", "mcp__perclst__ts_test_strategist"],
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-string",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-string",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-unit-test-validators-rules-string",
+          "task": "All tests pass and the review is complete. Commit your changes with an appropriate conventional commit message (e.g. test(validators): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "script",
+      "command": "perclst curate --output-only"
+    },
+    {
+      "type": "agent",
+      "name": "commit-curate",
+      "task": "Commit any new or modified files under knowledge/ with a conventional commit message (e.g. chore: curate knowledges).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
