@@ -20,6 +20,13 @@ export default tseslint.config(
     }
   },
   {
+    // TSX: JSX makes render functions longer, raise the limit
+    files: ['**/*.tsx'],
+    rules: {
+      'max-lines-per-function': ['warn', { max: 75, skipBlankLines: true, skipComments: true }]
+    }
+  },
+  {
     // Test files: suites naturally grow long, so relax function-length limit
     files: ['**/__tests__/**', '**/*.test.ts'],
     rules: {

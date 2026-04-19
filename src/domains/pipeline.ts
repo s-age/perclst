@@ -1,8 +1,15 @@
 import type { AgentResponse, ExecuteOptions } from '@src/types/agent'
-import type { AgentPipelineTask, RejectedContext } from '@src/types/pipeline'
+import type {
+  AgentPipelineTask,
+  NestedPipelineTask,
+  Pipeline,
+  RejectedContext
+} from '@src/types/pipeline'
 import type { Session } from '@src/types/session'
 import type { IAgentDomain } from '@src/domains/ports/agent'
-import type { IPipelineDomain } from '@src/domains/ports/pipeline'
+import type { IPipelineDomain, RejectionResult } from '@src/domains/ports/pipeline'
+import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
+import { getRejectionFeedback, getCwd } from '@src/repositories/rejectionFeedback'
 import { debug } from '@src/utils/output'
 
 const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Please:
@@ -22,6 +29,42 @@ export class PipelineDomain implements IPipelineDomain {
       '---',
       rejected.feedback.trim()
     ].join('\n')
+  }
+
+  async getRejectionFeedback(taskName: string): Promise<string | undefined> {
+    return getRejectionFeedback(taskName)
+  }
+
+  getWorkingDirectory(): string {
+    return getCwd()
+  }
+
+  resolveRejection(
+    pipeline: Pipeline,
+    toName: string,
+    taskIndex: number,
+    currentCount: number,
+    maxRetries: number,
+    feedback: string
+  ): RejectionResult {
+    const newCount = currentCount + 1
+    if (newCount > maxRetries) throw new PipelineMaxRetriesError(taskIndex, maxRetries)
+
+    const targetIndex = pipeline.tasks.findIndex(
+      (t) => (t.type === 'agent' || t.type === 'pipeline') && t.name === toName
+    )
+    if (targetIndex === -1) throw new Error(`Rejection target '${toName}' not found in pipeline`)
+
+    const targetTask = pipeline.tasks[targetIndex]
+    const task =
+      targetTask.type === 'agent'
+        ? targetTask
+        : (((targetTask as NestedPipelineTask).tasks.find(
+            (t) => t.type === 'agent'
+          ) as AgentPipelineTask) ?? ({ type: 'agent', task: '' } as AgentPipelineTask))
+
+    debug.print(`Rejecting to '${toName}' (retry ${newCount}/${maxRetries})`)
+    return { targetIndex, context: { retry_count: newCount, task, feedback }, newCount }
   }
 
   async runWithLimit(

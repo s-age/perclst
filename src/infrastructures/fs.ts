@@ -34,3 +34,7 @@ export function readText(path: string): string {
 export function homeDir(): string {
   return homedir()
 }
+
+export function currentWorkingDir(): string {
+  return process.cwd()
+}

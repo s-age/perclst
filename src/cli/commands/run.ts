@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
-import { resolve } from 'path'
+import { tmpdir } from 'os'
+import { resolve, join } from 'path'
 import { execSync } from 'child_process'
 import * as readline from 'readline'
 import { container } from '@src/core/di/container'
@@ -8,6 +9,7 @@ import { PipelineService } from '@src/services/pipelineService'
 import type { PipelineTaskResult } from '@src/services/pipelineService'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
+import { APIError } from '@src/errors/apiError'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 import { stdout, stderr } from '@src/utils/output'
 import { printResponse, printStreamEvent } from '@src/cli/display'
@@ -19,6 +21,7 @@ import type { AgentStreamEvent } from '@src/types/agent'
 type RawRunOptions = {
   model?: string
   outputOnly?: boolean
+  batch?: boolean
   format?: string
 }
 
@@ -95,6 +98,53 @@ function confirm(question: string): Promise<boolean> {
   })
 }
 
+async function checkUncommittedChanges(): Promise<void> {
+  const diffStat = getGitDiffStat()
+  if (!diffStat) return
+  stderr.print(`\nUncommitted changes detected:\n${diffStat}\n`)
+  const ok = await confirm('Run pipeline with uncommitted changes? [y/N] ')
+  if (!ok) {
+    stdout.print('Aborted.')
+    process.exit(0)
+  }
+}
+
+async function executeTUIPipeline(input: RunPipelineInput): Promise<void> {
+  process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
+  const absolutePath = resolve(input.pipelinePath)
+  let raw: unknown
+  try {
+    raw = JSON.parse(readFileSync(absolutePath, 'utf-8'))
+  } catch {
+    stderr.print(`Failed to read pipeline file: ${absolutePath}`)
+    process.exit(1)
+  }
+  const pipeline = parsePipeline(raw)
+  const { render } = await import('ink')
+  const React = (await import('react')).default
+  const { PipelineRunner } = await import('@src/cli/components/PipelineRunner.js')
+  const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)
+  const config = container.resolve<Config>(TOKENS.Config)
+  await new Promise<void>((resolve, reject) => {
+    const app = render(
+      React.createElement(PipelineRunner, {
+        pipeline,
+        options: { model: input.model },
+        pipelineService,
+        config,
+        onDone: () => {
+          app.unmount()
+          resolve()
+        },
+        onError: (err) => {
+          app.unmount()
+          reject(err)
+        }
+      })
+    )
+  })
+}
+
 async function executePipeline(input: RunPipelineInput): Promise<void> {
   const absolutePath = resolve(input.pipelinePath)
   let raw: unknown
@@ -127,19 +177,17 @@ async function executePipeline(input: RunPipelineInput): Promise<void> {
 
 export async function runCommand(pipelinePath: string, options: RawRunOptions) {
   try {
-    const diffStat = getGitDiffStat()
-    if (diffStat) {
-      stderr.print(`\nUncommitted changes detected:\n${diffStat}\n`)
-      const ok = await confirm('Run pipeline with uncommitted changes? [y/N] ')
-      if (!ok) {
-        stdout.print('Aborted.')
-        process.exit(0)
-      }
-    }
+    await checkUncommittedChanges()
 
     const input = parseRunOptions({ pipelinePath, ...options })
     const headBefore = getGitHead()
-    await executePipeline(input)
+
+    if (process.stdout.isTTY && !input.batch) {
+      await executeTUIPipeline(input)
+    } else {
+      await executePipeline(input)
+    }
+
     const headAfter = getGitHead()
     if (headBefore && headAfter && headBefore !== headAfter) {
       printGitDiffSummary(headBefore, headAfter)
@@ -152,6 +200,8 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
     } else if (error instanceof RateLimitError) {
       const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
       stderr.print(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
+    } else if (error instanceof APIError) {
+      stderr.print(`Pipeline failed: ${error.message}`)
     } else {
       stderr.print('Pipeline failed', error as Error)
     }
