@@ -1,0 +1,106 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "unit-test-claude-session-parser",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-claude-session-parser",
+          "task": "target_file_path: repositories/parsers/claudeSessionParser.ts\nWhen all tests pass and the review is accepted, commit your changes with an appropriate conventional commit message (e.g. test(repositories): ...).",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-claude-session-parser",
+          "task": "target_file_path: repositories/parsers/claudeSessionParser.ts\nng_output_path: .claude/tmp/review-unit-test-claude-session-parser",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-claude-session-parser",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-claude-session-parser",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-ts-parser",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-ts-parser",
+          "task": "target_file_path: repositories/parsers/tsParser.ts\nWhen all tests pass and the review is accepted, commit your changes with an appropriate conventional commit message (e.g. test(repositories): ...).",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-ts-parser",
+          "task": "target_file_path: repositories/parsers/tsParser.ts\nng_output_path: .claude/tmp/review-unit-test-ts-parser",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-ts-parser",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-ts-parser",
+            "max_retries": 3
+          }
+        }
+      ]
+    }
+  ]
+}
