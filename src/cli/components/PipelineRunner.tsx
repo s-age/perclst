@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Text } from 'ink'
+import { Box, Text, useStdout } from 'ink'
 import { TaskRow } from '@src/cli/components/TaskRow.js'
 import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService.js'
 import type { Pipeline } from '@src/types/pipeline.js'
@@ -24,8 +24,9 @@ type PipelineRunnerProps = {
   onError: (err: Error) => void
 }
 
-const MAX_STREAM_LINES = 20
 const SPINNER_INTERVAL_MS = 80
+// rows reserved: header(1) + blank(1) + status(1)
+const STREAM_HEADER_ROWS = 3
 
 function initTasks(pipeline: Pipeline): TaskState[] {
   return pipeline.tasks.map((t) => ({
@@ -54,11 +55,16 @@ export function PipelineRunner({
   onDone,
   onError
 }: PipelineRunnerProps) {
+  const { stdout } = useStdout()
+  const termRows = stdout.rows ?? 24
+
   const [tasks, setTasks] = useState<TaskState[]>(() => initTasks(pipeline))
   const [streamLines, setStreamLines] = useState<string[]>([])
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [spinnerFrame, setSpinnerFrame] = useState(0)
+
+  const streamCapacity = Math.max(1, termRows - STREAM_HEADER_ROWS)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -70,7 +76,7 @@ export function PipelineRunner({
   useEffect(() => {
     const onStreamEvent = (event: AgentStreamEvent) => {
       const line = formatStreamLine(event)
-      setStreamLines((prev) => [...prev.slice(-(MAX_STREAM_LINES - 1)), line])
+      setStreamLines((prev) => [...prev.slice(-(streamCapacity - 1)), line])
     }
 
     const runOptions: PipelineRunOptions = { ...options, onStreamEvent }
@@ -122,7 +128,7 @@ export function PipelineRunner({
   const runningIndex = tasks.findIndex((t) => t.status === 'running' || t.status === 'retrying')
 
   return (
-    <Box flexDirection="row">
+    <Box flexDirection="row" height={termRows}>
       {/* Left 40%: Workflow overview */}
       <Box flexDirection="column" width="40%" paddingRight={1}>
         <Text bold>Workflow</Text>
