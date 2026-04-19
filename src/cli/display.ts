@@ -1,5 +1,5 @@
 import ansis from 'ansis'
-import type { AgentResponse } from '@src/types/agent'
+import type { AgentResponse, AgentStreamEvent } from '@src/types/agent'
 import type { DisplayConfig } from '@src/types/config'
 import type { DisplayOptions } from '@src/types/display'
 import { DEFAULT_HEADER_COLOR, CONTEXT_WINDOW_SIZE } from '@src/constants/config'
@@ -82,6 +82,18 @@ function formatToolResult(result: string): string {
           .join('\n')
       : '')
   )
+}
+
+export function printStreamEvent(event: AgentStreamEvent, displayConfig?: DisplayConfig): void {
+  const { header, dim, toolLabel } = makeDisplay(displayConfig)
+  if (event.type === 'thought') {
+    stdout.print(header('Thinking'))
+    stdout.print(dim(event.thinking))
+  } else if (event.type === 'tool_use') {
+    stdout.print(`\n${toolLabel(event.name)} input: ${JSON.stringify(event.input)}`)
+  } else if (event.type === 'tool_result') {
+    stdout.print(`         result: ${formatToolResult(event.result)}`)
+  }
 }
 
 function printJsonResponse(response: AgentResponse, extra?: PrintResponseExtra): void {

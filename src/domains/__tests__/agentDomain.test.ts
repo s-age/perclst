@@ -51,7 +51,8 @@ describe('AgentDomain', () => {
         type: 'start',
         system: 'You are a conductor.',
         prompt: 'Hello'
-      })
+      }),
+      undefined
     )
   })
 
@@ -65,7 +66,8 @@ describe('AgentDomain', () => {
       expect.objectContaining({
         type: 'start',
         system: undefined
-      })
+      }),
+      undefined
     )
   })
 
@@ -76,7 +78,8 @@ describe('AgentDomain', () => {
       expect.objectContaining({
         type: 'resume',
         prompt: 'Continue'
-      })
+      }),
+      undefined
     )
   })
 
@@ -86,7 +89,8 @@ describe('AgentDomain', () => {
     expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'claude-opus-4-6'
-      })
+      }),
+      undefined
     )
   })
 })

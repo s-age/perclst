@@ -4,8 +4,9 @@ import { AgentService } from '@src/services/agentService'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
-import { printResponse } from '@src/cli/display'
+import { printResponse, printStreamEvent } from '@src/cli/display'
 import type { Config } from '@src/types/config'
+import type { AgentStreamEvent } from '@src/types/agent'
 import { parseStartSession } from '@src/validators/cli/startSession'
 
 type RawStartOptions = {
@@ -38,15 +39,32 @@ export async function startCommand(task: string, options: RawStartOptions) {
     const allowedTools = input.allowedTools ?? config.allowed_tools
     const disallowedTools = input.disallowedTools ?? config.disallowed_tools
 
+    const streaming = !input.outputOnly && input.format !== 'json'
+    const onStreamEvent = streaming
+      ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+      : undefined
+
     const { sessionId, response } = await agentService.start(
       input.task,
       { name: input.name, procedure: input.procedure, tags: input.tags },
-      { allowedTools, disallowedTools, model: input.model, maxTurns, maxContextTokens }
+      {
+        allowedTools,
+        disallowedTools,
+        model: input.model,
+        maxTurns,
+        maxContextTokens,
+        onStreamEvent
+      }
     )
 
     stdout.print(`Session created: ${sessionId}`)
 
-    printResponse(response, input, config.display, { sessionId })
+    printResponse(
+      response,
+      { ...input, silentThoughts: streaming, silentToolResponse: streaming },
+      config.display,
+      { sessionId }
+    )
 
     stdout.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {

@@ -1,4 +1,5 @@
 import type { ClaudeAction, RawOutput } from '@src/types/claudeCode'
+import type { AgentStreamEvent } from '@src/types/agent'
 
 export type IProcedureRepository = {
   load(name: string): string
@@ -6,5 +7,8 @@ export type IProcedureRepository = {
 }
 
 export type IClaudeCodeRepository = {
-  dispatch(action: ClaudeAction): Promise<RawOutput>
+  dispatch(
+    action: ClaudeAction,
+    onStreamEvent?: (event: AgentStreamEvent) => void
+  ): Promise<RawOutput>
 }

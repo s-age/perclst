@@ -1,4 +1,4 @@
-import type { AgentResponse } from '@src/types/agent'
+import type { AgentResponse, AgentStreamEvent } from '@src/types/agent'
 import type { Session, CreateSessionParams } from '@src/types/session'
 import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { ISessionDomain } from '@src/domains/ports/session'
@@ -15,6 +15,7 @@ export type AgentRunOptions = {
   model?: string
   maxTurns?: number
   maxContextTokens?: number
+  onStreamEvent?: (event: AgentStreamEvent) => void
 }
 
 export type StartResult = {
