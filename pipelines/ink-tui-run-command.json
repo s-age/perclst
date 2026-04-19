@@ -1,0 +1,282 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "npm install ink react @types/react"
+    },
+    {
+      "type": "agent",
+      "name": "setup-tsconfig-jsx",
+      "task": "Edit tsconfig.json to add `\"jsx\": \"react-jsx\"` inside compilerOptions. The file is at the project root. Do not change any other fields. After editing, run `npx tsc --noEmit 2>&1 | head -5` to confirm there are no tsconfig parse errors (TypeScript errors about missing .tsx files are expected at this stage and can be ignored).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Edit", "Bash"]
+    },
+    {
+      "type": "pipeline",
+      "name": "pipelineservice-events",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-pipelineservice-events",
+          "task": "Add progress event emission to src/services/pipelineService.ts.\n\nNew PipelineTaskResult variants to add:\n```ts\n| { kind: 'task_start'; taskIndex: number; name?: string; taskType: 'agent' | 'script' | 'pipeline' }\n| { kind: 'retry'; taskIndex: number; name?: string; retryCount: number; maxRetries: number }\n```\n\nChanges to pipelineService.ts:\n1. In the `run()` while loop, yield a `task_start` event immediately before running each task (before the if/else if/else branch).\n2. In `handleAgentRejection()`: yield a `retry` event with retryCount and maxRetries before returning targetIndex. Since this is a private method (not an async generator), emit via a callback instead — add an optional `onProgress?: (event: ProgressEvent) => void` parameter to `run()` and thread it through.\n3. Same for `handleScriptRejection()`.\n\nAlternative simpler approach: make `run()` yield retry events inline by inlining the rejection checks (removing the private methods or yielding retry events there after checking the rejection files).\n\nPick whichever approach compiles cleanly and is less invasive.\n\nAlso write unit tests in src/services/__tests__/pipelineService.test.ts (create if not exists) covering:\n- task_start events emitted for each task type\n- retry events emitted when rejection triggers\n\nVerify with mcp__perclst__ts_checker after implementation.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Write", "Edit", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__knowledge_search",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-arch-pipelineservice-events",
+          "task": "target_path: src/services/pipelineService.ts\nng_output_path: .claude/tmp/review-arch-pipelineservice-events",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-pipelineservice-events",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-pipelineservice-events",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-pipelineservice-events",
+          "task": "Commit all changes to src/services/pipelineService.ts and any new/modified test files with a conventional commit message (e.g. feat(pipeline): add task_start and retry progress events).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "run-options-batch",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-run-options-batch",
+          "task": "Add a `batch` boolean field to the run pipeline validator.\n\nFile: src/validators/cli/runPipeline.ts\n- Add `batch: booleanRule().optional()` to `runOptionsSchema` alongside the existing fields.\n\nFile: src/validators/cli/__tests__/runPipeline.test.ts (already exists)\n- Add test cases covering: batch=true, batch=false, batch absent (undefined), batch with invalid type (should throw ValidationError).\n\nVerify with mcp__perclst__ts_checker after implementation.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Write", "Edit", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__knowledge_search",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-arch-run-options-batch",
+          "task": "target_path: src/validators/cli/runPipeline.ts\nng_output_path: .claude/tmp/review-arch-run-options-batch",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-run-options-batch",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-run-options-batch",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-run-options-batch",
+          "task": "Commit all changes to src/validators/cli/runPipeline.ts and its test file with a conventional commit message (e.g. feat(validators): add batch option to run pipeline schema).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "taskrow-component",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-taskrow-component",
+          "task": "Create src/cli/components/TaskRow.tsx — an Ink React component that renders one pipeline task status line.\n\nProps interface:\n```ts\ntype TaskRowProps = {\n  name?: string\n  taskType: 'agent' | 'script' | 'pipeline'\n  status: 'pending' | 'running' | 'done' | 'failed' | 'retrying'\n  retryCount?: number\n  maxRetries?: number\n  depth?: number  // 0 = top-level, 1 = nested — indented with two spaces per level\n}\n```\n\nRendering rules:\n- pending:  `  ○ {name or taskType} [{taskType}]`  (grey)\n- running:  `  ● {name or taskType} [{taskType}] — running`  (yellow)\n- done:     `  ✓ {name or taskType} [{taskType}]`  (green)\n- failed:   `  ✗ {name or taskType} [{taskType}] — failed`  (red)\n- retrying: `  ↺ {name or taskType} [{taskType}] — retry {retryCount}/{maxRetries}`  (yellow)\n\nUse Ink's `<Box>` and `<Text>` with color props. Do NOT use ansis directly — Ink handles its own rendering.\n\nThe src/cli/components/ directory does not exist yet; create it.\n\nVerify by running `npm run build` after implementation.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Write", "Edit", "Bash",
+            "mcp__perclst__knowledge_search",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-arch-taskrow-component",
+          "task": "target_path: src/cli/components\nng_output_path: .claude/tmp/review-arch-taskrow-component",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-taskrow-component",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run build",
+          "rejected": {
+            "to": "implement-taskrow-component",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-taskrow-component",
+          "task": "Commit src/cli/components/TaskRow.tsx with a conventional commit message (e.g. feat(cli): add TaskRow Ink component for pipeline status display).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "pipeline-runner-component",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-pipeline-runner-component",
+          "task": "Create src/cli/components/PipelineRunner.tsx — the main Ink TUI component for pipeline execution.\n\nImports needed:\n- `Pipeline` from `@src/types/pipeline`\n- `PipelineRunOptions`, `PipelineService`, `PipelineTaskResult` from `@src/services/pipelineService`\n- `Config` from `@src/types/config`\n- `TaskRow` from `./TaskRow`\n- React hooks: useEffect, useState\n- Ink: Box, Text\n\nProps:\n```ts\ntype PipelineRunnerProps = {\n  pipeline: Pipeline\n  options: PipelineRunOptions\n  pipelineService: PipelineService\n  config: Config\n  onDone: () => void\n  onError: (err: Error) => void\n}\n```\n\nState:\n- `tasks`: array of TaskRow props (grows as task_start events arrive; updated as events change status)\n- `streamLines`: last 15 lines from agent stream events (thought/tool_use/tool_result)\n- `done`: boolean\n- `error`: string | null\n\nLogic in useEffect (runs once on mount):\n```ts\n;(async () => {\n  for await (const result of pipelineService.run(pipeline, {\n    ...options,\n    onStreamEvent: (event) => {\n      // format event to one line and append to streamLines (keep last 15)\n    }\n  })) {\n    // handle result.kind: 'task_start' | 'retry' | 'agent' | 'script'\n    // task_start: push new task entry with status 'running'\n    // retry: update existing task entry to status 'retrying' with retryCount/maxRetries\n    // agent/script (completion): update task entry to status 'done'\n  }\n  setDone(true)\n  props.onDone()\n})().catch(err => {\n  setError(err.message)\n  props.onError(err)\n})\n```\n\nRender layout (vertical Box):\n1. Header: `Running pipeline — {pipeline.tasks.length} task(s)` (bold)\n2. Tasks list: map tasks → <TaskRow />\n3. Stream log: last 15 streamLines in grey, only show if !done\n4. If done: `Pipeline complete.` (green)\n5. If error: `Pipeline failed: {error}` (red)\n\nVerify by running `npm run build` after implementation.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Write", "Edit", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__knowledge_search",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-arch-pipeline-runner-component",
+          "task": "target_path: src/cli/components\nng_output_path: .claude/tmp/review-arch-pipeline-runner-component",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-pipeline-runner-component",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run build",
+          "rejected": {
+            "to": "implement-pipeline-runner-component",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-pipeline-runner-component",
+          "task": "Commit src/cli/components/PipelineRunner.tsx with a conventional commit message (e.g. feat(cli): add PipelineRunner Ink TUI component).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "run-command-tui",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-run-command-tui",
+          "task": "Wire the Ink TUI into src/cli/commands/run.ts.\n\nChanges needed:\n1. Add `batch?: boolean` to the `RawRunOptions` type.\n2. In `runCommand()`, after parsing input, add TTY detection:\n   ```ts\n   const useTUI = process.stdout.isTTY && !input.batch\n   ```\n3. If `useTUI`, dynamically import ink and PipelineRunner and render:\n   ```ts\n   const { render } = await import('ink')\n   const React = (await import('react')).default\n   const { PipelineRunner } = await import('@src/cli/components/PipelineRunner.js')\n   const pipeline = parsePipeline(raw)\n   const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)\n   const config = container.resolve<Config>(TOKENS.Config)\n   await new Promise<void>((resolve, reject) => {\n     const app = render(\n       React.createElement(PipelineRunner, {\n         pipeline,\n         options: { model: input.model },\n         pipelineService,\n         config,\n         onDone: () => { app.unmount(); resolve() },\n         onError: (err) => { app.unmount(); reject(err) }\n       })\n     )\n   })\n   ```\n4. If not `useTUI`, keep the existing `executePipeline(input)` call unchanged.\n5. Also add `--batch` flag wiring in the commander command registration in src/cli/index.ts.\n\nRead src/cli/index.ts first to understand how to register the new --batch flag on the `run` command.\n\nVerify by running `npm run build` after implementation.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Write", "Edit", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__knowledge_search",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-arch-run-command-tui",
+          "task": "target_path: src/cli/commands/run.ts\nng_output_path: .claude/tmp/review-arch-run-command-tui",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-run-command-tui",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run build",
+          "rejected": {
+            "to": "implement-run-command-tui",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-run-command-tui",
+          "task": "Commit changes to src/cli/commands/run.ts and src/cli/index.ts with a conventional commit message (e.g. feat(cli): add Ink TUI to perclst run with TTY detection and --batch flag).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "script",
+      "command": "perclst curate --output-only"
+    },
+    {
+      "type": "agent",
+      "name": "commit-curate",
+      "task": "Commit any new or modified files under knowledge/ with a conventional commit message (e.g. chore: curate knowledge).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
