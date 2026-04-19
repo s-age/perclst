@@ -1,5 +1,5 @@
 import { SyntaxKind } from 'ts-morph'
-import type { SourceFile } from 'ts-morph'
+import type { Node, SourceFile, ReferencedSymbol } from 'ts-morph'
 import type {
   SymbolInfo,
   ImportInfo,
@@ -7,8 +7,47 @@ import type {
   TypeDefinition,
   PropertyInfo,
   MethodInfo,
-  ParameterInfo
+  ParameterInfo,
+  ReferenceInfo
 } from '@src/types/tsAnalysis'
+
+export function resolveSymbol(sourceFile: SourceFile, symbolName: string): Node | undefined {
+  if (symbolName.includes('.')) {
+    const [className, methodName] = symbolName.split('.', 2)
+    return sourceFile.getClass(className)?.getMethod(methodName) ?? undefined
+  }
+  return (
+    sourceFile.getFunction(symbolName) ??
+    sourceFile.getClass(symbolName) ??
+    sourceFile.getVariableDeclaration(symbolName) ??
+    sourceFile.getInterface(symbolName) ??
+    sourceFile.getTypeAlias(symbolName) ??
+    undefined
+  )
+}
+
+export function extractReferences(
+  referencedSymbols: ReferencedSymbol[],
+  options?: { includeTest?: boolean }
+): ReferenceInfo[] {
+  const results: ReferenceInfo[] = []
+  for (const rs of referencedSymbols) {
+    for (const ref of rs.getReferences()) {
+      const node = ref.getNode()
+      const sf = node.getSourceFile()
+      const refFilePath = sf.getFilePath()
+      if (!options?.includeTest && refFilePath.includes('__tests__')) continue
+      const pos = sf.getLineAndColumnAtPos(node.getStart())
+      results.push({
+        file_path: refFilePath,
+        line: pos.line,
+        column: pos.column,
+        snippet: node.getText()
+      })
+    }
+  }
+  return results
+}
 
 export function extractSymbols(sourceFile: SourceFile): SymbolInfo[] {
   return [
