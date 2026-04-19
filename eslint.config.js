@@ -27,9 +27,10 @@ export default tseslint.config(
     }
   },
   {
-    // Test files: suites naturally grow long, so relax function-length limit
+    // Test files: suites naturally grow long, raise limits
     files: ['**/__tests__/**', '**/*.test.ts'],
     rules: {
+      'max-lines': ['warn', { max: 500, skipBlankLines: true, skipComments: true }],
       'max-lines-per-function': 'off'
     }
   },

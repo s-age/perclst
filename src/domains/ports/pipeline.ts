@@ -1,11 +1,25 @@
 import type { AgentResponse, ExecuteOptions } from '@src/types/agent'
-import type { AgentPipelineTask, Pipeline, RejectedContext } from '@src/types/pipeline'
+import type {
+  AgentPipelineTask,
+  Pipeline,
+  PipelineRunOptions,
+  RejectedContext
+} from '@src/types/pipeline'
 import type { Session } from '@src/types/session'
 
 export type RejectionResult = {
   targetIndex: number
   context: RejectedContext
   newCount: number
+}
+
+export type AgentTaskResult = {
+  taskPath: number[]
+  taskIndex: number
+  name?: string
+  sessionId: string
+  response: AgentResponse
+  action: 'started' | 'resumed'
 }
 
 export type IPipelineDomain = {
@@ -28,4 +42,12 @@ export type IPipelineDomain = {
     maxRetries: number,
     feedback: string
   ): RejectionResult
+  buildExecuteOptions(task: AgentPipelineTask, options: PipelineRunOptions): ExecuteOptions
+  runAgentTask(
+    task: AgentPipelineTask,
+    index: number,
+    taskPath: number[],
+    options: PipelineRunOptions,
+    rejected?: RejectedContext
+  ): Promise<AgentTaskResult>
 }

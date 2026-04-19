@@ -88,7 +88,7 @@ function buildDomains(model: string, repos: Repos): Domains {
     scriptDomain: new ScriptDomain(shellRepo),
     sessionDomain,
     agentDomain,
-    pipelineDomain: new PipelineDomain(agentDomain),
+    pipelineDomain: new PipelineDomain(agentDomain, sessionDomain),
     analyzeDomain: new AnalyzeDomain(sessionDomain, claudeSessionRepo),
     importDomain: new ImportDomain(claudeSessionRepo),
     checkerDomain: new CheckerDomain(checkerRepo),
@@ -140,10 +140,7 @@ function registerServices(domains: Domains): void {
   } = domains
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
-  container.register(
-    TOKENS.PipelineService,
-    new PipelineService(sessionDomain, pipelineDomain, scriptDomain)
-  )
+  container.register(TOKENS.PipelineService, new PipelineService(pipelineDomain, scriptDomain))
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
   container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))
   container.register(TOKENS.CheckerService, new CheckerService(checkerDomain))

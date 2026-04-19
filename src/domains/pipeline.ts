@@ -3,11 +3,13 @@ import type {
   AgentPipelineTask,
   NestedPipelineTask,
   Pipeline,
+  PipelineRunOptions,
   RejectedContext
 } from '@src/types/pipeline'
 import type { Session } from '@src/types/session'
 import type { IAgentDomain } from '@src/domains/ports/agent'
-import type { IPipelineDomain, RejectionResult } from '@src/domains/ports/pipeline'
+import type { IPipelineDomain, RejectionResult, AgentTaskResult } from '@src/domains/ports/pipeline'
+import type { ISessionDomain } from '@src/domains/ports/session'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 import { getRejectionFeedback, getCwd } from '@src/repositories/rejectionFeedback'
 import { debug } from '@src/utils/output'
@@ -18,7 +20,10 @@ const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Pleas
 Then provide your final response.`
 
 export class PipelineDomain implements IPipelineDomain {
-  constructor(private agentDomain: IAgentDomain) {}
+  constructor(
+    private agentDomain: IAgentDomain,
+    private sessionDomain: ISessionDomain
+  ) {}
 
   buildRejectedInstruction(task: AgentPipelineTask, rejected: RejectedContext): string {
     return [
@@ -80,6 +85,92 @@ export class PipelineDomain implements IPipelineDomain {
       response = await this.agentDomain.run(session, GRACEFUL_TERMINATION_PROMPT, true, execOpts)
     }
     return response
+  }
+
+  buildExecuteOptions(task: AgentPipelineTask, options: PipelineRunOptions): ExecuteOptions {
+    return {
+      allowedTools: task.allowed_tools ?? options.allowedTools,
+      disallowedTools: task.disallowed_tools ?? options.disallowedTools,
+      model: task.model ?? options.model,
+      onStreamEvent: options.onStreamEvent
+    }
+  }
+
+  async runAgentTask(
+    task: AgentPipelineTask,
+    index: number,
+    taskPath: number[],
+    options: PipelineRunOptions,
+    rejected?: RejectedContext
+  ): Promise<AgentTaskResult> {
+    const maxTurns = task.max_turns ?? options.maxTurns ?? -1
+    const maxContextTokens = task.max_context_tokens ?? options.maxContextTokens ?? -1
+    const execOpts = this.buildExecuteOptions(task, options)
+    const instruction = rejected ? this.buildRejectedInstruction(task, rejected) : task.task
+
+    if (task.name && rejected) {
+      const resumed = await this.resumeNamedSession(
+        task,
+        index,
+        taskPath,
+        instruction,
+        execOpts,
+        maxTurns,
+        maxContextTokens
+      )
+      if (resumed) return resumed
+    }
+
+    const session = await this.sessionDomain.create({ name: task.name, procedure: task.procedure })
+    const sessionFilePath = this.sessionDomain.getPath(session.id)
+    const response = await this.runWithLimit(
+      session,
+      instruction,
+      false,
+      { ...execOpts, sessionFilePath },
+      maxTurns,
+      maxContextTokens
+    )
+    await this.sessionDomain.updateStatus(session.id, 'active')
+    return {
+      taskPath,
+      taskIndex: index,
+      name: task.name,
+      sessionId: session.id,
+      response,
+      action: 'started'
+    }
+  }
+
+  private async resumeNamedSession(
+    task: AgentPipelineTask,
+    index: number,
+    taskPath: number[],
+    instruction: string,
+    execOpts: ExecuteOptions,
+    maxTurns: number,
+    maxContextTokens: number
+  ): Promise<AgentTaskResult | null> {
+    const existing = await this.sessionDomain.findByName(task.name!)
+    if (!existing) return null
+    const sessionFilePath = this.sessionDomain.getPath(existing.id)
+    const response = await this.runWithLimit(
+      existing,
+      instruction,
+      true,
+      { ...execOpts, sessionFilePath },
+      maxTurns,
+      maxContextTokens
+    )
+    await this.sessionDomain.updateStatus(existing.id, 'active')
+    return {
+      taskPath,
+      taskIndex: index,
+      name: task.name,
+      sessionId: existing.id,
+      response,
+      action: 'resumed'
+    }
   }
 
   private getContextTokens(response: AgentResponse): number {

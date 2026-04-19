@@ -9,6 +9,7 @@ export type TaskState = {
   status: 'pending' | 'running' | 'done' | 'failed' | 'retrying'
   retryCount?: number
   maxRetries?: number
+  children?: TaskState[]
 }
 
 export type PermissionRequest = {
