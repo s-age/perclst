@@ -38,6 +38,8 @@ export type TestStrategyOptions = {
 export type TestStrategyResult = {
   target_file_path: string
   corresponding_test_file: string | null
+  test_file_exists: boolean
+  expected_test_file_path: string
   strategies: FunctionStrategy[]
   overall_recommendation: string
   error?: string

@@ -1,7 +1,10 @@
 import type { ITestStrategyRepository } from '@src/repositories/ports/testStrategy'
 import type { RawFunctionInfo, TestFramework } from '@src/types/testStrategy'
 import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
-import { findTestFile as _findTestFile } from '@src/infrastructures/testFileDiscovery'
+import {
+  findTestFile as _findTestFile,
+  canonicalTestFilePath as _canonicalTestFilePath
+} from '@src/infrastructures/testFileDiscovery'
 import {
   parseFunctions as _parseFunctions,
   extractTestFunctions as _extractTestFunctions,
@@ -19,6 +22,10 @@ export function parseFunctionsFromFile(filePath: string): RawFunctionInfo[] | nu
 
 export function findTestFile(targetFilePath: string): string | null {
   return _findTestFile(targetFilePath)
+}
+
+export function canonicalTestFilePath(targetFilePath: string): string {
+  return _canonicalTestFilePath(targetFilePath)
 }
 
 export function extractTestFunctions(testFilePath: string): string[] {
@@ -40,6 +47,10 @@ export class TestStrategyRepository implements ITestStrategyRepository {
 
   findTestFile(targetFilePath: string): string | null {
     return findTestFile(targetFilePath)
+  }
+
+  canonicalTestFilePath(targetFilePath: string): string {
+    return canonicalTestFilePath(targetFilePath)
   }
 
   extractTestFunctions(testFilePath: string): string[] {
