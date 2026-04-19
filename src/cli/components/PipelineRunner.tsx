@@ -280,9 +280,9 @@ export function PipelineRunner({
         <Text bold color={permRequest ? 'yellow' : 'gray'}>
           Permission{permRequest ? ' Request' : ''}
         </Text>
+        <Text> </Text>
         {permRequest ? (
           <>
-            <Text> </Text>
             <Text>
               {' '}
               Tool : <Text color="cyan">{permRequest.tool_name}</Text>
@@ -292,7 +292,12 @@ export function PipelineRunner({
             <Text color="yellow"> Allow? [y/N] </Text>
           </>
         ) : (
-          <Text color="gray"> —</Text>
+          <>
+            <Text color="gray"> —</Text>
+            <Text> </Text>
+            <Text> </Text>
+            <Text> </Text>
+          </>
         )}
       </Box>
     </Box>
