@@ -29,9 +29,13 @@ import { KnowledgeSearchService } from '@src/services/knowledgeSearchService'
 import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
 import { TsAnalysisDomain } from '@src/domains/tsAnalysis'
 import { TsAnalysisService } from '@src/services/tsAnalysisService'
+import { FileMoveRepository } from '@src/repositories/fileMoveRepository'
+import { PipelineFileDomain } from '@src/domains/pipelineFile'
+import { PipelineFileService } from '@src/services/pipelineFileService'
 import { DEFAULT_MODEL } from '@src/constants/config'
 
 type Repos = {
+  fileMoveRepo: FileMoveRepository
   claudeCodeRepo: ClaudeCodeRepository
   shellRepo: ShellRepository
   sessionRepo: SessionRepository
@@ -44,6 +48,7 @@ type Repos = {
 }
 
 type Domains = {
+  pipelineFileDomain: PipelineFileDomain
   scriptDomain: ScriptDomain
   sessionDomain: SessionDomain
   agentDomain: AgentDomain
@@ -58,6 +63,7 @@ type Domains = {
 
 function buildRepos(sessionsDir: string): Repos {
   return {
+    fileMoveRepo: new FileMoveRepository(),
     claudeCodeRepo: new ClaudeCodeRepository(),
     shellRepo: new ShellRepository(),
     sessionRepo: new SessionRepository(sessionsDir),
@@ -72,6 +78,7 @@ function buildRepos(sessionsDir: string): Repos {
 
 function buildDomains(model: string, repos: Repos): Domains {
   const {
+    fileMoveRepo,
     claudeCodeRepo,
     shellRepo,
     sessionRepo,
@@ -85,6 +92,7 @@ function buildDomains(model: string, repos: Repos): Domains {
   const sessionDomain = new SessionDomain(sessionRepo)
   const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
   return {
+    pipelineFileDomain: new PipelineFileDomain(fileMoveRepo),
     scriptDomain: new ScriptDomain(shellRepo),
     sessionDomain,
     agentDomain,
@@ -113,7 +121,9 @@ function registerReposAndDomains(
   container.register(TOKENS.TestStrategyRepository, repos.testStrategyRepo)
   container.register(TOKENS.KnowledgeSearchRepository, repos.knowledgeSearchRepo)
   container.register(TOKENS.TsAnalysisRepository, repos.tsAnalysisRepo)
+  container.register(TOKENS.FileMoveRepository, repos.fileMoveRepo)
   container.register(TOKENS.ScriptDomain, domains.scriptDomain)
+  container.register(TOKENS.PipelineFileDomain, domains.pipelineFileDomain)
   container.register(TOKENS.SessionDomain, domains.sessionDomain)
   container.register(TOKENS.AgentDomain, domains.agentDomain)
   container.register(TOKENS.PipelineDomain, domains.pipelineDomain)
@@ -127,6 +137,7 @@ function registerReposAndDomains(
 
 function registerServices(domains: Domains): void {
   const {
+    pipelineFileDomain,
     sessionDomain,
     agentDomain,
     pipelineDomain,
@@ -150,6 +161,7 @@ function registerServices(domains: Domains): void {
     new KnowledgeSearchService(knowledgeSearchDomain)
   )
   container.register(TOKENS.TsAnalysisService, new TsAnalysisService(tsAnalysisDomain))
+  container.register(TOKENS.PipelineFileService, new PipelineFileService(pipelineFileDomain))
 }
 
 export function setupContainer(): void {

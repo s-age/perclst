@@ -16,6 +16,18 @@ Before drafting a pipeline:
 2. Read an existing pipeline in `pipelines/` — use it as a structural reference.
 3. If tasks will use a procedure, read `procedures/<name>.md` to understand what inputs the agent needs and which tools it calls internally.
 
+## Naming pipeline files
+
+Pipeline filenames use `__` (double-hyphen) as the namespace separator and `-` as the word separator within a segment:
+
+```
+<namespace>__<namespace>__<name>.json
+unit-test__infrastructures__commandrunner-projectroot.json
+```
+
+- Each `__`-separated segment becomes a directory level when the file is moved to `done/`
+- Use lowercase and hyphens within segments; no underscores, no camelCase
+
 ## Naming tasks
 
 Task `name` doubles as the resume key — a second pipeline run resumes the named session instead of starting fresh. Choose names that are:

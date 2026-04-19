@@ -17,6 +17,7 @@ import { parseRunOptions, parsePipeline } from '@src/validators/cli/runPipeline'
 import type { RunPipelineInput } from '@src/validators/cli/runPipeline'
 import type { Config } from '@src/types/config'
 import type { AgentStreamEvent } from '@src/types/agent'
+import { PipelineFileService } from '@src/services/pipelineFileService'
 
 type RawRunOptions = {
   model?: string
@@ -203,6 +204,10 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
     if (headBefore && headAfter && headBefore !== headAfter) {
       printGitDiffSummary(headBefore, headAfter)
     }
+
+    const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
+    const donePath = pipelineFileService.moveToDone(input.pipelinePath)
+    stdout.print(`\nMoved to: ${donePath}`)
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)
