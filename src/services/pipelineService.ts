@@ -33,10 +33,6 @@ export type PipelineTaskResult =
     }
   | { kind: 'script'; taskIndex: number; command: string; result: ScriptResult }
 
-export type PipelineResult = {
-  results: PipelineTaskResult[]
-}
-
 export class PipelineService {
   constructor(
     private sessionDomain: ISessionDomain,
@@ -44,12 +40,11 @@ export class PipelineService {
     private scriptDomain: IScriptDomain
   ) {}
 
-  async run(
+  async *run(
     pipeline: Pipeline,
     options: PipelineRunOptions = {},
     outerRejection?: RejectedContext
-  ): Promise<PipelineResult> {
-    const results: PipelineTaskResult[] = []
+  ): AsyncGenerator<PipelineTaskResult> {
     const retryCount = new Map<number, number>()
     const pendingRejections = new Map<number, RejectedContext>()
 
@@ -67,7 +62,7 @@ export class PipelineService {
         const rejection = pendingRejections.get(i)
         pendingRejections.delete(i)
         const result = await this.runAgentTask(task, i, options, rejection)
-        results.push(result)
+        yield result
         const jumpTo = this.handleAgentRejection(pipeline, task, i, retryCount, pendingRejections)
         if (jumpTo !== undefined) {
           i = jumpTo
@@ -76,10 +71,11 @@ export class PipelineService {
       } else if (task.type === 'pipeline') {
         const rejection = pendingRejections.get(i)
         pendingRejections.delete(i)
-        results.push(...(await this.runNestedPipelineTask(task, options, rejection)).results)
+        debug.print(`Running nested pipeline: ${task.name}`)
+        yield* this.run({ tasks: task.tasks }, options, rejection)
       } else {
         const result = await this.runScriptTask(task, i)
-        results.push(result)
+        yield result
         const jumpTo = this.handleScriptRejection(
           pipeline,
           task,
@@ -95,8 +91,6 @@ export class PipelineService {
       }
       i++
     }
-
-    return { results }
   }
 
   private handleAgentRejection(
@@ -263,15 +257,6 @@ export class PipelineService {
       response,
       action: 'started'
     }
-  }
-
-  private async runNestedPipelineTask(
-    task: NestedPipelineTask,
-    options: PipelineRunOptions,
-    outerRejection?: RejectedContext
-  ): Promise<PipelineResult> {
-    debug.print(`Running nested pipeline: ${task.name}`)
-    return this.run({ tasks: task.tasks }, options, outerRejection)
   }
 
   private async runScriptTask(
