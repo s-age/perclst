@@ -13,6 +13,7 @@ When you start running Claude Code seriously with `claude -p` (headless mode), y
 - **Skills silently disappear**: `.claude/skills/` are auto-injected in interactive sessions but completely ignored in headless mode — sub-agents lose all your coding conventions and constraints without any warning.
 - **UUIDs are unmanageable**: Every session gets a UUID. Resuming the right session means copying IDs from list output or keeping notes. There is no way to say "resume the implementer session."
 - **Feedback loops require manual work**: When tests fail after an agent makes changes, you have to find the session, resume it with the error output, wait, and check again — by hand, every time.
+- **Agent behavior is opaque**: Vendor UIs hide tool invocations, error traces, and per-turn token usage. You can see that an agent was slow or expensive, but you cannot diagnose why — and you cannot verify that a procedure change actually helped. See [Why Turn Count Matters](docs/why-turn-count-matters.md) for a concrete example.
 
 ## Features
 
