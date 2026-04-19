@@ -357,6 +357,8 @@ This pipeline runs as follows:
 
 > For all options: `perclst run -h`
 
+The `pipelines/` directory in this repository contains the pipelines used in perclst's own development — unit-test generation, code review loops, and refactoring workflows. These are real operational examples, not toy samples.
+
 ## `import`
 
 Import an existing Claude Code session into perclst management.
