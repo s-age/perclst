@@ -1,10 +1,10 @@
-import { existsSync, readdirSync, readFileSync } from 'fs'
-import { dirname, join, basename, extname } from 'path'
-import { Project, Node, SyntaxKind, type SourceFile } from 'ts-morph'
+import { dirname, join } from 'path'
+import { Node, SyntaxKind, type SourceFile } from 'ts-morph'
+import { fileExists, readText, readJson } from '@src/infrastructures/fs'
 import type { RawFunctionInfo, TestFramework } from '@src/types/testStrategy'
 
 // ---------------------------------------------------------------------------
-// Structural count extraction — pure AST traversal, no domain logic
+// Internal: structural count extraction — pure AST traversal
 // ---------------------------------------------------------------------------
 
 function countStructure(
@@ -48,10 +48,6 @@ function countStructure(
 
   return { branchCount, loopCount, logicalOpCount, catchCount }
 }
-
-// ---------------------------------------------------------------------------
-// Public: parse functions from a TypeScript file
-// ---------------------------------------------------------------------------
 
 function collectImportedNames(sf: SourceFile): Set<string> {
   const names = new Set<string>()
@@ -135,11 +131,11 @@ function collectClassMethods(
     )
 }
 
-export function parseFunctions(filePath: string): RawFunctionInfo[] | null {
-  const project = new Project({ skipAddingFilesFromTsConfig: true })
-  const sf = project.addSourceFileAtPathIfExists(filePath)
-  if (!sf) return null
+// ---------------------------------------------------------------------------
+// Public: AST → RawFunctionInfo shaping
+// ---------------------------------------------------------------------------
 
+export function parseFunctions(sf: SourceFile): RawFunctionInfo[] {
   const importedNames = collectImportedNames(sf)
   const referencedImportsIn = makeReferencedImportsIn(importedNames)
 
@@ -151,66 +147,13 @@ export function parseFunctions(filePath: string): RawFunctionInfo[] | null {
 }
 
 // ---------------------------------------------------------------------------
-// Public: test file discovery
-// ---------------------------------------------------------------------------
-
-export function findTestFile(targetFilePath: string): string | null {
-  const dir = dirname(targetFilePath)
-  const stem = basename(targetFilePath, extname(targetFilePath))
-  const ext = extname(targetFilePath)
-
-  const nearby = [
-    join(dir, `${stem}.test${ext}`),
-    join(dir, `${stem}.spec${ext}`),
-    join(dir, '__tests__', `${stem}.test${ext}`),
-    join(dir, '__tests__', `${stem}.spec${ext}`)
-  ]
-  for (const p of nearby) {
-    if (existsSync(p)) return p
-  }
-
-  let current = dir
-  for (let i = 0; i < 20; i++) {
-    if (existsSync(join(current, '.git'))) {
-      for (const testDir of ['tests', 'test', '__tests__']) {
-        const found = searchDir(join(current, testDir), stem, ext)
-        if (found) return found
-      }
-      break
-    }
-    const parent = dirname(current)
-    if (parent === current) break
-    current = parent
-  }
-  return null
-}
-
-function searchDir(dir: string, stem: string, ext: string): string | null {
-  if (!existsSync(dir)) return null
-  try {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        const found = searchDir(full, stem, ext)
-        if (found) return found
-      } else if (entry.name === `${stem}.test${ext}` || entry.name === `${stem}.spec${ext}`) {
-        return full
-      }
-    }
-  } catch {
-    // ignore permission errors
-  }
-  return null
-}
-
-// ---------------------------------------------------------------------------
-// Public: extract test function names from a test file
+// Public: test file content → test function names
 // ---------------------------------------------------------------------------
 
 export function extractTestFunctions(testFilePath: string): string[] {
-  if (!existsSync(testFilePath)) return []
+  if (!fileExists(testFilePath)) return []
   const result: string[] = []
-  for (const line of readFileSync(testFilePath, 'utf-8').split('\n')) {
+  for (const line of readText(testFilePath).split('\n')) {
     const s = line.trim()
     if (
       s.startsWith('it(') ||
@@ -233,19 +176,16 @@ export function extractTestFunctions(testFilePath: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Public: detect test framework from package.json
+// Public: package.json deps → TestFramework domain type
 // ---------------------------------------------------------------------------
 
 export function detectFramework(targetFilePath: string): TestFramework {
   let current = dirname(targetFilePath)
   for (let i = 0; i < 20; i++) {
     const pkgPath = join(current, 'package.json')
-    if (existsSync(pkgPath)) {
+    if (fileExists(pkgPath)) {
       try {
-        const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8')) as Record<
-          string,
-          Record<string, string>
-        >
+        const pkg = readJson<Record<string, Record<string, string>>>(pkgPath)
         const deps = { ...pkg['dependencies'], ...pkg['devDependencies'] }
         if ('vitest' in deps) return 'vitest'
       } catch {

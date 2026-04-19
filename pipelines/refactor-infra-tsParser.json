@@ -1,0 +1,57 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "refactor-infra-tsParser",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-refactor-tsParser",
+          "task": "target_path: src/infrastructures/tsParser.ts\n\nPre-diagnosed violations (no-shaping rule):\n- parseFunctions, countStructure, collectImportedNames, makeReferencedImportsIn, collectStandaloneFunctions, collectVariableFunctions, collectClassMethods: AST→RawFunctionInfo shaping — move to src/repositories/parsers/tsParser.ts\n- extractTestFunctions: string parsing of test file content — move to src/repositories/parsers/tsParser.ts\n- detectFramework: reads package.json and returns TestFramework domain type — move to src/repositories/parsers/tsParser.ts\n- findTestFile + searchDir: pure FS traversal — keep in src/infrastructures/tsParser.ts\n\nKnown callers: src/repositories/testStrategyRepository.ts imports parseFunctions, findTestFile, extractTestFunctions, detectFramework — update its imports after the move.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-refactor-tsParser",
+          "task": "target_path: src/infrastructures/tsParser.ts\nng_output_path: .claude/tmp/review-refactor-tsParser",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze"
+          ],
+          "rejected": {
+            "to": "implement-refactor-tsParser",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run build",
+          "rejected": {
+            "to": "implement-refactor-tsParser",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-refactor-tsParser",
+          "task": "Refactor complete and build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(infra): move tsParser shaping logic to repositories/parsers/).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    }
+  ]
+}

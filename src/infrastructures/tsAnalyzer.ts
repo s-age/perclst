@@ -2,18 +2,26 @@ import { Project } from 'ts-morph'
 import type { SourceFile } from 'ts-morph'
 import type { ReferenceInfo } from '@src/types/tsAnalysis'
 
+type TsAnalyzerOptions =
+  | { skipAddingFilesFromTsConfig: true }
+  | { tsConfigFilePath?: string; skipAddingFilesFromTsConfig?: false }
+
 export class TsAnalyzer {
   private project: Project
 
-  constructor(tsConfigPath?: string) {
-    this.project = new Project({
-      tsConfigFilePath: tsConfigPath || 'tsconfig.json',
-      skipAddingFilesFromTsConfig: false
-    })
+  constructor(options: TsAnalyzerOptions = {}) {
+    this.project =
+      options.skipAddingFilesFromTsConfig === true
+        ? new Project({ skipAddingFilesFromTsConfig: true })
+        : new Project({ tsConfigFilePath: options.tsConfigFilePath ?? 'tsconfig.json' })
   }
 
   getSourceFile(filePath: string): SourceFile {
     return this.project.addSourceFileAtPath(filePath)
+  }
+
+  getSourceFileIfExists(filePath: string): SourceFile | undefined {
+    return this.project.addSourceFileAtPathIfExists(filePath) ?? undefined
   }
 
   // Scans the entire project to find references — filesystem I/O, not pure transformation
