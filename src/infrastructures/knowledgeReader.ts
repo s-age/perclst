@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs'
 import { join } from 'path'
 
-export function listMarkdownFilesRecursive(dir: string): string[] {
+export function listFilesRecursive(dir: string, ext?: string): string[] {
   if (!existsSync(dir)) return []
   const results: string[] = []
   const traverse = (current: string) => {
@@ -9,7 +9,7 @@ export function listMarkdownFilesRecursive(dir: string): string[] {
       const full = join(current, entry)
       if (statSync(full).isDirectory()) {
         traverse(full)
-      } else if (entry.endsWith('.md')) {
+      } else if (!ext || entry.endsWith(ext)) {
         results.push(full)
       }
     }

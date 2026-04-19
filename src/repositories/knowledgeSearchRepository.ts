@@ -1,7 +1,7 @@
 import { join, relative, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { IKnowledgeSearchRepository, KnowledgeFileEntry } from './ports/knowledgeSearch'
-import { listMarkdownFilesRecursive, readTextFile } from '@src/infrastructures/knowledgeReader'
+import { listFilesRecursive, readTextFile } from '@src/infrastructures/knowledgeReader'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -11,7 +11,7 @@ export class KnowledgeSearchRepository implements IKnowledgeSearchRepository {
   constructor(private readonly knowledgeDir: string = DEFAULT_KNOWLEDGE_DIR) {}
 
   loadAll(includeDraft: boolean): KnowledgeFileEntry[] {
-    const files = listMarkdownFilesRecursive(this.knowledgeDir)
+    const files = listFilesRecursive(this.knowledgeDir, '.md')
     return files
       .filter((abs) => includeDraft || !abs.includes(`${this.knowledgeDir}/draft`))
       .map((abs) => ({
