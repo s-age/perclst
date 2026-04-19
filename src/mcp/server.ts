@@ -15,7 +15,16 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { openSync, readSync, writeSync, closeSync } from 'fs'
+import {
+  openSync,
+  readSync,
+  writeSync,
+  closeSync,
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  unlinkSync
+} from 'fs'
 import { askPermissionParams } from '@src/validators/mcp/askPermission'
 import { tsAnalyzeParams } from '@src/validators/mcp/tsAnalyze'
 import { tsGetReferencesParams } from '@src/validators/mcp/tsGetReferences'
@@ -49,11 +58,40 @@ type PermissionResult =
   | { behavior: 'allow'; updatedInput: Record<string, unknown> }
   | { behavior: 'deny'; message: string }
 
+async function askPermissionViaIPC(
+  pipePath: string,
+  args: { tool_name: string; input: Record<string, unknown> }
+): Promise<PermissionResult> {
+  const reqPath = `${pipePath}.req`
+  const resPath = `${pipePath}.res`
+  writeFileSync(reqPath, JSON.stringify({ tool_name: args.tool_name, input: args.input }), 'utf-8')
+  const deadline = Date.now() + 60_000
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 100))
+    if (existsSync(resPath)) {
+      try {
+        const res = JSON.parse(readFileSync(resPath, 'utf-8')) as PermissionResult
+        try {
+          unlinkSync(resPath)
+        } catch {
+          /* ignore */
+        }
+        return res
+      } catch {
+        return { behavior: 'deny', message: 'Failed to parse permission response' }
+      }
+    }
+  }
+  return { behavior: 'deny', message: 'Permission request timed out' }
+}
+
 async function askPermission(args: {
   tool_name: string
   input: Record<string, unknown>
   tool_use_id?: string
 }): Promise<PermissionResult> {
+  const pipePath = process.env.PERCLST_PERMISSION_PIPE
+  if (pipePath) return askPermissionViaIPC(pipePath, args)
   const { tool_name, input } = args
   const summary = formatInputSummary(input)
   const prompt =

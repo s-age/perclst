@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
-import { resolve } from 'path'
+import { tmpdir } from 'os'
+import { resolve, join } from 'path'
 import { execSync } from 'child_process'
 import * as readline from 'readline'
 import { container } from '@src/core/di/container'
@@ -8,6 +9,7 @@ import { PipelineService } from '@src/services/pipelineService'
 import type { PipelineTaskResult } from '@src/services/pipelineService'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
+import { APIError } from '@src/errors/apiError'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 import { stdout, stderr } from '@src/utils/output'
 import { printResponse, printStreamEvent } from '@src/cli/display'
@@ -143,6 +145,7 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
 
     const useTUI = process.stdout.isTTY && !input.batch
     if (useTUI) {
+      process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
       const absolutePath = resolve(input.pipelinePath)
       let raw: unknown
       try {
@@ -190,6 +193,8 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
     } else if (error instanceof RateLimitError) {
       const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
       stderr.print(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
+    } else if (error instanceof APIError) {
+      stderr.print(`Pipeline failed: ${error.message}`)
     } else {
       stderr.print('Pipeline failed', error as Error)
     }

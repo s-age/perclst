@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Text, useStdout } from 'ink'
+import { Box, Text, useStdout, useInput } from 'ink'
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
 import { TaskRow } from '@src/cli/components/TaskRow.js'
 import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService.js'
 import type { Pipeline } from '@src/types/pipeline.js'
@@ -15,6 +16,15 @@ type TaskState = {
   maxRetries?: number
 }
 
+type PermissionRequest = {
+  tool_name: string
+  input: Record<string, unknown>
+}
+
+type PermissionResult =
+  | { behavior: 'allow'; updatedInput: Record<string, unknown> }
+  | { behavior: 'deny'; message: string }
+
 type PipelineRunnerProps = {
   pipeline: Pipeline
   options: PipelineRunOptions
@@ -25,8 +35,10 @@ type PipelineRunnerProps = {
 }
 
 const SPINNER_INTERVAL_MS = 80
-// rows reserved: header(1) + blank(1) + status(1)
+const PERM_PANEL_ROWS = 8
+// rows reserved in right panel: header(1) + blank(1) + status(1)
 const STREAM_HEADER_ROWS = 3
+const MAX_ALL_LINES = 5000
 
 function initTasks(pipeline: Pipeline): TaskState[] {
   return pipeline.tasks.map((t) => ({
@@ -37,14 +49,40 @@ function initTasks(pipeline: Pipeline): TaskState[] {
   }))
 }
 
-function formatStreamLine(event: AgentStreamEvent): string {
+function splitToLines(text: string, width: number, prefix: string): string[] {
+  const lines: string[] = []
+  for (let i = 0; i < text.length; i += width) {
+    lines.push(`${prefix}${text.slice(i, i + width)}`)
+  }
+  return lines.length > 0 ? lines : [prefix]
+}
+
+function formatStreamLines(event: AgentStreamEvent, lineWidth: number): string[] {
   if (event.type === 'thought') {
-    return `  ${event.thinking.slice(0, 100)}`
+    const text = event.thinking.trim().replace(/\s+/g, ' ')
+    return splitToLines(text, lineWidth, '  ')
   }
   if (event.type === 'tool_use') {
-    return `  → ${event.name}`
+    return [`  → ${event.name}`]
   }
-  return `  ← ${event.toolName}`
+  const result = event.result.trim().replace(/\s+/g, ' ')
+  const header = `  ← ${event.toolName}`
+  if (!result) return [header]
+  return [header, ...splitToLines(result, lineWidth - 4, '    ').slice(0, 3)]
+}
+
+function formatInputSummary(input: Record<string, unknown>): string {
+  const primary = input.command ?? input.file_path ?? input.path ?? input.url ?? input.pattern
+  if (primary !== undefined) return String(primary)
+  return JSON.stringify(input).slice(0, 120)
+}
+
+function respondPermission(pipePath: string, result: PermissionResult): void {
+  try {
+    writeFileSync(`${pipePath}.res`, JSON.stringify(result), 'utf-8')
+  } catch {
+    /* ignore */
+  }
 }
 
 // eslint-disable-next-line max-lines-per-function
@@ -57,14 +95,21 @@ export function PipelineRunner({
 }: PipelineRunnerProps) {
   const { stdout } = useStdout()
   const termRows = stdout.rows ?? 24
+  const mainRows = termRows - PERM_PANEL_ROWS
+  // right panel is ~60% minus border(1) and padding(1)
+  const panelWidth = Math.max(20, Math.floor((stdout.columns ?? 80) * 0.6) - 6)
 
   const [tasks, setTasks] = useState<TaskState[]>(() => initTasks(pipeline))
-  const [streamLines, setStreamLines] = useState<string[]>([])
+  const [allLines, setAllLines] = useState<string[]>([])
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [spinnerFrame, setSpinnerFrame] = useState(0)
+  const [permRequest, setPermRequest] = useState<PermissionRequest | null>(null)
+  // scrollOffset > 0 means scrolled up from bottom (reserved for future Ctrl+O)
+  const [scrollOffset] = useState(0)
 
-  const streamCapacity = Math.max(1, termRows - STREAM_HEADER_ROWS)
+  const streamCapacity = Math.max(1, mainRows - STREAM_HEADER_ROWS)
+  const permPipePath = process.env.PERCLST_PERMISSION_PIPE ?? null
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -73,10 +118,46 @@ export function PipelineRunner({
     return () => clearInterval(interval)
   }, [])
 
+  // Poll for permission requests from MCP server via file IPC
+  useEffect(() => {
+    if (!permPipePath) return
+    const reqPath = `${permPipePath}.req`
+    const interval = setInterval(() => {
+      if (!existsSync(reqPath)) return
+      try {
+        const req = JSON.parse(readFileSync(reqPath, 'utf-8')) as PermissionRequest
+        try {
+          unlinkSync(reqPath)
+        } catch {
+          /* ignore */
+        }
+        setPermRequest(req)
+      } catch {
+        /* ignore */
+      }
+    }, 100)
+    return () => clearInterval(interval)
+  }, [permPipePath])
+
+  useInput((input) => {
+    if (!permRequest || !permPipePath) return
+    const allow = input.toLowerCase() === 'y'
+    respondPermission(
+      permPipePath,
+      allow
+        ? { behavior: 'allow', updatedInput: permRequest.input }
+        : { behavior: 'deny', message: 'User denied permission' }
+    )
+    setPermRequest(null)
+  })
+
   useEffect(() => {
     const onStreamEvent = (event: AgentStreamEvent) => {
-      const line = formatStreamLine(event)
-      setStreamLines((prev) => [...prev.slice(-(streamCapacity - 1)), line])
+      const lines = formatStreamLines(event, panelWidth)
+      setAllLines((prev) => {
+        const next = [...prev, ...lines]
+        return next.length > MAX_ALL_LINES ? next.slice(-MAX_ALL_LINES) : next
+      })
     }
 
     const runOptions: PipelineRunOptions = { ...options, onStreamEvent }
@@ -85,12 +166,16 @@ export function PipelineRunner({
       try {
         for await (const result of pipelineService.run(pipeline, runOptions, undefined as never)) {
           switch (result.kind) {
-            case 'task_start':
-              setStreamLines([])
+            case 'task_start': {
+              const sep = result.name
+                ? `─── ${result.taskIndex + 1}. ${result.name} [${result.taskType}] ───`
+                : `─── task ${result.taskIndex + 1} [${result.taskType}] ───`
+              setAllLines((prev) => (prev.length > 0 ? [...prev, '', sep] : [sep]))
               setTasks((prev) =>
                 prev.map((t, i) => (i === result.taskIndex ? { ...t, status: 'running' } : t))
               )
               break
+            }
             case 'retry':
               setTasks((prev) =>
                 prev.map((t, i) =>
@@ -126,54 +211,89 @@ export function PipelineRunner({
   }, [])
 
   const runningIndex = tasks.findIndex((t) => t.status === 'running' || t.status === 'retrying')
+  const viewEnd = scrollOffset > 0 ? allLines.length - scrollOffset : allLines.length
+  const viewStart = Math.max(0, viewEnd - streamCapacity)
+  const visibleLines = allLines.slice(viewStart, viewEnd)
 
   return (
-    <Box flexDirection="row" height={termRows}>
-      {/* Left 40%: Workflow overview */}
-      <Box flexDirection="column" width="40%" paddingRight={1}>
-        <Text bold>Workflow</Text>
-        <Text> </Text>
-        {tasks.map((task, i) => (
-          <TaskRow
-            key={i}
-            index={i}
-            name={task.name}
-            command={task.command}
-            taskType={task.taskType}
-            status={task.status}
-            retryCount={task.retryCount}
-            maxRetries={task.maxRetries}
-            spinnerFrame={spinnerFrame}
-          />
-        ))}
-        <Text> </Text>
-        {done && <Text color="green">✓ Complete ({tasks.length} tasks)</Text>}
-        {error !== null && <Text color="red">✗ Failed</Text>}
+    <Box flexDirection="column" height={termRows}>
+      {/* Top: left/right split */}
+      <Box flexDirection="row" height={mainRows}>
+        {/* Left 40%: Workflow overview */}
+        <Box flexDirection="column" width="40%" paddingRight={1}>
+          <Text bold>Workflow</Text>
+          <Text> </Text>
+          {tasks.map((task, i) => (
+            <TaskRow
+              key={i}
+              index={i}
+              name={task.name}
+              command={task.command}
+              taskType={task.taskType}
+              status={task.status}
+              retryCount={task.retryCount}
+              maxRetries={task.maxRetries}
+              spinnerFrame={spinnerFrame}
+            />
+          ))}
+          <Text> </Text>
+          {done && <Text color="green">✓ Complete ({tasks.length} tasks)</Text>}
+          {error !== null && <Text color="red">✗ Failed</Text>}
+        </Box>
+
+        {/* Right 60%: Execution output */}
+        <Box
+          flexDirection="column"
+          width="60%"
+          borderStyle="single"
+          borderTop={false}
+          borderBottom={false}
+          borderRight={false}
+          paddingLeft={1}
+        >
+          <Text bold>
+            Output
+            {runningIndex >= 0 && <Text color="gray"> — task {runningIndex + 1}</Text>}
+          </Text>
+          <Text> </Text>
+          {allLines.length === 0 && !done && !error && <Text color="gray"> waiting...</Text>}
+          {visibleLines.map((line, i) => (
+            <Text key={i} color={line.startsWith('───') ? 'cyan' : 'gray'} wrap="truncate">
+              {line}
+            </Text>
+          ))}
+          {done && <Text color="green"> Pipeline complete.</Text>}
+          {error !== null && <Text color="red"> Error: {error}</Text>}
+        </Box>
       </Box>
 
-      {/* Right 60%: Execution output */}
+      {/* Bottom: permission panel */}
       <Box
         flexDirection="column"
-        width="60%"
+        height={PERM_PANEL_ROWS}
         borderStyle="single"
-        borderTop={false}
-        borderBottom={false}
+        borderLeft={false}
         borderRight={false}
-        paddingLeft={1}
+        borderBottom={false}
+        paddingX={1}
       >
-        <Text bold>
-          Output
-          {runningIndex >= 0 && <Text color="gray"> — task {runningIndex + 1}</Text>}
+        <Text bold color={permRequest ? 'yellow' : 'gray'}>
+          Permission{permRequest ? ' Request' : ''}
         </Text>
-        <Text> </Text>
-        {streamLines.length === 0 && !done && !error && <Text color="gray"> waiting...</Text>}
-        {streamLines.map((line, i) => (
-          <Text key={i} color="gray">
-            {line}
-          </Text>
-        ))}
-        {done && <Text color="green"> Pipeline complete.</Text>}
-        {error !== null && <Text color="red"> Error: {error}</Text>}
+        {permRequest ? (
+          <>
+            <Text> </Text>
+            <Text>
+              {' '}
+              Tool : <Text color="cyan">{permRequest.tool_name}</Text>
+            </Text>
+            <Text wrap="truncate"> Input: {formatInputSummary(permRequest.input)}</Text>
+            <Text> </Text>
+            <Text color="yellow"> Allow? [y/N] </Text>
+          </>
+        ) : (
+          <Text color="gray"> —</Text>
+        )}
       </Box>
     </Box>
   )

@@ -3,7 +3,7 @@
     {
       "type": "agent",
       "name": "get-references",
-      "task": "mcp__perclst__ts_get_references を src/infrastructures/tsAnalyzer.ts に対して実行して結果をそのまま出力してください。",
+      "task": "mcp__perclst__ts_get_references を src/utils/uuid.ts(generateId) に対して実行して結果をそのまま出力してください。",
       "model": "haiku",
       "allowed_tools": ["mcp__perclst__ts_analyze", "mcp__perclst__ts_get_references"]
     },
