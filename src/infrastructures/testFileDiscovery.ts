@@ -45,7 +45,7 @@ export function findTestFile(targetFilePath: string): string | null {
   return null
 }
 
-function searchDir(dir: string, stem: string, ext: string): string | null {
+export function searchDir(dir: string, stem: string, ext: string): string | null {
   if (!existsSync(dir)) return null
   try {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
