@@ -27,6 +27,7 @@ When you start running Claude Code seriously with `claude -p` (headless mode), y
 - **Local Storage**: Sessions stored in `~/.perclst/sessions/` by default
 - **MCP Server**: TypeScript analysis tools for Claude Code
 - **Procedure System**: Define agent behavior via system prompts
+- **Knowledge Lifecycle**: Agents capture discoveries and gotchas to `knowledge/draft/`; `perclst curate` promotes them into structured entries; `knowledge_search` lets future agents retrieve them before starting work
 
 ## Concepts
 
@@ -59,6 +60,27 @@ The MCP server exists primarily to handle permission prompts in headless (`claud
 The TypeScript analysis tools are used for developing perclst itself. You can add your own project-specific tools to `src/mcp/tools/` and register them in `src/mcp/server.ts`.
 
 See [docs/MCP.md](docs/MCP.md) for setup instructions and the full tool reference.
+
+## Knowledge
+
+perclst includes a lightweight knowledge system that lets agents accumulate and retrieve project-specific context across sessions.
+
+**Lifecycle:**
+
+```
+Agent encounters something worth remembering
+  → writes a freeform note to knowledge/draft/
+  → perclst curate promotes it into a structured knowledge/ entry
+  → future agents call knowledge_search before starting work
+```
+
+**Capture** — when an agent hits a gotcha, makes a non-obvious design decision, or learns how something actually behaves (vs. how it was assumed to work), it drops a `.md` file in `knowledge/draft/`. No structure required — freeform notes are fine.
+
+**Curate** — `perclst curate` runs the `meta-curate-knowledge` procedure, which reads all draft entries, structures them, and files them into `knowledge/`. Only this procedure writes to `knowledge/` directly; all agents write to `knowledge/draft/` only.
+
+**Search** — the `knowledge_search` MCP tool lets agents query the knowledge base by keyword before starting a task. This surfaces past problems, decisions, and gotchas that aren't visible in the code itself.
+
+The result is a knowledge base that grows with the project — built by agents, consumed by agents, without any manual curation step in the normal workflow.
 
 ## License
 
