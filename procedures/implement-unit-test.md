@@ -25,7 +25,7 @@ flowchart TD
     ReadTestFile --> WriteTests
     StartFresh --> WriteTests
 
-    WriteTests["Write tests\n- Use recommended_framework (vitest/jest)\n- Order by complexity descending\n- Use suggested_test_case_count as minimum case count per function\n- Cover: happy path, each branch, empty-collection if loops, each error path\n- For class methods: instantiate with mocked constructor args"]
+    WriteTests["Write tests — conventions:\n- Test file: {dir}/__tests__/{stem}.test.ts\n- Import explicitly: import { vi, describe, it, expect, beforeEach } from 'vitest'\n- One assertion per it block (one input variant per case)\n- Order: happy path first, then branches, then error paths\n- Use suggested_test_case_count as minimum case count per function\n- Cover: happy path, each branch, empty-collection if loops, each error path\n- Mock injected deps with vi.fn() typed object literals; reset with vi.clearAllMocks() in beforeEach\n- Module mocks: vi.mock() at top level\n- Pure functions with no deps: no mocks needed\n- For class methods: instantiate with mocked constructor args in beforeEach\n- Never test implementation details — test observable behavior"]
 
     WriteTests --> RunChecker[Run ts_checker]
     RunChecker --> AllPass{lint + build +\ntests pass?}

@@ -87,7 +87,38 @@ describe('buildTurns', () => {
     expect(result.turns).toHaveLength(0)
   })
 
-  it('should accumulate token counts across multiple assistant entries', () => {
+  it('should merge consecutive assistant entries into one logical turn', () => {
+    const entries: RawEntry[] = [
+      {
+        type: 'assistant',
+        uuid: 'msg-1',
+        message: { content: [{ type: 'thinking', thinking: 'thought' }] }
+      } as RawAssistantEntry,
+      {
+        type: 'assistant',
+        uuid: 'msg-2',
+        message: { content: [{ type: 'text', text: 'I will read the file.' }] }
+      } as RawAssistantEntry,
+      {
+        type: 'assistant',
+        uuid: 'msg-3',
+        message: {
+          content: [{ type: 'tool_use', id: 'tool-1', name: 'Read', input: { file_path: 'x.ts' } }]
+        }
+      } as RawAssistantEntry
+    ]
+    const toolResultMap = new Map([['tool-1', { text: 'contents', isError: false }]])
+
+    const result = buildTurns(entries, toolResultMap)
+
+    expect(result.turns).toHaveLength(1)
+    expect(result.turns[0].assistantText).toBe('I will read the file.')
+    expect(result.turns[0].toolCalls).toHaveLength(1)
+    expect(result.turns[0].toolCalls[0].name).toBe('Read')
+    expect(result.turns[0].thinkingBlocks).toEqual(['thought'])
+  })
+
+  it('should accumulate token counts across consecutive assistant entries into one turn', () => {
     const entries: RawEntry[] = [
       {
         type: 'assistant',
@@ -110,12 +141,43 @@ describe('buildTurns', () => {
 
     const result = buildTurns(entries, toolResultMap)
 
+    expect(result.turns).toHaveLength(1)
     expect(result.tokens).toEqual({
       totalInput: 180,
       totalOutput: 90,
       totalCacheRead: 0,
       totalCacheCreation: 0
     })
+  })
+
+  it('should start a new assistant turn after each user entry', () => {
+    const entries: RawEntry[] = [
+      {
+        type: 'assistant',
+        uuid: 'msg-1',
+        message: {
+          content: [{ type: 'tool_use', id: 't1', name: 'Bash', input: { command: 'ls' } }]
+        }
+      } as RawAssistantEntry,
+      {
+        type: 'user',
+        message: {
+          content: [{ type: 'tool_result', tool_use_id: 't1', content: 'ok' }] as RawContentBlock[]
+        }
+      } as RawUserEntry,
+      {
+        type: 'assistant',
+        uuid: 'msg-2',
+        message: { content: [{ type: 'text', text: 'Done.' }] }
+      } as RawAssistantEntry
+    ]
+    const toolResultMap = new Map([['t1', { text: 'ok', isError: false }]])
+
+    const result = buildTurns(entries, toolResultMap)
+
+    expect(result.turns).toHaveLength(2)
+    expect(result.turns[0].toolCalls[0].name).toBe('Bash')
+    expect(result.turns[1].assistantText).toBe('Done.')
   })
 
   it('should skip assistant entries with only thinking blocks', () => {

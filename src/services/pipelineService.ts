@@ -228,7 +228,7 @@ export class PipelineService {
       ? this.pipelineDomain.buildRejectedInstruction(task, rejected)
       : task.task
 
-    if (task.name) {
+    if (task.name && rejected) {
       const resumed = await this.resumeNamedSession(
         task,
         index,

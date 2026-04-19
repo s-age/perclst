@@ -33,7 +33,9 @@ export type AnalysisSummary = {
   turns: ClaudeCodeTurn[]
   turnsBreakdown: {
     userInstructions: number
-    toolUse: number
+    thinking: number
+    toolCalls: number
+    toolResults: number
     assistantResponse: number
     total: number
   }
