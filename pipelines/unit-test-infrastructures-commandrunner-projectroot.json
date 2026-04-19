@@ -1,0 +1,133 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "unit-test-infrastructures-commandrunner",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-infrastructures-commandrunner",
+          "task": "target_file_path: src/infrastructures/commandRunner.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-infrastructures-commandrunner",
+          "task": "target_file_path: src/infrastructures/commandRunner.ts\nng_output_path: .claude/tmp/review-unit-test-infrastructures-commandrunner",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-infrastructures-commandrunner",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-infrastructures-commandrunner",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "implement-unit-test-infrastructures-commandrunner",
+          "task": "All tests pass and the review is complete. Commit your changes with an appropriate conventional commit message (e.g. test(services): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Write", "Edit", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-infrastructures-projectroot",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-infrastructures-projectroot",
+          "task": "target_file_path: src/infrastructures/projectRoot.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-infrastructures-projectroot",
+          "task": "target_file_path: src/infrastructures/projectRoot.ts\nng_output_path: .claude/tmp/review-unit-test-infrastructures-projectroot",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-infrastructures-projectroot",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-infrastructures-projectroot",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "implement-unit-test-infrastructures-projectroot",
+          "task": "All tests pass and the review is complete. Commit your changes with an appropriate conventional commit message (e.g. test(services): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Write", "Edit", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "script",
+      "command": "perclst curate --output-only"
+    },
+    {
+      "type": "agent",
+      "name": "commit-curate",
+      "task": "Commit any new or modified files under knowledge/ with a conventional commit message (e.g. chore: curate knowledges).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
