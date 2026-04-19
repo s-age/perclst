@@ -19,7 +19,8 @@
       "@src/*": ["src/*"],
       "@types/*": ["src/types/*"]
     },
-    "types": ["node"]
+    "types": ["node"],
+    "jsx": "react-jsx"
   },
   "include": ["src/**/*", "scripts/**/*"],
   "exclude": ["node_modules", "dist"]
