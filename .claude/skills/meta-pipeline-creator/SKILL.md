@@ -104,6 +104,19 @@ When a review agent should reject the preceding implement agent (within a nested
 }
 ```
 
+### Cleaning up stale `ng_output_path` files
+
+If a pipeline is re-run after a previous run that wrote to `ng_output_path`, the stale file will cause downstream agents to skip the "no issues" early-exit and proceed as if issues were found. To prevent this, add a `script` task at the top of the outer `tasks` array to delete the file before the review agent runs:
+
+```json
+{
+  "type": "script",
+  "command": "rm -f .claude/tmp/<ng-output-path-name>"
+}
+```
+
+This must be the **first** task in the outer array — before the initial review agent.
+
 ## Script tasks and rejection loops
 
 Add a `script` task after agent tasks when external validation (e.g. `npm run test:unit`) should gate progress:
