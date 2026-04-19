@@ -167,6 +167,8 @@ perclst start "Promote all entries in knowledge/draft/ into structured knowledge
 
 Execute a pipeline of agent tasks defined in a JSON file. Tasks run serially. If a task specifies a `name` and a session with that name already exists, the task resumes that session; otherwise a new session is created.
 
+**Pipeline JSON Schema**: [`schemas/pipeline.schema.json`](../schemas/pipeline.schema.json) — add `"$schema": "../schemas/pipeline.schema.json"` to a pipeline file for editor autocompletion and validation.
+
 ```bash
 perclst run pipeline.json
 perclst run pipeline.json --output-only

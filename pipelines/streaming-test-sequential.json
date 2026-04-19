@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/pipeline.schema.json",
   "tasks": [
     {
       "type": "agent",
