@@ -86,6 +86,7 @@ export function PipelineRunner({
         for await (const result of pipelineService.run(pipeline, runOptions, undefined as never)) {
           switch (result.kind) {
             case 'task_start':
+              setStreamLines([])
               setTasks((prev) =>
                 prev.map((t, i) => (i === result.taskIndex ? { ...t, status: 'running' } : t))
               )
@@ -109,7 +110,6 @@ export function PipelineRunner({
               setTasks((prev) =>
                 prev.map((t, i) => (i === result.taskIndex ? { ...t, status: 'done' } : t))
               )
-              setStreamLines([])
               break
           }
         }
