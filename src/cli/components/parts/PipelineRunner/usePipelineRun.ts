@@ -21,56 +21,78 @@ type Setters = {
   setError: (v: string | null) => void
 }
 
-function taskSep(index: number, name: string | undefined, type: string): string {
-  return name ? `─── ${index + 1}. ${name} [${type}] ───` : `─── task ${index + 1} [${type}] ───`
+function taskSep(
+  taskPath: number[],
+  index: number,
+  name: string | undefined,
+  type: string
+): string {
+  const prefix = taskPath.length > 0 ? taskPath.map((p) => p + 1).join('.') + '.' : ''
+  const num = `${prefix}${index + 1}`
+  return name ? `─── ${num}. ${name} [${type}] ───` : `─── task ${num} [${type}] ───`
+}
+
+function updateAtPath(
+  tasks: TaskState[],
+  path: number[],
+  index: number,
+  updater: (t: TaskState) => TaskState
+): TaskState[] {
+  if (path.length === 0) {
+    return tasks.map((t, i) => (i === index ? updater(t) : t))
+  }
+  const [head, ...rest] = path
+  return tasks.map((t, i) =>
+    i === head ? { ...t, children: updateAtPath(t.children ?? [], rest, index, updater) } : t
+  )
+}
+
+type PipelineResult =
+  Awaited<ReturnType<PipelineService['run']>> extends AsyncGenerator<infer T> ? T : never
+
+function applyResult(
+  result: PipelineResult,
+  { setTasks, setAllLines }: Pick<Setters, 'setTasks' | 'setAllLines'>
+): void {
+  if (result.kind === 'task_start') {
+    const sep = taskSep(result.taskPath, result.taskIndex, result.name, result.taskType)
+    setAllLines((prev) => (prev.length > 0 ? [...prev, '', sep] : [sep]))
+    setTasks((prev) =>
+      updateAtPath(prev, result.taskPath, result.taskIndex, (t) => ({ ...t, status: 'running' }))
+    )
+  } else if (result.kind === 'retry') {
+    setTasks((prev) =>
+      updateAtPath(prev, result.taskPath, result.taskIndex, (t) => ({
+        ...t,
+        status: 'retrying',
+        retryCount: result.retryCount,
+        maxRetries: result.maxRetries
+      }))
+    )
+  } else {
+    setTasks((prev) =>
+      updateAtPath(prev, result.taskPath, result.taskIndex, (t) => ({ ...t, status: 'done' }))
+    )
+  }
 }
 
 async function runPipeline(
   pipelineService: PipelineService,
   pipeline: Pipeline,
   runOptions: PipelineRunOptions,
-  { setTasks, setAllLines, setDone, setError }: Setters,
+  setters: Setters,
   onDone: () => void,
   onError: (err: Error) => void
 ): Promise<void> {
   try {
     for await (const result of pipelineService.run(pipeline, runOptions, undefined as never)) {
-      switch (result.kind) {
-        case 'task_start': {
-          const sep = taskSep(result.taskIndex, result.name, result.taskType)
-          setAllLines((prev) => (prev.length > 0 ? [...prev, '', sep] : [sep]))
-          setTasks((prev) =>
-            prev.map((t, i) => (i === result.taskIndex ? { ...t, status: 'running' } : t))
-          )
-          break
-        }
-        case 'retry':
-          setTasks((prev) =>
-            prev.map((t, i) =>
-              i === result.taskIndex
-                ? {
-                    ...t,
-                    status: 'retrying',
-                    retryCount: result.retryCount,
-                    maxRetries: result.maxRetries
-                  }
-                : t
-            )
-          )
-          break
-        case 'agent':
-        case 'script':
-          setTasks((prev) =>
-            prev.map((t, i) => (i === result.taskIndex ? { ...t, status: 'done' } : t))
-          )
-          break
-      }
+      applyResult(result, setters)
     }
-    setDone(true)
+    setters.setDone(true)
     onDone()
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    setError(msg)
+    setters.setError(msg)
     onError(err instanceof Error ? err : new Error(msg))
   }
 }

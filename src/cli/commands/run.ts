@@ -25,21 +25,32 @@ type RawRunOptions = {
   format?: string
 }
 
+function taskLabel(taskPath: number[], taskIndex: number): string {
+  const prefix = taskPath.length > 0 ? taskPath.map((p) => p + 1).join('.') + '.' : ''
+  return `${prefix}${taskIndex + 1}`
+}
+
 function printTaskResult(
   result: PipelineTaskResult,
   input: RunPipelineInput,
   config: Config,
   streaming: boolean
 ): void {
+  if (result.kind === 'task_start' || result.kind === 'retry' || result.kind === 'pipeline_end') {
+    return
+  }
   if (result.kind === 'script') {
     const status = result.result.exitCode === 0 ? 'ok' : `exit ${result.result.exitCode}`
-    stdout.print(`\nTask ${result.taskIndex + 1} [script] ${status}: ${result.command}`)
+    stdout.print(
+      `\nTask ${taskLabel(result.taskPath, result.taskIndex)} [script] ${status}: ${result.command}`
+    )
     if (result.result.stdout) stdout.print(result.result.stdout.trimEnd())
     if (result.result.stderr) stdout.print(result.result.stderr.trimEnd())
   } else {
+    const num = taskLabel(result.taskPath, result.taskIndex)
     const label = result.name
-      ? `Task ${result.taskIndex + 1}: ${result.name} [${result.action}]`
-      : `Task ${result.taskIndex + 1} [${result.action}]`
+      ? `Task ${num}: ${result.name} [${result.action}]`
+      : `Task ${num} [${result.action}]`
     stdout.print(`\n${label} — session: ${result.sessionId}`)
     printResponse(
       result.response,

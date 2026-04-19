@@ -1,7 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import type { Pipeline, AgentPipelineTask, ScriptPipelineTask } from '@src/types/pipeline'
-import type { ISessionDomain } from '@src/domains/ports/session'
-import type { IPipelineDomain } from '@src/domains/ports/pipeline'
+import type { Pipeline, AgentPipelineTask } from '@src/types/pipeline'
+import type { IPipelineDomain, AgentTaskResult } from '@src/domains/ports/pipeline'
 import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
 import type { AgentResponse } from '@src/types/agent'
 import type { Session } from '@src/types/session'
@@ -12,14 +11,18 @@ vi.mock('@src/utils/output', () => ({
   debug: { print: vi.fn() }
 }))
 
+const stubAgentResult = (overrides: Partial<AgentTaskResult> = {}): AgentTaskResult => ({
+  taskPath: [],
+  taskIndex: 0,
+  name: undefined,
+  sessionId: 'session-1',
+  response: {} as AgentResponse,
+  action: 'started',
+  ...overrides
+})
+
 describe('PipelineService', () => {
   let service: PipelineService
-  const mockSessionDomain: ISessionDomain = {
-    create: vi.fn<[], Promise<Session>>(),
-    findByName: vi.fn<[string], Promise<Session | null>>(),
-    getPath: vi.fn<[string], string>(),
-    updateStatus: vi.fn<[string, string], Promise<void>>()
-  }
   const mockPipelineDomain: IPipelineDomain = {
     runWithLimit: vi.fn<
       [Session, string, boolean, object, number, number],
@@ -28,7 +31,12 @@ describe('PipelineService', () => {
     buildRejectedInstruction: vi.fn<[AgentPipelineTask, object], string>(),
     getRejectionFeedback: vi.fn<[string], Promise<string | undefined>>(),
     getWorkingDirectory: vi.fn<[], string>(),
-    resolveRejection: vi.fn()
+    resolveRejection: vi.fn(),
+    buildExecuteOptions: vi.fn(),
+    runAgentTask: vi.fn<
+      [AgentPipelineTask, number, number[], object, object?],
+      Promise<AgentTaskResult>
+    >()
   }
   const mockScriptDomain: IScriptDomain = {
     run: vi.fn<[string, string], Promise<ScriptResult>>()
@@ -37,31 +45,28 @@ describe('PipelineService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(mockPipelineDomain.getWorkingDirectory).mockReturnValue('/test/cwd')
-    service = new PipelineService(mockSessionDomain, mockPipelineDomain, mockScriptDomain)
+    vi.mocked(mockPipelineDomain.runAgentTask).mockResolvedValue(stubAgentResult())
+    service = new PipelineService(mockPipelineDomain, mockScriptDomain)
   })
+
+  async function collectEvents(pipeline: Pipeline): Promise<PipelineTaskResult[]> {
+    const events: PipelineTaskResult[] = []
+    for await (const event of service.run(pipeline)) events.push(event)
+    return events
+  }
 
   describe('task_start events', () => {
     it('should emit task_start event for agent task', async () => {
-      const task: AgentPipelineTask = {
-        type: 'agent',
-        task: 'do something',
-        name: 'test-agent'
+      const pipeline: Pipeline = {
+        tasks: [{ type: 'agent', task: 'do something', name: 'test-agent' }]
       }
-      const pipeline: Pipeline = { tasks: [task] }
-
-      const mockSession: Session = { id: 'session-1', name: 'test-agent' } as Session
-      vi.mocked(mockSessionDomain.create).mockResolvedValue(mockSession)
-      vi.mocked(mockPipelineDomain.runWithLimit).mockResolvedValue({} as AgentResponse)
-      vi.mocked(mockSessionDomain.getPath).mockReturnValue('/path')
-
-      const events: PipelineTaskResult[] = []
-      for await (const event of service.run(pipeline)) {
-        events.push(event)
-      }
-
-      const taskStartEvent = events.find((e) => e.kind === 'task_start')
-      expect(taskStartEvent).toEqual({
+      vi.mocked(mockPipelineDomain.runAgentTask).mockResolvedValue(
+        stubAgentResult({ taskIndex: 0, name: 'test-agent' })
+      )
+      const events = await collectEvents(pipeline)
+      expect(events.find((e) => e.kind === 'task_start')).toEqual({
         kind: 'task_start',
+        taskPath: [],
         taskIndex: 0,
         name: 'test-agent',
         taskType: 'agent'
@@ -69,84 +74,84 @@ describe('PipelineService', () => {
     })
 
     it('should emit task_start event for script task', async () => {
-      const task: ScriptPipelineTask = {
-        type: 'script',
-        command: 'echo "test"'
-      }
-      const pipeline: Pipeline = { tasks: [task] }
-
-      vi.mocked(mockScriptDomain.run).mockResolvedValue({
-        exitCode: 0,
-        stdout: 'test',
-        stderr: ''
-      })
-
-      const events: PipelineTaskResult[] = []
-      for await (const event of service.run(pipeline)) {
-        events.push(event)
-      }
-
-      const taskStartEvent = events.find((e) => e.kind === 'task_start')
-      expect(taskStartEvent).toEqual({
+      vi.mocked(mockScriptDomain.run).mockResolvedValue({ exitCode: 0, stdout: 'test', stderr: '' })
+      const events = await collectEvents({ tasks: [{ type: 'script', command: 'echo "test"' }] })
+      expect(events.find((e) => e.kind === 'task_start')).toEqual({
         kind: 'task_start',
+        taskPath: [],
         taskIndex: 0,
         name: undefined,
         taskType: 'script'
       })
     })
 
-    it('should emit task_start event before task result event', async () => {
-      const task: AgentPipelineTask = {
-        type: 'agent',
-        task: 'do something'
-      }
-      const pipeline: Pipeline = { tasks: [task] }
-
-      const mockSession: Session = { id: 'session-1' } as Session
-      vi.mocked(mockSessionDomain.create).mockResolvedValue(mockSession)
-      vi.mocked(mockPipelineDomain.runWithLimit).mockResolvedValue({} as AgentResponse)
-      vi.mocked(mockSessionDomain.getPath).mockReturnValue('/path')
-
-      const events: PipelineTaskResult[] = []
-      for await (const event of service.run(pipeline)) {
-        events.push(event)
-      }
-
-      const taskStartIndex = events.findIndex((e) => e.kind === 'task_start')
-      const agentResultIndex = events.findIndex((e) => e.kind === 'agent')
-      expect(taskStartIndex).toBeLessThan(agentResultIndex)
+    it('should emit task_start before task result event', async () => {
+      const events = await collectEvents({ tasks: [{ type: 'agent', task: 'do something' }] })
+      const startIdx = events.findIndex((e) => e.kind === 'task_start')
+      const agentIdx = events.findIndex((e) => e.kind === 'agent')
+      expect(startIdx).toBeLessThan(agentIdx)
     })
 
     it('should emit task_start for each task in sequence', async () => {
-      const agentTask: AgentPipelineTask = {
-        type: 'agent',
-        task: 'agent work'
+      vi.mocked(mockScriptDomain.run).mockResolvedValue({ exitCode: 0, stdout: '', stderr: '' })
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'agent work' },
+          { type: 'script', command: 'echo test' }
+        ]
       }
-      const scriptTask: ScriptPipelineTask = {
-        type: 'script',
-        command: 'echo test'
+      const events = await collectEvents(pipeline)
+      const starts = events.filter((e) => e.kind === 'task_start')
+      expect(starts).toHaveLength(2)
+      expect(starts[0]).toMatchObject({ taskIndex: 0, taskPath: [] })
+      expect(starts[1]).toMatchObject({ taskIndex: 1, taskPath: [] })
+    })
+  })
+
+  describe('nested pipeline tasks', () => {
+    it('should emit task_start with correct taskPath for nested tasks', async () => {
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'pipeline', name: 'sub', tasks: [{ type: 'agent', task: 'work', name: 'child' }] }
+        ]
       }
-      const pipeline: Pipeline = { tasks: [agentTask, scriptTask] }
+      const events = await collectEvents(pipeline)
+      const starts = events.filter((e) => e.kind === 'task_start')
+      expect(starts).toHaveLength(2)
+      expect(starts[0]).toMatchObject({ taskPath: [], taskIndex: 0, taskType: 'pipeline' })
+      expect(starts[1]).toMatchObject({ taskPath: [0], taskIndex: 0, taskType: 'agent' })
+    })
 
-      const mockSession: Session = { id: 'session-1' } as Session
-      vi.mocked(mockSessionDomain.create).mockResolvedValue(mockSession)
-      vi.mocked(mockPipelineDomain.runWithLimit).mockResolvedValue({} as AgentResponse)
-      vi.mocked(mockSessionDomain.getPath).mockReturnValue('/path')
-      vi.mocked(mockScriptDomain.run).mockResolvedValue({
-        exitCode: 0,
-        stdout: '',
-        stderr: ''
-      })
-
-      const events: PipelineTaskResult[] = []
-      for await (const event of service.run(pipeline)) {
-        events.push(event)
+    it('should emit pipeline_end after all nested tasks complete', async () => {
+      const pipeline: Pipeline = {
+        tasks: [{ type: 'pipeline', name: 'sub', tasks: [{ type: 'agent', task: 'work' }] }]
       }
+      const events = await collectEvents(pipeline)
+      const pipelineEnd = events.find((e) => e.kind === 'pipeline_end')
+      expect(pipelineEnd).toEqual({ kind: 'pipeline_end', taskPath: [], taskIndex: 0 })
+      expect(events.indexOf(events.find((e) => e.kind === 'agent')!)).toBeLessThan(
+        events.indexOf(pipelineEnd!)
+      )
+    })
 
-      const taskStartEvents = events.filter((e) => e.kind === 'task_start')
-      expect(taskStartEvents).toHaveLength(2)
-      expect(taskStartEvents[0]?.taskIndex).toBe(0)
-      expect(taskStartEvents[1]?.taskIndex).toBe(1)
+    it('should emit events for multiple levels of nesting with correct paths', async () => {
+      const pipeline: Pipeline = {
+        tasks: [
+          {
+            type: 'pipeline',
+            name: 'outer',
+            tasks: [{ type: 'pipeline', name: 'inner', tasks: [{ type: 'agent', task: 'work' }] }]
+          }
+        ]
+      }
+      const events = await collectEvents(pipeline)
+      const starts = events.filter((e) => e.kind === 'task_start')
+      expect(starts[0]).toMatchObject({ taskPath: [], taskIndex: 0, taskType: 'pipeline' })
+      expect(starts[1]).toMatchObject({ taskPath: [0], taskIndex: 0, taskType: 'pipeline' })
+      expect(starts[2]).toMatchObject({ taskPath: [0, 0], taskIndex: 0, taskType: 'agent' })
+      const ends = events.filter((e) => e.kind === 'pipeline_end')
+      expect(ends[0]).toEqual({ kind: 'pipeline_end', taskPath: [0], taskIndex: 0 })
+      expect(ends[1]).toEqual({ kind: 'pipeline_end', taskPath: [], taskIndex: 0 })
     })
   })
 
@@ -162,31 +167,28 @@ describe('PipelineService', () => {
         }
       }) as const
 
-    it('should emit retry event with correct structure when agent rejection triggers', async () => {
-      let feedbackCallCount = 0
-      vi.mocked(mockPipelineDomain.getRejectionFeedback).mockImplementation(async () => {
-        feedbackCallCount++
-        return feedbackCallCount === 1 ? 'feedback from agent' : undefined
-      })
+    it('should emit retry event when agent rejection triggers', async () => {
+      let callCount = 0
+      vi.mocked(mockPipelineDomain.getRejectionFeedback).mockImplementation(async () =>
+        ++callCount === 1 ? 'feedback' : undefined
+      )
       vi.mocked(mockPipelineDomain.resolveRejection).mockReturnValue(stubRejectionResult(0))
+      vi.mocked(mockPipelineDomain.runAgentTask)
+        .mockResolvedValueOnce(stubAgentResult({ taskIndex: 0, name: 'target-agent' }))
+        .mockResolvedValueOnce(stubAgentResult({ taskIndex: 1, name: 'rejection-agent' }))
+        .mockResolvedValueOnce(stubAgentResult({ taskIndex: 0, name: 'target-agent' }))
 
-      const targetTask: AgentPipelineTask = {
-        type: 'agent',
-        task: 'initial task',
-        name: 'target-agent'
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'initial', name: 'target-agent' },
+          {
+            type: 'agent',
+            task: 'reject',
+            name: 'rejection-agent',
+            rejected: { to: 'target-agent', max_retries: 2 }
+          }
+        ]
       }
-      const rejectionTask: AgentPipelineTask = {
-        type: 'agent',
-        task: 'rejection task',
-        name: 'rejection-agent',
-        rejected: { to: 'target-agent', max_retries: 2 }
-      }
-      const pipeline: Pipeline = { tasks: [targetTask, rejectionTask] }
-
-      vi.mocked(mockSessionDomain.create).mockResolvedValue({ id: 'session-1' } as Session)
-      vi.mocked(mockPipelineDomain.runWithLimit).mockResolvedValue({} as AgentResponse)
-      vi.mocked(mockSessionDomain.getPath).mockReturnValue('/path')
-
       const events: PipelineTaskResult[] = []
       for await (const event of service.run(pipeline)) events.push(event)
 
@@ -200,29 +202,23 @@ describe('PipelineService', () => {
 
     it('should emit retry event when script rejection triggers', async () => {
       vi.mocked(mockPipelineDomain.resolveRejection).mockReturnValue(stubRejectionResult(0))
-
-      const targetTask: AgentPipelineTask = {
-        type: 'agent',
-        task: 'target task',
-        name: 'target-agent'
-      }
-      const scriptTask: ScriptPipelineTask = {
-        type: 'script',
-        command: 'failing-script',
-        rejected: { to: 'target-agent', max_retries: 2 }
-      }
-      const pipeline: Pipeline = { tasks: [targetTask, scriptTask] }
-
-      vi.mocked(mockSessionDomain.create).mockResolvedValue({ id: 'session-1' } as Session)
-      vi.mocked(mockPipelineDomain.runWithLimit).mockResolvedValue({} as AgentResponse)
-      vi.mocked(mockSessionDomain.getPath).mockReturnValue('/path')
-
       let scriptRunCount = 0
-      vi.mocked(mockScriptDomain.run).mockImplementation(async () => {
-        scriptRunCount++
-        return { exitCode: scriptRunCount === 1 ? 1 : 0, stdout: 'out', stderr: 'err' }
-      })
+      vi.mocked(mockScriptDomain.run).mockImplementation(async () => ({
+        exitCode: ++scriptRunCount === 1 ? 1 : 0,
+        stdout: 'out',
+        stderr: 'err'
+      }))
 
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'target', name: 'target-agent' },
+          {
+            type: 'script',
+            command: 'failing-script',
+            rejected: { to: 'target-agent', max_retries: 2 }
+          }
+        ]
+      }
       const events: PipelineTaskResult[] = []
       for await (const event of service.run(pipeline)) events.push(event)
 
@@ -232,58 +228,44 @@ describe('PipelineService', () => {
       expect(retryEvent?.maxRetries).toBe(2)
     })
 
-    it('should use default max_retries of 1 when not specified in agent rejection', async () => {
-      let feedbackCallCount = 0
-      vi.mocked(mockPipelineDomain.getRejectionFeedback).mockImplementation(async () => {
-        feedbackCallCount++
-        return feedbackCallCount === 1 ? 'feedback' : undefined
-      })
+    it('should use default max_retries of 1 when not specified', async () => {
+      let callCount = 0
+      vi.mocked(mockPipelineDomain.getRejectionFeedback).mockImplementation(async () =>
+        ++callCount === 1 ? 'feedback' : undefined
+      )
       vi.mocked(mockPipelineDomain.resolveRejection).mockReturnValue(stubRejectionResult(0))
 
-      const targetTask: AgentPipelineTask = { type: 'agent', task: 'target', name: 'target' }
-      const rejectTask: AgentPipelineTask = {
-        type: 'agent',
-        task: 'reject',
-        name: 'reject',
-        rejected: { to: 'target' }
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'target', name: 'target' },
+          { type: 'agent', task: 'reject', name: 'reject', rejected: { to: 'target' } }
+        ]
       }
-      const pipeline: Pipeline = { tasks: [targetTask, rejectTask] }
-
-      vi.mocked(mockSessionDomain.create).mockResolvedValue({ id: 'session-1' } as Session)
-      vi.mocked(mockSessionDomain.findByName).mockResolvedValue(null)
-      vi.mocked(mockPipelineDomain.runWithLimit).mockResolvedValue({} as AgentResponse)
-      vi.mocked(mockSessionDomain.getPath).mockReturnValue('/path')
-
       const events: PipelineTaskResult[] = []
       for await (const event of service.run(pipeline)) events.push(event)
 
-      const retryEvent = events.find((e) => e.kind === 'retry')
-      expect(retryEvent?.maxRetries).toBe(1)
+      expect(events.find((e) => e.kind === 'retry')?.maxRetries).toBe(1)
     })
 
-    it('should emit retry event with correct taskIndex and retryCount', async () => {
-      let feedbackCallCount = 0
-      vi.mocked(mockPipelineDomain.getRejectionFeedback).mockImplementation(async () => {
-        feedbackCallCount++
-        return feedbackCallCount === 1 ? 'feedback' : undefined
-      })
+    it('should emit retry event with correct taskIndex', async () => {
+      let callCount = 0
+      vi.mocked(mockPipelineDomain.getRejectionFeedback).mockImplementation(async () =>
+        ++callCount === 1 ? 'feedback' : undefined
+      )
       vi.mocked(mockPipelineDomain.resolveRejection).mockReturnValue(stubRejectionResult(0))
 
-      const targetTask: AgentPipelineTask = { type: 'agent', task: 'target', name: 'target-1' }
-      const middleTask: AgentPipelineTask = { type: 'agent', task: 'middle', name: 'middle' }
-      const rejectTask: AgentPipelineTask = {
-        type: 'agent',
-        task: 'reject',
-        name: 'reject-task',
-        rejected: { to: 'target-1', max_retries: 2 }
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'target', name: 'target-1' },
+          { type: 'agent', task: 'middle', name: 'middle' },
+          {
+            type: 'agent',
+            task: 'reject',
+            name: 'reject-task',
+            rejected: { to: 'target-1', max_retries: 2 }
+          }
+        ]
       }
-      const pipeline: Pipeline = { tasks: [targetTask, middleTask, rejectTask] }
-
-      vi.mocked(mockSessionDomain.create).mockResolvedValue({ id: 'session-1' } as Session)
-      vi.mocked(mockSessionDomain.findByName).mockResolvedValue(null)
-      vi.mocked(mockPipelineDomain.runWithLimit).mockResolvedValue({} as AgentResponse)
-      vi.mocked(mockSessionDomain.getPath).mockReturnValue('/path')
-
       const events: PipelineTaskResult[] = []
       for await (const event of service.run(pipeline)) events.push(event)
 

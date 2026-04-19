@@ -1,3 +1,14 @@
+import type { AgentStreamEvent } from './agent.js'
+
+export type PipelineRunOptions = {
+  allowedTools?: string[]
+  disallowedTools?: string[]
+  model?: string
+  maxTurns?: number
+  maxContextTokens?: number
+  onStreamEvent?: (event: AgentStreamEvent) => void
+}
+
 export type RejectedContext = {
   retry_count: number
   task: AgentPipelineTask
