@@ -117,6 +117,14 @@ Place a `script` gate immediately after each agent task (or nested pipeline) tha
 
 When a pipeline has multiple independent agent tasks (e.g. one per file), give each its own gate so a failure is caught and fixed before the next agent starts.
 
+## Running a pipeline
+
+After writing the file, run it with:
+
+```bash
+perclst run pipelines/<name>.json
+```
+
 ## Verification checklist
 
 Before writing the file:

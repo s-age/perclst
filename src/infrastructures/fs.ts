@@ -27,6 +27,10 @@ export function ensureDir(dir: string): void {
   mkdirSync(dir, { recursive: true })
 }
 
+export function readText(path: string): string {
+  return readFileSync(path, 'utf-8')
+}
+
 export function homeDir(): string {
   return homedir()
 }
