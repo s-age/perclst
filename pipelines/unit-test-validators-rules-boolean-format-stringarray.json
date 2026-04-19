@@ -1,0 +1,192 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "unit-test-validators-rules-boolean",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-validators-rules-boolean",
+          "task": "target_file_path: src/validators/rules/boolean.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-validators-rules-boolean",
+          "task": "target_file_path: src/validators/rules/boolean.ts\nng_output_path: .claude/tmp/review-unit-test-validators-rules-boolean",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-boolean",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-boolean",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-unit-test-validators-rules-boolean",
+          "task": "All tests pass and the review is complete. Commit your changes with an appropriate conventional commit message (e.g. test(validators): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-validators-rules-format",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-validators-rules-format",
+          "task": "target_file_path: src/validators/rules/format.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-validators-rules-format",
+          "task": "target_file_path: src/validators/rules/format.ts\nng_output_path: .claude/tmp/review-unit-test-validators-rules-format",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-format",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-format",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-unit-test-validators-rules-format",
+          "task": "All tests pass and the review is complete. Commit your changes with an appropriate conventional commit message (e.g. test(validators): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-validators-rules-stringarray",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-validators-rules-stringarray",
+          "task": "target_file_path: src/validators/rules/stringArray.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-validators-rules-stringarray",
+          "task": "target_file_path: src/validators/rules/stringArray.ts\nng_output_path: .claude/tmp/review-unit-test-validators-rules-stringarray",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-stringarray",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-validators-rules-stringarray",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-unit-test-validators-rules-stringarray",
+          "task": "All tests pass and the review is complete. Commit your changes with an appropriate conventional commit message (e.g. test(validators): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "script",
+      "command": "perclst curate --output-only"
+    },
+    {
+      "type": "agent",
+      "name": "commit-curate",
+      "task": "Commit any new or modified files under knowledge/ with a conventional commit message (e.g. chore: curate knowledges).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
