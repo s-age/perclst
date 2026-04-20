@@ -1,4 +1,4 @@
-import type { Session, CreateSessionParams } from '@src/types/session'
+import type { Session, CreateSessionParams, SweepFilter } from '@src/types/session'
 
 export type ISessionDomain = {
   create(params: CreateSessionParams): Promise<Session>
@@ -10,6 +10,13 @@ export type ISessionDomain = {
   updateStatus(sessionId: string, status: 'active' | 'completed' | 'failed'): Promise<Session>
   rename(sessionId: string, name: string): Promise<Session>
   findByName(name: string): Promise<Session | null>
+  resolveId(nameOrId: string): Promise<string>
+  createRewind(
+    originalSessionId: string,
+    messageId: string | undefined,
+    name?: string
+  ): Promise<Session>
+  sweep(filter: SweepFilter, dryRun: boolean): Promise<Session[]>
 }
 
 export type IImportDomain = {

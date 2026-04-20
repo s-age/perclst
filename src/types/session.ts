@@ -28,3 +28,11 @@ export type ResumeSessionParams = {
   session_id: string
   instruction: string
 }
+
+export type SweepFilter = {
+  from?: string
+  to?: string
+  status?: string
+  like?: string
+  anonOnly?: boolean
+}
