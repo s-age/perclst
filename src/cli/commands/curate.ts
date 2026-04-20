@@ -1,18 +1,13 @@
-import { readdirSync } from 'fs'
-import { join } from 'path'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import type { KnowledgeSearchService } from '@src/services/knowledgeSearchService'
 import { stdout } from '@src/utils/output'
 import { startCommand } from './start'
 
 export async function curateCommand() {
-  const draftDir = join(process.cwd(), 'knowledge', 'draft')
-  let entries: string[] = []
-  try {
-    entries = readdirSync(draftDir).filter((f) => f !== '.gitkeep')
-  } catch {
-    // directory doesn't exist — nothing to curate
-  }
+  const knowledgeService = container.resolve<KnowledgeSearchService>(TOKENS.KnowledgeSearchService)
 
-  if (entries.length === 0) {
+  if (!knowledgeService.hasDraftEntries()) {
     stdout.print('No draft entries to curate.')
     return
   }
