@@ -23,6 +23,7 @@ type RawRunOptions = {
   model?: string
   outputOnly?: boolean
   batch?: boolean
+  yes?: boolean
   format?: string
 }
 
@@ -123,6 +124,7 @@ async function checkUncommittedChanges(): Promise<void> {
 
 async function executeTUIPipeline(input: RunPipelineInput): Promise<void> {
   process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
+  if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   let raw: unknown
   try {
@@ -158,6 +160,7 @@ async function executeTUIPipeline(input: RunPipelineInput): Promise<void> {
 }
 
 async function executePipeline(input: RunPipelineInput): Promise<void> {
+  if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   let raw: unknown
   try {

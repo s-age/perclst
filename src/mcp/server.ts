@@ -90,6 +90,8 @@ async function askPermission(args: {
   input: Record<string, unknown>
   tool_use_id?: string
 }): Promise<PermissionResult> {
+  if (process.env.PERCLST_PERMISSION_AUTO_YES === '1')
+    return { behavior: 'allow', updatedInput: args.input }
   const pipePath = process.env.PERCLST_PERMISSION_PIPE
   if (pipePath) return askPermissionViaIPC(pipePath, args)
   const { tool_name, input } = args
