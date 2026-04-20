@@ -1,0 +1,505 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-fix-mcp-server .claude/tmp/review-fix-mcp-knowledge-search .claude/tmp/review-fix-mcp-ts-analyze .claude/tmp/review-fix-mcp-ts-checker .claude/tmp/review-fix-mcp-ts-get-references .claude/tmp/review-fix-mcp-ts-get-types .claude/tmp/review-fix-mcp-ts-test-strategist"
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-mcp-server",
+      "task": "target_path: src/mcp/server.ts\nng_output_path: .claude/tmp/review-fix-mcp-server",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-mcp-server",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-mcp-server",
+          "task": "target_path: src/mcp/server.ts\nng_output_path: .claude/tmp/review-fix-mcp-server\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-mcp-server",
+          "task": "target_path: src/mcp/server.ts\nng_output_path: .claude/tmp/review-fix-mcp-server\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-mcp-server",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-fix-mcp-server",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-mcp-server",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(mcp): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-mcp-knowledge-search",
+      "task": "target_path: src/mcp/tools/knowledgeSearch.ts\nng_output_path: .claude/tmp/review-fix-mcp-knowledge-search",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-mcp-knowledge-search",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-mcp-knowledge-search",
+          "task": "target_path: src/mcp/tools/knowledgeSearch.ts\nng_output_path: .claude/tmp/review-fix-mcp-knowledge-search\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-mcp-knowledge-search",
+          "task": "target_path: src/mcp/tools/knowledgeSearch.ts\nng_output_path: .claude/tmp/review-fix-mcp-knowledge-search\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-mcp-knowledge-search",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-fix-mcp-knowledge-search",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-mcp-knowledge-search",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(mcp): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-mcp-ts-analyze",
+      "task": "target_path: src/mcp/tools/tsAnalyze.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-analyze",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-mcp-ts-analyze",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-mcp-ts-analyze",
+          "task": "target_path: src/mcp/tools/tsAnalyze.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-analyze\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-mcp-ts-analyze",
+          "task": "target_path: src/mcp/tools/tsAnalyze.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-analyze\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-mcp-ts-analyze",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-fix-mcp-ts-analyze",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-mcp-ts-analyze",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(mcp): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-mcp-ts-checker",
+      "task": "target_path: src/mcp/tools/tsChecker.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-checker",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-mcp-ts-checker",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-mcp-ts-checker",
+          "task": "target_path: src/mcp/tools/tsChecker.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-checker\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-mcp-ts-checker",
+          "task": "target_path: src/mcp/tools/tsChecker.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-checker\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-mcp-ts-checker",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-fix-mcp-ts-checker",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-mcp-ts-checker",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(mcp): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-mcp-ts-get-references",
+      "task": "target_path: src/mcp/tools/tsGetReferences.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-get-references",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-mcp-ts-get-references",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-mcp-ts-get-references",
+          "task": "target_path: src/mcp/tools/tsGetReferences.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-get-references\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-mcp-ts-get-references",
+          "task": "target_path: src/mcp/tools/tsGetReferences.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-get-references\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-mcp-ts-get-references",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-fix-mcp-ts-get-references",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-mcp-ts-get-references",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(mcp): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-mcp-ts-get-types",
+      "task": "target_path: src/mcp/tools/tsGetTypes.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-get-types",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-mcp-ts-get-types",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-mcp-ts-get-types",
+          "task": "target_path: src/mcp/tools/tsGetTypes.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-get-types\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-mcp-ts-get-types",
+          "task": "target_path: src/mcp/tools/tsGetTypes.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-get-types\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-mcp-ts-get-types",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-fix-mcp-ts-get-types",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-mcp-ts-get-types",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(mcp): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-mcp-ts-test-strategist",
+      "task": "target_path: src/mcp/tools/tsTestStrategist.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-test-strategist",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-mcp-ts-test-strategist",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-mcp-ts-test-strategist",
+          "task": "target_path: src/mcp/tools/tsTestStrategist.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-test-strategist\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-mcp-ts-test-strategist",
+          "task": "target_path: src/mcp/tools/tsTestStrategist.ts\nng_output_path: .claude/tmp/review-fix-mcp-ts-test-strategist\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-mcp-ts-test-strategist",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-fix-mcp-ts-test-strategist",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-mcp-ts-test-strategist",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(mcp): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    }
+  ]
+}
