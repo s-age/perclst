@@ -101,10 +101,10 @@ function printGitDiffSummary(fromHash: string, toHash: string): void {
   }
 }
 
-function commitMovedPipeline(donePath: string): void {
+function commitMovedPipeline(originalPath: string, donePath: string): void {
   try {
     const filename = basename(donePath)
-    execSync(`git add "${donePath}"`, { encoding: 'utf-8' })
+    execSync(`git add "${originalPath}" "${donePath}"`, { encoding: 'utf-8' })
     execSync(`git commit -m "chore: mv ${filename}"`, { encoding: 'utf-8' })
   } catch {
     // not in a git repo or nothing to commit
@@ -229,7 +229,7 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
     const donePath = pipelineFileService.moveToDone(input.pipelinePath)
     stdout.print(`\nMoved to: ${donePath}`)
-    commitMovedPipeline(donePath)
+    commitMovedPipeline(input.pipelinePath, donePath)
     cleanTmpDir()
   } catch (error) {
     if (error instanceof ValidationError) {
