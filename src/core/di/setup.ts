@@ -30,6 +30,7 @@ import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
 import { TsAnalysisDomain } from '@src/domains/tsAnalysis'
 import { TsAnalysisService } from '@src/services/tsAnalysisService'
 import { FileMoveRepository } from '@src/repositories/fileMoveRepository'
+import { RejectionFeedbackRepository } from '@src/repositories/rejectionFeedback'
 import { PipelineFileDomain } from '@src/domains/pipelineFile'
 import { PipelineFileService } from '@src/services/pipelineFileService'
 import { DEFAULT_MODEL } from '@src/constants/config'
@@ -37,6 +38,7 @@ import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
 type Repos = {
   fileMoveRepo: FileMoveRepository
+  rejectionFeedbackRepo: RejectionFeedbackRepository
   claudeCodeRepo: ClaudeCodeRepository
   shellRepo: ShellRepository
   sessionRepo: SessionRepository
@@ -65,6 +67,7 @@ type Domains = {
 function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
   return {
     fileMoveRepo: new FileMoveRepository(),
+    rejectionFeedbackRepo: new RejectionFeedbackRepository(),
     claudeCodeRepo: new ClaudeCodeRepository(),
     shellRepo: new ShellRepository(),
     sessionRepo: new SessionRepository(sessionsDir),
@@ -82,6 +85,7 @@ function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
 function buildDomains(model: string, repos: Repos): Domains {
   const {
     fileMoveRepo,
+    rejectionFeedbackRepo,
     claudeCodeRepo,
     shellRepo,
     sessionRepo,
@@ -99,7 +103,7 @@ function buildDomains(model: string, repos: Repos): Domains {
     scriptDomain: new ScriptDomain(shellRepo),
     sessionDomain,
     agentDomain,
-    pipelineDomain: new PipelineDomain(agentDomain, sessionDomain),
+    pipelineDomain: new PipelineDomain(agentDomain, sessionDomain, rejectionFeedbackRepo),
     analyzeDomain: new AnalyzeDomain(sessionDomain, claudeSessionRepo),
     importDomain: new ImportDomain(claudeSessionRepo),
     checkerDomain: new CheckerDomain(checkerRepo),
@@ -125,6 +129,7 @@ function registerReposAndDomains(
   container.register(TOKENS.KnowledgeSearchRepository, repos.knowledgeSearchRepo)
   container.register(TOKENS.TsAnalysisRepository, repos.tsAnalysisRepo)
   container.register(TOKENS.FileMoveRepository, repos.fileMoveRepo)
+  container.register(TOKENS.RejectionFeedbackRepository, repos.rejectionFeedbackRepo)
   container.register(TOKENS.ScriptDomain, domains.scriptDomain)
   container.register(TOKENS.PipelineFileDomain, domains.pipelineFileDomain)
   container.register(TOKENS.SessionDomain, domains.sessionDomain)
