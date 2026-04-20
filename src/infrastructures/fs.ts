@@ -1,4 +1,12 @@
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  readdirSync,
+  mkdirSync,
+  statSync,
+  type Dirent
+} from 'fs'
 import { unlink } from 'fs/promises'
 import { homedir } from 'os'
 
@@ -37,4 +45,12 @@ export function homeDir(): string {
 
 export function currentWorkingDir(): string {
   return process.cwd()
+}
+
+export function listDirEntries(dir: string): Dirent[] {
+  return readdirSync(dir, { withFileTypes: true })
+}
+
+export function isDirectory(path: string): boolean {
+  return statSync(path).isDirectory()
 }
