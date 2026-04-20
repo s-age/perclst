@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { extractTestFunctions, detectFramework } from '../../testStrategyRepository'
+import { extractTestFunctions, readPackageDeps } from '../../testStrategyRepository'
 import * as fsModule from '@src/infrastructures/fs'
 
 vi.mock('@src/infrastructures/fs')
@@ -127,50 +127,51 @@ describe('extractTestFunctions', () => {
   })
 })
 
-describe('detectFramework', () => {
+describe('readPackageDeps', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('returns vitest when vitest in dependencies', () => {
+  it('returns merged dependencies from package.json', () => {
     vi.mocked(fsModule.fileExists).mockReturnValue(true)
     vi.mocked(fsModule.readJson).mockReturnValue({
       dependencies: { vitest: '^1.0.0' }
     })
 
-    const result = detectFramework('/project/src/file.ts')
+    const result = readPackageDeps('/project/src/file.ts')
 
-    expect(result).toBe('vitest')
+    expect(result).toEqual({ vitest: '^1.0.0' })
   })
 
-  it('returns vitest when vitest in devDependencies', () => {
+  it('returns devDependencies when only devDependencies present', () => {
     vi.mocked(fsModule.fileExists).mockReturnValue(true)
     vi.mocked(fsModule.readJson).mockReturnValue({
       devDependencies: { vitest: '^1.0.0' }
     })
 
-    const result = detectFramework('/project/src/file.ts')
+    const result = readPackageDeps('/project/src/file.ts')
 
-    expect(result).toBe('vitest')
+    expect(result).toEqual({ vitest: '^1.0.0' })
   })
 
-  it('returns jest as default when vitest not found', () => {
+  it('merges dependencies and devDependencies', () => {
     vi.mocked(fsModule.fileExists).mockReturnValue(true)
     vi.mocked(fsModule.readJson).mockReturnValue({
-      dependencies: { jest: '^29.0.0' }
+      dependencies: { react: '^18.0.0' },
+      devDependencies: { vitest: '^1.0.0', jest: '^29.0.0' }
     })
 
-    const result = detectFramework('/project/src/file.ts')
+    const result = readPackageDeps('/project/src/file.ts')
 
-    expect(result).toBe('jest')
+    expect(result).toEqual({ react: '^18.0.0', vitest: '^1.0.0', jest: '^29.0.0' })
   })
 
-  it('returns jest when no package.json found', () => {
+  it('returns null when no package.json found', () => {
     vi.mocked(fsModule.fileExists).mockReturnValue(false)
 
-    const result = detectFramework('/project/src/file.ts')
+    const result = readPackageDeps('/project/src/file.ts')
 
-    expect(result).toBe('jest')
+    expect(result).toBeNull()
   })
 
   it('searches up directory tree for package.json', () => {
@@ -182,41 +183,27 @@ describe('detectFramework', () => {
       devDependencies: { vitest: '^1.0.0' }
     })
 
-    const result = detectFramework('/project/nested/file.ts')
+    const result = readPackageDeps('/project/nested/file.ts')
 
-    expect(result).toBe('vitest')
+    expect(result).toEqual({ vitest: '^1.0.0' })
   })
 
-  it('stops searching after 20 levels', () => {
+  it('returns null when search exceeds 20 levels without finding package.json', () => {
     vi.mocked(fsModule.fileExists).mockReturnValue(false)
 
-    const result = detectFramework('/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/file.ts')
+    const result = readPackageDeps('/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/file.ts')
 
-    expect(result).toBe('jest')
+    expect(result).toBeNull()
   })
 
-  it('handles readJson errors gracefully', () => {
+  it('returns null when readJson throws', () => {
     vi.mocked(fsModule.fileExists).mockReturnValue(true)
     vi.mocked(fsModule.readJson).mockImplementation(() => {
       throw new Error('Invalid JSON')
     })
 
-    const result = detectFramework('/project/src/file.ts')
+    const result = readPackageDeps('/project/src/file.ts')
 
-    expect(result).toBe('jest')
-  })
-
-  it('prioritizes vitest over jest when both present', () => {
-    vi.mocked(fsModule.fileExists).mockReturnValue(true)
-    vi.mocked(fsModule.readJson).mockReturnValue({
-      devDependencies: {
-        vitest: '^1.0.0',
-        jest: '^29.0.0'
-      }
-    })
-
-    const result = detectFramework('/project/src/file.ts')
-
-    expect(result).toBe('vitest')
+    expect(result).toBeNull()
   })
 })

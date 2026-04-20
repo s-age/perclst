@@ -33,6 +33,7 @@ import { FileMoveRepository } from '@src/repositories/fileMoveRepository'
 import { PipelineFileDomain } from '@src/domains/pipelineFile'
 import { PipelineFileService } from '@src/services/pipelineFileService'
 import { DEFAULT_MODEL } from '@src/constants/config'
+import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
 type Repos = {
   fileMoveRepo: FileMoveRepository
@@ -70,7 +71,9 @@ function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
     claudeSessionRepo: new ClaudeSessionRepository(),
     procedureRepo: new ProcedureRepository(),
     checkerRepo: new CheckerRepository(),
-    testStrategyRepo: new TestStrategyRepository(),
+    testStrategyRepo: new TestStrategyRepository(
+      new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
+    ),
     knowledgeSearchRepo: new KnowledgeSearchRepository(knowledgeDir),
     tsAnalysisRepo: new TsAnalysisRepository()
   }
