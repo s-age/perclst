@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { resolve, join, basename } from 'path'
+import { resolve, join, dirname, basename } from 'path'
 import { execSync } from 'child_process'
 import * as readline from 'readline'
 import { container } from '@src/core/di/container'
@@ -105,7 +105,7 @@ function commitMovedPipeline(originalPath: string, donePath: string): void {
   try {
     const filename = basename(donePath)
     const absOriginal = resolve(originalPath)
-    const absDone = resolve(donePath)
+    const absDone = join(dirname(absOriginal), donePath)
     execSync(`git add -u "${absOriginal}"`, { encoding: 'utf-8' })
     execSync(`git add "${absDone}"`, { encoding: 'utf-8' })
     try {
