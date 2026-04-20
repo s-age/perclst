@@ -68,10 +68,14 @@ describe('AgentService', () => {
       expect(sessionDomain.getPath).toHaveBeenCalledWith(mockSession.id)
       expect(agentDomain.run).toHaveBeenCalledWith(mockSession, 'Do a task', false, {
         model: 'claude-opus-4-6',
+        maxTurns: -1,
+        maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
       expect(agentDomain.isLimitExceeded).toHaveBeenCalledWith(mockResponse, {
-        model: 'claude-opus-4-6'
+        model: 'claude-opus-4-6',
+        maxTurns: -1,
+        maxContextTokens: -1
       })
       expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
       expect(result.sessionId).toBe(mockSession.id)
@@ -82,6 +86,8 @@ describe('AgentService', () => {
       await service.start('Do a task', { working_dir: '/tmp' })
 
       expect(agentDomain.run).toHaveBeenCalledWith(mockSession, 'Do a task', false, {
+        maxTurns: -1,
+        maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
     })
@@ -110,11 +116,15 @@ describe('AgentService', () => {
       expect(sessionDomain.getPath).toHaveBeenCalledWith(mockSession.id)
       expect(agentDomain.resume).toHaveBeenCalledWith(mockSession, 'Continue', {
         model: 'claude-sonnet-4-6',
+        maxTurns: -1,
+        maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
       expect(sessionDomain.save).toHaveBeenCalledWith(mockSession)
       expect(agentDomain.isLimitExceeded).toHaveBeenCalledWith(mockResponse, {
-        model: 'claude-sonnet-4-6'
+        model: 'claude-sonnet-4-6',
+        maxTurns: -1,
+        maxContextTokens: -1
       })
       expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
       expect(result).toBe(mockResponse)
@@ -124,6 +134,8 @@ describe('AgentService', () => {
       await service.resume(mockSession.id, 'Continue')
 
       expect(agentDomain.resume).toHaveBeenCalledWith(mockSession, 'Continue', {
+        maxTurns: -1,
+        maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
     })

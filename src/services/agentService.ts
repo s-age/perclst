@@ -26,8 +26,8 @@ export class AgentService {
   private resolveRunOptions(options: AgentRunOptions): AgentRunOptions {
     return {
       ...options,
-      maxTurns: options.maxTurns ?? this.config.limits?.max_turns,
-      maxContextTokens: options.maxContextTokens ?? this.config.limits?.max_context_tokens,
+      maxTurns: options.maxTurns ?? this.config.limits?.max_turns ?? -1,
+      maxContextTokens: options.maxContextTokens ?? this.config.limits?.max_context_tokens ?? -1,
       allowedTools: options.allowedTools ?? this.config.allowed_tools,
       disallowedTools: options.disallowedTools ?? this.config.disallowed_tools
     }
