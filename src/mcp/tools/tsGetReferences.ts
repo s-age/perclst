@@ -39,12 +39,11 @@ export async function executeTsGetReferences(args: {
   recursive?: boolean
 }) {
   const service = container.resolve<TsAnalysisService>(TOKENS.TsAnalysisService)
-  const options = { includeTest: args.include_test }
 
-  const references =
-    args.recursive !== false
-      ? service.getReferencesRecursive(args.file_path, args.symbol_name, options)
-      : service.getReferences(args.file_path, args.symbol_name, options)
+  const references = service.getReferences(args.file_path, args.symbol_name, {
+    includeTest: args.include_test,
+    recursive: args.recursive
+  })
 
   return {
     content: [

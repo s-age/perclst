@@ -16,17 +16,12 @@ export class TsAnalysisService {
   getReferences(
     filePath: string,
     symbolName: string,
-    options?: { includeTest?: boolean }
-  ): ReferenceInfo[] {
+    options?: { includeTest?: boolean; recursive?: boolean }
+  ): ReferenceInfo[] | RecursiveReferenceInfo[] {
+    if (options?.recursive !== false) {
+      return this.domain.getReferencesRecursive(filePath, symbolName, options)
+    }
     return this.domain.getReferences(filePath, symbolName, options)
-  }
-
-  getReferencesRecursive(
-    filePath: string,
-    symbolName: string,
-    options?: { includeTest?: boolean }
-  ): RecursiveReferenceInfo[] {
-    return this.domain.getReferencesRecursive(filePath, symbolName, options)
   }
 
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {
