@@ -27,10 +27,6 @@ export async function sweepCommand(options: RawSweepOptions) {
       force: options.force ?? false
     })
 
-    if (input.status && !['active', 'completed', 'failed'].includes(input.status)) {
-      throw new ValidationError('--status must be one of: active, completed, failed')
-    }
-
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const targets = await sessionService.sweep(
       {
