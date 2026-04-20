@@ -2,7 +2,7 @@
 name: meta-procedure-creator
 description: Author a new procedure file in procedures/. Use when asked to create or rewrite a procedure, or when designing an agent's behavior.
 paths:
-  - procedures/**
+  - 'procedures/**'
 disable-model-invocation: true
 ---
 

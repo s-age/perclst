@@ -2,7 +2,7 @@
 name: meta-skill-creator
 description: Create or review a SKILL.md file. Use when writing a new skill, auditing an existing one, or unsure how to structure skill content.
 paths:
-  - .claude/skills/**
+  - '.claude/skills/**'
 disable-model-invocation: true
 ---
 
@@ -87,11 +87,11 @@ with create(), get(), and delete() methods.
 ```yaml
 # Good — scoped to a source subtree
 paths:
-  - src/lib/agent/**
+  - 'src/lib/agent/**'
 
 # Bad — too broad, skill fires on unrelated files
 paths:
-  - src/**
+  - 'src/**'
 ```
 
 ## Template
@@ -101,7 +101,7 @@ paths:
 name: your-skill-name
 description: One sentence on what it does. Use when [trigger phrase / user says X].
 paths:
-  - src/your-area/**
+  - 'src/your-area/**'
 disable-model-invocation: false
 ---
 

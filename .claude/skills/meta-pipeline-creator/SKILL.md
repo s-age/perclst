@@ -2,7 +2,7 @@
 name: meta-pipeline-creator
 description: Author a new pipeline JSON file in pipelines/. Use when asked to create a pipeline, convert a manual workflow into an automated run, or add tasks to an existing pipeline.
 paths:
-  - pipelines/**
+  - 'pipelines/**'
 disable-model-invocation: true
 ---
 
@@ -18,7 +18,9 @@ Before drafting a pipeline:
 
 ## Naming pipeline files
 
-Pipeline filenames use `__` (double-hyphen) as the namespace separator and `-` as the word separator within a segment:
+**MANDATORY**: New pipeline files MUST be placed in the `pipelines/` root directory. NEVER create new pipeline files inside `pipelines/done/` — that directory is reserved exclusively for pipelines that have already been run and archived.
+
+Pipeline filenames use `__` (double-underscore) as the namespace separator and `-` as the word separator within a segment:
 
 ```
 <namespace>__<namespace>__<name>.json
@@ -27,6 +29,7 @@ unit-test__infrastructures__commandrunner-projectroot.json
 
 - Each `__`-separated segment becomes a directory level when the file is moved to `done/`
 - Use lowercase and hyphens within segments; no underscores, no camelCase
+- Always place the new file at `pipelines/<namespace>__<namespace>__<name>.json`, never in a subdirectory
 
 ## Naming tasks
 
@@ -154,6 +157,8 @@ perclst run pipelines/<name>.json
 
 Before writing the file:
 
+- [ ] File is placed at `pipelines/<name>.json` — NOT inside `pipelines/done/` or any subdirectory
+- [ ] Filename uses `__` (double-underscore) as namespace separator, `-` within segments, all lowercase
 - [ ] Every MCP tool called by a procedure is listed in `allowed_tools`
 - [ ] `rejected.to` references an existing `name` (agent or pipeline) visible in the same `tasks` array scope
 - [ ] Task names are unique and follow `<stem>-<target>` convention
