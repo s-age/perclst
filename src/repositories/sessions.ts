@@ -1,7 +1,6 @@
 import { join } from 'path'
 import type { Session } from '@src/types/session'
 import type { ISessionRepository } from '@src/repositories/ports/session'
-import { toTimestamp } from '@src/utils/date'
 import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
 import {
   readJson,
@@ -85,13 +84,11 @@ export function listSessions(sessionsDir: string): Session[] {
   for (const file of files) {
     const sessionId = file.replace('.json', '')
     try {
-      const session = loadSession(sessionsDir, sessionId)
-      if (!session.id || !session.metadata) continue
-      sessions.push(session)
+      sessions.push(loadSession(sessionsDir, sessionId))
     } catch {
       continue
     }
   }
 
-  return sessions.sort((a, b) => toTimestamp(b.updated_at) - toTimestamp(a.updated_at))
+  return sessions
 }
