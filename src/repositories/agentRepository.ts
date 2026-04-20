@@ -1,16 +1,27 @@
 import { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
-import {
-  parseStreamEvents,
-  classifyExitError,
-  emitStreamEvents
-} from '@src/repositories/parsers/claudeCodeParser'
+import { parseStreamEvents, emitStreamEvents } from '@src/repositories/parsers/claudeCodeParser'
 import type { IClaudeCodeRepository } from '@src/repositories/ports/agent'
 import { RawExitError } from '@src/errors/rawExitError'
+import { APIError } from '@src/errors/apiError'
+import { RateLimitError } from '@src/errors/rateLimitError'
 import type { ClaudeAction, RawOutput } from '@src/types/claudeCode'
 import type { AgentStreamEvent } from '@src/types/agent'
 
 export class ClaudeCodeRepository implements IClaudeCodeRepository {
   private infra = new ClaudeCodeInfra()
+
+  private classifyExitError(err: RawExitError): never {
+    const { code, stderr } = err
+    const rateLimitMatch = stderr.match(/resets?\s+([^\n\r]+)/i)
+    if (
+      stderr.toLowerCase().includes("you've hit your limit") ||
+      stderr.toLowerCase().includes('you have hit your limit')
+    ) {
+      throw new RateLimitError(rateLimitMatch?.[1]?.trim())
+    }
+    if (stderr) this.infra.writeStderr(stderr)
+    throw new APIError(`claude exited with code ${code}`)
+  }
 
   async dispatch(
     action: ClaudeAction,
@@ -40,7 +51,7 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
         if (onStreamEvent) emitStreamEvents(line, toolNameMap, onStreamEvent)
       }
     } catch (err) {
-      if (err instanceof RawExitError) classifyExitError(err)
+      if (err instanceof RawExitError) this.classifyExitError(err)
       throw err
     }
 
