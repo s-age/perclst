@@ -21,8 +21,18 @@ const templatePath = join(repoDir, '.claude', 'settings.json')
 const destPath = join(homedir(), '.claude', 'settings.json')
 const backupPath = destPath + '.bak'
 
-// --- Load template ---
-const template = JSON.parse(readFileSync(templatePath, 'utf-8'))
+// --- Copy skill-inject.mjs to ~/.perclst/ ---
+const hookSrc = join(repoDir, 'hooks', 'skill-inject.mjs')
+const hookDest = join(homedir(), '.perclst', 'skill-inject.mjs')
+mkdirSync(dirname(hookDest), { recursive: true })
+copyFileSync(hookSrc, hookDest)
+
+// --- Load template, replacing $CLAUDE_PROJECT_DIR ref with absolute hook path ---
+const templateRaw = readFileSync(templatePath, 'utf-8').replaceAll(
+  '\\"$CLAUDE_PROJECT_DIR\\"/hooks/skill-inject.mjs',
+  hookDest
+)
+const template = JSON.parse(templateRaw)
 
 // --- Load existing ~/.claude/settings.json or start fresh ---
 let dest: Record<string, unknown> = {}
@@ -35,26 +45,37 @@ if (destExists) {
 const merged = JSON.parse(JSON.stringify(dest)) // deep clone
 merged.hooks ??= {}
 
-// Determine which hook event the template uses (PreToolUse or PostToolUse)
-const hookEvent: string = template.hooks.PostToolUse ? 'PostToolUse' : 'PreToolUse'
-merged.hooks[hookEvent] ??= []
-
-// Remove any existing entry whose command references skill-inject.mjs
-// (clean up both PreToolUse and PostToolUse in case of migration)
-for (const event of ['PreToolUse', 'PostToolUse']) {
-  if (!Array.isArray(merged.hooks[event])) continue
-  merged.hooks[event] = merged.hooks[event].filter(
-    (entry: Record<string, unknown>) =>
-      !(entry.hooks as Array<Record<string, string>> | undefined)?.some((h) =>
-        h.command?.includes('skill-inject.mjs')
-      )
+// Collect all commands from template entries (for dedup)
+function entryCommands(entry: Record<string, unknown>): Set<string> {
+  return new Set(
+    (entry.hooks as Array<Record<string, string>> | undefined)
+      ?.map((h) => h.command)
+      .filter(Boolean) ?? []
   )
-  if (merged.hooks[event].length === 0) delete merged.hooks[event]
 }
 
-// Append entries from template
-merged.hooks[hookEvent] ??= []
-merged.hooks[hookEvent].push(...template.hooks[hookEvent])
+// For each event in the template: remove existing entries whose commands overlap,
+// then append the template entries.
+for (const event of Object.keys(template.hooks) as string[]) {
+  const templateEntries: Array<Record<string, unknown>> = template.hooks[event]
+  if (!Array.isArray(templateEntries)) continue
+
+  // Build set of all commands that the template will provide
+  const templateCommands = new Set(
+    templateEntries.flatMap((e) => [...entryCommands(e)])
+  )
+
+  merged.hooks[event] ??= []
+  // Remove existing entries that would duplicate any template command,
+  // or that reference skill-inject.mjs (covers old $CLAUDE_PROJECT_DIR path)
+  merged.hooks[event] = (merged.hooks[event] as Array<Record<string, unknown>>).filter(
+    (entry) =>
+      ![...entryCommands(entry)].some(
+        (cmd) => templateCommands.has(cmd) || cmd.includes('skill-inject.mjs')
+      )
+  )
+  merged.hooks[event].push(...templateEntries)
+}
 
 // --- Show diff summary ---
 const before = JSON.stringify(dest, null, 2)
@@ -98,8 +119,9 @@ if (destExists) {
 // --- Write ---
 mkdirSync(dirname(destPath), { recursive: true })
 writeFileSync(destPath, after + '\n')
+stdout.print(`copied:  ${hookDest}`)
 stdout.print(`updated: ${destPath}`)
-stdout.print('  hook -> $CLAUDE_PROJECT_DIR/hooks/skill-inject.mjs')
+stdout.print(`  hook -> ${hookDest}`)
 if (destExists) {
   stdout.print(`\nnote: original settings saved to ${backupPath}`)
   stdout.print('      you can restore it with:')
