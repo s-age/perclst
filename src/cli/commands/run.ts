@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { resolve, join } from 'path'
+import { resolve, join, basename } from 'path'
 import { execSync } from 'child_process'
 import * as readline from 'readline'
 import { container } from '@src/core/di/container'
@@ -98,6 +98,24 @@ function printGitDiffSummary(fromHash: string, toHash: string): void {
     stdout.print(`\nTo inspect: git diff ${fromHash}...${toHash}`)
   } catch {
     // not in a git repo or no diff available
+  }
+}
+
+function commitMovedPipeline(donePath: string): void {
+  try {
+    const filename = basename(donePath)
+    execSync(`git add "${donePath}"`, { encoding: 'utf-8' })
+    execSync(`git commit -m "chore: mv ${filename}"`, { encoding: 'utf-8' })
+  } catch {
+    // not in a git repo or nothing to commit
+  }
+}
+
+function cleanTmpDir(): void {
+  try {
+    execSync('rm -f .claude/tmp/*', { encoding: 'utf-8' })
+  } catch {
+    // ignore
   }
 }
 
@@ -211,6 +229,8 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
     const donePath = pipelineFileService.moveToDone(input.pipelinePath)
     stdout.print(`\nMoved to: ${donePath}`)
+    commitMovedPipeline(donePath)
+    cleanTmpDir()
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)
