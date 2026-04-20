@@ -1,7 +1,7 @@
 import { join } from 'path'
 import type { Config } from '@src/types/config'
 import { DEFAULT_CONFIG, CONFIG_DIR_NAME } from '@src/constants/config'
-import { readJson, fileExists, homeDir } from '@src/infrastructures/fs'
+import { readJson, fileExists, homeDir, currentWorkingDir } from '@src/infrastructures/fs'
 
 function loadFromPath(path: string): Partial<Config> {
   if (!fileExists(path)) return {}
@@ -16,7 +16,7 @@ function loadFromPath(path: string): Partial<Config> {
 function resolvePath(path: string): string {
   if (path.startsWith('/')) return path
   if (path.startsWith('~')) return path.replace('~', homeDir())
-  return join(process.cwd(), path)
+  return join(currentWorkingDir(), path)
 }
 
 export function loadConfig(): Config {
