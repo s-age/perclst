@@ -3,7 +3,7 @@ import type { ISessionDomain } from '@src/domains/ports/session'
 import type { ISessionRepository } from '@src/repositories/ports/session'
 import { generateId } from '@src/utils/uuid'
 import { debug } from '@src/utils/output'
-import { toISO } from '@src/utils/date'
+import { toISO, toTimestamp } from '@src/utils/date'
 
 export class SessionDomain implements ISessionDomain {
   constructor(private sessionRepo: ISessionRepository) {
@@ -46,7 +46,8 @@ export class SessionDomain implements ISessionDomain {
   }
 
   async list(): Promise<Session[]> {
-    return this.sessionRepo.list()
+    const sessions = this.sessionRepo.list().filter((s) => s.id && s.metadata)
+    return sessions.sort((a, b) => toTimestamp(b.updated_at) - toTimestamp(a.updated_at))
   }
 
   async delete(sessionId: string): Promise<void> {

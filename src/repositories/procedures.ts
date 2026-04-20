@@ -2,8 +2,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { IProcedureRepository } from '@src/repositories/ports/agent'
 import { ProcedureNotFoundError } from '@src/errors/procedureNotFoundError'
-import { fileExists } from '@src/infrastructures/fs'
-import { readFileSync } from 'fs'
+import { fileExists, readText } from '@src/infrastructures/fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -24,7 +23,7 @@ export function loadProcedure(name: string): string {
   if (!fileExists(path)) {
     throw new ProcedureNotFoundError(name)
   }
-  return readFileSync(path, 'utf-8')
+  return readText(path)
 }
 
 export function procedureExists(name: string): boolean {

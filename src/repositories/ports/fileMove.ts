@@ -1,3 +1,3 @@
 export type IFileMoveRepository = {
-  moveToDone(pipelinePath: string): string
+  moveToDone(src: string, dest: string): void
 }

@@ -1,23 +1,17 @@
 import type { ITestStrategyRepository } from '@src/repositories/ports/testStrategy'
-import type { RawFunctionInfo, TestFramework } from '@src/types/testStrategy'
+import type { RawFunctionInfo } from '@src/types/testStrategy'
 import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import { searchDir } from '@src/infrastructures/testFileDiscovery'
-import { fileExists } from '@src/infrastructures/fs'
+import { fileExists, readText, readJson } from '@src/infrastructures/fs'
 import {
   parseFunctions as _parseFunctions,
-  extractTestFunctions as _extractTestFunctions,
-  detectFramework as _detectFramework
+  parseTestFunctionNames
 } from '@src/repositories/parsers/tsParser'
 import { dirname, join, basename, extname, resolve } from 'path'
 
 // ---------------------------------------------------------------------------
 // Standalone functions
 // ---------------------------------------------------------------------------
-
-export function parseFunctionsFromFile(filePath: string): RawFunctionInfo[] | null {
-  const sf = new TsAnalyzer({ skipAddingFilesFromTsConfig: true }).getSourceFileIfExists(filePath)
-  return sf ? _parseFunctions(sf) : null
-}
 
 export function canonicalTestFilePath(targetFilePath: string): string {
   const abs = resolve(targetFilePath)
@@ -60,11 +54,27 @@ export function findTestFile(targetFilePath: string): string | null {
 }
 
 export function extractTestFunctions(testFilePath: string): string[] {
-  return _extractTestFunctions(testFilePath)
+  if (!fileExists(testFilePath)) return []
+  return parseTestFunctionNames(readText(testFilePath))
 }
 
-export function detectFramework(targetFilePath: string): TestFramework {
-  return _detectFramework(targetFilePath)
+export function readPackageDeps(targetFilePath: string): Record<string, string> | null {
+  let current = dirname(targetFilePath)
+  for (let i = 0; i < 20; i++) {
+    const pkgPath = join(current, 'package.json')
+    if (fileExists(pkgPath)) {
+      try {
+        const pkg = readJson<Record<string, Record<string, string>>>(pkgPath)
+        return { ...pkg['dependencies'], ...pkg['devDependencies'] }
+      } catch {
+        return null
+      }
+    }
+    const parent = dirname(current)
+    if (parent === current) break
+    current = parent
+  }
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -72,8 +82,11 @@ export function detectFramework(targetFilePath: string): TestFramework {
 // ---------------------------------------------------------------------------
 
 export class TestStrategyRepository implements ITestStrategyRepository {
+  constructor(private readonly tsAnalyzer: TsAnalyzer) {}
+
   parseFunctions(filePath: string): RawFunctionInfo[] | null {
-    return parseFunctionsFromFile(filePath)
+    const sf = this.tsAnalyzer.getSourceFileIfExists(filePath)
+    return sf ? _parseFunctions(sf) : null
   }
 
   findTestFile(targetFilePath: string): string | null {
@@ -88,7 +101,7 @@ export class TestStrategyRepository implements ITestStrategyRepository {
     return extractTestFunctions(testFilePath)
   }
 
-  detectFramework(targetFilePath: string): TestFramework {
-    return detectFramework(targetFilePath)
+  readPackageDeps(targetFilePath: string): Record<string, string> | null {
+    return readPackageDeps(targetFilePath)
   }
 }

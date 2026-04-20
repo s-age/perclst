@@ -129,7 +129,7 @@ export class TestStrategyDomain implements ITestStrategyDomain {
 
     const resolvedTestFile = testFilePath ?? this.repo.findTestFile(targetFilePath)
     const testFunctions = resolvedTestFile ? this.repo.extractTestFunctions(resolvedTestFile) : []
-    const framework = this.repo.detectFramework(targetFilePath)
+    const framework = this.detectFramework(this.repo.readPackageDeps(targetFilePath))
     const strategies = functions.map((raw) => buildStrategy(raw, framework, testFunctions))
 
     return {
@@ -140,6 +140,11 @@ export class TestStrategyDomain implements ITestStrategyDomain {
       strategies,
       overall_recommendation: buildRecommendation(strategies)
     }
+  }
+
+  private detectFramework(deps: Record<string, string> | null): TestFramework {
+    if (deps && 'vitest' in deps) return 'vitest'
+    return 'jest'
   }
 
   private errResult(targetFilePath: string, error: string): TestStrategyResult {

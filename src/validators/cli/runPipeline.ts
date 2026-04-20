@@ -12,6 +12,7 @@ const runOptionsSchema = schema({
   model: stringRule().optional(),
   outputOnly: booleanRule().optional(),
   batch: booleanRule().optional(),
+  yes: booleanRule().optional(),
   format: formatRule()
 })
 

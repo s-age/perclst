@@ -1,7 +1,5 @@
-import { dirname, join } from 'path'
 import { Node, SyntaxKind, type SourceFile } from 'ts-morph'
-import { fileExists, readText, readJson } from '@src/infrastructures/fs'
-import type { RawFunctionInfo, TestFramework } from '@src/types/testStrategy'
+import type { RawFunctionInfo } from '@src/types/testStrategy'
 
 // ---------------------------------------------------------------------------
 // Internal: structural count extraction — pure AST traversal
@@ -147,13 +145,12 @@ export function parseFunctions(sf: SourceFile): RawFunctionInfo[] {
 }
 
 // ---------------------------------------------------------------------------
-// Public: test file content → test function names
+// Public: raw test file content → test function names (pure, no I/O)
 // ---------------------------------------------------------------------------
 
-export function extractTestFunctions(testFilePath: string): string[] {
-  if (!fileExists(testFilePath)) return []
+export function parseTestFunctionNames(content: string): string[] {
   const result: string[] = []
-  for (const line of readText(testFilePath).split('\n')) {
+  for (const line of content.split('\n')) {
     const s = line.trim()
     if (
       s.startsWith('it(') ||
@@ -174,29 +171,4 @@ export function extractTestFunctions(testFilePath: string): string[] {
     }
   }
   return result
-}
-
-// ---------------------------------------------------------------------------
-// Public: package.json deps → TestFramework domain type
-// ---------------------------------------------------------------------------
-
-export function detectFramework(targetFilePath: string): TestFramework {
-  let current = dirname(targetFilePath)
-  for (let i = 0; i < 20; i++) {
-    const pkgPath = join(current, 'package.json')
-    if (fileExists(pkgPath)) {
-      try {
-        const pkg = readJson<Record<string, Record<string, string>>>(pkgPath)
-        const deps = { ...pkg['dependencies'], ...pkg['devDependencies'] }
-        if ('vitest' in deps) return 'vitest'
-      } catch {
-        // fall through to default
-      }
-      break
-    }
-    const parent = dirname(current)
-    if (parent === current) break
-    current = parent
-  }
-  return 'jest'
 }

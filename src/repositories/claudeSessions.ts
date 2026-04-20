@@ -1,13 +1,11 @@
 import { join } from 'path'
-import { readFileSync, readdirSync, existsSync, statSync } from 'fs'
-import type { AnalysisSummary, AssistantTurnEntry } from '@src/types/analysis'
+import type { AssistantTurnEntry, ClaudeSessionData } from '@src/types/analysis'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
-import { fileExists, homeDir } from '@src/infrastructures/fs'
+import { fileExists, homeDir, readText, listDirEntries, isDirectory } from '@src/infrastructures/fs'
 import {
   parseRawEntries,
   buildToolResultMap,
   buildTurns,
-  buildSummaryStats,
   filterEntriesUpTo,
   type RawAssistantEntry
 } from '@src/repositories/parsers/claudeSessionParser'
@@ -46,7 +44,7 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     claudeSessionId: string,
     workingDir: string,
     upToMessageId?: string
-  ): AnalysisSummary {
+  ): ClaudeSessionData {
     return readClaudeSession(claudeSessionId, workingDir, upToMessageId)
   }
 
@@ -71,7 +69,7 @@ export function decodeWorkingDir(encoded: string): { path: string | null; ambigu
       component = component ? `${component}-${parts[i]}` : parts[i]
       const candidate = join(current, component)
       try {
-        if (existsSync(candidate) && statSync(candidate).isDirectory()) {
+        if (fileExists(candidate) && isDirectory(candidate)) {
           search(i + 1, candidate)
         }
       } catch {
@@ -93,15 +91,15 @@ export function decodeWorkingDir(encoded: string): { path: string | null; ambigu
  */
 export function findEncodedDirBySessionId(claudeSessionId: string): string {
   const projectsDir = join(homeDir(), '.claude', 'projects')
-  if (!existsSync(projectsDir)) {
+  if (!fileExists(projectsDir)) {
     throw new Error(`Claude Code projects directory not found: ${projectsDir}`)
   }
 
   const matches: string[] = []
-  for (const entry of readdirSync(projectsDir, { withFileTypes: true })) {
+  for (const entry of listDirEntries(projectsDir)) {
     if (!entry.isDirectory()) continue
     const jsonlPath = join(projectsDir, entry.name, `${claudeSessionId}.jsonl`)
-    if (existsSync(jsonlPath)) {
+    if (fileExists(jsonlPath)) {
       matches.push(entry.name)
     }
   }
@@ -124,7 +122,7 @@ export function findEncodedDirBySessionId(claudeSessionId: string): string {
  */
 export function validateSessionAtDir(claudeSessionId: string, workingDir: string): void {
   const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
-  if (!existsSync(jsonlPath)) {
+  if (!fileExists(jsonlPath)) {
     throw new Error(`Claude Code session not found: ${jsonlPath}`)
   }
 }
@@ -138,7 +136,7 @@ export function getAssistantTurns(
     throw new Error(`Claude Code session file not found: ${jsonlPath}`)
   }
 
-  const entries = parseRawEntries(readFileSync(jsonlPath, 'utf-8'))
+  const entries = parseRawEntries(readText(jsonlPath))
   const result: AssistantTurnEntry[] = []
 
   for (const entry of entries) {
@@ -162,20 +160,19 @@ export function readClaudeSession(
   claudeSessionId: string,
   workingDir: string,
   upToMessageId?: string
-): AnalysisSummary {
+): ClaudeSessionData {
   const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
 
   if (!fileExists(jsonlPath)) {
     throw new Error(`Claude Code session file not found: ${jsonlPath}`)
   }
 
-  let entries = parseRawEntries(readFileSync(jsonlPath, 'utf-8'))
+  let entries = parseRawEntries(readText(jsonlPath))
   if (upToMessageId) {
     entries = filterEntriesUpTo(entries, upToMessageId)
   }
   const toolResultMap = buildToolResultMap(entries)
   const { turns, tokens } = buildTurns(entries, toolResultMap)
-  const { turnsBreakdown, toolUses } = buildSummaryStats(turns)
 
-  return { turns, turnsBreakdown, toolUses, tokens }
+  return { turns, tokens }
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { resolve, join } from 'path'
+import { resolve, join, dirname, basename } from 'path'
 import { execSync } from 'child_process'
 import * as readline from 'readline'
 import { container } from '@src/core/di/container'
@@ -23,6 +23,7 @@ type RawRunOptions = {
   model?: string
   outputOnly?: boolean
   batch?: boolean
+  yes?: boolean
   format?: string
 }
 
@@ -100,6 +101,32 @@ function printGitDiffSummary(fromHash: string, toHash: string): void {
   }
 }
 
+function commitMovedPipeline(originalPath: string, donePath: string): void {
+  try {
+    const filename = basename(donePath)
+    const absOriginal = resolve(originalPath)
+    const absDone = join(dirname(absOriginal), donePath)
+    execSync(`git add -u "${absOriginal}"`, { encoding: 'utf-8' })
+    execSync(`git add "${absDone}"`, { encoding: 'utf-8' })
+    try {
+      execSync('git add -u .claude/tmp/', { encoding: 'utf-8' })
+    } catch {
+      // no tracked tmp files to stage
+    }
+    execSync(`git commit -m "chore: mv ${filename}"`, { encoding: 'utf-8' })
+  } catch {
+    // not in a git repo or nothing to commit
+  }
+}
+
+function cleanTmpDir(): void {
+  try {
+    execSync('rm -f .claude/tmp/*', { encoding: 'utf-8' })
+  } catch {
+    // ignore
+  }
+}
+
 function confirm(question: string): Promise<boolean> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stderr })
   return new Promise((resolve) => {
@@ -123,6 +150,7 @@ async function checkUncommittedChanges(): Promise<void> {
 
 async function executeTUIPipeline(input: RunPipelineInput): Promise<void> {
   process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
+  if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   let raw: unknown
   try {
@@ -158,6 +186,7 @@ async function executeTUIPipeline(input: RunPipelineInput): Promise<void> {
 }
 
 async function executePipeline(input: RunPipelineInput): Promise<void> {
+  if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   let raw: unknown
   try {
@@ -208,6 +237,8 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
     const donePath = pipelineFileService.moveToDone(input.pipelinePath)
     stdout.print(`\nMoved to: ${donePath}`)
+    commitMovedPipeline(input.pipelinePath, donePath)
+    cleanTmpDir()
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)

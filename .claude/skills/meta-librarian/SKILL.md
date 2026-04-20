@@ -2,7 +2,7 @@
 name: meta-librarian
 description: Promote knowledge/draft/ entries into structured knowledge/ files. Use when asked to organize, file, or promote draft knowledge, or when knowledge/draft/ has new entries.
 paths:
-  - knowledge/**
+  - 'knowledge/**'
 disable-model-invocation: true
 ---
 

@@ -44,13 +44,70 @@ describe('SessionDomain', () => {
   })
 
   it('should delegate list to sessionRepo.list', async () => {
-    const mockSessions = [{ id: 's1' }, { id: 's2' }] as never[]
+    const mockSessions = [
+      {
+        id: 's1',
+        updated_at: '2024-01-01T00:00:00.000Z',
+        metadata: { status: 'active', tags: [] }
+      },
+      { id: 's2', updated_at: '2024-01-02T00:00:00.000Z', metadata: { status: 'active', tags: [] } }
+    ] as never[]
     vi.mocked(mockSessionRepo.list).mockReturnValue(mockSessions)
 
     const result = await domain.list()
 
     expect(mockSessionRepo.list).toHaveBeenCalled()
-    expect(result).toBe(mockSessions)
+    expect(result).toHaveLength(2)
+  })
+
+  it('should sort list results newest-first by updated_at', async () => {
+    const older = {
+      id: 's1',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      metadata: { status: 'active', tags: [] }
+    }
+    const newer = {
+      id: 's2',
+      updated_at: '2024-01-02T00:00:00.000Z',
+      metadata: { status: 'active', tags: [] }
+    }
+    vi.mocked(mockSessionRepo.list).mockReturnValue([older, newer] as never[])
+
+    const result = await domain.list()
+
+    expect(result[0]).toEqual(newer)
+    expect(result[1]).toEqual(older)
+  })
+
+  it('should filter out sessions missing id', async () => {
+    const valid = {
+      id: 's1',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      metadata: { status: 'active', tags: [] }
+    }
+    const invalid = {
+      updated_at: '2024-01-01T00:00:00.000Z',
+      metadata: { status: 'active', tags: [] }
+    }
+    vi.mocked(mockSessionRepo.list).mockReturnValue([valid, invalid] as never[])
+
+    const result = await domain.list()
+
+    expect(result).toEqual([valid])
+  })
+
+  it('should filter out sessions missing metadata', async () => {
+    const valid = {
+      id: 's1',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      metadata: { status: 'active', tags: [] }
+    }
+    const invalid = { id: 's2', updated_at: '2024-01-01T00:00:00.000Z' }
+    vi.mocked(mockSessionRepo.list).mockReturnValue([valid, invalid] as never[])
+
+    const result = await domain.list()
+
+    expect(result).toEqual([valid])
   })
 
   it('should delete a session', async () => {

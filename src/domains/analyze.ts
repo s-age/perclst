@@ -1,7 +1,49 @@
-import type { AnalyzeResult, RewindTurn } from '@src/types/analysis'
+import type {
+  AnalyzeResult,
+  AnalysisSummary,
+  ClaudeCodeTurn,
+  RewindTurn
+} from '@src/types/analysis'
 import type { IAnalyzeDomain } from '@src/domains/ports/analysis'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
+
+export function buildSummaryStats(turns: ClaudeCodeTurn[]): {
+  turnsBreakdown: AnalysisSummary['turnsBreakdown']
+  toolUses: AnalysisSummary['toolUses']
+} {
+  let userInstructions = 0
+  let thinking = 0
+  let toolCalls = 0
+  let assistantResponse = 0
+  const allToolUses: AnalysisSummary['toolUses'] = []
+
+  for (const turn of turns) {
+    if (turn.userMessage !== undefined) userInstructions++
+    if (turn.toolCalls.length > 0) {
+      thinking++
+      toolCalls += turn.toolCalls.length
+      for (const tc of turn.toolCalls) {
+        allToolUses.push({ name: tc.name, input: tc.input, isError: tc.isError })
+      }
+    } else if (turn.assistantText !== undefined) {
+      assistantResponse++
+    }
+  }
+
+  const toolResults = toolCalls
+  return {
+    turnsBreakdown: {
+      userInstructions,
+      thinking,
+      toolCalls,
+      toolResults,
+      assistantResponse,
+      total: userInstructions + thinking + toolCalls + toolResults + assistantResponse
+    },
+    toolUses: allToolUses
+  }
+}
 
 export class AnalyzeDomain implements IAnalyzeDomain {
   constructor(
@@ -13,11 +55,13 @@ export class AnalyzeDomain implements IAnalyzeDomain {
     const session = await this.sessionDomain.get(sessionId)
     const effectiveClaudeSessionId =
       session.rewind_source_claude_session_id ?? session.claude_session_id
-    const summary = this.claudeSessionRepo.readSession(
+    const { turns, tokens } = this.claudeSessionRepo.readSession(
       effectiveClaudeSessionId,
       session.working_dir,
       session.rewind_to_message_id
     )
+    const { turnsBreakdown, toolUses } = buildSummaryStats(turns)
+    const summary: AnalysisSummary = { turns, turnsBreakdown, toolUses, tokens }
     return { session, summary }
   }
 

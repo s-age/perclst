@@ -107,6 +107,10 @@ export class ClaudeCodeInfra {
     if (exitCode !== 0) throw new RawExitError(exitCode, stderr)
   }
 
+  writeStderr(data: string): void {
+    process.stderr.write(data)
+  }
+
   private async *streamStdout(stdout: NodeJS.ReadableStream): AsyncGenerator<string> {
     let buffer = ''
     for await (const chunk of stdout) {

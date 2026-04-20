@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSummaryStats } from '../claudeSessionParser'
+import { buildSummaryStats } from '../analyze'
 
 describe('buildSummaryStats', () => {
   it('should count user instructions, thinking steps, tool calls/results, and final response', () => {
@@ -80,7 +80,7 @@ describe('buildSummaryStats', () => {
   })
 
   it('should handle empty turns array', () => {
-    const turns = []
+    const turns: never[] = []
 
     const result = buildSummaryStats(turns)
 

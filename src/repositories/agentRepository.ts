@@ -1,30 +1,27 @@
 import { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
-import { parseStreamEvents, classifyExitError } from '@src/repositories/parsers/claudeCodeParser'
+import { parseStreamEvents, emitStreamEvents } from '@src/repositories/parsers/claudeCodeParser'
 import type { IClaudeCodeRepository } from '@src/repositories/ports/agent'
 import { RawExitError } from '@src/errors/rawExitError'
+import { APIError } from '@src/errors/apiError'
+import { RateLimitError } from '@src/errors/rateLimitError'
 import type { ClaudeAction, RawOutput } from '@src/types/claudeCode'
 import type { AgentStreamEvent } from '@src/types/agent'
-import { MCP_SERVER_NAME } from '@src/constants/config'
-
-const PERMISSION_TOOL_NAME = `mcp__${MCP_SERVER_NAME}__ask_permission`
-
-type RawContentBlock = {
-  type: string
-  thinking?: string
-  name?: string
-  id?: string
-  input?: unknown
-  tool_use_id?: string
-  content?: unknown
-}
-
-type RawStreamEvent = {
-  type: string
-  message?: { content: RawContentBlock[] }
-}
 
 export class ClaudeCodeRepository implements IClaudeCodeRepository {
   private infra = new ClaudeCodeInfra()
+
+  private classifyExitError(err: RawExitError): never {
+    const { code, stderr } = err
+    const rateLimitMatch = stderr.match(/resets?\s+([^\n\r]+)/i)
+    if (
+      stderr.toLowerCase().includes("you've hit your limit") ||
+      stderr.toLowerCase().includes('you have hit your limit')
+    ) {
+      throw new RateLimitError(rateLimitMatch?.[1]?.trim())
+    }
+    if (stderr) this.infra.writeStderr(stderr)
+    throw new APIError(`claude exited with code ${code}`)
+  }
 
   async dispatch(
     action: ClaudeAction,
@@ -54,47 +51,10 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
         if (onStreamEvent) emitStreamEvents(line, toolNameMap, onStreamEvent)
       }
     } catch (err) {
-      if (err instanceof RawExitError) classifyExitError(err)
+      if (err instanceof RawExitError) this.classifyExitError(err)
       throw err
     }
 
     return parseStreamEvents(lines, jsonlBaseline)
-  }
-}
-
-function emitStreamEvents(
-  line: string,
-  toolNameMap: Map<string, string>,
-  onStreamEvent: (event: AgentStreamEvent) => void
-): void {
-  const trimmed = line.trim()
-  if (!trimmed) return
-  let raw: RawStreamEvent
-  try {
-    raw = JSON.parse(trimmed) as RawStreamEvent
-  } catch {
-    return
-  }
-  if (!raw.message?.content) return
-
-  if (raw.type === 'assistant') {
-    for (const block of raw.message.content) {
-      if (block.type === 'thinking' && block.thinking !== undefined) {
-        onStreamEvent({ type: 'thought', thinking: block.thinking })
-      } else if (block.type === 'tool_use' && block.name && block.name !== PERMISSION_TOOL_NAME) {
-        if (block.id) toolNameMap.set(block.id, block.name)
-        onStreamEvent({ type: 'tool_use', name: block.name, input: block.input ?? {} })
-      }
-    }
-  } else if (raw.type === 'user') {
-    for (const block of raw.message.content) {
-      if (block.type === 'tool_result' && block.tool_use_id) {
-        const toolName = toolNameMap.get(block.tool_use_id) ?? '?'
-        if (toolName === '?') return
-        const result =
-          typeof block.content === 'string' ? block.content : JSON.stringify(block.content, null, 2)
-        onStreamEvent({ type: 'tool_result', toolName, result })
-      }
-    }
   }
 }

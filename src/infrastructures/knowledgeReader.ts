@@ -1,16 +1,19 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs'
-import { join } from 'path'
+import { join, relative } from 'path'
 
-export function listFilesRecursive(dir: string, ext?: string): string[] {
+export function listFilesRecursive(
+  dir: string,
+  ext?: string
+): { absolute: string; relative: string }[] {
   if (!existsSync(dir)) return []
-  const results: string[] = []
+  const results: { absolute: string; relative: string }[] = []
   const traverse = (current: string) => {
     for (const entry of readdirSync(current)) {
       const full = join(current, entry)
       if (statSync(full).isDirectory()) {
         traverse(full)
       } else if (!ext || entry.endsWith(ext)) {
-        results.push(full)
+        results.push({ absolute: full, relative: relative(dir, full) })
       }
     }
   }
