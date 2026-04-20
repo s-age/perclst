@@ -33,3 +33,12 @@ export type ExecuteOptions = {
   resumeSessionAt?: string
   onStreamEvent?: (event: AgentStreamEvent) => void
 }
+
+export type AgentRunOptions = {
+  allowedTools?: string[]
+  disallowedTools?: string[]
+  model?: string
+  maxTurns?: number
+  maxContextTokens?: number
+  onStreamEvent?: (event: AgentStreamEvent) => void
+}

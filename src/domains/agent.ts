@@ -1,4 +1,4 @@
-import type { AgentResponse, ExecuteOptions } from '@src/types/agent'
+import type { AgentResponse, ExecuteOptions, AgentRunOptions } from '@src/types/agent'
 import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { IProcedureRepository, IClaudeCodeRepository } from '@src/repositories/ports/agent'
 import type { Session } from '@src/types/session'
@@ -54,6 +54,56 @@ export class AgentDomain implements IAgentDomain {
       thoughts: raw.thoughts.length > 0 ? raw.thoughts : undefined,
       tool_history: raw.tool_history.length > 0 ? raw.tool_history : undefined
     }
+  }
+
+  private getContextTokens(response: AgentResponse): number {
+    const u = response.last_assistant_usage
+    if (!u) return 0
+    return u.input_tokens + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0)
+  }
+
+  isLimitExceeded(response: AgentResponse, options: AgentRunOptions): boolean {
+    const maxTurns = options.maxTurns ?? -1
+    if (maxTurns > 0) {
+      const messageCount = response.message_count ?? 0
+      if (messageCount >= maxTurns) {
+        debug.print(`Turn limit reached: ${messageCount} >= ${maxTurns}`)
+        return true
+      }
+    }
+
+    const maxContextTokens = options.maxContextTokens ?? -1
+    if (maxContextTokens > 0) {
+      const contextTokens = this.getContextTokens(response)
+      if (contextTokens >= maxContextTokens) {
+        debug.print(`Context token limit reached: ${contextTokens} >= ${maxContextTokens}`)
+        return true
+      }
+    }
+
+    return false
+  }
+
+  async resume(
+    session: Session,
+    instruction: string,
+    options: ExecuteOptions = {}
+  ): Promise<AgentResponse> {
+    if (session.rewind_source_claude_session_id) {
+      const pseudoOriginal: Session = {
+        ...session,
+        claude_session_id: session.rewind_source_claude_session_id
+      }
+      const response = await this.fork(pseudoOriginal, session, instruction, {
+        ...options,
+        resumeSessionAt: session.rewind_to_message_id
+      })
+      session.rewind_source_claude_session_id = undefined
+      session.rewind_to_message_id = undefined
+      return response
+    }
+
+    return this.run(session, instruction, true, options)
   }
 
   async fork(
