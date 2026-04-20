@@ -36,7 +36,9 @@ describe('PipelineService', () => {
     runAgentTask: vi.fn<
       [AgentPipelineTask, number, number[], object, object?],
       Promise<AgentTaskResult>
-    >()
+    >(),
+    findOuterRejectionTarget: vi.fn<[object], number | undefined>(),
+    resolveScriptRejection: vi.fn()
   }
   const mockScriptDomain: IScriptDomain = {
     run: vi.fn<[string, string], Promise<ScriptResult>>()
@@ -201,7 +203,9 @@ describe('PipelineService', () => {
     })
 
     it('should emit retry event when script rejection triggers', async () => {
-      vi.mocked(mockPipelineDomain.resolveRejection).mockReturnValue(stubRejectionResult(0))
+      vi.mocked(mockPipelineDomain.resolveScriptRejection)
+        .mockReturnValueOnce(stubRejectionResult(0))
+        .mockReturnValue(undefined)
       let scriptRunCount = 0
       vi.mocked(mockScriptDomain.run).mockImplementation(async () => ({
         exitCode: ++scriptRunCount === 1 ? 1 : 0,

@@ -1,5 +1,5 @@
 import type { Session } from '@src/types/session'
-import type { AgentResponse, ExecuteOptions } from '@src/types/agent'
+import type { AgentResponse, ExecuteOptions, AgentRunOptions } from '@src/types/agent'
 
 export type IAgentDomain = {
   run(
@@ -14,4 +14,6 @@ export type IAgentDomain = {
     instruction: string,
     options?: ExecuteOptions
   ): Promise<AgentResponse>
+  resume(session: Session, instruction: string, options?: ExecuteOptions): Promise<AgentResponse>
+  isLimitExceeded(response: AgentResponse, options: AgentRunOptions): boolean
 }

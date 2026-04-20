@@ -3,9 +3,11 @@ import type {
   AgentPipelineTask,
   Pipeline,
   PipelineRunOptions,
-  RejectedContext
+  RejectedContext,
+  ScriptPipelineTask
 } from '@src/types/pipeline'
 import type { Session } from '@src/types/session'
+import type { ScriptResult } from '@src/domains/ports/script'
 
 export type RejectionResult = {
   targetIndex: number
@@ -50,4 +52,12 @@ export type IPipelineDomain = {
     options: PipelineRunOptions,
     rejected?: RejectedContext
   ): Promise<AgentTaskResult>
+  findOuterRejectionTarget(pipeline: Pipeline): number | undefined
+  resolveScriptRejection(
+    pipeline: Pipeline,
+    task: ScriptPipelineTask,
+    result: ScriptResult,
+    taskIndex: number,
+    currentCount: number
+  ): RejectionResult | undefined
 }
