@@ -10,8 +10,8 @@ import type { Session } from '@src/types/session'
 import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { IPipelineDomain, RejectionResult, AgentTaskResult } from '@src/domains/ports/pipeline'
 import type { ISessionDomain } from '@src/domains/ports/session'
+import type { IRejectionFeedbackRepository } from '@src/repositories/ports/rejectionFeedback'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
-import { getRejectionFeedback, getCwd } from '@src/repositories/rejectionFeedback'
 import { debug } from '@src/utils/output'
 
 const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Please:
@@ -22,7 +22,8 @@ Then provide your final response.`
 export class PipelineDomain implements IPipelineDomain {
   constructor(
     private agentDomain: IAgentDomain,
-    private sessionDomain: ISessionDomain
+    private sessionDomain: ISessionDomain,
+    private rejectionFeedbackRepo: IRejectionFeedbackRepository
   ) {}
 
   buildRejectedInstruction(task: AgentPipelineTask, rejected: RejectedContext): string {
@@ -37,11 +38,11 @@ export class PipelineDomain implements IPipelineDomain {
   }
 
   async getRejectionFeedback(taskName: string): Promise<string | undefined> {
-    return getRejectionFeedback(taskName)
+    return this.rejectionFeedbackRepo.getFeedback(taskName)
   }
 
   getWorkingDirectory(): string {
-    return getCwd()
+    return this.rejectionFeedbackRepo.getCwd()
   }
 
   resolveRejection(
@@ -121,7 +122,11 @@ export class PipelineDomain implements IPipelineDomain {
       if (resumed) return resumed
     }
 
-    const session = await this.sessionDomain.create({ name: task.name, procedure: task.procedure })
+    const session = await this.sessionDomain.create({
+      name: task.name,
+      procedure: task.procedure,
+      working_dir: this.getWorkingDirectory()
+    })
     const sessionFilePath = this.sessionDomain.getPath(session.id)
     const response = await this.runWithLimit(
       session,

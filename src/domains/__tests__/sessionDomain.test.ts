@@ -23,7 +23,8 @@ describe('SessionDomain', () => {
   it('should create a new session', async () => {
     const session = await domain.create({
       procedure: 'test-procedure',
-      tags: ['tag1', 'tag2']
+      tags: ['tag1', 'tag2'],
+      working_dir: '/tmp/test'
     })
 
     expect(session.id).toBeDefined()

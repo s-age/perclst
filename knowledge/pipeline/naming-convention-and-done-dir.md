@@ -43,17 +43,34 @@ Files with no namespace segments move flat: `no-namespace.json` → `done/no-nam
 - `runCommand` (CLI layer) calls `moveToDone` via `PipelineFileService` from DI —
   no `fs` imports in the CLI layer.
 
+**camelCase → kebab-case conversion**
+
+Source filenames under `src/` are camelCase; pipeline names use kebab-case. Convert
+when deriving a pipeline name from a source file:
+
+| Source file | Pipeline segment |
+|---|---|
+| `knowledgeSearch.ts` | `knowledge-search` |
+| `pipelineFile.ts` | `pipeline-file` |
+| `testStrategy.ts` | `test-strategy` |
+| `tsAnalysis.ts` | `ts-analysis` |
+
 ## Do
 
 - Name new pipeline files with `__` between namespace segments and `-` within segments.
 - Add namespace prefixes to group related pipelines (e.g. `unit-test__`, `e2e__`).
+- Convert camelCase source filenames to kebab-case when building pipeline names.
+- Place new pipelines as flat JSON files directly under `pipelines/` root.
 
 ## Don't
 
 - Use a single `-` as a namespace separator — it is ambiguous and breaks the
   mechanical directory conversion.
 - Perform `mkdirSync` / `renameSync` directly in the CLI or service layer.
+- Imitate the subdirectory structure found under `pipelines/done/` when creating
+  new pipelines — that layout is auto-generated at archive time and is not the
+  authoring format.
 
 ---
 
-**Keywords:** pipeline, naming convention, done directory, namespace separator, FileMoveRepository, moveToDone, double underscore
+**Keywords:** pipeline, naming convention, done directory, namespace separator, FileMoveRepository, moveToDone, double underscore, camelCase, kebab-case, flat file
