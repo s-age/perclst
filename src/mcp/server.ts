@@ -15,16 +15,6 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import {
-  openSync,
-  readSync,
-  writeSync,
-  closeSync,
-  existsSync,
-  readFileSync,
-  writeFileSync,
-  unlinkSync
-} from 'fs'
 import { askPermissionParams } from '@src/validators/mcp/askPermission'
 import { tsAnalyzeParams } from '@src/validators/mcp/tsAnalyze'
 import { tsGetReferencesParams } from '@src/validators/mcp/tsGetReferences'
@@ -38,89 +28,10 @@ import { executeTsGetTypes } from './tools/tsGetTypes'
 import { executeTsChecker } from './tools/tsChecker'
 import { executeTsTestStrategist } from './tools/tsTestStrategist'
 import { executeKnowledgeSearch } from './tools/knowledgeSearch'
+import { executeAskPermission } from './tools/askPermission'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
-
-// ---------------------------------------------------------------------------
-// ask_permission: interactive prompt via /dev/tty
-// ---------------------------------------------------------------------------
-
-function formatInputSummary(input: Record<string, unknown>): string {
-  const primary = input.command ?? input.file_path ?? input.path ?? input.url ?? input.pattern
-  if (primary !== undefined) return String(primary)
-  const json = JSON.stringify(input, null, 2)
-  const lines = json.split('\n')
-  return lines.length > 6 ? lines.slice(0, 6).join('\n') + '\n  ...' : json
-}
-
-type PermissionResult =
-  | { behavior: 'allow'; updatedInput: Record<string, unknown> }
-  | { behavior: 'deny'; message: string }
-
-async function askPermissionViaIPC(
-  pipePath: string,
-  args: { tool_name: string; input: Record<string, unknown> }
-): Promise<PermissionResult> {
-  const reqPath = `${pipePath}.req`
-  const resPath = `${pipePath}.res`
-  writeFileSync(reqPath, JSON.stringify({ tool_name: args.tool_name, input: args.input }), 'utf-8')
-  const deadline = Date.now() + 60_000
-  while (Date.now() < deadline) {
-    await new Promise((r) => setTimeout(r, 100))
-    if (existsSync(resPath)) {
-      try {
-        const res = JSON.parse(readFileSync(resPath, 'utf-8')) as PermissionResult
-        try {
-          unlinkSync(resPath)
-        } catch {
-          /* ignore */
-        }
-        return res
-      } catch {
-        return { behavior: 'deny', message: 'Failed to parse permission response' }
-      }
-    }
-  }
-  return { behavior: 'deny', message: 'Permission request timed out' }
-}
-
-async function askPermission(args: {
-  tool_name: string
-  input: Record<string, unknown>
-  tool_use_id?: string
-}): Promise<PermissionResult> {
-  if (process.env.PERCLST_PERMISSION_AUTO_YES === '1')
-    return { behavior: 'allow', updatedInput: args.input }
-  const pipePath = process.env.PERCLST_PERMISSION_PIPE
-  if (pipePath) return askPermissionViaIPC(pipePath, args)
-  const { tool_name, input } = args
-  const summary = formatInputSummary(input)
-  const prompt =
-    `\nPermission Request\n` +
-    `  Tool : ${tool_name}\n` +
-    `  Input: ${summary.replace(/\n/g, '\n         ')}\n` +
-    `  Allow? [y/N] `
-
-  let ttyFd: number
-  try {
-    ttyFd = openSync('/dev/tty', 'r+')
-  } catch {
-    return { behavior: 'deny', message: 'No terminal available for interactive prompt' }
-  }
-
-  try {
-    writeSync(ttyFd, prompt)
-    const buf = Buffer.alloc(256)
-    const bytesRead = readSync(ttyFd, buf, 0, 256, null)
-    const answer = buf.slice(0, bytesRead).toString().trim().toLowerCase()
-    return answer === 'y' || answer === 'yes'
-      ? { behavior: 'allow', updatedInput: input }
-      : { behavior: 'deny', message: 'User denied permission' }
-  } finally {
-    closeSync(ttyFd)
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Server setup
@@ -133,14 +44,7 @@ server.tool(
   'Ask the user whether to allow a tool call. ' +
     'Called by Claude Code when it needs permission to use a built-in tool in headless (-p) mode.',
   askPermissionParams,
-  async ({ tool_name, input, tool_use_id }) => ({
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify(await askPermission({ tool_name, input, tool_use_id }))
-      }
-    ]
-  })
+  ({ tool_name, input, tool_use_id }) => executeAskPermission({ tool_name, input, tool_use_id })
 )
 
 server.tool(

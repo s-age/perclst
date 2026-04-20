@@ -11,4 +11,12 @@ export class PermissionPipeService {
   respond(result: PermissionResult): void {
     this.domain.respond(result)
   }
+
+  async askPermission(args: {
+    tool_name: string
+    input: Record<string, unknown>
+    tool_use_id?: string
+  }): Promise<PermissionResult> {
+    return this.domain.askPermission(args)
+  }
 }
