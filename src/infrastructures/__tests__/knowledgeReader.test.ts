@@ -1,15 +1,15 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { Stats } from 'fs'
 
-const { mockExistsSync, mockReaddirSync, mockStatSync, mockReadFileSync, mockJoin } = vi.hoisted(
-  () => ({
+const { mockExistsSync, mockReaddirSync, mockStatSync, mockReadFileSync, mockJoin, mockRelative } =
+  vi.hoisted(() => ({
     mockExistsSync: vi.fn(),
     mockReaddirSync: vi.fn(),
     mockStatSync: vi.fn(),
     mockReadFileSync: vi.fn(),
-    mockJoin: vi.fn()
-  })
-)
+    mockJoin: vi.fn(),
+    mockRelative: vi.fn()
+  }))
 
 vi.mock('fs', () => ({
   existsSync: mockExistsSync,
@@ -19,7 +19,8 @@ vi.mock('fs', () => ({
 }))
 
 vi.mock('path', () => ({
-  join: mockJoin
+  join: mockJoin,
+  relative: mockRelative
 }))
 
 import { listFilesRecursive, readTextFile } from '../knowledgeReader'
@@ -29,6 +30,9 @@ describe('knowledgeReader', () => {
     vi.clearAllMocks()
     // Default mock implementations for all tests
     mockJoin.mockImplementation((...parts: string[]) => parts.join('/'))
+    mockRelative.mockImplementation((from: string, to: string) =>
+      to.startsWith(from + '/') ? to.slice(from.length + 1) : to
+    )
   })
 
   describe('listFilesRecursive', () => {
@@ -61,7 +65,10 @@ describe('knowledgeReader', () => {
 
       const result = listFilesRecursive('/docs')
 
-      expect(result).toEqual(['/docs/file1.md', '/docs/file2.txt'])
+      expect(result).toEqual([
+        { absolute: '/docs/file1.md', relative: 'file1.md' },
+        { absolute: '/docs/file2.txt', relative: 'file2.txt' }
+      ])
       expect(mockReaddirSync).toHaveBeenCalledWith('/docs')
     })
 
@@ -73,7 +80,10 @@ describe('knowledgeReader', () => {
 
       const result = listFilesRecursive('/docs', '.md')
 
-      expect(result).toEqual(['/docs/file1.md', '/docs/file2.md'])
+      expect(result).toEqual([
+        { absolute: '/docs/file1.md', relative: 'file1.md' },
+        { absolute: '/docs/file2.md', relative: 'file2.md' }
+      ])
       expect(mockReaddirSync).toHaveBeenCalledWith('/docs')
     })
 
@@ -85,9 +95,10 @@ describe('knowledgeReader', () => {
 
       const result = listFilesRecursive('/root', '.md')
 
-      expect(result).toEqual(['/root/readme.md', '/root/guide.md'])
-      expect(result).not.toContain('/root/package.json')
-      expect(result).not.toContain('/root/index.js')
+      expect(result).toEqual([
+        { absolute: '/root/readme.md', relative: 'readme.md' },
+        { absolute: '/root/guide.md', relative: 'guide.md' }
+      ])
     })
 
     it('finds files recursively in nested subdirectories', () => {
@@ -114,7 +125,10 @@ describe('knowledgeReader', () => {
 
       const result = listFilesRecursive('/root', '.md')
 
-      expect(result).toEqual(['/root/file1.md', '/root/subdir/file2.md'])
+      expect(result).toEqual([
+        { absolute: '/root/file1.md', relative: 'file1.md' },
+        { absolute: '/root/subdir/file2.md', relative: 'subdir/file2.md' }
+      ])
       expect(mockReaddirSync).toHaveBeenCalledWith('/root')
       expect(mockReaddirSync).toHaveBeenCalledWith('/root/subdir')
     })
@@ -127,9 +141,10 @@ describe('knowledgeReader', () => {
 
       const result = listFilesRecursive('/root', '.md')
 
-      expect(result).toEqual(['/root/readme.md', '/root/changelog.md'])
-      expect(result).not.toContain('/root/src')
-      expect(result).not.toContain('/root/package.json')
+      expect(result).toEqual([
+        { absolute: '/root/readme.md', relative: 'readme.md' },
+        { absolute: '/root/changelog.md', relative: 'changelog.md' }
+      ])
     })
   })
 

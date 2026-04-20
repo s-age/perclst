@@ -1,6 +1,6 @@
 import { container } from './container'
 import { TOKENS } from './identifiers'
-import { loadConfig, resolveSessionsDir } from '@src/repositories/config'
+import { loadConfig, resolveSessionsDir, resolveKnowledgeDir } from '@src/repositories/config'
 import { SessionRepository } from '@src/repositories/sessions'
 import { ClaudeSessionRepository } from '@src/repositories/claudeSessions'
 import { ProcedureRepository } from '@src/repositories/procedures'
@@ -61,7 +61,7 @@ type Domains = {
   tsAnalysisDomain: TsAnalysisDomain
 }
 
-function buildRepos(sessionsDir: string): Repos {
+function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
   return {
     fileMoveRepo: new FileMoveRepository(),
     claudeCodeRepo: new ClaudeCodeRepository(),
@@ -71,7 +71,7 @@ function buildRepos(sessionsDir: string): Repos {
     procedureRepo: new ProcedureRepository(),
     checkerRepo: new CheckerRepository(),
     testStrategyRepo: new TestStrategyRepository(),
-    knowledgeSearchRepo: new KnowledgeSearchRepository(),
+    knowledgeSearchRepo: new KnowledgeSearchRepository(knowledgeDir),
     tsAnalysisRepo: new TsAnalysisRepository()
   }
 }
@@ -167,8 +167,9 @@ function registerServices(domains: Domains): void {
 export function setupContainer(): void {
   const config = loadConfig()
   const sessionsDir = resolveSessionsDir(config)
+  const knowledgeDir = resolveKnowledgeDir()
   const model = config.model ?? DEFAULT_MODEL
-  const repos = buildRepos(sessionsDir)
+  const repos = buildRepos(sessionsDir, knowledgeDir)
   const domains = buildDomains(model, repos)
   registerReposAndDomains(config, repos, domains)
   registerServices(domains)
