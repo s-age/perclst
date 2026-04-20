@@ -21,6 +21,7 @@ export type CreateSessionParams = {
   procedure?: string
   parent_session_id?: string
   tags?: string[]
+  working_dir: string
 }
 
 export type ResumeSessionParams = {

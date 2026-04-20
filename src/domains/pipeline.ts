@@ -122,7 +122,11 @@ export class PipelineDomain implements IPipelineDomain {
       if (resumed) return resumed
     }
 
-    const session = await this.sessionDomain.create({ name: task.name, procedure: task.procedure })
+    const session = await this.sessionDomain.create({
+      name: task.name,
+      procedure: task.procedure,
+      working_dir: this.getWorkingDirectory()
+    })
     const sessionFilePath = this.sessionDomain.getPath(session.id)
     const response = await this.runWithLimit(
       session,

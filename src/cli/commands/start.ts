@@ -46,7 +46,12 @@ export async function startCommand(task: string, options: RawStartOptions) {
 
     const { sessionId, response } = await agentService.start(
       input.task,
-      { name: input.name, procedure: input.procedure, tags: input.tags },
+      {
+        name: input.name,
+        procedure: input.procedure,
+        tags: input.tags,
+        working_dir: process.cwd()
+      },
       {
         allowedTools,
         disallowedTools,

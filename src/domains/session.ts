@@ -23,7 +23,7 @@ export class SessionDomain implements ISessionDomain {
       updated_at: toISO(),
       procedure: params.procedure,
       claude_session_id: id,
-      working_dir: process.cwd(),
+      working_dir: params.working_dir,
       metadata: {
         parent_session_id: params.parent_session_id,
         tags: params.tags || [],
