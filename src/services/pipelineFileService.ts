@@ -6,4 +6,28 @@ export class PipelineFileService {
   moveToDone(pipelinePath: string): string {
     return this.pipelineFileDomain.moveToDone(pipelinePath)
   }
+
+  getDiffStat(): string | null {
+    return this.pipelineFileDomain.getDiffStat()
+  }
+
+  getHead(): string | null {
+    return this.pipelineFileDomain.getHead()
+  }
+
+  getDiffSummary(from: string, to: string): string | null {
+    return this.pipelineFileDomain.getDiffSummary(from, to)
+  }
+
+  commitMove(originalPath: string, donePath: string): void {
+    this.pipelineFileDomain.commitMove(originalPath, donePath)
+  }
+
+  cleanTmpDir(): void {
+    this.pipelineFileDomain.cleanTmpDir()
+  }
+
+  loadRawPipeline(absolutePath: string): unknown {
+    return this.pipelineFileDomain.loadRawPipeline(absolutePath)
+  }
 }

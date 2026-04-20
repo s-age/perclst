@@ -1,7 +1,5 @@
-import { readFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { resolve, join, dirname, basename } from 'path'
-import { execSync } from 'child_process'
+import { resolve, join } from 'path'
 import * as readline from 'readline'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
@@ -68,65 +66,6 @@ function printTaskResult(
   }
 }
 
-function getGitDiffStat(): string | null {
-  try {
-    const staged = execSync('git diff --cached --stat', { encoding: 'utf-8' }).trim()
-    const unstaged = execSync('git diff --stat', { encoding: 'utf-8' }).trim()
-    const combined = [staged, unstaged].filter(Boolean).join('\n')
-    return combined || null
-  } catch {
-    return null
-  }
-}
-
-function getGitHead(): string | null {
-  try {
-    return execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim()
-  } catch {
-    return null
-  }
-}
-
-function printGitDiffSummary(fromHash: string, toHash: string): void {
-  try {
-    const stat = execSync(`git diff ${fromHash}...${toHash} --stat`, { encoding: 'utf-8' }).trim()
-    if (!stat) return
-    stdout.print(
-      `\nChanges committed during pipeline (${fromHash.slice(0, 7)}...${toHash.slice(0, 7)}):`
-    )
-    stdout.print(stat)
-    stdout.print(`\nTo inspect: git diff ${fromHash}...${toHash}`)
-  } catch {
-    // not in a git repo or no diff available
-  }
-}
-
-function commitMovedPipeline(originalPath: string, donePath: string): void {
-  try {
-    const filename = basename(donePath)
-    const absOriginal = resolve(originalPath)
-    const absDone = join(dirname(absOriginal), donePath)
-    execSync(`git add -u "${absOriginal}"`, { encoding: 'utf-8' })
-    execSync(`git add "${absDone}"`, { encoding: 'utf-8' })
-    try {
-      execSync('git add -u .claude/tmp/', { encoding: 'utf-8' })
-    } catch {
-      // no tracked tmp files to stage
-    }
-    execSync(`git commit -m "chore: mv ${filename}"`, { encoding: 'utf-8' })
-  } catch {
-    // not in a git repo or nothing to commit
-  }
-}
-
-function cleanTmpDir(): void {
-  try {
-    execSync('rm -f .claude/tmp/*', { encoding: 'utf-8' })
-  } catch {
-    // ignore
-  }
-}
-
 function confirm(question: string): Promise<boolean> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stderr })
   return new Promise((resolve) => {
@@ -137,8 +76,8 @@ function confirm(question: string): Promise<boolean> {
   })
 }
 
-async function checkUncommittedChanges(): Promise<void> {
-  const diffStat = getGitDiffStat()
+async function checkUncommittedChanges(pipelineFileService: PipelineFileService): Promise<void> {
+  const diffStat = pipelineFileService.getDiffStat()
   if (!diffStat) return
   stderr.print(`\nUncommitted changes detected:\n${diffStat}\n`)
   const ok = await confirm('Run pipeline with uncommitted changes? [y/N] ')
@@ -148,13 +87,30 @@ async function checkUncommittedChanges(): Promise<void> {
   }
 }
 
-async function executeTUIPipeline(input: RunPipelineInput): Promise<void> {
+function printGitDiffSummary(
+  pipelineFileService: PipelineFileService,
+  fromHash: string,
+  toHash: string
+): void {
+  const stat = pipelineFileService.getDiffSummary(fromHash, toHash)
+  if (!stat) return
+  stdout.print(
+    `\nChanges committed during pipeline (${fromHash.slice(0, 7)}...${toHash.slice(0, 7)}):`
+  )
+  stdout.print(stat)
+  stdout.print(`\nTo inspect: git diff ${fromHash}...${toHash}`)
+}
+
+async function executeTUIPipeline(
+  input: RunPipelineInput,
+  pipelineFileService: PipelineFileService
+): Promise<void> {
   process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   let raw: unknown
   try {
-    raw = JSON.parse(readFileSync(absolutePath, 'utf-8'))
+    raw = pipelineFileService.loadRawPipeline(absolutePath)
   } catch {
     stderr.print(`Failed to read pipeline file: ${absolutePath}`)
     process.exit(1)
@@ -185,12 +141,15 @@ async function executeTUIPipeline(input: RunPipelineInput): Promise<void> {
   })
 }
 
-async function executePipeline(input: RunPipelineInput): Promise<void> {
+async function executePipeline(
+  input: RunPipelineInput,
+  pipelineFileService: PipelineFileService
+): Promise<void> {
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   let raw: unknown
   try {
-    raw = JSON.parse(readFileSync(absolutePath, 'utf-8'))
+    raw = pipelineFileService.loadRawPipeline(absolutePath)
   } catch {
     stderr.print(`Failed to read pipeline file: ${absolutePath}`)
     process.exit(1)
@@ -218,27 +177,28 @@ async function executePipeline(input: RunPipelineInput): Promise<void> {
 
 export async function runCommand(pipelinePath: string, options: RawRunOptions) {
   try {
-    await checkUncommittedChanges()
+    const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
+
+    await checkUncommittedChanges(pipelineFileService)
 
     const input = parseRunOptions({ pipelinePath, ...options })
-    const headBefore = getGitHead()
+    const headBefore = pipelineFileService.getHead()
 
     if (process.stdout.isTTY && !input.batch) {
-      await executeTUIPipeline(input)
+      await executeTUIPipeline(input, pipelineFileService)
     } else {
-      await executePipeline(input)
+      await executePipeline(input, pipelineFileService)
     }
 
-    const headAfter = getGitHead()
+    const headAfter = pipelineFileService.getHead()
     if (headBefore && headAfter && headBefore !== headAfter) {
-      printGitDiffSummary(headBefore, headAfter)
+      printGitDiffSummary(pipelineFileService, headBefore, headAfter)
     }
 
-    const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
     const donePath = pipelineFileService.moveToDone(input.pipelinePath)
     stdout.print(`\nMoved to: ${donePath}`)
-    commitMovedPipeline(input.pipelinePath, donePath)
-    cleanTmpDir()
+    pipelineFileService.commitMove(input.pipelinePath, donePath)
+    pipelineFileService.cleanTmpDir()
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)

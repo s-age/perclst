@@ -30,6 +30,7 @@ import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
 import { TsAnalysisDomain } from '@src/domains/tsAnalysis'
 import { TsAnalysisService } from '@src/services/tsAnalysisService'
 import { FileMoveRepository } from '@src/repositories/fileMoveRepository'
+import { GitRepository } from '@src/repositories/gitRepository'
 import { RejectionFeedbackRepository } from '@src/repositories/rejectionFeedback'
 import { PipelineFileDomain } from '@src/domains/pipelineFile'
 import { PipelineFileService } from '@src/services/pipelineFileService'
@@ -38,6 +39,7 @@ import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
 type Repos = {
   fileMoveRepo: FileMoveRepository
+  gitRepo: GitRepository
   rejectionFeedbackRepo: RejectionFeedbackRepository
   claudeCodeRepo: ClaudeCodeRepository
   shellRepo: ShellRepository
@@ -67,6 +69,7 @@ type Domains = {
 function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
   return {
     fileMoveRepo: new FileMoveRepository(),
+    gitRepo: new GitRepository(),
     rejectionFeedbackRepo: new RejectionFeedbackRepository(),
     claudeCodeRepo: new ClaudeCodeRepository(),
     shellRepo: new ShellRepository(),
@@ -85,6 +88,7 @@ function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
 function buildDomains(model: string, repos: Repos): Domains {
   const {
     fileMoveRepo,
+    gitRepo,
     rejectionFeedbackRepo,
     claudeCodeRepo,
     shellRepo,
@@ -99,7 +103,7 @@ function buildDomains(model: string, repos: Repos): Domains {
   const sessionDomain = new SessionDomain(sessionRepo)
   const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
   return {
-    pipelineFileDomain: new PipelineFileDomain(fileMoveRepo),
+    pipelineFileDomain: new PipelineFileDomain(fileMoveRepo, gitRepo),
     scriptDomain: new ScriptDomain(shellRepo),
     sessionDomain,
     agentDomain,
@@ -129,6 +133,7 @@ function registerReposAndDomains(
   container.register(TOKENS.KnowledgeSearchRepository, repos.knowledgeSearchRepo)
   container.register(TOKENS.TsAnalysisRepository, repos.tsAnalysisRepo)
   container.register(TOKENS.FileMoveRepository, repos.fileMoveRepo)
+  container.register(TOKENS.GitRepository, repos.gitRepo)
   container.register(TOKENS.RejectionFeedbackRepository, repos.rejectionFeedbackRepo)
   container.register(TOKENS.ScriptDomain, domains.scriptDomain)
   container.register(TOKENS.PipelineFileDomain, domains.pipelineFileDomain)

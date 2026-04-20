@@ -1,3 +1,9 @@
 export type IPipelineFileDomain = {
   moveToDone(pipelinePath: string): string
+  getDiffStat(): string | null
+  getHead(): string | null
+  getDiffSummary(from: string, to: string): string | null
+  commitMove(originalPath: string, donePath: string): void
+  cleanTmpDir(): void
+  loadRawPipeline(absolutePath: string): unknown
 }
