@@ -104,7 +104,15 @@ function printGitDiffSummary(fromHash: string, toHash: string): void {
 function commitMovedPipeline(originalPath: string, donePath: string): void {
   try {
     const filename = basename(donePath)
-    execSync(`git add "${originalPath}" "${donePath}"`, { encoding: 'utf-8' })
+    const absOriginal = resolve(originalPath)
+    const absDone = resolve(donePath)
+    execSync(`git add -u "${absOriginal}"`, { encoding: 'utf-8' })
+    execSync(`git add "${absDone}"`, { encoding: 'utf-8' })
+    try {
+      execSync('git add -u .claude/tmp/', { encoding: 'utf-8' })
+    } catch {
+      // no tracked tmp files to stage
+    }
     execSync(`git commit -m "chore: mv ${filename}"`, { encoding: 'utf-8' })
   } catch {
     // not in a git repo or nothing to commit
