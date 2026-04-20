@@ -51,3 +51,9 @@ export type AnalysisSummary = {
     totalCacheCreation: number
   }
 }
+
+/** Raw parsed output from the Claude session repository — turns + token totals, without any computed breakdown. */
+export type ClaudeSessionData = {
+  turns: ClaudeCodeTurn[]
+  tokens: AnalysisSummary['tokens']
+}

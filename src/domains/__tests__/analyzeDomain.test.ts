@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import type { Session } from '@src/types/session'
-import type { AnalysisSummary, AssistantTurnEntry } from '@src/types/analysis'
+import type { AnalysisSummary, AssistantTurnEntry, ClaudeSessionData } from '@src/types/analysis'
 import { AnalyzeDomain } from '../analyze'
 
 const mockSessionDomain: ISessionDomain = {
@@ -35,10 +35,8 @@ const makeSession = (overrides: Partial<Session> = {}): Session => ({
   ...overrides
 })
 
-const makeSummary = (): AnalysisSummary => ({
+const makeSessionData = (): ClaudeSessionData => ({
   turns: [],
-  turnsBreakdown: { userInstructions: 0, toolUse: 0, assistantResponse: 0, total: 0 },
-  toolUses: [],
   tokens: { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0 }
 })
 
@@ -53,9 +51,9 @@ describe('AnalyzeDomain', () => {
   describe('analyze', () => {
     it('should return session and summary for the given sessionId', async () => {
       const session = makeSession()
-      const summary = makeSummary()
+      const sessionData = makeSessionData()
       vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
-      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(summary)
+      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(sessionData)
 
       const result = await domain.analyze('session-1')
 
@@ -65,7 +63,20 @@ describe('AnalyzeDomain', () => {
         session.working_dir,
         undefined
       )
-      expect(result).toEqual({ session, summary })
+      const expectedSummary: AnalysisSummary = {
+        turns: [],
+        turnsBreakdown: {
+          userInstructions: 0,
+          thinking: 0,
+          toolCalls: 0,
+          toolResults: 0,
+          assistantResponse: 0,
+          total: 0
+        },
+        toolUses: [],
+        tokens: { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0 }
+      }
+      expect(result).toEqual({ session, summary: expectedSummary })
     })
   })
 

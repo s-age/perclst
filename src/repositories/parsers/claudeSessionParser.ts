@@ -1,4 +1,4 @@
-import type { AnalysisSummary, ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
+import type { ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
 
 export type RawUserEntry = {
   type: 'user'
@@ -230,42 +230,6 @@ export function buildTurns(
   flush()
 
   return { turns, tokens: { totalInput, totalOutput, totalCacheRead, totalCacheCreation } }
-}
-
-export function buildSummaryStats(turns: ClaudeCodeTurn[]): {
-  turnsBreakdown: AnalysisSummary['turnsBreakdown']
-  toolUses: AnalysisSummary['toolUses']
-} {
-  let userInstructions = 0
-  let thinking = 0
-  let toolCalls = 0
-  let assistantResponse = 0
-  const allToolUses: AnalysisSummary['toolUses'] = []
-
-  for (const turn of turns) {
-    if (turn.userMessage !== undefined) userInstructions++
-    if (turn.toolCalls.length > 0) {
-      thinking++
-      toolCalls += turn.toolCalls.length
-      for (const tc of turn.toolCalls) {
-        allToolUses.push({ name: tc.name, input: tc.input, isError: tc.isError })
-      }
-    } else if (turn.assistantText !== undefined) {
-      assistantResponse++
-    }
-  }
-
-  return {
-    turnsBreakdown: {
-      userInstructions,
-      thinking,
-      toolCalls,
-      toolResults: toolCalls,
-      assistantResponse,
-      total: userInstructions + thinking + toolCalls + toolCalls + assistantResponse
-    },
-    toolUses: allToolUses
-  }
 }
 
 export function filterEntriesUpTo(entries: RawEntry[], messageId: string): RawEntry[] {

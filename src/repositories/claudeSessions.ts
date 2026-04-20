@@ -1,12 +1,11 @@
 import { join } from 'path'
-import type { AnalysisSummary, AssistantTurnEntry } from '@src/types/analysis'
+import type { AssistantTurnEntry, ClaudeSessionData } from '@src/types/analysis'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import { fileExists, homeDir, readText, listDirEntries, isDirectory } from '@src/infrastructures/fs'
 import {
   parseRawEntries,
   buildToolResultMap,
   buildTurns,
-  buildSummaryStats,
   filterEntriesUpTo,
   type RawAssistantEntry
 } from '@src/repositories/parsers/claudeSessionParser'
@@ -45,7 +44,7 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     claudeSessionId: string,
     workingDir: string,
     upToMessageId?: string
-  ): AnalysisSummary {
+  ): ClaudeSessionData {
     return readClaudeSession(claudeSessionId, workingDir, upToMessageId)
   }
 
@@ -161,7 +160,7 @@ export function readClaudeSession(
   claudeSessionId: string,
   workingDir: string,
   upToMessageId?: string
-): AnalysisSummary {
+): ClaudeSessionData {
   const jsonlPath = resolveJsonlPath(claudeSessionId, workingDir)
 
   if (!fileExists(jsonlPath)) {
@@ -174,7 +173,6 @@ export function readClaudeSession(
   }
   const toolResultMap = buildToolResultMap(entries)
   const { turns, tokens } = buildTurns(entries, toolResultMap)
-  const { turnsBreakdown, toolUses } = buildSummaryStats(turns)
 
-  return { turns, turnsBreakdown, toolUses, tokens }
+  return { turns, tokens }
 }
