@@ -1,6 +1,5 @@
 import { Project } from 'ts-morph'
 import type { SourceFile } from 'ts-morph'
-import type { ReferenceInfo } from '@src/types/tsAnalysis'
 
 type TsAnalyzerOptions =
   | { skipAddingFilesFromTsConfig: true }
@@ -22,54 +21,5 @@ export class TsAnalyzer {
 
   getSourceFileIfExists(filePath: string): SourceFile | undefined {
     return this.project.addSourceFileAtPathIfExists(filePath) ?? undefined
-  }
-
-  // Scans the entire project to find references — filesystem I/O, not pure transformation
-  getReferences(
-    filePath: string,
-    symbolName: string,
-    options?: { includeTest?: boolean }
-  ): ReferenceInfo[] {
-    const sourceFile = this.project.addSourceFileAtPath(filePath)
-
-    let symbol = null
-    if (symbolName.includes('.')) {
-      const [className, methodName] = symbolName.split('.', 2)
-      const classDecl = sourceFile.getClass(className)
-      if (classDecl) {
-        symbol = classDecl.getMethod(methodName)
-      }
-    } else {
-      symbol =
-        sourceFile.getFunction(symbolName) ||
-        sourceFile.getClass(symbolName) ||
-        sourceFile.getVariableDeclaration(symbolName) ||
-        sourceFile.getInterface(symbolName) ||
-        sourceFile.getTypeAlias(symbolName)
-    }
-
-    if (!symbol) return []
-
-    const references: ReferenceInfo[] = []
-    for (const referencedSymbol of symbol.findReferences()) {
-      for (const reference of referencedSymbol.getReferences()) {
-        const node = reference.getNode()
-        const sf = node.getSourceFile()
-        const refFilePath = sf.getFilePath()
-
-        if (!options?.includeTest && refFilePath.includes('__tests__')) {
-          continue
-        }
-
-        const pos = sf.getLineAndColumnAtPos(node.getStart())
-        references.push({
-          file_path: refFilePath,
-          line: pos.line,
-          column: pos.column,
-          snippet: node.getText()
-        })
-      }
-    }
-    return references
   }
 }

@@ -1,0 +1,79 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-fix-infra-knowledgereader"
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-knowledgereader",
+      "task": "target_path: src/infrastructures/knowledgeReader.ts\nng_output_path: .claude/tmp/review-fix-infra-knowledgereader",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-infra-knowledgereader",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-knowledgereader",
+          "task": "target_path: src/infrastructures/knowledgeReader.ts\nng_output_path: .claude/tmp/review-fix-infra-knowledgereader\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-knowledgereader",
+          "task": "target_path: src/infrastructures/knowledgeReader.ts\nng_output_path: .claude/tmp/review-fix-infra-knowledgereader\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-knowledgereader",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run build",
+          "rejected": {
+            "to": "implement-fix-knowledgereader",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-knowledgereader",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(infra): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    }
+  ]
+}

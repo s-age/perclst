@@ -5,25 +5,12 @@ import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { ClaudeAction } from '@src/types/claudeCode'
 import { APIError } from '@src/errors/apiError'
-import { RateLimitError } from '@src/errors/rateLimitError'
+import { RawExitError } from '@src/errors/rawExitError'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const MCP_SERVER_PATH = resolve(__dirname, '../mcp/server.js')
-
-function throwIfExitError(code: number | null, stderr: string): void {
-  if (code === 0) return
-  const rateLimitMatch = stderr.match(/resets?\s+([^\n\r]+)/i)
-  if (
-    stderr.toLowerCase().includes("you've hit your limit") ||
-    stderr.toLowerCase().includes('you have hit your limit')
-  ) {
-    throw new RateLimitError(rateLimitMatch?.[1]?.trim())
-  }
-  if (stderr) process.stderr.write(stderr)
-  throw new APIError(`claude exited with code ${code}`)
-}
 
 // Internal infrastructure adapter — consumed exclusively by ClaudeCodeRepository in agentRepository.ts
 export class ClaudeCodeInfra {
@@ -116,7 +103,8 @@ export class ClaudeCodeInfra {
       }
     }
     if (spawnError) throw spawnError
-    throwIfExitError(await closePromise, stderr)
+    const exitCode = await closePromise
+    if (exitCode !== 0) throw new RawExitError(exitCode, stderr)
   }
 
   private async *streamStdout(stdout: NodeJS.ReadableStream): AsyncGenerator<string> {

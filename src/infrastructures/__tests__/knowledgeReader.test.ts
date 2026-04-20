@@ -22,7 +22,7 @@ vi.mock('path', () => ({
   join: mockJoin
 }))
 
-import { listMarkdownFilesRecursive, readTextFile } from '../knowledgeReader'
+import { listFilesRecursive, readTextFile } from '../knowledgeReader'
 
 describe('knowledgeReader', () => {
   beforeEach(() => {
@@ -31,11 +31,11 @@ describe('knowledgeReader', () => {
     mockJoin.mockImplementation((...parts: string[]) => parts.join('/'))
   })
 
-  describe('listMarkdownFilesRecursive', () => {
+  describe('listFilesRecursive', () => {
     it('returns empty array when directory does not exist', () => {
       mockExistsSync.mockReturnValue(false)
 
-      const result = listMarkdownFilesRecursive('/nonexistent/dir')
+      const result = listFilesRecursive('/nonexistent/dir')
 
       expect(result).toEqual([])
       expect(mockExistsSync).toHaveBeenCalledWith('/nonexistent/dir')
@@ -47,38 +47,50 @@ describe('knowledgeReader', () => {
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listMarkdownFilesRecursive('/empty/dir')
+      const result = listFilesRecursive('/empty/dir')
 
       expect(result).toEqual([])
       expect(mockReaddirSync).toHaveBeenCalledWith('/empty/dir')
     })
 
-    it('returns markdown files from directory with only markdown files', () => {
+    it('returns all files when no ext filter is given', () => {
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['file1.md', 'file2.txt'])
+      const mockStats: Partial<Stats> = { isDirectory: () => false }
+      mockStatSync.mockReturnValue(mockStats)
+
+      const result = listFilesRecursive('/docs')
+
+      expect(result).toEqual(['/docs/file1.md', '/docs/file2.txt'])
+      expect(mockReaddirSync).toHaveBeenCalledWith('/docs')
+    })
+
+    it('returns only matching files when ext filter is given', () => {
       mockExistsSync.mockReturnValue(true)
       mockReaddirSync.mockReturnValue(['file1.md', 'file2.md'])
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listMarkdownFilesRecursive('/docs')
+      const result = listFilesRecursive('/docs', '.md')
 
       expect(result).toEqual(['/docs/file1.md', '/docs/file2.md'])
       expect(mockReaddirSync).toHaveBeenCalledWith('/docs')
     })
 
-    it('filters out non-markdown files and returns only .md files', () => {
+    it('filters out non-matching files when ext is provided', () => {
       mockExistsSync.mockReturnValue(true)
       mockReaddirSync.mockReturnValue(['readme.md', 'package.json', 'guide.md', 'index.js'])
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listMarkdownFilesRecursive('/root')
+      const result = listFilesRecursive('/root', '.md')
 
       expect(result).toEqual(['/root/readme.md', '/root/guide.md'])
       expect(result).not.toContain('/root/package.json')
       expect(result).not.toContain('/root/index.js')
     })
 
-    it('finds markdown files recursively in nested subdirectories', () => {
+    it('finds files recursively in nested subdirectories', () => {
       mockExistsSync.mockReturnValue(true)
 
       // Mock readdirSync to return different values for different directories
@@ -100,20 +112,20 @@ describe('knowledgeReader', () => {
         } as Partial<Stats>
       })
 
-      const result = listMarkdownFilesRecursive('/root')
+      const result = listFilesRecursive('/root', '.md')
 
       expect(result).toEqual(['/root/file1.md', '/root/subdir/file2.md'])
       expect(mockReaddirSync).toHaveBeenCalledWith('/root')
       expect(mockReaddirSync).toHaveBeenCalledWith('/root/subdir')
     })
 
-    it('skips entries with non-markdown extensions', () => {
+    it('skips entries with non-matching extensions when ext is provided', () => {
       mockExistsSync.mockReturnValue(true)
       mockReaddirSync.mockReturnValue(['readme.md', 'src', 'package.json', 'changelog.md'])
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listMarkdownFilesRecursive('/root')
+      const result = listFilesRecursive('/root', '.md')
 
       expect(result).toEqual(['/root/readme.md', '/root/changelog.md'])
       expect(result).not.toContain('/root/src')
