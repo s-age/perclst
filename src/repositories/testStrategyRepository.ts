@@ -2,11 +2,10 @@ import type { ITestStrategyRepository } from '@src/repositories/ports/testStrate
 import type { RawFunctionInfo, TestFramework } from '@src/types/testStrategy'
 import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import { searchDir } from '@src/infrastructures/testFileDiscovery'
-import { fileExists } from '@src/infrastructures/fs'
+import { fileExists, readText, readJson } from '@src/infrastructures/fs'
 import {
   parseFunctions as _parseFunctions,
-  extractTestFunctions as _extractTestFunctions,
-  detectFramework as _detectFramework
+  parseTestFunctionNames
 } from '@src/repositories/parsers/tsParser'
 import { dirname, join, basename, extname, resolve } from 'path'
 
@@ -60,11 +59,29 @@ export function findTestFile(targetFilePath: string): string | null {
 }
 
 export function extractTestFunctions(testFilePath: string): string[] {
-  return _extractTestFunctions(testFilePath)
+  if (!fileExists(testFilePath)) return []
+  return parseTestFunctionNames(readText(testFilePath))
 }
 
 export function detectFramework(targetFilePath: string): TestFramework {
-  return _detectFramework(targetFilePath)
+  let current = dirname(targetFilePath)
+  for (let i = 0; i < 20; i++) {
+    const pkgPath = join(current, 'package.json')
+    if (fileExists(pkgPath)) {
+      try {
+        const pkg = readJson<Record<string, Record<string, string>>>(pkgPath)
+        const deps = { ...pkg['dependencies'], ...pkg['devDependencies'] }
+        if ('vitest' in deps) return 'vitest'
+      } catch {
+        // fall through to default
+      }
+      break
+    }
+    const parent = dirname(current)
+    if (parent === current) break
+    current = parent
+  }
+  return 'jest'
 }
 
 // ---------------------------------------------------------------------------

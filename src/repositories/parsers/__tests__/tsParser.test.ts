@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { extractTestFunctions, detectFramework } from '../tsParser'
+import { extractTestFunctions, detectFramework } from '../../testStrategyRepository'
 import * as fsModule from '@src/infrastructures/fs'
 
 vi.mock('@src/infrastructures/fs')
