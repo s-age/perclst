@@ -75,7 +75,7 @@ function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
       new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
     ),
     knowledgeSearchRepo: new KnowledgeSearchRepository(knowledgeDir),
-    tsAnalysisRepo: new TsAnalysisRepository()
+    tsAnalysisRepo: new TsAnalysisRepository(new TsAnalyzer())
   }
 }
 

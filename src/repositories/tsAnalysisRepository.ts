@@ -12,7 +12,7 @@ import type { ITsAnalysisRepository } from '@src/repositories/ports/tsAnalysis'
 import type { TypeScriptAnalysis, ReferenceInfo, TypeDefinition } from '@src/types/tsAnalysis'
 
 export class TsAnalysisRepository implements ITsAnalysisRepository {
-  private infra = new TsAnalyzer()
+  constructor(private infra: TsAnalyzer) {}
 
   analyzeFile(filePath: string): TypeScriptAnalysis {
     const sf = this.infra.getSourceFile(filePath)

@@ -1,11 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { TsAnalysisRepository } from '../tsAnalysisRepository'
+import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
 describe('TsAnalysisRepository', () => {
   let repo: TsAnalysisRepository
 
   describe('getReferences', () => {
-    repo = new TsAnalysisRepository()
+    beforeEach(() => {
+      repo = new TsAnalysisRepository(new TsAnalyzer())
+    })
 
     it('should find references to a class', () => {
       const refs = repo.getReferences('src/domains/analyze.ts', 'AnalyzeDomain')
