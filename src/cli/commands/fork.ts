@@ -38,19 +38,14 @@ export async function forkCommand(
     const input = parseForkSession({ originalSessionId, prompt, ...options })
     const resolvedId = await sessionService.resolveId(input.originalSessionId)
 
-    const maxTurns = input.maxTurns ?? config.limits?.max_turns ?? -1
-    const maxContextTokens = input.maxContextTokens ?? config.limits?.max_context_tokens ?? -1
-    const allowedTools = input.allowedTools ?? config.allowed_tools
-    const disallowedTools = input.disallowedTools ?? config.disallowed_tools
-
     const newSession = await sessionService.createRewindSession(resolvedId, undefined, input.name)
 
     const response = await agentService.resume(newSession.id, input.prompt, {
-      allowedTools,
-      disallowedTools,
+      allowedTools: input.allowedTools,
+      disallowedTools: input.disallowedTools,
       model: input.model,
-      maxTurns,
-      maxContextTokens
+      maxTurns: input.maxTurns,
+      maxContextTokens: input.maxContextTokens
     })
 
     stdout.print(`Session forked: ${newSession.id}`)

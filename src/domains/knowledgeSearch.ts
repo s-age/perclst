@@ -107,6 +107,10 @@ function extractExcerpt(content: string, matchedTerms: string[]): string {
 export class KnowledgeSearchDomain implements IKnowledgeSearchDomain {
   constructor(private readonly repo: IKnowledgeSearchRepository) {}
 
+  hasDraftEntries(): boolean {
+    return this.repo.hasDraftEntries()
+  }
+
   search(options: KnowledgeSearchOptions): KnowledgeSearchResult {
     const { query, include_draft } = options
     const orGroups = parseQuery(query)

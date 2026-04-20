@@ -1,45 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useInput } from 'ink'
-import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
-import type { PermissionRequest, PermissionResult } from './types.js'
+import type { PermissionPipeService } from '@src/services/permissionPipeService.js'
+import type { PermissionRequest } from '@src/types/permissionPipe.js'
 
-function respondPermission(pipePath: string, result: PermissionResult): void {
-  try {
-    writeFileSync(`${pipePath}.res`, JSON.stringify(result), 'utf-8')
-  } catch {
-    /* ignore */
-  }
-}
-
-export function usePermission() {
-  const permPipePath = process.env.PERCLST_PERMISSION_PIPE ?? null
+export function usePermission(service: PermissionPipeService | null) {
   const [permRequest, setPermRequest] = useState<PermissionRequest | null>(null)
 
   useEffect(() => {
-    if (!permPipePath) return
-    const reqPath = `${permPipePath}.req`
+    if (!service) return
     const interval = setInterval(() => {
-      if (!existsSync(reqPath)) return
-      try {
-        const req = JSON.parse(readFileSync(reqPath, 'utf-8')) as PermissionRequest
-        try {
-          unlinkSync(reqPath)
-        } catch {
-          /* ignore */
-        }
-        setPermRequest(req)
-      } catch {
-        /* ignore */
-      }
+      const req = service.pollRequest()
+      if (req) setPermRequest(req)
     }, 100)
     return () => clearInterval(interval)
-  }, [permPipePath])
+  }, [service])
 
   useInput((input) => {
-    if (!permRequest || !permPipePath) return
+    if (!permRequest || !service) return
     const allow = input.toLowerCase() === 'y'
-    respondPermission(
-      permPipePath,
+    service.respond(
       allow
         ? { behavior: 'allow', updatedInput: permRequest.input }
         : { behavior: 'deny', message: 'User denied permission' }

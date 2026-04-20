@@ -1,9 +1,13 @@
 import type { IPipelineFileDomain } from '@src/domains/ports/pipelineFile'
 import type { IFileMoveRepository } from '@src/repositories/ports/fileMove'
+import type { IGitRepository } from '@src/repositories/ports/git'
 import { resolve, dirname, basename, join } from '@src/utils/path'
 
 export class PipelineFileDomain implements IPipelineFileDomain {
-  constructor(private readonly fileMoveRepo: IFileMoveRepository) {}
+  constructor(
+    private readonly fileMoveRepo: IFileMoveRepository,
+    private readonly gitRepo: IGitRepository
+  ) {}
 
   moveToDone(pipelinePath: string): string {
     const absoluteSrc = resolve(pipelinePath)
@@ -16,5 +20,55 @@ export class PipelineFileDomain implements IPipelineFileDomain {
     const relativeDest = join('done', ...subDirs, filename)
     this.fileMoveRepo.moveToDone(absoluteSrc, dest)
     return relativeDest
+  }
+
+  getDiffStat(): string | null {
+    return this.gitRepo.getDiffStat()
+  }
+
+  getHead(): string | null {
+    return this.gitRepo.getHead()
+  }
+
+  getDiffSummary(from: string, to: string): string | null {
+    return this.gitRepo.getDiffSummary(from, to)
+  }
+
+  commitMove(originalPath: string, donePath: string): void {
+    try {
+      const absOriginal = resolve(originalPath)
+      const absDone = join(dirname(absOriginal), donePath)
+      const filename = basename(donePath)
+      try {
+        this.gitRepo.stageUpdated(absOriginal)
+      } catch {
+        // not a tracked file or not a git repo
+      }
+      try {
+        this.gitRepo.stageNew(absDone)
+      } catch {
+        // file may not exist yet
+      }
+      try {
+        this.gitRepo.stageUpdated('.claude/tmp/')
+      } catch {
+        // no tracked tmp files to stage
+      }
+      this.gitRepo.commit(`chore: mv ${filename}`)
+    } catch {
+      // not in a git repo or nothing to commit
+    }
+  }
+
+  cleanTmpDir(): void {
+    try {
+      this.gitRepo.removeGlob('.claude/tmp/*')
+    } catch {
+      // ignore
+    }
+  }
+
+  loadRawPipeline(absolutePath: string): unknown {
+    return this.fileMoveRepo.readRawJson(absolutePath)
   }
 }

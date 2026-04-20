@@ -30,14 +30,19 @@ import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
 import { TsAnalysisDomain } from '@src/domains/tsAnalysis'
 import { TsAnalysisService } from '@src/services/tsAnalysisService'
 import { FileMoveRepository } from '@src/repositories/fileMoveRepository'
+import { GitRepository } from '@src/repositories/gitRepository'
 import { RejectionFeedbackRepository } from '@src/repositories/rejectionFeedback'
 import { PipelineFileDomain } from '@src/domains/pipelineFile'
 import { PipelineFileService } from '@src/services/pipelineFileService'
+import { PermissionPipeRepository } from '@src/repositories/permissionPipeRepository'
+import { PermissionPipeDomain } from '@src/domains/permissionPipe'
+import { PermissionPipeService } from '@src/services/permissionPipeService'
 import { DEFAULT_MODEL } from '@src/constants/config'
 import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
 type Repos = {
   fileMoveRepo: FileMoveRepository
+  gitRepo: GitRepository
   rejectionFeedbackRepo: RejectionFeedbackRepository
   claudeCodeRepo: ClaudeCodeRepository
   shellRepo: ShellRepository
@@ -67,6 +72,7 @@ type Domains = {
 function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
   return {
     fileMoveRepo: new FileMoveRepository(),
+    gitRepo: new GitRepository(),
     rejectionFeedbackRepo: new RejectionFeedbackRepository(),
     claudeCodeRepo: new ClaudeCodeRepository(),
     shellRepo: new ShellRepository(),
@@ -85,6 +91,7 @@ function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
 function buildDomains(model: string, repos: Repos): Domains {
   const {
     fileMoveRepo,
+    gitRepo,
     rejectionFeedbackRepo,
     claudeCodeRepo,
     shellRepo,
@@ -99,7 +106,7 @@ function buildDomains(model: string, repos: Repos): Domains {
   const sessionDomain = new SessionDomain(sessionRepo)
   const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
   return {
-    pipelineFileDomain: new PipelineFileDomain(fileMoveRepo),
+    pipelineFileDomain: new PipelineFileDomain(fileMoveRepo, gitRepo),
     scriptDomain: new ScriptDomain(shellRepo),
     sessionDomain,
     agentDomain,
@@ -129,6 +136,7 @@ function registerReposAndDomains(
   container.register(TOKENS.KnowledgeSearchRepository, repos.knowledgeSearchRepo)
   container.register(TOKENS.TsAnalysisRepository, repos.tsAnalysisRepo)
   container.register(TOKENS.FileMoveRepository, repos.fileMoveRepo)
+  container.register(TOKENS.GitRepository, repos.gitRepo)
   container.register(TOKENS.RejectionFeedbackRepository, repos.rejectionFeedbackRepo)
   container.register(TOKENS.ScriptDomain, domains.scriptDomain)
   container.register(TOKENS.PipelineFileDomain, domains.pipelineFileDomain)
@@ -143,7 +151,7 @@ function registerReposAndDomains(
   container.register(TOKENS.TsAnalysisDomain, domains.tsAnalysisDomain)
 }
 
-function registerServices(domains: Domains): void {
+function registerServices(config: ReturnType<typeof loadConfig>, domains: Domains): void {
   const {
     pipelineFileDomain,
     sessionDomain,
@@ -158,7 +166,7 @@ function registerServices(domains: Domains): void {
     tsAnalysisDomain
   } = domains
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
-  container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
+  container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain, config))
   container.register(TOKENS.PipelineService, new PipelineService(pipelineDomain, scriptDomain))
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
   container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))
@@ -170,6 +178,11 @@ function registerServices(domains: Domains): void {
   )
   container.register(TOKENS.TsAnalysisService, new TsAnalysisService(tsAnalysisDomain))
   container.register(TOKENS.PipelineFileService, new PipelineFileService(pipelineFileDomain))
+  const permPipeRepo = new PermissionPipeRepository()
+  const permPipeDomain = new PermissionPipeDomain(permPipeRepo)
+  container.register(TOKENS.PermissionPipeRepository, permPipeRepo)
+  container.register(TOKENS.PermissionPipeDomain, permPipeDomain)
+  container.register(TOKENS.PermissionPipeService, new PermissionPipeService(permPipeDomain))
 }
 
 export function setupContainer(): void {
@@ -180,5 +193,5 @@ export function setupContainer(): void {
   const repos = buildRepos(sessionsDir, knowledgeDir)
   const domains = buildDomains(model, repos)
   registerReposAndDomains(config, repos, domains)
-  registerServices(domains)
+  registerServices(config, domains)
 }

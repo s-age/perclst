@@ -4,6 +4,10 @@ import type { KnowledgeSearchOptions, KnowledgeSearchResult } from '@src/types/k
 export class KnowledgeSearchService {
   constructor(private readonly domain: IKnowledgeSearchDomain) {}
 
+  hasDraftEntries(): boolean {
+    return this.domain.hasDraftEntries()
+  }
+
   search(options: KnowledgeSearchOptions): KnowledgeSearchResult {
     return this.domain.search(options)
   }

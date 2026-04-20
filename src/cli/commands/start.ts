@@ -34,11 +34,6 @@ export async function startCommand(task: string, options: RawStartOptions) {
 
     const input = parseStartSession({ task, ...options })
 
-    const maxTurns = input.maxTurns ?? config.limits?.max_turns ?? -1
-    const maxContextTokens = input.maxContextTokens ?? config.limits?.max_context_tokens ?? -1
-    const allowedTools = input.allowedTools ?? config.allowed_tools
-    const disallowedTools = input.disallowedTools ?? config.disallowed_tools
-
     const streaming = !input.outputOnly && input.format !== 'json'
     const onStreamEvent = streaming
       ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
@@ -53,11 +48,11 @@ export async function startCommand(task: string, options: RawStartOptions) {
         working_dir: process.cwd()
       },
       {
-        allowedTools,
-        disallowedTools,
+        allowedTools: input.allowedTools,
+        disallowedTools: input.disallowedTools,
         model: input.model,
-        maxTurns,
-        maxContextTokens,
+        maxTurns: input.maxTurns,
+        maxContextTokens: input.maxContextTokens,
         onStreamEvent
       }
     )

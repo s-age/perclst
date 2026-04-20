@@ -22,7 +22,9 @@ export const TOKENS = {
   TestStrategistService: Symbol.for('TestStrategistService'),
   TsAnalysisService: Symbol.for('TsAnalysisService'),
   // Repositories
+  PermissionPipeRepository: Symbol.for('PermissionPipeRepository'),
   FileMoveRepository: Symbol.for('FileMoveRepository'),
+  GitRepository: Symbol.for('GitRepository'),
   RejectionFeedbackRepository: Symbol.for('RejectionFeedbackRepository'),
   ClaudeCodeRepository: Symbol.for('ClaudeCodeRepository'),
   SessionRepository: Symbol.for('SessionRepository'),
@@ -36,6 +38,8 @@ export const TOKENS = {
   // Domains
   KnowledgeSearchDomain: Symbol.for('KnowledgeSearchDomain'),
   TsAnalysisDomain: Symbol.for('TsAnalysisDomain'),
+  PermissionPipeDomain: Symbol.for('PermissionPipeDomain'),
   // Services
-  KnowledgeSearchService: Symbol.for('KnowledgeSearchService')
+  KnowledgeSearchService: Symbol.for('KnowledgeSearchService'),
+  PermissionPipeService: Symbol.for('PermissionPipeService')
 } as const

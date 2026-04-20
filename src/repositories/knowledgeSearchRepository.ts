@@ -1,3 +1,4 @@
+import { join } from 'path'
 import type { IKnowledgeSearchRepository, KnowledgeFileEntry } from './ports/knowledgeSearch'
 import { listFilesRecursive, readTextFile } from '@src/infrastructures/knowledgeReader'
 
@@ -12,5 +13,9 @@ export class KnowledgeSearchRepository implements IKnowledgeSearchRepository {
         relativePath: entry.relative,
         content: readTextFile(entry.absolute)
       }))
+  }
+
+  hasDraftEntries(): boolean {
+    return listFilesRecursive(join(this.knowledgeDir, 'draft'), '.md').length > 0
   }
 }

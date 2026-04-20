@@ -15,6 +15,9 @@ const sweepSchema = schema({
   dryRun: booleanRule().optional(),
   force: booleanRule().optional()
 }).superRefine((val, ctx) => {
+  if (val.status && !['active', 'completed', 'failed'].includes(val.status)) {
+    ctx.addIssue({ code: 'custom', message: '--status must be one of: active, completed, failed' })
+  }
   if (!val.from && !val.to && !val.status && !val.like && !val.anonOnly) {
     ctx.addIssue({
       code: 'custom',

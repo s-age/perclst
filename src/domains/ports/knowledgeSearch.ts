@@ -2,4 +2,5 @@ import type { KnowledgeSearchOptions, KnowledgeSearchResult } from '@src/types/k
 
 export type IKnowledgeSearchDomain = {
   search(options: KnowledgeSearchOptions): KnowledgeSearchResult
+  hasDraftEntries(): boolean
 }

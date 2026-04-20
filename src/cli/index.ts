@@ -14,6 +14,7 @@ import { sweepCommand } from './commands/sweep'
 import { rewindCommand } from './commands/rewind'
 import { runCommand } from './commands/run'
 import { curateCommand } from './commands/curate'
+import { assertNoSingleDashMultiCharOptions } from '@src/validators/cli/argFormat'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -192,11 +193,6 @@ program
   .action(runCommand)
 
 // Reject single-dash multi-character options (e.g. -name instead of --name)
-for (const arg of process.argv.slice(2)) {
-  if (/^-[a-zA-Z]{2,}/.test(arg)) {
-    console.error(`error: invalid option '${arg}' — did you mean '-${arg}'?`)
-    process.exit(1)
-  }
-}
+assertNoSingleDashMultiCharOptions(process.argv.slice(2))
 
 program.parse()
