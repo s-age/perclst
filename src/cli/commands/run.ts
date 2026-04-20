@@ -5,6 +5,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { PipelineService } from '@src/services/pipelineService'
 import type { PipelineTaskResult } from '@src/services/pipelineService'
+import { PermissionPipeService } from '@src/services/permissionPipeService'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { APIError } from '@src/errors/apiError'
@@ -120,6 +121,9 @@ async function executeTUIPipeline(
   const React = (await import('react')).default
   const { PipelineRunner } = await import('@src/cli/components/PipelineRunner.js')
   const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)
+  const permissionPipeService = container.resolve<PermissionPipeService>(
+    TOKENS.PermissionPipeService
+  )
   const config = container.resolve<Config>(TOKENS.Config)
   await new Promise<void>((resolve, reject) => {
     const app = render(
@@ -127,6 +131,7 @@ async function executeTUIPipeline(
         pipeline,
         options: { model: input.model },
         pipelineService,
+        permissionPipeService,
         config,
         onDone: () => {
           app.unmount()

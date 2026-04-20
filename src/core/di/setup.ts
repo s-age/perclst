@@ -34,6 +34,9 @@ import { GitRepository } from '@src/repositories/gitRepository'
 import { RejectionFeedbackRepository } from '@src/repositories/rejectionFeedback'
 import { PipelineFileDomain } from '@src/domains/pipelineFile'
 import { PipelineFileService } from '@src/services/pipelineFileService'
+import { PermissionPipeRepository } from '@src/repositories/permissionPipeRepository'
+import { PermissionPipeDomain } from '@src/domains/permissionPipe'
+import { PermissionPipeService } from '@src/services/permissionPipeService'
 import { DEFAULT_MODEL } from '@src/constants/config'
 import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
@@ -175,6 +178,11 @@ function registerServices(config: ReturnType<typeof loadConfig>, domains: Domain
   )
   container.register(TOKENS.TsAnalysisService, new TsAnalysisService(tsAnalysisDomain))
   container.register(TOKENS.PipelineFileService, new PipelineFileService(pipelineFileDomain))
+  const permPipeRepo = new PermissionPipeRepository()
+  const permPipeDomain = new PermissionPipeDomain(permPipeRepo)
+  container.register(TOKENS.PermissionPipeRepository, permPipeRepo)
+  container.register(TOKENS.PermissionPipeDomain, permPipeDomain)
+  container.register(TOKENS.PermissionPipeService, new PermissionPipeService(permPipeDomain))
 }
 
 export function setupContainer(): void {

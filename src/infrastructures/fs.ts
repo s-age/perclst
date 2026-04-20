@@ -2,6 +2,7 @@ import {
   existsSync,
   readFileSync,
   writeFileSync,
+  unlinkSync,
   readdirSync,
   mkdirSync,
   statSync,
@@ -37,6 +38,14 @@ export function ensureDir(dir: string): void {
 
 export function readText(path: string): string {
   return readFileSync(path, 'utf-8')
+}
+
+export function writeText(path: string, content: string): void {
+  writeFileSync(path, content, 'utf-8')
+}
+
+export function removeFileSync(path: string): void {
+  unlinkSync(path)
 }
 
 export function homeDir(): string {

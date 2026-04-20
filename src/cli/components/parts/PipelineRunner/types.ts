@@ -1,6 +1,9 @@
 import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService.js'
+import type { PermissionPipeService } from '@src/services/permissionPipeService.js'
 import type { Pipeline } from '@src/types/pipeline.js'
 import type { Config } from '@src/types/config.js'
+
+export type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe.js'
 
 export type TaskState = {
   name?: string
@@ -12,19 +15,11 @@ export type TaskState = {
   children?: TaskState[]
 }
 
-export type PermissionRequest = {
-  tool_name: string
-  input: Record<string, unknown>
-}
-
-export type PermissionResult =
-  | { behavior: 'allow'; updatedInput: Record<string, unknown> }
-  | { behavior: 'deny'; message: string }
-
 export type PipelineRunnerProps = {
   pipeline: Pipeline
   options: PipelineRunOptions
   pipelineService: PipelineService
+  permissionPipeService: PermissionPipeService | null
   config: Config
   onDone: () => void
   onError: (err: Error) => void

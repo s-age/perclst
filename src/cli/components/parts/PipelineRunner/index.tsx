@@ -12,6 +12,7 @@ export function PipelineRunner({
   pipeline,
   options,
   pipelineService,
+  permissionPipeService,
   onDone,
   onError
 }: PipelineRunnerProps) {
@@ -34,7 +35,7 @@ export function PipelineRunner({
     onDone,
     onError
   })
-  const { permRequest } = usePermission()
+  const { permRequest } = usePermission(permissionPipeService)
 
   const runningIndex = tasks.findIndex((t) => t.status === 'running' || t.status === 'retrying')
   const streamCapacity = Math.max(1, mainRows - STREAM_HEADER_ROWS)
