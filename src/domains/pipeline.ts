@@ -4,11 +4,13 @@ import type {
   NestedPipelineTask,
   Pipeline,
   PipelineRunOptions,
-  RejectedContext
+  RejectedContext,
+  ScriptPipelineTask
 } from '@src/types/pipeline'
 import type { Session } from '@src/types/session'
 import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { IPipelineDomain, RejectionResult, AgentTaskResult } from '@src/domains/ports/pipeline'
+import type { ScriptResult } from '@src/domains/ports/script'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import type { IRejectionFeedbackRepository } from '@src/repositories/ports/rejectionFeedback'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
@@ -198,5 +200,29 @@ export class PipelineDomain implements IPipelineDomain {
       return true
     }
     return false
+  }
+
+  findOuterRejectionTarget(pipeline: Pipeline): number | undefined {
+    const index = pipeline.tasks.findIndex((t) => t.type === 'agent')
+    return index !== -1 ? index : undefined
+  }
+
+  resolveScriptRejection(
+    pipeline: Pipeline,
+    task: ScriptPipelineTask,
+    result: ScriptResult,
+    taskIndex: number,
+    currentCount: number
+  ): RejectionResult | undefined {
+    if (result.exitCode === 0 || !task.rejected) return undefined
+    const feedback = [result.stdout, result.stderr].filter(Boolean).join('\n')
+    return this.resolveRejection(
+      pipeline,
+      task.rejected.to,
+      taskIndex,
+      currentCount,
+      task.rejected.max_retries ?? 1,
+      feedback
+    )
   }
 }

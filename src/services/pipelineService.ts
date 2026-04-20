@@ -56,8 +56,8 @@ export class PipelineService {
     const retryCount = new Map<number, number>()
     const pendingRejections = new Map<number, RejectedContext>()
     if (outerRejection) {
-      const firstAgentIndex = pipeline.tasks.findIndex((t) => t.type === 'agent')
-      if (firstAgentIndex !== -1) pendingRejections.set(firstAgentIndex, outerRejection)
+      const targetIndex = this.pipelineDomain.findOuterRejectionTarget(pipeline)
+      if (targetIndex !== undefined) pendingRejections.set(targetIndex, outerRejection)
     }
     let i = 0
     while (i < pipeline.tasks.length) {
@@ -196,19 +196,17 @@ export class PipelineService {
     retryCount: Map<number, number>,
     pendingRejections: Map<number, RejectedContext>
   ): Promise<number | undefined> {
-    if (scriptResult.exitCode === 0 || !task.rejected) return undefined
-    const feedback = [scriptResult.stdout, scriptResult.stderr].filter(Boolean).join('\n')
-    const { targetIndex, context, newCount } = this.pipelineDomain.resolveRejection(
+    const rejection = this.pipelineDomain.resolveScriptRejection(
       pipeline,
-      task.rejected.to,
+      task,
+      scriptResult,
       i,
-      retryCount.get(i) ?? 0,
-      task.rejected.max_retries ?? 1,
-      feedback
+      retryCount.get(i) ?? 0
     )
-    retryCount.set(i, newCount)
-    pendingRejections.set(targetIndex, context)
-    return targetIndex
+    if (!rejection) return undefined
+    retryCount.set(i, rejection.newCount)
+    pendingRejections.set(rejection.targetIndex, rejection.context)
+    return rejection.targetIndex
   }
 
   private async runScriptTask(
