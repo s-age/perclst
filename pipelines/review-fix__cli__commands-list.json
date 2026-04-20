@@ -1,0 +1,79 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-fix-cli-commands-list"
+    },
+    {
+      "type": "agent",
+      "name": "review-initial-cli-commands-list",
+      "task": "target_path: src/cli/commands/list.ts\nng_output_path: .claude/tmp/review-fix-cli-commands-list",
+      "procedure": "review-arch",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-fix-cli-commands-list",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-fix-cli-commands-list",
+          "task": "target_path: src/cli/commands/list.ts\nng_output_path: .claude/tmp/review-fix-cli-commands-list\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "refactor-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-loop-cli-commands-list",
+          "task": "target_path: src/cli/commands/list.ts\nng_output_path: .claude/tmp/review-fix-cli-commands-list\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "review-arch",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-fix-cli-commands-list",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-fix-cli-commands-list",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-fix-cli-commands-list",
+          "task": "Review and fixes complete. Build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(cli): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    }
+  ]
+}
