@@ -143,7 +143,7 @@ function registerReposAndDomains(
   container.register(TOKENS.TsAnalysisDomain, domains.tsAnalysisDomain)
 }
 
-function registerServices(domains: Domains): void {
+function registerServices(config: ReturnType<typeof loadConfig>, domains: Domains): void {
   const {
     pipelineFileDomain,
     sessionDomain,
@@ -158,7 +158,7 @@ function registerServices(domains: Domains): void {
     tsAnalysisDomain
   } = domains
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
-  container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain))
+  container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain, config))
   container.register(TOKENS.PipelineService, new PipelineService(pipelineDomain, scriptDomain))
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
   container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))
@@ -180,5 +180,5 @@ export function setupContainer(): void {
   const repos = buildRepos(sessionsDir, knowledgeDir)
   const domains = buildDomains(model, repos)
   registerReposAndDomains(config, repos, domains)
-  registerServices(domains)
+  registerServices(config, domains)
 }
