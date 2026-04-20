@@ -30,21 +30,6 @@ async function handleListMode(
   }
 }
 
-async function resolveMessageId(
-  analyzeService: AnalyzeService,
-  resolvedId: string,
-  index: number
-): Promise<string | undefined> {
-  if (index === 0) return undefined
-  const turns = await analyzeService.getRewindTurns(resolvedId)
-  const turn = turns[index]
-  if (!turn) {
-    stderr.print(`Index ${index} is out of range (session has ${turns.length} assistant turns)`)
-    process.exit(1)
-  }
-  return turn.uuid
-}
-
 export async function rewindCommand(
   sessionId: string | undefined,
   indexStr: string | undefined,
@@ -72,7 +57,7 @@ export async function rewindCommand(
       process.exit(1)
     }
 
-    const messageId = await resolveMessageId(analyzeService, resolvedId, input.index)
+    const messageId = await analyzeService.resolveTurnByIndex(resolvedId, input.index)
     const newSession = await sessionService.createRewindSession(resolvedId, messageId)
 
     stdout.print(`\nRewind session created: ${newSession.id}`)
@@ -80,6 +65,8 @@ export async function rewindCommand(
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)
+    } else if (error instanceof RangeError) {
+      stderr.print(error.message)
     } else {
       stderr.print('Failed to rewind session', error as Error)
     }

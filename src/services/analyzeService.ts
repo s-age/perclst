@@ -13,4 +13,16 @@ export class AnalyzeService {
   async getRewindTurns(sessionId: string): Promise<RewindTurn[]> {
     return this.domain.getRewindTurns(sessionId)
   }
+
+  async resolveTurnByIndex(sessionId: string, index: number): Promise<string | undefined> {
+    if (index === 0) return undefined
+    const turns = await this.domain.getRewindTurns(sessionId)
+    const turn = turns[index]
+    if (!turn) {
+      throw new RangeError(
+        `Index ${index} is out of range (session has ${turns.length} assistant turns)`
+      )
+    }
+    return turn.uuid
+  }
 }
