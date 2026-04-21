@@ -20,6 +20,10 @@ export class PipelineFileService {
     return this.pipelineFileDomain.getDiffSummary(from, to)
   }
 
+  getDiff(from: string, to: string): string | null {
+    return this.pipelineFileDomain.getDiff(from, to)
+  }
+
   commitMove(originalPath: string, donePath: string): void {
     this.pipelineFileDomain.commitMove(originalPath, donePath)
   }

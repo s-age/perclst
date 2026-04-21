@@ -159,6 +159,36 @@ perclst sweep --to 2025-03-31 --status completed --anon-only
 | `--dry-run` | Preview matched sessions without deleting |
 | `--force` | Required when `--to` is omitted |
 
+## `inspect`
+
+Run a pre-push code inspection between two git refs. Spawns a sonnet agent that reviews the diff for code quality issues, sensitive data leaks, and unintentional artifacts.
+
+```bash
+perclst inspect <old> <new>
+perclst inspect main HEAD
+perclst inspect abc1234 def5678
+```
+
+The agent produces a report like:
+
+```
+## Inspection Report
+
+### Summary
+✗ 2 issue(s) found
+
+### Findings
+[WARNING] src/lib/agent.ts:42 — debug console.log left in
+[INFO]    src/config/default.ts:10 — TODO comment
+
+### Verdict
+Push approved.
+```
+
+If `CRITICAL` findings are present (API key, personal data leak, etc.), the report ends with **Push blocked**.
+
+---
+
 ## `curate`
 
 Promote all `knowledge/draft/` entries into structured `knowledge/` files. Shorthand for running the `meta-curate-knowledge` procedure with the required tool permissions.

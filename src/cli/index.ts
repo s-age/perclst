@@ -14,6 +14,7 @@ import { sweepCommand } from './commands/sweep'
 import { rewindCommand } from './commands/rewind'
 import { runCommand } from './commands/run'
 import { curateCommand } from './commands/curate'
+import { inspectCommand } from './commands/inspect'
 import { assertNoSingleDashMultiCharOptions } from '@src/validators/cli/argFormat'
 import { setupContainer } from '@src/core/di/setup'
 
@@ -183,6 +184,14 @@ program
   .command('curate')
   .description('Promote all knowledge/draft/ entries into structured knowledge/ files')
   .action(curateCommand)
+
+// Inspect command
+program
+  .command('inspect')
+  .description('Run a pre-push code inspection between two git refs')
+  .argument('<old>', 'Base git ref (older commit or branch)')
+  .argument('<new>', 'Head git ref (newer commit or branch)')
+  .action(inspectCommand)
 
 // Run command
 program

@@ -36,6 +36,10 @@ export class PipelineFileDomain implements IPipelineFileDomain {
     return this.gitRepo.getDiffSummary(from, to)
   }
 
+  getDiff(from: string, to: string): string | null {
+    return this.gitRepo.getDiff(from, to)
+  }
+
   commitMove(originalPath: string, donePath: string): void {
     try {
       const absOriginal = resolve(originalPath)
