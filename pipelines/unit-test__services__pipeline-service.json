@@ -1,0 +1,66 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-unit-test-pipeline-service"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-pipeline-service",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-pipeline-service",
+          "task": "target_file_path: src/services/pipelineService.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-pipeline-service",
+          "task": "target_file_path: src/services/pipelineService.ts\nng_output_path: .claude/tmp/review-unit-test-pipeline-service",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-pipeline-service",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-pipeline-service",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-unit-test-pipeline-service",
+      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(services): ...).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

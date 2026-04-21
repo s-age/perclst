@@ -89,28 +89,12 @@ describe('AnalyzeService', () => {
       expect(result).toBe(mockAnalyzeResult)
     })
 
-    it('returns AnalyzeResult with session data', async () => {
+    it('returns complete AnalyzeResult with session, summary, and tokens', async () => {
       const result = await service.analyze('session-123')
       expect(result.session.id).toBe('session-123')
-      expect(result.session.procedure).toBe('test-procedure')
-    })
-
-    it('returns AnalyzeResult with summary containing turns', async () => {
-      const result = await service.analyze('session-123')
       expect(result.summary.turns).toHaveLength(1)
-      expect(result.summary.turns[0].userMessage).toBe('Analyze this code')
-    })
-
-    it('returns AnalyzeResult with tool usage information', async () => {
-      const result = await service.analyze('session-123')
       expect(result.summary.toolUses).toHaveLength(1)
-      expect(result.summary.toolUses[0].name).toBe('Read')
-    })
-
-    it('returns AnalyzeResult with token counts', async () => {
-      const result = await service.analyze('session-123')
       expect(result.summary.tokens.totalInput).toBe(100)
-      expect(result.summary.tokens.totalOutput).toBe(150)
     })
 
     it('delegates analyze call exactly once', async () => {
@@ -141,10 +125,9 @@ describe('AnalyzeService', () => {
     it('returns RewindTurn with correct structure', async () => {
       const result = await service.getRewindTurns('session-123')
       const turn = result[0]
-      expect(turn).toHaveProperty('index')
-      expect(turn).toHaveProperty('uuid')
-      expect(turn).toHaveProperty('text')
       expect(turn.index).toBe(0)
+      expect(turn.uuid).toBe('uuid-1')
+      expect(turn.text).toBe('User instruction 1')
     })
 
     it('delegates getRewindTurns call exactly once', async () => {

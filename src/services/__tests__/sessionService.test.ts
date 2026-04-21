@@ -23,7 +23,18 @@ function makeMockDomain(): ISessionDomain {
     updateStatus: vi.fn().mockResolvedValue({
       ...mockSession,
       metadata: { ...mockSession.metadata, status: 'completed' }
-    })
+    }),
+    rename: vi.fn().mockResolvedValue({
+      ...mockSession,
+      id: 'renamed-id'
+    }),
+    findByName: vi.fn().mockResolvedValue(mockSession),
+    resolveId: vi.fn().mockResolvedValue('test-id'),
+    createRewind: vi.fn().mockResolvedValue({
+      ...mockSession,
+      id: 'rewind-session-id'
+    }),
+    sweep: vi.fn().mockResolvedValue([mockSession])
   }
 }
 
@@ -70,5 +81,69 @@ describe('SessionService', () => {
     const result = await service.updateStatus('test-id', 'completed')
     expect(domain.updateStatus).toHaveBeenCalledWith('test-id', 'completed')
     expect(result.metadata.status).toBe('completed')
+  })
+
+  it('delegates rename to domain', async () => {
+    const result = await service.rename('test-id', 'new-name')
+    expect(domain.rename).toHaveBeenCalledWith('test-id', 'new-name')
+    expect(result.id).toBe('renamed-id')
+  })
+
+  it('delegates findByName to domain', async () => {
+    const result = await service.findByName('my-session')
+    expect(domain.findByName).toHaveBeenCalledWith('my-session')
+    expect(result).toBe(mockSession)
+  })
+
+  it('delegates findByName to domain and returns null when not found', async () => {
+    vi.mocked(domain.findByName).mockResolvedValue(null)
+    const result = await service.findByName('nonexistent')
+    expect(domain.findByName).toHaveBeenCalledWith('nonexistent')
+    expect(result).toBeNull()
+  })
+
+  it('delegates resolveId to domain', async () => {
+    const result = await service.resolveId('test-id-or-name')
+    expect(domain.resolveId).toHaveBeenCalledWith('test-id-or-name')
+    expect(result).toBe('test-id')
+  })
+
+  it('delegates createRewindSession to domain with all parameters', async () => {
+    const result = await service.createRewindSession('original-id', 'msg-123', 'Rewind Session')
+    expect(domain.createRewind).toHaveBeenCalledWith('original-id', 'msg-123', 'Rewind Session')
+    expect(result.id).toBe('rewind-session-id')
+  })
+
+  it('delegates createRewindSession to domain with undefined messageId', async () => {
+    const result = await service.createRewindSession('original-id', undefined, 'Rewind Session')
+    expect(domain.createRewind).toHaveBeenCalledWith('original-id', undefined, 'Rewind Session')
+    expect(result.id).toBe('rewind-session-id')
+  })
+
+  it('delegates createRewindSession to domain with undefined name', async () => {
+    const result = await service.createRewindSession('original-id', 'msg-123', undefined)
+    expect(domain.createRewind).toHaveBeenCalledWith('original-id', 'msg-123', undefined)
+    expect(result.id).toBe('rewind-session-id')
+  })
+
+  it('delegates sweep to domain with dryRun false', async () => {
+    const filter = { createdBefore: '2024-01-01T00:00:00.000Z' }
+    const result = await service.sweep(filter, false)
+    expect(domain.sweep).toHaveBeenCalledWith(filter, false)
+    expect(result).toEqual([mockSession])
+  })
+
+  it('delegates sweep to domain with dryRun true', async () => {
+    const filter = { createdBefore: '2024-01-01T00:00:00.000Z' }
+    const result = await service.sweep(filter, true)
+    expect(domain.sweep).toHaveBeenCalledWith(filter, true)
+    expect(result).toEqual([mockSession])
+  })
+
+  it('delegates sweep to domain with empty filter and dryRun false', async () => {
+    const filter = {}
+    const result = await service.sweep(filter, false)
+    expect(domain.sweep).toHaveBeenCalledWith(filter, false)
+    expect(result).toEqual([mockSession])
   })
 })
