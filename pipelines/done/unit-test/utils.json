@@ -1,22 +1,40 @@
 {
   "tasks": [
     {
-      "type": "agent",
+      "type": "child",
+      "path": "unit-test__utils__date.json",
       "name": "unit-test-utils-date",
-      "task": "Write unit tests for src/utils/date.ts using vitest. Place the test file at src/utils/__tests__/date.test.ts. The file exports: now() returning a dayjs object, toISO(d?) returning an ISO 8601 string, toLocaleString(isoString) returning a locale string, toTimestamp(isoString) returning a Unix ms number. Use vi.useFakeTimers() to control time in now()/toISO() tests. Do not use globals — import describe/it/expect/vi from 'vitest'.",
-      "allowed_tools": ["Read", "Write", "Bash"]
+      "done": true
     },
     {
-      "type": "agent",
-      "name": "unit-test-utils-logger",
-      "task": "Write unit tests for src/utils/logger.ts using vitest. Place the test file at src/utils/__tests__/logger.test.ts. The file exports: LogLevel enum (DEBUG=0, INFO=1, WARN=2, ERROR=3) and a singleton logger with methods setLevel, debug, info, warn, error, print. Use vi.spyOn(console, 'log') etc. to verify output. Test that messages below the current level are suppressed. Test print() with and without color/bgColor options. Do not use globals — import describe/it/expect/vi/beforeEach from 'vitest'.",
-      "allowed_tools": ["Read", "Write", "Bash"]
-    },
-    {
-      "type": "agent",
+      "type": "child",
+      "path": "unit-test__utils__uuid.json",
       "name": "unit-test-utils-uuid",
-      "task": "Write unit tests for src/utils/uuid.ts using vitest. Place the test file at src/utils/__tests__/uuid.test.ts. The file exports generateId() which returns a UUID v4 string via Node's crypto.randomUUID(). Test: return value matches UUID v4 regex, successive calls return different values. Do not use globals — import describe/it/expect from 'vitest'.",
-      "allowed_tools": ["Read", "Write", "Bash"]
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__utils__output.json",
+      "name": "unit-test-utils-output",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__utils__format-input-summary.json",
+      "name": "unit-test-utils-format-input-summary",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__utils__path.json",
+      "name": "unit-test-utils-path",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__utils__turns.json",
+      "name": "unit-test-utils-turns",
+      "done": true
     }
   ]
 }
