@@ -157,6 +157,58 @@ describe('PipelineService', () => {
     })
   })
 
+  describe('child pipeline tasks', () => {
+    it('should throw when loadChildPipeline is not provided', async () => {
+      const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'sub.json' }] }
+      await expect(async () => {
+        const events: PipelineTaskResult[] = []
+        for await (const e of service.run(pipeline)) events.push(e)
+      }).rejects.toThrow('loadChildPipeline is required')
+    })
+
+    it('should delegate to child pipeline and emit pipeline_end', async () => {
+      const childPipeline: Pipeline = { tasks: [{ type: 'agent', task: 'child work' }] }
+      const loadChildPipeline = vi.fn().mockReturnValue(childPipeline)
+      vi.mocked(mockPipelineDomain.runAgentTask).mockResolvedValue(stubAgentResult())
+
+      const pipeline: Pipeline = {
+        tasks: [{ type: 'child', path: '/absolute/sub.json', name: 'sub' }]
+      }
+      const events = await (async () => {
+        const result: PipelineTaskResult[] = []
+        for await (const e of service.run(pipeline, {
+          loadChildPipeline,
+          pipelineDir: '/absolute'
+        }))
+          result.push(e)
+        return result
+      })()
+
+      expect(loadChildPipeline).toHaveBeenCalledWith('/absolute/sub.json')
+      expect(events.find((e) => e.kind === 'pipeline_end')).toEqual({
+        kind: 'pipeline_end',
+        taskPath: [],
+        taskIndex: 0
+      })
+      const starts = events.filter((e) => e.kind === 'task_start')
+      expect(starts[0]).toMatchObject({ taskType: 'child', taskIndex: 0 })
+      expect(starts[1]).toMatchObject({ taskType: 'agent', taskPath: [0], taskIndex: 0 })
+    })
+
+    it('should resolve relative path against pipelineDir', async () => {
+      const childPipeline: Pipeline = { tasks: [{ type: 'agent', task: 'work' }] }
+      const loadChildPipeline = vi.fn().mockReturnValue(childPipeline)
+      vi.mocked(mockPipelineDomain.runAgentTask).mockResolvedValue(stubAgentResult())
+
+      const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'sub/child.json' }] }
+      const events: PipelineTaskResult[] = []
+      for await (const e of service.run(pipeline, { loadChildPipeline, pipelineDir: '/base/dir' }))
+        events.push(e)
+
+      expect(loadChildPipeline).toHaveBeenCalledWith('/base/dir/sub/child.json')
+    })
+  })
+
   describe('retry events', () => {
     const stubRejectionResult = (targetIndex: number, newCount = 1) =>
       ({

@@ -1,8 +1,10 @@
+import { resolve, dirname } from 'path'
 import type {
   Pipeline,
   AgentPipelineTask,
   ScriptPipelineTask,
   NestedPipelineTask,
+  ChildPipelineTask,
   PipelineRunOptions,
   RejectedContext
 } from '@src/types/pipeline'
@@ -29,7 +31,7 @@ export type PipelineTaskResult =
       taskPath: number[]
       taskIndex: number
       name?: string
-      taskType: 'agent' | 'script' | 'pipeline'
+      taskType: 'agent' | 'script' | 'pipeline' | 'child'
     }
   | {
       kind: 'retry'
@@ -86,6 +88,8 @@ export class PipelineService {
         )
       } else if (task.type === 'pipeline') {
         yield* this.runNestedPipeline(task, i, taskPath, options, rejection)
+      } else if (task.type === 'child') {
+        yield* this.runChildPipeline(task, i, taskPath, options, rejection)
       } else {
         jumpTo = yield* this.runScriptStep(
           task,
@@ -112,6 +116,25 @@ export class PipelineService {
   ): AsyncGenerator<PipelineTaskResult> {
     debug.print(`Running nested pipeline: ${task.name}`)
     yield* this.run({ tasks: task.tasks }, options, rejection, [...taskPath, i])
+    yield { kind: 'pipeline_end' as const, taskPath, taskIndex: i }
+  }
+
+  private async *runChildPipeline(
+    task: ChildPipelineTask,
+    i: number,
+    taskPath: number[],
+    options: PipelineRunOptions,
+    rejection: RejectedContext | undefined
+  ): AsyncGenerator<PipelineTaskResult> {
+    if (!options.loadChildPipeline) {
+      throw new Error('loadChildPipeline is required for child pipeline tasks')
+    }
+    const baseDir = options.pipelineDir ?? process.cwd()
+    const absolutePath = resolve(baseDir, task.path)
+    const childDir = dirname(absolutePath)
+    const childPipeline = options.loadChildPipeline(absolutePath)
+    const childOptions = { ...options, pipelineDir: childDir }
+    yield* this.run(childPipeline, childOptions, rejection, [...taskPath, i])
     yield { kind: 'pipeline_end' as const, taskPath, taskIndex: i }
   }
 

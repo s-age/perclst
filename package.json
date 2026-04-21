@@ -17,7 +17,6 @@
     "clean": "rm -rf dist",
     "prepublish": "npm run build",
     "setup": "tsx scripts/setup.ts",
-    "run-pipelines": "tsx scripts/run-pipelines.ts",
     "link": "npm link && tsx scripts/setup.ts",
     "unlink": "npm unlink -g perclst",
     "lint": "eslint src",

@@ -8,6 +8,8 @@ export type PipelineRunOptions = {
   maxContextTokens?: number
   onStreamEvent?: (event: AgentStreamEvent) => void
   onTaskDone?: (taskPath: number[], taskIndex: number) => void
+  loadChildPipeline?: (absolutePath: string) => Pipeline
+  pipelineDir?: string
 }
 
 export type RejectedContext = {
@@ -49,7 +51,18 @@ export type NestedPipelineTask = {
   done?: boolean
 }
 
-export type PipelineTask = AgentPipelineTask | ScriptPipelineTask | NestedPipelineTask
+export type ChildPipelineTask = {
+  type: 'child'
+  path: string
+  name?: string
+  done?: boolean
+}
+
+export type PipelineTask =
+  | AgentPipelineTask
+  | ScriptPipelineTask
+  | NestedPipelineTask
+  | ChildPipelineTask
 
 export type Pipeline = {
   tasks: PipelineTask[]

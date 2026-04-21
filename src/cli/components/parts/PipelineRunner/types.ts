@@ -8,7 +8,7 @@ export type { PermissionRequest, PermissionResult } from '@src/types/permissionP
 export type TaskState = {
   name?: string
   command?: string
-  taskType: 'agent' | 'script' | 'pipeline'
+  taskType: 'agent' | 'script' | 'pipeline' | 'child'
   status: 'pending' | 'running' | 'done' | 'failed' | 'retrying'
   retryCount?: number
   maxRetries?: number
