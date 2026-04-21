@@ -22,7 +22,8 @@ export async function inspectCommand(oldRef: string, newRef: string) {
       `Inspect the following git diff and produce a code inspection report:\n\n${diff}`,
       {
         procedure: 'code-inspector',
-        model: 'sonnet'
+        model: 'sonnet',
+        outputOnly: true
       }
     )
   } catch (error) {
