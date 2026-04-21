@@ -69,7 +69,8 @@
     {
       "type": "child",
       "path": "unit-test__repositories__shell.json",
-      "name": "unit-test-repositories-shell"
+      "name": "unit-test-repositories-shell",
+      "done": true
     }
   ]
 }
