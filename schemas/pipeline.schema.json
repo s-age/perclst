@@ -83,6 +83,10 @@
         "rejected": {
           "$ref": "#/$defs/RejectedConfig",
           "description": "Loop back to another task when the agent signals rejection via ng_output_path."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Set to true when this task has completed. Written automatically by the runner."
         }
       }
     },
@@ -100,6 +104,10 @@
         "rejected": {
           "$ref": "#/$defs/RejectedConfig",
           "description": "Loop back to a named agent or pipeline task when the command exits non-zero."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Set to true when this task has completed. Written automatically by the runner."
         }
       }
     },
@@ -119,6 +127,10 @@
           "minItems": 1,
           "items": { "$ref": "#/$defs/PipelineTask" },
           "description": "Agent and/or script tasks to run in order."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Set to true when this task has completed. Written automatically by the runner."
         }
       }
     },

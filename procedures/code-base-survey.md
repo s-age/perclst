@@ -27,7 +27,7 @@ flowchart TD
 
 ## Constraints
 
-- Do not modify any `src/` files — read-only on source code
+- Do not modify any `src/` files — read-only on source code; do not call `ts_checker` (it runs lint:fix and can mutate files)
 - Writing to `knowledge/draft/` is encouraged when the investigation reveals something non-obvious
 - Do not make implementation decisions — report facts and candidates only
 - Do not speculate beyond what the code shows
