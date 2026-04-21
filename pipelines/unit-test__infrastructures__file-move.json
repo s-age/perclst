@@ -1,0 +1,63 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-unit-test-infrastructures-file-move"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-infrastructures-file-move",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-infrastructures-file-move",
+          "task": "target_file_path: src/infrastructures/fileMove.ts",
+          "procedure": "implement-unit-test",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-infrastructures-file-move",
+          "task": "target_file_path: src/infrastructures/fileMove.ts\nng_output_path: .claude/tmp/review-unit-test-infrastructures-file-move",
+          "procedure": "review-unit-test",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-infrastructures-file-move",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-infrastructures-file-move",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "agent",
+          "name": "commit-unit-test-infrastructures-file-move",
+          "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(infrastructures): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    }
+  ]
+}
