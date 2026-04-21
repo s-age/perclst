@@ -8,8 +8,7 @@ const SURVEY_TOOLS = [
   'mcp__perclst__knowledge_search',
   'mcp__perclst__ts_analyze',
   'mcp__perclst__ts_get_references',
-  'mcp__perclst__ts_get_types',
-  'mcp__perclst__ts_checker'
+  'mcp__perclst__ts_get_types'
 ]
 
 const REFRESH_TOOLS = ['Read', 'Glob', 'Grep', 'Bash', 'Write', 'mcp__perclst__ts_analyze']

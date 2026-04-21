@@ -1,0 +1,16 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "test__child-pipeline1.json",
+      "name": "git-diff",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "test__child-pipeline2.json",
+      "name": "git-status",
+      "done": true
+    }
+  ]
+}

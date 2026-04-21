@@ -18,7 +18,8 @@
       "oneOf": [
         { "$ref": "#/$defs/AgentTask" },
         { "$ref": "#/$defs/ScriptTask" },
-        { "$ref": "#/$defs/NestedPipelineTask" }
+        { "$ref": "#/$defs/NestedPipelineTask" },
+        { "$ref": "#/$defs/ChildPipelineTask" }
       ]
     },
     "RejectedConfig": {
@@ -82,6 +83,10 @@
         "rejected": {
           "$ref": "#/$defs/RejectedConfig",
           "description": "Loop back to another task when the agent signals rejection via ng_output_path."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Set to true when this task has completed. Written automatically by the runner."
         }
       }
     },
@@ -99,6 +104,10 @@
         "rejected": {
           "$ref": "#/$defs/RejectedConfig",
           "description": "Loop back to a named agent or pipeline task when the command exits non-zero."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Set to true when this task has completed. Written automatically by the runner."
         }
       }
     },
@@ -118,6 +127,31 @@
           "minItems": 1,
           "items": { "$ref": "#/$defs/PipelineTask" },
           "description": "Agent and/or script tasks to run in order."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Set to true when this task has completed. Written automatically by the runner."
+        }
+      }
+    },
+    "ChildPipelineTask": {
+      "type": "object",
+      "required": ["type", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "child" },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the child pipeline JSON file. Resolved relative to the parent pipeline file's directory."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for this child pipeline step."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Set to true when this task has completed. Written automatically by the runner."
         }
       }
     }

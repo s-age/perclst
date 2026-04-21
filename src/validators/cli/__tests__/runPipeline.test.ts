@@ -208,6 +208,28 @@ describe('parsePipeline', () => {
     })
   })
 
+  describe('child pipeline task', () => {
+    it('should parse a minimal child task', () => {
+      const result = parsePipeline({ tasks: [{ type: 'child', path: 'pipelines/sub.json' }] })
+      expect(result.tasks[0]).toMatchObject({ type: 'child', path: 'pipelines/sub.json' })
+    })
+
+    it('should parse child task with name and done', () => {
+      const result = parsePipeline({
+        tasks: [{ type: 'child', path: 'pipelines/sub.json', name: 'sub', done: true }]
+      })
+      expect(result.tasks[0]).toMatchObject({ type: 'child', name: 'sub', done: true })
+    })
+
+    it('should throw ValidationError when child task path is missing', () => {
+      expect(() => parsePipeline({ tasks: [{ type: 'child' }] })).toThrow(ValidationError)
+    })
+
+    it('should throw ValidationError when child task path is empty string', () => {
+      expect(() => parsePipeline({ tasks: [{ type: 'child', path: '' }] })).toThrow(ValidationError)
+    })
+  })
+
   describe('top-level pipeline', () => {
     it('should parse multiple tasks of mixed types', () => {
       const result = parsePipeline({ tasks: [agentTask, scriptTask] })

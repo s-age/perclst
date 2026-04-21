@@ -5,7 +5,12 @@ import { booleanRule } from '../rules/boolean'
 import { formatRule } from '../rules/format'
 import { stringArrayRule } from '../rules/stringArray'
 import { ValidationError } from '@src/errors/validationError'
-import type { Pipeline, PipelineTask, NestedPipelineTask } from '@src/types/pipeline'
+import type {
+  Pipeline,
+  PipelineTask,
+  NestedPipelineTask,
+  ChildPipelineTask
+} from '@src/types/pipeline'
 
 const runOptionsSchema = schema({
   pipelinePath: stringRule({ required: true }),
@@ -58,7 +63,19 @@ const nestedPipelineTaskSchema: z.ZodType<NestedPipelineTask> = z.object({
   done: z.boolean().optional()
 })
 
-pipelineTaskSchema = z.union([agentTaskSchema, scriptTaskSchema, nestedPipelineTaskSchema])
+const childPipelineTaskSchema: z.ZodType<ChildPipelineTask> = z.object({
+  type: z.literal('child'),
+  path: z.string().min(1),
+  name: z.string().optional(),
+  done: z.boolean().optional()
+})
+
+pipelineTaskSchema = z.union([
+  agentTaskSchema,
+  scriptTaskSchema,
+  nestedPipelineTaskSchema,
+  childPipelineTaskSchema
+])
 
 const pipelineSchema = z.object({
   tasks: z.array(pipelineTaskSchema).min(1)

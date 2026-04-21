@@ -1,5 +1,5 @@
 import { tmpdir } from 'os'
-import { resolve, join } from 'path'
+import { resolve, join, dirname } from 'path'
 import * as readline from 'readline'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
@@ -78,6 +78,15 @@ function markTaskDone(pipeline: Pipeline, taskPath: number[], taskIndex: number)
   if (tasks[taskIndex]) tasks[taskIndex].done = true
 }
 
+function makeChildLoader(
+  pipelineFileService: PipelineFileService
+): (absolutePath: string) => Pipeline {
+  return (absolutePath) => {
+    const raw = pipelineFileService.loadRawPipeline(absolutePath)
+    return parsePipeline(raw)
+  }
+}
+
 function confirm(question: string): Promise<boolean> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stderr })
   return new Promise((resolve) => {
@@ -140,11 +149,13 @@ async function executeTUIPipeline(
     markTaskDone(pipeline, taskPath, taskIndex)
     pipelineFileService.savePipeline(absolutePath, pipeline)
   }
+  const loadChildPipeline = makeChildLoader(pipelineFileService)
+  const pipelineDir = dirname(absolutePath)
   await new Promise<void>((resolve, reject) => {
     const app = render(
       React.createElement(PipelineRunner, {
         pipeline,
-        options: { model: input.model, onTaskDone },
+        options: { model: input.model, onTaskDone, loadChildPipeline, pipelineDir },
         pipelineService,
         permissionPipeService,
         config,
@@ -187,6 +198,8 @@ async function executePipeline(
     markTaskDone(pipeline, taskPath, taskIndex)
     pipelineFileService.savePipeline(absolutePath, pipeline)
   }
+  const loadChildPipeline = makeChildLoader(pipelineFileService)
+  const pipelineDir = dirname(absolutePath)
 
   stdout.print(`Running pipeline: ${pipeline.tasks.length} task(s)`)
 
@@ -194,7 +207,9 @@ async function executePipeline(
   for await (const result of pipelineService.run(pipeline, {
     model: input.model,
     onStreamEvent,
-    onTaskDone
+    onTaskDone,
+    loadChildPipeline,
+    pipelineDir
   })) {
     count++
     printTaskResult(result, input, config, streaming)
