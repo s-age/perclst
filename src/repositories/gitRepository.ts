@@ -1,5 +1,5 @@
 import type { IGitRepository } from '@src/repositories/ports/git'
-import { execGitSync, execCmdSync } from '@src/infrastructures/git'
+import { execGitSync } from '@src/infrastructures/git'
 
 export class GitRepository implements IGitRepository {
   getDiffStat(): string | null {
@@ -40,9 +40,5 @@ export class GitRepository implements IGitRepository {
 
   commit(message: string): void {
     execGitSync(`commit -m "${message}"`)
-  }
-
-  removeGlob(pattern: string): void {
-    execCmdSync(`rm -f ${pattern}`)
   }
 }

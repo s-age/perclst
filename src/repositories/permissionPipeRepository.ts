@@ -37,13 +37,32 @@ export class PermissionPipeRepository implements IPermissionPipeRepository {
     }
   }
 
-  async askViaIPC(
+  async askPermission(args: {
+    tool_name: string
+    input: Record<string, unknown>
+    tool_use_id?: string
+  }): Promise<PermissionResult> {
+    if (process.env.PERCLST_PERMISSION_AUTO_YES === '1')
+      return { behavior: 'allow', updatedInput: args.input }
+    const pipePath = process.env.PERCLST_PERMISSION_PIPE
+    if (pipePath) return this.askViaIPC(pipePath, args)
+    return this.askViaTTY(args)
+  }
+
+  private async askViaIPC(
     pipePath: string,
-    args: { tool_name: string; input: Record<string, unknown> }
+    args: { tool_name: string; input: Record<string, unknown>; tool_use_id?: string }
   ): Promise<PermissionResult> {
     const reqPath = `${pipePath}.req`
     const resPath = `${pipePath}.res`
-    writeText(reqPath, JSON.stringify({ tool_name: args.tool_name, input: args.input }))
+    writeText(
+      reqPath,
+      JSON.stringify({
+        tool_name: args.tool_name,
+        input: args.input,
+        tool_use_id: args.tool_use_id
+      })
+    )
     const deadline = Date.now() + 60_000
     while (Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, 100))
@@ -64,7 +83,7 @@ export class PermissionPipeRepository implements IPermissionPipeRepository {
     return { behavior: 'deny', message: 'Permission request timed out' }
   }
 
-  async askViaTTY(args: {
+  private async askViaTTY(args: {
     tool_name: string
     input: Record<string, unknown>
   }): Promise<PermissionResult> {

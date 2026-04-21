@@ -9,6 +9,7 @@ import {
   type Dirent
 } from 'fs'
 import { unlink } from 'fs/promises'
+import { join } from 'path'
 import { homedir } from 'os'
 
 export function readJson<T>(path: string): T {
@@ -46,6 +47,19 @@ export function writeText(path: string, content: string): void {
 
 export function removeFileSync(path: string): void {
   unlinkSync(path)
+}
+
+export function cleanDir(dirPath: string): void {
+  if (!existsSync(dirPath)) return
+  for (const entry of readdirSync(dirPath, { withFileTypes: true })) {
+    if (entry.isFile()) {
+      try {
+        unlinkSync(join(dirPath, entry.name))
+      } catch {
+        // ignore locked or already removed files
+      }
+    }
+  }
 }
 
 export function homeDir(): string {

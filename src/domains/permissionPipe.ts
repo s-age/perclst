@@ -18,10 +18,6 @@ export class PermissionPipeDomain implements IPermissionPipeDomain {
     input: Record<string, unknown>
     tool_use_id?: string
   }): Promise<PermissionResult> {
-    if (process.env.PERCLST_PERMISSION_AUTO_YES === '1')
-      return { behavior: 'allow', updatedInput: args.input }
-    const pipePath = process.env.PERCLST_PERMISSION_PIPE
-    if (pipePath) return this.repo.askViaIPC(pipePath, args)
-    return this.repo.askViaTTY(args)
+    return this.repo.askPermission(args)
   }
 }

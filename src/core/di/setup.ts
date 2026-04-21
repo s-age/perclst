@@ -29,7 +29,7 @@ import { KnowledgeSearchService } from '@src/services/knowledgeSearchService'
 import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
 import { TsAnalysisDomain } from '@src/domains/tsAnalysis'
 import { TsAnalysisService } from '@src/services/tsAnalysisService'
-import { FileMoveRepository } from '@src/repositories/fileMoveRepository'
+import { PipelineFileRepository } from '@src/repositories/fileMoveRepository'
 import { GitRepository } from '@src/repositories/gitRepository'
 import { RejectionFeedbackRepository } from '@src/repositories/rejectionFeedback'
 import { PipelineFileDomain } from '@src/domains/pipelineFile'
@@ -41,7 +41,7 @@ import { DEFAULT_MODEL } from '@src/constants/config'
 import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
 type Repos = {
-  fileMoveRepo: FileMoveRepository
+  fileMoveRepo: PipelineFileRepository
   gitRepo: GitRepository
   rejectionFeedbackRepo: RejectionFeedbackRepository
   claudeCodeRepo: ClaudeCodeRepository
@@ -71,7 +71,7 @@ type Domains = {
 
 function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
   return {
-    fileMoveRepo: new FileMoveRepository(),
+    fileMoveRepo: new PipelineFileRepository(),
     gitRepo: new GitRepository(),
     rejectionFeedbackRepo: new RejectionFeedbackRepository(),
     claudeCodeRepo: new ClaudeCodeRepository(),
@@ -135,7 +135,7 @@ function registerReposAndDomains(
   container.register(TOKENS.TestStrategyRepository, repos.testStrategyRepo)
   container.register(TOKENS.KnowledgeSearchRepository, repos.knowledgeSearchRepo)
   container.register(TOKENS.TsAnalysisRepository, repos.tsAnalysisRepo)
-  container.register(TOKENS.FileMoveRepository, repos.fileMoveRepo)
+  container.register(TOKENS.PipelineFileRepository, repos.fileMoveRepo)
   container.register(TOKENS.GitRepository, repos.gitRepo)
   container.register(TOKENS.RejectionFeedbackRepository, repos.rejectionFeedbackRepo)
   container.register(TOKENS.ScriptDomain, domains.scriptDomain)

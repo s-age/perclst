@@ -23,7 +23,7 @@ export const TOKENS = {
   TsAnalysisService: Symbol.for('TsAnalysisService'),
   // Repositories
   PermissionPipeRepository: Symbol.for('PermissionPipeRepository'),
-  FileMoveRepository: Symbol.for('FileMoveRepository'),
+  PipelineFileRepository: Symbol.for('PipelineFileRepository'),
   GitRepository: Symbol.for('GitRepository'),
   RejectionFeedbackRepository: Symbol.for('RejectionFeedbackRepository'),
   ClaudeCodeRepository: Symbol.for('ClaudeCodeRepository'),

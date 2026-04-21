@@ -5,5 +5,4 @@ export type IGitRepository = {
   stageUpdated(path: string): void
   stageNew(path: string): void
   commit(message: string): void
-  removeGlob(pattern: string): void
 }
