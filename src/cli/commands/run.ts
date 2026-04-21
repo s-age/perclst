@@ -72,12 +72,8 @@ function markTaskDone(pipeline: Pipeline, taskPath: number[], taskIndex: number)
   let tasks = pipeline.tasks
   for (const step of taskPath) {
     const parent = tasks[step]
-    if (parent.type !== 'pipeline' && parent.type !== 'child') return
-    if (parent.type === 'pipeline') {
-      tasks = parent.tasks
-    } else {
-      return
-    }
+    if (parent.type !== 'pipeline') return
+    tasks = parent.tasks
   }
   if (tasks[taskIndex]) tasks[taskIndex].done = true
 }
