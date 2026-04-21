@@ -139,22 +139,42 @@ describe('ClaudeCodeInfra', () => {
   // -------------------------------------------------------------------------
   describe('buildArgs', () => {
     it('should include -p flag for a start action', () => {
-      const result = infra.buildArgs({ type: 'start', sessionId: 'sess1', prompt: 'p', workingDir: '/w' })
+      const result = infra.buildArgs({
+        type: 'start',
+        sessionId: 'sess1',
+        prompt: 'p',
+        workingDir: '/w'
+      })
       expect(result).toContain('-p')
     })
 
     it('should include --output-format flag for a start action', () => {
-      const result = infra.buildArgs({ type: 'start', sessionId: 'sess1', prompt: 'p', workingDir: '/w' })
+      const result = infra.buildArgs({
+        type: 'start',
+        sessionId: 'sess1',
+        prompt: 'p',
+        workingDir: '/w'
+      })
       expect(result).toContain('--output-format')
     })
 
     it('should include stream-json as output format value for a start action', () => {
-      const result = infra.buildArgs({ type: 'start', sessionId: 'sess1', prompt: 'p', workingDir: '/w' })
+      const result = infra.buildArgs({
+        type: 'start',
+        sessionId: 'sess1',
+        prompt: 'p',
+        workingDir: '/w'
+      })
       expect(result).toContain('stream-json')
     })
 
     it('should include --verbose flag for a start action', () => {
-      const result = infra.buildArgs({ type: 'start', sessionId: 'sess1', prompt: 'p', workingDir: '/w' })
+      const result = infra.buildArgs({
+        type: 'start',
+        sessionId: 'sess1',
+        prompt: 'p',
+        workingDir: '/w'
+      })
       expect(result).toContain('--verbose')
     })
 
@@ -230,7 +250,12 @@ describe('ClaudeCodeInfra', () => {
     })
 
     it('should not include --allowedTools when allowedTools is not provided', () => {
-      const result = infra.buildArgs({ type: 'start', sessionId: 's1', prompt: 'p', workingDir: '/w' })
+      const result = infra.buildArgs({
+        type: 'start',
+        sessionId: 's1',
+        prompt: 'p',
+        workingDir: '/w'
+      })
       expect(result).not.toContain('--allowedTools')
     })
 
@@ -257,7 +282,12 @@ describe('ClaudeCodeInfra', () => {
     })
 
     it('should not include --disallowedTools when disallowedTools is not provided', () => {
-      const result = infra.buildArgs({ type: 'start', sessionId: 's1', prompt: 'p', workingDir: '/w' })
+      const result = infra.buildArgs({
+        type: 'start',
+        sessionId: 's1',
+        prompt: 'p',
+        workingDir: '/w'
+      })
       expect(result).not.toContain('--disallowedTools')
     })
 
