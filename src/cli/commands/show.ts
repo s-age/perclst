@@ -4,51 +4,22 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { SessionService } from '@src/services/sessionService'
 import { AnalyzeService } from '@src/services/analyzeService'
-import type { ClaudeCodeTurn } from '@src/types/analysis'
 import { stdout, stderr } from '@src/utils/output'
 import { toLocaleString } from '@src/utils/date'
+import { flattenTurns, applyRowFilter } from '@src/utils/turns'
 import { parseShowSession } from '@src/validators/cli/showSession'
-
-const CONTENT_MAX = 120
 
 type RawShowOptions = {
   format?: string
+  order?: string
+  head?: string
+  tail?: string
+  length?: string
 }
 
-type TurnRow = { n: number; role: string; content: string }
-
-function truncate(text: string): string {
+function truncate(text: string, max: number): string {
   const single = ansis.strip(text).replace(/\n/g, ' ')
-  return single.length > CONTENT_MAX ? single.slice(0, CONTENT_MAX - 1) + '…' : single
-}
-
-function flattenTurns(turns: ClaudeCodeTurn[]): TurnRow[] {
-  const rows: TurnRow[] = []
-  let n = 1
-
-  for (const turn of turns) {
-    if (turn.userMessage !== undefined) {
-      rows.push({ n: n++, role: 'user', content: truncate(turn.userMessage) })
-    }
-
-    for (const block of turn.thinkingBlocks ?? []) {
-      rows.push({ n: n++, role: 'thinking', content: truncate(block) })
-    }
-
-    for (const tool of turn.toolCalls) {
-      const inputStr = JSON.stringify(tool.input)
-      rows.push({ n: n++, role: 'tool_use', content: truncate(`${tool.name}  ${inputStr}`) })
-      if (tool.result !== null) {
-        rows.push({ n: n++, role: 'tool_result', content: truncate(tool.result) })
-      }
-    }
-
-    if (turn.assistantText !== undefined) {
-      rows.push({ n: n++, role: 'assistant', content: truncate(turn.assistantText) })
-    }
-  }
-
-  return rows
+  return single.length > max ? single.slice(0, max - 1) + '…' : single
 }
 
 export async function showCommand(sessionId: string, options: RawShowOptions) {
@@ -78,7 +49,11 @@ export async function showCommand(sessionId: string, options: RawShowOptions) {
     }
 
     const { summary } = await analyzeService.analyze(resolvedId)
-    const rows = flattenTurns(summary.turns)
+    const rows = applyRowFilter(flattenTurns(summary.turns), {
+      head: input.head,
+      tail: input.tail,
+      order: input.order
+    })
 
     if (rows.length === 0) {
       stdout.print(`\n(no turns)`)
@@ -86,13 +61,15 @@ export async function showCommand(sessionId: string, options: RawShowOptions) {
     }
 
     stdout.print('')
-    const table = new Table({
+    const tableOpts: ConstructorParameters<typeof Table>[0] = {
       head: ['N', 'role', 'content'],
-      style: { head: [], border: [] },
-      colWidths: [5, 13, CONTENT_MAX + 4]
-    })
+      style: { head: [], border: [] }
+    }
+    if (input.length !== undefined) tableOpts.colWidths = [5, 13, input.length + 4]
+    const table = new Table(tableOpts)
     for (const row of rows) {
-      table.push([String(row.n), row.role, row.content])
+      const content = input.length !== undefined ? truncate(row.content, input.length) : row.content
+      table.push([String(row.n), row.role, content])
     }
     stdout.print(table.toString())
   } catch (error) {

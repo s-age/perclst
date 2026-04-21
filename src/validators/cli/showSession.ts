@@ -1,10 +1,16 @@
+import { z } from 'zod'
 import { schema, safeParse } from '../schema'
 import { stringRule } from '../rules/string'
 import { formatRule } from '../rules/format'
+import { intRule } from '../rules/int'
 
 const showSchema = schema({
   sessionId: stringRule({ required: true }),
-  format: formatRule()
+  format: formatRule(),
+  order: z.enum(['asc', 'desc']).default('asc'),
+  head: intRule({ min: 1 }).optional(),
+  tail: intRule({ min: 1 }).optional(),
+  length: intRule({ min: 1 }).optional()
 })
 
 export type ShowSessionInput = typeof showSchema._output
