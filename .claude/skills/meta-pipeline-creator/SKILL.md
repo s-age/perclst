@@ -145,6 +145,24 @@ Place a `script` gate immediately after each agent task (or nested pipeline) tha
 
 When a pipeline has multiple independent agent tasks (e.g. one per file), give each its own gate so a failure is caught and fixed before the next agent starts.
 
+## Committing after a successful run
+
+The commit task **must always be assigned to the implement agent** (i.e. resume the same named session, not a separate agent task). Do not create a standalone `haiku` commit agent.
+
+**Why**: The implement agent has lived through the full implement → review → check-gate cycle. Resuming that session lets it write a commit message grounded in the actual changes it made and the feedback it received — which in turn feeds the knowledge accumulation pipeline. A separate commit agent has no context and produces shallow messages.
+
+```json
+{
+  "type": "agent",
+  "name": "implement-unit-test-foo-service",
+  "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(layer): ...).",
+  "model": "haiku",
+  "allowed_tools": ["Read", "Bash"]
+}
+```
+
+Note: reuse the **same `name`** as the implement agent so perclst resumes the existing session.
+
 ## Running a pipeline
 
 After writing the file, run it with:

@@ -57,7 +57,7 @@
         },
         {
           "type": "agent",
-          "name": "commit-unit-test-repositories-shell",
+          "name": "implement-unit-test-repositories-shell",
           "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(repositories): ...).",
           "model": "haiku",
           "allowed_tools": ["Read", "Bash"]
