@@ -37,13 +37,15 @@ const agentTaskSchema = z.object({
   disallowed_tools: stringArrayRule().optional(),
   max_turns: z.number().int().optional(),
   max_context_tokens: z.number().int().optional(),
-  rejected: rejectedConfigSchema.optional()
+  rejected: rejectedConfigSchema.optional(),
+  done: z.boolean().optional()
 })
 
 const scriptTaskSchema = z.object({
   type: z.literal('script'),
   command: z.string().min(1),
-  rejected: rejectedConfigSchema.optional()
+  rejected: rejectedConfigSchema.optional(),
+  done: z.boolean().optional()
 })
 
 // eslint-disable-next-line prefer-const
@@ -52,7 +54,8 @@ let pipelineTaskSchema: z.ZodType<PipelineTask>
 const nestedPipelineTaskSchema: z.ZodType<NestedPipelineTask> = z.object({
   type: z.literal('pipeline'),
   name: z.string().min(1),
-  tasks: z.array(z.lazy((): z.ZodType<PipelineTask> => pipelineTaskSchema)).min(1)
+  tasks: z.array(z.lazy((): z.ZodType<PipelineTask> => pipelineTaskSchema)).min(1),
+  done: z.boolean().optional()
 })
 
 pipelineTaskSchema = z.union([agentTaskSchema, scriptTaskSchema, nestedPipelineTaskSchema])

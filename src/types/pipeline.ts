@@ -7,6 +7,7 @@ export type PipelineRunOptions = {
   maxTurns?: number
   maxContextTokens?: number
   onStreamEvent?: (event: AgentStreamEvent) => void
+  onTaskDone?: (taskPath: number[], taskIndex: number) => void
 }
 
 export type RejectedContext = {
@@ -26,6 +27,7 @@ export type AgentPipelineTask = {
   max_turns?: number
   max_context_tokens?: number
   rejected?: ScriptRejectedConfig
+  done?: boolean
 }
 
 export type ScriptRejectedConfig = {
@@ -37,12 +39,14 @@ export type ScriptPipelineTask = {
   type: 'script'
   command: string
   rejected?: ScriptRejectedConfig
+  done?: boolean
 }
 
 export type NestedPipelineTask = {
   type: 'pipeline'
   name: string
   tasks: PipelineTask[]
+  done?: boolean
 }
 
 export type PipelineTask = AgentPipelineTask | ScriptPipelineTask | NestedPipelineTask

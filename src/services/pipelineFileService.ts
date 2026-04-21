@@ -1,4 +1,5 @@
 import type { IPipelineFileDomain } from '@src/domains/ports/pipelineFile'
+import type { Pipeline } from '@src/types/pipeline'
 
 export class PipelineFileService {
   constructor(private readonly pipelineFileDomain: IPipelineFileDomain) {}
@@ -29,5 +30,9 @@ export class PipelineFileService {
 
   loadRawPipeline(absolutePath: string): unknown {
     return this.pipelineFileDomain.loadRawPipeline(absolutePath)
+  }
+
+  savePipeline(absolutePath: string, pipeline: Pipeline): void {
+    this.pipelineFileDomain.savePipeline(absolutePath, pipeline)
   }
 }

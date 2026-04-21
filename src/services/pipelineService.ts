@@ -62,6 +62,10 @@ export class PipelineService {
     let i = 0
     while (i < pipeline.tasks.length) {
       const task = pipeline.tasks[i]
+      if (task.done) {
+        i++
+        continue
+      }
       debug.print(`Pipeline task ${i + 1}/${pipeline.tasks.length}`, { type: task.type })
       const name = task.type !== 'script' ? task.name : undefined
       yield { kind: 'task_start' as const, taskPath, taskIndex: i, name, taskType: task.type }
@@ -91,6 +95,9 @@ export class PipelineService {
           retryCount,
           pendingRejections
         )
+      }
+      if (jumpTo === undefined) {
+        options.onTaskDone?.(taskPath, i)
       }
       i = jumpTo ?? i + 1
     }

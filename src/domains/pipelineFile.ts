@@ -1,5 +1,6 @@
 import type { IPipelineFileDomain } from '@src/domains/ports/pipelineFile'
 import type { IPipelineFileRepository } from '@src/repositories/ports/fileMove'
+import type { Pipeline } from '@src/types/pipeline'
 import type { IGitRepository } from '@src/repositories/ports/git'
 import { resolve, dirname, basename, join } from '@src/utils/path'
 
@@ -66,5 +67,9 @@ export class PipelineFileDomain implements IPipelineFileDomain {
 
   loadRawPipeline(absolutePath: string): unknown {
     return this.fileMoveRepo.readRawJson(absolutePath)
+  }
+
+  savePipeline(absolutePath: string, pipeline: Pipeline): void {
+    this.fileMoveRepo.writeJson(absolutePath, pipeline)
   }
 }

@@ -1,3 +1,5 @@
+import type { Pipeline } from '@src/types/pipeline'
+
 export type IPipelineFileDomain = {
   moveToDone(pipelinePath: string): string
   getDiffStat(): string | null
@@ -6,4 +8,5 @@ export type IPipelineFileDomain = {
   commitMove(originalPath: string, donePath: string): void
   cleanTmpDir(): void
   loadRawPipeline(absolutePath: string): unknown
+  savePipeline(absolutePath: string, pipeline: Pipeline): void
 }
