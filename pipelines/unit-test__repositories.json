@@ -63,7 +63,8 @@
     {
       "type": "child",
       "path": "unit-test__repositories__sessions.json",
-      "name": "unit-test-repositories-sessions"
+      "name": "unit-test-repositories-sessions",
+      "done": true
     },
     {
       "type": "child",
