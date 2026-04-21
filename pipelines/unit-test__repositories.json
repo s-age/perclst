@@ -33,7 +33,8 @@
     {
       "type": "child",
       "path": "unit-test__repositories__git-repository.json",
-      "name": "unit-test-repositories-git-repository"
+      "name": "unit-test-repositories-git-repository",
+      "done": true
     },
     {
       "type": "child",
