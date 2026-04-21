@@ -51,7 +51,8 @@
     {
       "type": "child",
       "path": "unit-test__repositories__procedures.json",
-      "name": "unit-test-repositories-procedures"
+      "name": "unit-test-repositories-procedures",
+      "done": true
     },
     {
       "type": "child",
