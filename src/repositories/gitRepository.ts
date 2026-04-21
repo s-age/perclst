@@ -30,6 +30,15 @@ export class GitRepository implements IGitRepository {
     }
   }
 
+  getDiff(from: string, to: string): string | null {
+    try {
+      const diff = execGitSync(`diff ${from} ${to}`)
+      return diff || null
+    } catch {
+      return null
+    }
+  }
+
   stageUpdated(path: string): void {
     execGitSync(`add -u "${path}"`)
   }

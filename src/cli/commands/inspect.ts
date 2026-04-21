@@ -1,0 +1,36 @@
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { PipelineFileService } from '@src/services/pipelineFileService'
+import { stdout, stderr } from '@src/utils/output'
+import { ValidationError } from '@src/errors/validationError'
+import { parseInspectSession } from '@src/validators/cli/inspectSession'
+import { startCommand } from './start'
+
+export async function inspectCommand(oldRef: string, newRef: string) {
+  try {
+    const input = parseInspectSession({ old: oldRef, new: newRef })
+    const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
+
+    const diff = pipelineFileService.getDiff(input.old, input.new)
+
+    if (!diff) {
+      stdout.print('No differences found between the specified refs.')
+      return
+    }
+
+    await startCommand(
+      `Inspect the following git diff and produce a code inspection report:\n\n${diff}`,
+      {
+        procedure: 'code-inspector',
+        model: 'sonnet'
+      }
+    )
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      stderr.print(`Invalid arguments: ${error.message}`)
+    } else {
+      stderr.print('Failed to run inspect', error as Error)
+    }
+    process.exit(1)
+  }
+}
