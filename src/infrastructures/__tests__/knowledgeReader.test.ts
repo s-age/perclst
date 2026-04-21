@@ -146,6 +146,30 @@ describe('knowledgeReader', () => {
         { absolute: '/root/changelog.md', relative: 'changelog.md' }
       ])
     })
+
+    it('recurses into subdirectories and returns all files when no ext filter is given', () => {
+      mockExistsSync.mockReturnValue(true)
+
+      mockReaddirSync.mockImplementation((dir: string | Buffer) => {
+        const dirStr = typeof dir === 'string' ? dir : dir.toString()
+        if (dirStr === '/root') return ['notes.md', 'sub']
+        if (dirStr === '/root/sub') return ['data.json', 'image.png']
+        return []
+      })
+
+      mockStatSync.mockImplementation((p: string | Buffer) => {
+        const pathStr = typeof p === 'string' ? p : p.toString()
+        return { isDirectory: () => pathStr === '/root/sub' } as Partial<Stats>
+      })
+
+      const result = listFilesRecursive('/root')
+
+      expect(result).toEqual([
+        { absolute: '/root/notes.md', relative: 'notes.md' },
+        { absolute: '/root/sub/data.json', relative: 'sub/data.json' },
+        { absolute: '/root/sub/image.png', relative: 'sub/image.png' }
+      ])
+    })
   })
 
   describe('readTextFile', () => {
