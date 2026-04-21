@@ -1,9 +1,9 @@
 import { schema, safeParse } from '../schema'
-import { stringRule } from '../rules/string'
+import { gitRefRule } from '../rules/gitRef'
 
 const inspectSchema = schema({
-  old: stringRule({ required: true }),
-  new: stringRule({ required: true })
+  old: gitRefRule(),
+  new: gitRefRule()
 })
 
 export type InspectSessionInput = typeof inspectSchema._output
