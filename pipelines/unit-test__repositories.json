@@ -3,7 +3,8 @@
     {
       "type": "child",
       "path": "unit-test__repositories__agent-repository.json",
-      "name": "unit-test-repositories-agent-repository"
+      "name": "unit-test-repositories-agent-repository",
+      "done": true
     },
     {
       "type": "child",
