@@ -3,17 +3,20 @@
     {
       "type": "child",
       "path": "unit-test__services__analyze-service.json",
-      "name": "unit-test-services-analyze-service"
+      "name": "unit-test-services-analyze-service",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__services__checker-service.json",
-      "name": "unit-test-services-checker-service"
+      "name": "unit-test-services-checker-service",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__services__import-service.json",
-      "name": "unit-test-services-import-service"
+      "name": "unit-test-services-import-service",
+      "done": true
     },
     {
       "type": "child",
