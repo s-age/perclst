@@ -4,7 +4,7 @@ import type { Pipeline } from '@src/types/pipeline'
 export class PipelineFileService {
   constructor(private readonly pipelineFileDomain: IPipelineFileDomain) {}
 
-  moveToDone(pipelinePath: string): string {
+  moveToDone(pipelinePath: string): string | null {
     return this.pipelineFileDomain.moveToDone(pipelinePath)
   }
 

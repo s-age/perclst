@@ -10,9 +10,10 @@ export class PipelineFileDomain implements IPipelineFileDomain {
     private readonly gitRepo: IGitRepository
   ) {}
 
-  moveToDone(pipelinePath: string): string {
+  moveToDone(pipelinePath: string): string | null {
     const absoluteSrc = resolve(pipelinePath)
     const dir = dirname(absoluteSrc)
+    if (dir.split('/').includes('done')) return null
     const stem = basename(absoluteSrc, '.json')
     const segments = stem.split('__')
     const filename = segments[segments.length - 1] + '.json'

@@ -224,8 +224,10 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions) {
     }
 
     const donePath = pipelineFileService.moveToDone(input.pipelinePath)
-    stdout.print(`\nMoved to: ${donePath}`)
-    pipelineFileService.commitMove(input.pipelinePath, donePath)
+    if (donePath) {
+      stdout.print(`\nMoved to: ${donePath}`)
+      pipelineFileService.commitMove(input.pipelinePath, donePath)
+    }
     pipelineFileService.cleanTmpDir()
   } catch (error) {
     if (error instanceof ValidationError) {
