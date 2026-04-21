@@ -83,6 +83,17 @@ describe('execShell', () => {
     expect(result.stdout).toBe('partial output')
   })
 
+  it('resolves with stderr even when exec errors', async () => {
+    const error = Object.assign(new Error('command failed'), { code: 1 })
+    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
+      cb(error, '', 'error diagnostics')
+    }) as ExecImpl as typeof exec)
+
+    const result = await execShell('bad-cmd', '/tmp')
+
+    expect(result.stderr).toBe('error diagnostics')
+  })
+
   it('passes the command string to exec', async () => {
     mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
       cb(null, '', '')
