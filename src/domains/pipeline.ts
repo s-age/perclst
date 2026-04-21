@@ -111,7 +111,7 @@ export class PipelineDomain implements IPipelineDomain {
     const execOpts = this.buildExecuteOptions(task, options)
     const instruction = rejected ? this.buildRejectedInstruction(task, rejected) : task.task
 
-    if (task.name && rejected) {
+    if (task.name) {
       const resumed = await this.resumeNamedSession(
         task,
         index,
