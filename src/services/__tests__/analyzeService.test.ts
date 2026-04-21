@@ -1,8 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AnalyzeService } from '../analyzeService'
-import type { AnalyzeResult, RewindTurn } from '@src/types/analysis'
+import { flattenTurns, applyRowFilter } from '@src/domains/turns'
+import type { AnalyzeResult, RewindTurn, ClaudeCodeTurn } from '@src/types/analysis'
+import type { TurnRow, RowFilter } from '@src/types/display'
 import type { IAnalyzeDomain } from '@src/domains/ports/analysis'
 import type { Session } from '@src/types/session'
+
+vi.mock('@src/domains/turns', () => ({
+  flattenTurns: vi.fn(),
+  applyRowFilter: vi.fn()
+}))
 
 const mockSession: Session = {
   id: 'session-123',
@@ -78,6 +85,7 @@ describe('AnalyzeService', () => {
   let service: AnalyzeService
 
   beforeEach(() => {
+    vi.clearAllMocks()
     domain = makeMockDomain()
     service = new AnalyzeService(domain)
   })
@@ -146,6 +154,60 @@ describe('AnalyzeService', () => {
       const result = await service.getRewindTurns('session-123')
       expect(result).toEqual([])
       expect(result).toHaveLength(0)
+    })
+  })
+
+  describe('formatTurns', () => {
+    const mockTurns: ClaudeCodeTurn[] = [{ toolCalls: [], userMessage: 'hello' }]
+    const flatRows: TurnRow[] = [{ n: 1, role: 'user', content: 'hello' }]
+    const filteredRows: TurnRow[] = [{ n: 1, role: 'user', content: 'hello' }]
+    const filter: RowFilter = { head: 10 }
+
+    beforeEach(() => {
+      vi.mocked(flattenTurns).mockReturnValue(flatRows)
+      vi.mocked(applyRowFilter).mockReturnValue(filteredRows)
+    })
+
+    it('passes turns to flattenTurns', () => {
+      service.formatTurns(mockTurns, filter)
+      expect(flattenTurns).toHaveBeenCalledWith(mockTurns)
+    })
+
+    it('passes flattenTurns result and filter to applyRowFilter', () => {
+      service.formatTurns(mockTurns, filter)
+      expect(applyRowFilter).toHaveBeenCalledWith(flatRows, filter)
+    })
+
+    it('returns applyRowFilter result', () => {
+      const result = service.formatTurns(mockTurns, filter)
+      expect(result).toBe(filteredRows)
+    })
+  })
+
+  describe('resolveTurnByIndex', () => {
+    it('returns undefined when index is 0', async () => {
+      const result = await service.resolveTurnByIndex('session-123', 0)
+      expect(result).toBeUndefined()
+    })
+
+    it('does not call domain when index is 0', async () => {
+      await service.resolveTurnByIndex('session-123', 0)
+      expect(domain.getRewindTurns).not.toHaveBeenCalled()
+    })
+
+    it('returns uuid of the turn at the given index', async () => {
+      const result = await service.resolveTurnByIndex('session-123', 1)
+      expect(result).toBe('uuid-2')
+    })
+
+    it('throws RangeError when index exceeds available turns', async () => {
+      await expect(service.resolveTurnByIndex('session-123', 99)).rejects.toThrow(RangeError)
+    })
+
+    it('includes index and turn count in RangeError message', async () => {
+      await expect(service.resolveTurnByIndex('session-123', 99)).rejects.toThrow(
+        'Index 99 is out of range (session has 3 assistant turns)'
+      )
     })
   })
 
