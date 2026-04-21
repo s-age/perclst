@@ -41,7 +41,8 @@ export function PipelineRunner({
   const streamCapacity = Math.max(1, mainRows - STREAM_HEADER_ROWS)
   const [scrollOffset] = useState(0)
   const viewEnd = scrollOffset > 0 ? allLines.length - scrollOffset : allLines.length
-  const visibleLines = allLines.slice(Math.max(0, viewEnd - streamCapacity), viewEnd)
+  const lineOffset = Math.max(0, viewEnd - streamCapacity)
+  const visibleLines = allLines.slice(lineOffset, viewEnd)
 
   return (
     <Box flexDirection="column" height={termRows}>
@@ -49,6 +50,7 @@ export function PipelineRunner({
         <WorkflowPanel tasks={tasks} done={done} error={error} spinnerFrame={spinnerFrame} />
         <OutputPanel
           visibleLines={visibleLines}
+          lineOffset={lineOffset}
           runningIndex={runningIndex}
           done={done}
           error={error}
