@@ -1,0 +1,66 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-unit-test-domains-turns"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-domains-turns",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-domains-turns",
+          "task": "target_file_path: src/domains/turns.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-domains-turns",
+          "task": "target_file_path: src/domains/turns.ts\nng_output_path: .claude/tmp/review-unit-test-domains-turns",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-domains-turns",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-domains-turns",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-unit-test-domains-turns",
+      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(domains): ...).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

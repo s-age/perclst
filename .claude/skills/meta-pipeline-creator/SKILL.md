@@ -151,13 +151,51 @@ The commit task **must always be assigned to the implement agent** (i.e. resume 
 
 **Why**: The implement agent has lived through the full implement → review → check-gate cycle. Resuming that session lets it write a commit message grounded in the actual changes it made and the feedback it received — which in turn feeds the knowledge accumulation pipeline. A separate commit agent has no context and produces shallow messages.
 
+The commit agent sits **outside** the nested pipeline, at the top-level `tasks` array — after the pipeline group and any outer script gate:
+
 ```json
 {
-  "type": "agent",
-  "name": "implement-unit-test-foo-service",
-  "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(layer): ...).",
-  "model": "haiku",
-  "allowed_tools": ["Read", "Bash"]
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-unit-test-foo-service"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-foo-service",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-foo-service",
+          "task": "target_file_path: src/services/fooService.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker", "mcp__perclst__ts_analyze", "mcp__perclst__ts_get_references", "mcp__perclst__ts_get_types"]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-foo-service",
+          "task": "target_file_path: src/services/fooService.ts\nng_output_path: .claude/tmp/review-unit-test-foo-service",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_analyze", "mcp__perclst__ts_get_references", "mcp__perclst__ts_get_types"],
+          "rejected": { "to": "implement-unit-test-foo-service", "max_retries": 3 }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": { "to": "implement-unit-test-foo-service", "max_retries": 3 }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-unit-test-foo-service",
+      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(layer): ...).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
 }
 ```
 

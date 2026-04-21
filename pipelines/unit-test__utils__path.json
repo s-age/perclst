@@ -1,0 +1,66 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-unit-test-utils-path"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-utils-path",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-utils-path",
+          "task": "target_file_path: src/utils/path.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-utils-path",
+          "task": "target_file_path: src/utils/path.ts\nng_output_path: .claude/tmp/review-unit-test-utils-path",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-utils-path",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-utils-path",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-unit-test-utils-path",
+      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(utils): ...).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
