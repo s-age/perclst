@@ -15,6 +15,13 @@ Always import from vitest explicitly — no globals:
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 ```
 
+Add `it.each` only when you use it:
+
+```ts
+import { vi, describe, it, expect, beforeEach } from 'vitest'
+// it.each is on the it namespace — no extra import needed
+```
+
 ## Mock style
 
 **Interface mocks** (injected via constructor): declare at module scope as a typed object literal with `vi.fn()` values. Reset in `beforeEach` with `vi.clearAllMocks()`.
@@ -101,6 +108,34 @@ it('should throw ValidationError when raw input is a number', () => {
 })
 ```
 
+### Use `it.each` when only inputs differ
+
+When ≥ 3 cases share the **same assertion shape** and differ only in the input value, replace the repeated `it` blocks with `it.each`. This keeps every case as a separate test run (satisfies the one-assertion rule) while reducing boilerplate.
+
+**Conditions that must all hold:**
+1. Same assertion (`toThrow(X)`, `toBe(y)`, etc.) across all rows
+2. Same failure reason / same code path
+3. ≥ 3 variants — two or fewer are clearer as explicit `it` blocks
+
+```ts
+// BEST — it.each for same-behavior error paths
+it.each([
+  ['null',     null],
+  ['string',   'hello'],
+  ['number',   42],
+  ['boolean',  true],
+] as const)('should throw ValidationError when raw input is %s', (_label, input) => {
+  expect(() => parse(input)).toThrow(ValidationError)
+})
+```
+
+**Do NOT use `it.each` for:**
+- Happy-path cases where the expected output differs per row
+- Cases that require different setup or mock behavior
+- Cross-field logic (`superRefine`) where each combination has distinct semantics
+
+Keep the label column (`_label`) as the first element so the generated test name is human-readable without encoding the raw value.
+
 ## Pipeline rejection protocol
 
 Review agents signal failure via a temp file, not exit codes or stdout.
@@ -116,6 +151,20 @@ A default-value assertion already present in an earlier `it` must not be repeate
 ## Cover all optional field types in error paths
 
 For each optional field that has a type constraint (boolean, integer, enum…), add at least one negative test that passes the wrong type. 100 % line coverage does not guarantee this — a `stringRule` path inside `booleanRule` may be reachable only through a direct wrong-type call.
+
+When a single field must reject multiple wrong types, use `it.each`:
+
+```ts
+it.each([
+  ['string', 'yes'],
+  ['number', 1],
+  ['array',  []],
+] as const)('should throw ValidationError when silentThoughts receives a %s', (_label, value) => {
+  expect(() => parse({ ...minimal, silentThoughts: value })).toThrow(ValidationError)
+})
+```
+
+For a single wrong-type case, a plain `it` is still fine:
 
 ```ts
 it('should throw ValidationError when a boolean field receives a string', () => {
