@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { join } from 'path'
 import { APIError } from '@src/errors/apiError'
 import { RawExitError } from '@src/errors/rawExitError'
-import { MCP_SERVER_NAME } from '@src/constants/config'
+import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
 
 // ---------------------------------------------------------------------------
 // Hoisted mocks — available before any vi.mock() factory runs
@@ -624,6 +624,121 @@ describe('ClaudeCodeInfra', () => {
 
       expect(writeSpy).toHaveBeenCalledWith('error output')
       writeSpy.mockRestore()
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  describe('writeMcpConfig', () => {
+    it('should return a path located under the system temp directory', () => {
+      mocks.tmpdir.mockReturnValue('/tmp')
+
+      const result = (infra as unknown as { writeMcpConfig(): string }).writeMcpConfig()
+
+      expect(result.startsWith('/tmp')).toBe(true)
+    })
+
+    it('should embed the current process pid in the returned filename', () => {
+      mocks.tmpdir.mockReturnValue('/tmp')
+
+      const result = (infra as unknown as { writeMcpConfig(): string }).writeMcpConfig()
+
+      expect(result).toContain(String(process.pid))
+    })
+
+    it('should embed APP_NAME in the returned filename', () => {
+      mocks.tmpdir.mockReturnValue('/tmp')
+
+      const result = (infra as unknown as { writeMcpConfig(): string }).writeMcpConfig()
+
+      expect(result).toContain(APP_NAME)
+    })
+
+    it('should call writeFileSync with the returned path', () => {
+      mocks.tmpdir.mockReturnValue('/tmp')
+
+      const result = (infra as unknown as { writeMcpConfig(): string }).writeMcpConfig()
+
+      expect(mocks.writeFileSync).toHaveBeenCalledWith(result, expect.any(String), 'utf-8')
+    })
+
+    it('should write valid JSON to the config file', () => {
+      mocks.tmpdir.mockReturnValue('/tmp')
+      ;(infra as unknown as { writeMcpConfig(): string }).writeMcpConfig()
+
+      const written = mocks.writeFileSync.mock.calls[0][1] as string
+      expect(() => JSON.parse(written)).not.toThrow()
+    })
+
+    it('should include the MCP server name as a key under mcpServers in the written JSON', () => {
+      mocks.tmpdir.mockReturnValue('/tmp')
+      ;(infra as unknown as { writeMcpConfig(): string }).writeMcpConfig()
+
+      const written = mocks.writeFileSync.mock.calls[0][1] as string
+      const config = JSON.parse(written) as { mcpServers: Record<string, unknown> }
+      expect(config.mcpServers).toHaveProperty(MCP_SERVER_NAME)
+    })
+
+    it('should set the MCP server command to "node" in the written config', () => {
+      mocks.tmpdir.mockReturnValue('/tmp')
+      ;(infra as unknown as { writeMcpConfig(): string }).writeMcpConfig()
+
+      const written = mocks.writeFileSync.mock.calls[0][1] as string
+      const config = JSON.parse(written) as {
+        mcpServers: Record<string, { command: string }>
+      }
+      expect(config.mcpServers[MCP_SERVER_NAME].command).toBe('node')
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  describe('streamStdout', () => {
+    /** Helper: collect all yielded lines from streamStdout given raw string chunks. */
+    async function collectStream(chunks: string[]): Promise<string[]> {
+      async function* makeReadable(): AsyncGenerator<Buffer> {
+        for (const chunk of chunks) yield Buffer.from(chunk)
+      }
+      const results: string[] = []
+      const gen = (
+        infra as unknown as { streamStdout(s: AsyncIterable<Buffer>): AsyncGenerator<string> }
+      ).streamStdout(makeReadable())
+      for await (const line of gen) results.push(line)
+      return results
+    }
+
+    it('should yield nothing when stdout emits no chunks', async () => {
+      const results = await collectStream([])
+
+      expect(results).toEqual([])
+    })
+
+    it('should yield each newline-terminated line from a single chunk', async () => {
+      const results = await collectStream(['foo\nbar\n'])
+
+      expect(results).toEqual(['foo', 'bar'])
+    })
+
+    it('should reassemble a line split across two consecutive chunks', async () => {
+      const results = await collectStream(['hel', 'lo\n'])
+
+      expect(results).toEqual(['hello'])
+    })
+
+    it('should yield a trailing line that has no terminating newline', async () => {
+      const results = await collectStream(['line1\nline2'])
+
+      expect(results).toEqual(['line1', 'line2'])
+    })
+
+    it('should not yield whitespace-only lines', async () => {
+      const results = await collectStream(['line1\n   \nline2\n'])
+
+      expect(results).toEqual(['line1', 'line2'])
+    })
+
+    it('should not yield an empty trailing buffer when the last chunk ends with a newline', async () => {
+      const results = await collectStream(['line1\n'])
+
+      expect(results).toEqual(['line1'])
     })
   })
 })
