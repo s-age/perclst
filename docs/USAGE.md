@@ -206,6 +206,28 @@ perclst start "Promote all entries in knowledge/draft/ into structured knowledge
   --output-only
 ```
 
+## `survey`
+
+Survey the codebase for bug investigation or pre-implementation research. Spawns a sonnet agent that searches the knowledge base, consults layer catalogs, and traces symbols to answer: **where is the relevant code?** and **what already exists that could be reused?**
+
+```bash
+# Investigate a topic
+perclst survey "セッション管理のバグを調べたい"
+perclst survey "pipeline rejection の仕組みを教えて"
+
+# Show only the final report
+perclst survey "AuthService 周りの実装" --output-only
+
+# Refresh codebase catalogs (re-scans utils, infra, domains, MCP tools, commands)
+perclst survey --refresh
+```
+
+The agent returns a structured report with two sections:
+- **Where** — layer, file, and symbol where relevant code lives
+- **What exists** — reuse candidates with rationale
+
+---
+
 ## `retrieve`
 
 Search the project knowledge base for one or more keywords and return a structured summary of findings. Shorthand for running the `meta-retrieve-knowledge` procedure with `--output-only`.
