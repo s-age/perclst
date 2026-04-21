@@ -1,0 +1,64 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "unit-test__repositories__agent-repository.json",
+      "name": "unit-test-repositories-agent-repository"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__checker-repository.json",
+      "name": "unit-test-repositories-checker-repository"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__claude-sessions.json",
+      "name": "unit-test-repositories-claude-sessions"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__config.json",
+      "name": "unit-test-repositories-config"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__file-move-repository.json",
+      "name": "unit-test-repositories-file-move-repository"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__git-repository.json",
+      "name": "unit-test-repositories-git-repository"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__knowledge-search-repository.json",
+      "name": "unit-test-repositories-knowledge-search-repository"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__permission-pipe-repository.json",
+      "name": "unit-test-repositories-permission-pipe-repository"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__procedures.json",
+      "name": "unit-test-repositories-procedures"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__rejection-feedback.json",
+      "name": "unit-test-repositories-rejection-feedback"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__sessions.json",
+      "name": "unit-test-repositories-sessions"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__repositories__shell.json",
+      "name": "unit-test-repositories-shell"
+    }
+  ]
+}
