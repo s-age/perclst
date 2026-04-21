@@ -13,7 +13,7 @@ export function initTasks(pipeline: Pipeline): TaskState[] {
     name: t.type !== 'script' ? t.name : undefined,
     command: t.type === 'script' ? t.command : undefined,
     taskType: t.type,
-    status: 'pending' as const,
+    status: (t.done ? 'done' : 'pending') as TaskState['status'],
     children: t.type === 'pipeline' ? initTasks({ tasks: t.tasks }) : undefined
   }))
 }

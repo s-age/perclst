@@ -1,5 +1,6 @@
 import type { IPipelineFileDomain } from '@src/domains/ports/pipelineFile'
 import type { IPipelineFileRepository } from '@src/repositories/ports/fileMove'
+import type { Pipeline } from '@src/types/pipeline'
 import type { IGitRepository } from '@src/repositories/ports/git'
 import { resolve, dirname, basename, join } from '@src/utils/path'
 
@@ -9,9 +10,10 @@ export class PipelineFileDomain implements IPipelineFileDomain {
     private readonly gitRepo: IGitRepository
   ) {}
 
-  moveToDone(pipelinePath: string): string {
+  moveToDone(pipelinePath: string): string | null {
     const absoluteSrc = resolve(pipelinePath)
     const dir = dirname(absoluteSrc)
+    if (dir.split('/').includes('done')) return null
     const stem = basename(absoluteSrc, '.json')
     const segments = stem.split('__')
     const filename = segments[segments.length - 1] + '.json'
@@ -66,5 +68,9 @@ export class PipelineFileDomain implements IPipelineFileDomain {
 
   loadRawPipeline(absolutePath: string): unknown {
     return this.fileMoveRepo.readRawJson(absolutePath)
+  }
+
+  savePipeline(absolutePath: string, pipeline: Pipeline): void {
+    this.fileMoveRepo.writeJson(absolutePath, pipeline)
   }
 }
