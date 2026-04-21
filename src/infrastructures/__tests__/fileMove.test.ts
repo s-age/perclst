@@ -60,4 +60,16 @@ describe('moveFile', () => {
       'ENOENT: no such file or directory'
     )
   })
+
+  it('calls mkdirSync before renameSync even when renameSync throws', () => {
+    mockRenameSync.mockImplementation(() => {
+      throw new Error('ENOENT: no such file or directory')
+    })
+    try {
+      moveFile('/src/file.txt', '/dest/dir/file.txt')
+    } catch {
+      // expected
+    }
+    expect(mockMkdirSync).toHaveBeenCalledWith('/dest/dir', { recursive: true })
+  })
 })
