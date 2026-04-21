@@ -39,12 +39,14 @@
     {
       "type": "child",
       "path": "unit-test__repositories__knowledge-search-repository.json",
-      "name": "unit-test-repositories-knowledge-search-repository"
+      "name": "unit-test-repositories-knowledge-search-repository",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__repositories__permission-pipe-repository.json",
-      "name": "unit-test-repositories-permission-pipe-repository"
+      "name": "unit-test-repositories-permission-pipe-repository",
+      "done": true
     },
     {
       "type": "child",
