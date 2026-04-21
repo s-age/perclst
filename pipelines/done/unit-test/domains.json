@@ -1,25 +1,46 @@
 {
   "tasks": [
     {
-      "type": "agent",
-      "name": "unit-test-domains-analyze",
-      "task": "target_file_path: src/domains/analyze.ts",
-      "procedure": "implement-unit-test",
-      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
+      "type": "child",
+      "path": "unit-test__domains__knowledge-search.json",
+      "name": "unit-test-domains-knowledge-search",
+      "done": true
     },
     {
-      "type": "agent",
-      "name": "unit-test-domains-checker",
-      "task": "target_file_path: src/domains/checker.ts",
-      "procedure": "implement-unit-test",
-      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
+      "type": "child",
+      "path": "unit-test__domains__permission-pipe.json",
+      "name": "unit-test-domains-permission-pipe",
+      "done": true
     },
     {
-      "type": "agent",
-      "name": "unit-test-domains-import",
-      "task": "target_file_path: src/domains/import.ts",
-      "procedure": "implement-unit-test",
-      "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
+      "type": "child",
+      "path": "unit-test__domains__pipeline.json",
+      "name": "unit-test-domains-pipeline",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__pipeline-file.json",
+      "name": "unit-test-domains-pipeline-file",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__script.json",
+      "name": "unit-test-domains-script",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__test-strategy.json",
+      "name": "unit-test-domains-test-strategy",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__ts-analysis.json",
+      "name": "unit-test-domains-ts-analysis",
+      "done": true
     }
   ]
 }
