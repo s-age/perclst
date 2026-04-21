@@ -10,22 +10,30 @@ type Props = {
   spinnerFrame: number
 }
 
-function renderTasks(tasks: TaskState[], depth: number, spinnerFrame: number): React.ReactNode[] {
-  return tasks.flatMap((task, i) => [
-    <TaskRow
-      key={`${depth}-${i}`}
-      index={i}
-      name={task.name}
-      command={task.command}
-      taskType={task.taskType}
-      status={task.status}
-      retryCount={task.retryCount}
-      maxRetries={task.maxRetries}
-      spinnerFrame={spinnerFrame}
-      depth={depth}
-    />,
-    ...(task.children ? renderTasks(task.children, depth + 1, spinnerFrame) : [])
-  ])
+function renderTasks(
+  tasks: TaskState[],
+  depth: number,
+  spinnerFrame: number,
+  parentKey = ''
+): React.ReactNode[] {
+  return tasks.flatMap((task, i) => {
+    const key = parentKey ? `${parentKey}.${i}` : `${i}`
+    return [
+      <TaskRow
+        key={key}
+        index={i}
+        name={task.name}
+        command={task.command}
+        taskType={task.taskType}
+        status={task.status}
+        retryCount={task.retryCount}
+        maxRetries={task.maxRetries}
+        spinnerFrame={spinnerFrame}
+        depth={depth}
+      />,
+      ...(task.children ? renderTasks(task.children, depth + 1, spinnerFrame, key) : [])
+    ]
+  })
 }
 
 export function WorkflowPanel({ tasks, done, error, spinnerFrame }: Props) {
