@@ -6,7 +6,6 @@ import { SessionService } from '@src/services/sessionService'
 import { AnalyzeService } from '@src/services/analyzeService'
 import { stdout, stderr } from '@src/utils/output'
 import { toLocaleString } from '@src/utils/date'
-import { flattenTurns, applyRowFilter } from '@src/utils/turns'
 import { parseShowSession } from '@src/validators/cli/showSession'
 
 type RawShowOptions = {
@@ -49,7 +48,7 @@ export async function showCommand(sessionId: string, options: RawShowOptions) {
     }
 
     const { summary } = await analyzeService.analyze(resolvedId)
-    const rows = applyRowFilter(flattenTurns(summary.turns), {
+    const rows = analyzeService.formatTurns(summary.turns, {
       head: input.head,
       tail: input.tail,
       order: input.order

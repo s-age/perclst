@@ -1,30 +1,5 @@
-export type ToolCall = {
-  name: string
-  input: Record<string, unknown>
-  result: string | null
-  isError: boolean
-}
-
-export type ClaudeCodeTurn = {
-  userMessage?: string
-  toolCalls: ToolCall[]
-  assistantText?: string
-  thinkingBlocks?: string[]
-  usage?: {
-    input_tokens: number
-    output_tokens: number
-    cache_read_input_tokens: number
-    cache_creation_input_tokens: number
-  }
-}
-
-export type TurnRow = { n: number; role: string; content: string }
-
-export type RowFilter = {
-  head?: number
-  tail?: number
-  order?: 'asc' | 'desc'
-}
+import type { ClaudeCodeTurn } from '@src/types/analysis'
+import type { TurnRow, RowFilter } from '@src/types/display'
 
 export function flattenTurns(turns: ClaudeCodeTurn[]): TurnRow[] {
   const rows: TurnRow[] = []
