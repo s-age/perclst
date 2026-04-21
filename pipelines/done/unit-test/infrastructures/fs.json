@@ -21,7 +21,10 @@
             "Bash",
             "mcp__perclst__ts_test_strategist",
             "mcp__perclst__ts_analyze",
-            "mcp__perclst__ts_checker"
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__knowledge_search"
           ]
         },
         {
@@ -35,7 +38,9 @@
             "Write",
             "Bash",
             "mcp__perclst__ts_test_strategist",
-            "mcp__perclst__ts_checker"
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
           ],
           "rejected": {
             "to": "implement-unit-test-infrastructures-fs",
