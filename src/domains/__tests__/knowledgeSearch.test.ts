@@ -1,7 +1,111 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { IKnowledgeSearchRepository } from '@src/repositories/ports/knowledgeSearch'
 import type { KnowledgeFileEntry } from '@src/types/knowledgeSearch'
-import { KnowledgeSearchDomain } from '../knowledgeSearch'
+import { KnowledgeSearchDomain, parseQuery, extractKeywords } from '../knowledgeSearch'
+
+describe('parseQuery', () => {
+  it('should parse single term', () => {
+    const result = parseQuery('fork')
+    expect(result).toEqual([['fork']])
+  })
+
+  it('should parse multiple AND terms', () => {
+    const result = parseQuery('fork session')
+    expect(result).toEqual([['fork', 'session']])
+  })
+
+  it('should split OR groups', () => {
+    const result = parseQuery('fork OR session')
+    expect(result).toEqual([['fork'], ['session']])
+  })
+
+  it('should handle mixed AND/OR', () => {
+    const result = parseQuery('fork session OR branch')
+    expect(result).toEqual([['fork', 'session'], ['branch']])
+  })
+
+  it('should strip explicit AND keyword', () => {
+    const result = parseQuery('fork AND session')
+    expect(result).toEqual([['fork', 'session']])
+  })
+
+  it('should handle empty string', () => {
+    const result = parseQuery('')
+    expect(result).toEqual([])
+  })
+
+  it('should handle whitespace only', () => {
+    const result = parseQuery('   ')
+    expect(result).toEqual([])
+  })
+
+  it('should filter out only AND/OR keywords', () => {
+    const result = parseQuery('AND OR')
+    expect(result).toEqual([])
+  })
+
+  it('should be case-insensitive for OR', () => {
+    const result = parseQuery('fork or session')
+    expect(result).toEqual([['fork'], ['session']])
+  })
+
+  it('should normalize terms to lowercase', () => {
+    const result = parseQuery('FORK Session')
+    expect(result).toEqual([['fork', 'session']])
+  })
+
+  it('should handle multiple spaces between terms', () => {
+    const result = parseQuery('fork    session')
+    expect(result).toEqual([['fork', 'session']])
+  })
+
+  it('should handle complex query with multiple groups', () => {
+    const result = parseQuery('foo bar OR baz qux OR quux')
+    expect(result).toEqual([['foo', 'bar'], ['baz', 'qux'], ['quux']])
+  })
+})
+
+describe('extractKeywords', () => {
+  it('should extract keywords from content', () => {
+    const result = extractKeywords('**Keywords:** fork, session')
+    expect(result).toEqual(['fork', 'session'])
+  })
+
+  it('should return empty array when no keywords field', () => {
+    const result = extractKeywords('Just some content')
+    expect(result).toEqual([])
+  })
+
+  it('should handle empty keywords field', () => {
+    const result = extractKeywords('**Keywords:** ')
+    expect(result).toEqual([])
+  })
+
+  it('should trim whitespace around keywords', () => {
+    const result = extractKeywords('**Keywords:**  fork  ,  session  ')
+    expect(result).toEqual(['fork', 'session'])
+  })
+
+  it('should lowercase keywords', () => {
+    const result = extractKeywords('**Keywords:** FORK, Session')
+    expect(result).toEqual(['fork', 'session'])
+  })
+
+  it('should find keywords at end of file', () => {
+    const result = extractKeywords('Some content\n\n**Keywords:** term1, term2')
+    expect(result).toEqual(['term1', 'term2'])
+  })
+
+  it('should handle multiple keywords with trim', () => {
+    const result = extractKeywords('**Keywords:** alpha, beta, gamma, delta')
+    expect(result).toEqual(['alpha', 'beta', 'gamma', 'delta'])
+  })
+
+  it('should handle single keyword', () => {
+    const result = extractKeywords('**Keywords:** single')
+    expect(result).toEqual(['single'])
+  })
+})
 
 describe('KnowledgeSearchDomain', () => {
   let mockRepo: ReturnType<typeof vi.fn<(include_draft: boolean) => KnowledgeFileEntry[], void>>
@@ -17,7 +121,6 @@ describe('KnowledgeSearchDomain', () => {
       loadAll: mockRepo
     }
     domain = new KnowledgeSearchDomain(repo)
-    vi.clearAllMocks()
   })
 
   describe('hasDraftEntries', () => {

@@ -22,7 +22,7 @@ import type {
  *
  * The word "OR" (case-insensitive) splits groups; "AND" is stripped.
  */
-function parseQuery(query: string): string[][] {
+export function parseQuery(query: string): string[][] {
   return query
     .split(/\bOR\b/i)
     .map((group) =>
@@ -43,7 +43,7 @@ function parseQuery(query: string): string[][] {
  * Extract keywords from the `**Keywords:** …` line at the end of a knowledge file.
  * Returns an empty array if no Keywords field is found.
  */
-function extractKeywords(content: string): string[] {
+export function extractKeywords(content: string): string[] {
   const match = content.match(/\*\*Keywords:\*\*\s*(.+)$/m)
   if (!match) return []
   return match[1]
