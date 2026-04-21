@@ -9,12 +9,14 @@
     {
       "type": "child",
       "path": "unit-test__repositories__checker-repository.json",
-      "name": "unit-test-repositories-checker-repository"
+      "name": "unit-test-repositories-checker-repository",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__repositories__claude-sessions.json",
-      "name": "unit-test-repositories-claude-sessions"
+      "name": "unit-test-repositories-claude-sessions",
+      "done": true
     },
     {
       "type": "child",
