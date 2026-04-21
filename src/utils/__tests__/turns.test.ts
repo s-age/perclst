@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { flattenTurns, applyRowFilter } from '../turns.js'
-import type { ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
-import type { TurnRow, RowFilter } from '@src/types/display'
+import type { ClaudeCodeTurn, ToolCall, TurnRow, RowFilter } from '../turns.js'
 
 describe('flattenTurns', () => {
   describe('happy path — single turn with all components', () => {
