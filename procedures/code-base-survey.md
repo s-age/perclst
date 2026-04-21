@@ -17,14 +17,18 @@ flowchart TD
     NeedRefs -- Yes --> GetRefs[Run ts_get_references to trace usage]
     NeedRefs -- No --> Synthesize
     GetRefs --> Synthesize[Synthesize: Where + What exists]
-    Synthesize --> Report[Return structured report]
+    Synthesize --> CaptureKnowledge{Anything worth preserving?}
+    CaptureKnowledge -- Yes --> WriteKnowledge[Write to knowledge/draft/ — problems, discoveries, gotchas, design decisions]
+    CaptureKnowledge -- No --> Report
+    WriteKnowledge --> Report[Return structured report]
     Report --> Done([Done])
     ReportNotFound --> Done
 ```
 
 ## Constraints
 
-- Read-only — do not modify any source files
+- Do not modify any `src/` files — read-only on source code
+- Writing to `knowledge/draft/` is encouraged when the investigation reveals something non-obvious
 - Do not make implementation decisions — report facts and candidates only
 - Do not speculate beyond what the code shows
 
