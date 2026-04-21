@@ -41,6 +41,14 @@ describe('stderr', () => {
     expect(errSpy).not.toHaveBeenCalled()
     vi.restoreAllMocks()
   })
+
+  it('does not call console.error when cause is an empty string', () => {
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    stderr.print('error msg', '')
+    expect(errSpy).not.toHaveBeenCalled()
+    vi.restoreAllMocks()
+  })
 })
 
 describe('debug', () => {
