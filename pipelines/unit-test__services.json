@@ -1,0 +1,62 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "unit-test__services__analyze-service.json",
+      "name": "unit-test-services-analyze-service",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__checker-service.json",
+      "name": "unit-test-services-checker-service",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__import-service.json",
+      "name": "unit-test-services-import-service",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__agent-service.json",
+      "name": "unit-test-services-agent-service"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__knowledge-search-service.json",
+      "name": "unit-test-services-knowledge-search-service"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__permission-pipe-service.json",
+      "name": "unit-test-services-permission-pipe-service"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__pipeline-file-service.json",
+      "name": "unit-test-services-pipeline-file-service"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__pipeline-service.json",
+      "name": "unit-test-services-pipeline-service"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__session-service.json",
+      "name": "unit-test-services-session-service"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__test-strategist-service.json",
+      "name": "unit-test-services-test-strategist-service"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__services__ts-analysis-service.json",
+      "name": "unit-test-services-ts-analysis-service"
+    }
+  ]
+}
