@@ -44,26 +44,6 @@ describe('findProjectRoot', () => {
     expect(result).toBe('/home/user/project/src/infrastructures')
   })
 
-  it('calls existsSync exactly once when package.json is in the first directory', () => {
-    vi.mocked(fileURLToPath).mockReturnValue(
-      '/home/user/project/src/infrastructures/projectRoot.ts'
-    )
-    vi.mocked(dirname).mockImplementation((p: string) => {
-      if (p === '/home/user/project/src/infrastructures/projectRoot.ts') {
-        return '/home/user/project/src/infrastructures'
-      }
-      return p
-    })
-    vi.mocked(join).mockImplementation((dir: string) => `${dir}/package.json`)
-    vi.mocked(existsSync).mockImplementation(
-      (p: string) => p === '/home/user/project/src/infrastructures/package.json'
-    )
-
-    findProjectRoot()
-
-    expect(existsSync).toHaveBeenCalledTimes(1)
-  })
-
   it('returns the parent directory when package.json is one level up', () => {
     vi.mocked(fileURLToPath).mockReturnValue(
       '/home/user/project/src/infrastructures/projectRoot.ts'
@@ -82,24 +62,6 @@ describe('findProjectRoot', () => {
     expect(result).toBe('/home/user/project/src')
   })
 
-  it('calls existsSync twice when package.json is one level up', () => {
-    vi.mocked(fileURLToPath).mockReturnValue(
-      '/home/user/project/src/infrastructures/projectRoot.ts'
-    )
-    vi.mocked(dirname).mockImplementation((p: string) => {
-      const parts = p.split('/').filter(Boolean)
-      return '/' + parts.slice(0, -1).join('/')
-    })
-    vi.mocked(join).mockImplementation((dir: string) => `${dir}/package.json`)
-    vi.mocked(existsSync).mockImplementation(
-      (p: string) => p === '/home/user/project/src/package.json'
-    )
-
-    findProjectRoot()
-
-    expect(existsSync).toHaveBeenCalledTimes(2)
-  })
-
   it('returns the ancestor directory when package.json is multiple levels up', () => {
     vi.mocked(fileURLToPath).mockReturnValue('/home/user/project/src/lib/utils/helpers/file.ts')
     vi.mocked(dirname).mockImplementation((p: string) => {
@@ -112,20 +74,6 @@ describe('findProjectRoot', () => {
     const result = findProjectRoot()
 
     expect(result).toBe('/home/user/project')
-  })
-
-  it('calls existsSync 5 times when package.json is 5 levels up', () => {
-    vi.mocked(fileURLToPath).mockReturnValue('/home/user/project/src/lib/utils/helpers/file.ts')
-    vi.mocked(dirname).mockImplementation((p: string) => {
-      const parts = p.split('/').filter(Boolean)
-      return '/' + parts.slice(0, -1).join('/')
-    })
-    vi.mocked(join).mockImplementation((dir: string) => `${dir}/package.json`)
-    vi.mocked(existsSync).mockImplementation((p: string) => p === '/home/user/project/package.json')
-
-    findProjectRoot()
-
-    expect(existsSync).toHaveBeenCalledTimes(5)
   })
 
   it('falls back to process.cwd() when filesystem root is reached before package.json is found', () => {

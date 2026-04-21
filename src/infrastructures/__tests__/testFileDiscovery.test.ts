@@ -81,7 +81,7 @@ describe('testFileDiscovery', () => {
       expect(result).toBe('/tests/level1/level2/myFile.spec.ts')
     })
 
-    it('returns first match when .test file precedes .spec in iteration order', () => {
+    it('prefers .test file over .spec file when both exist', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true)
       ;(fs.readdirSync as ReturnType<typeof vi.fn>).mockReturnValue([
         createMockDirent('myFile.test.ts', false),

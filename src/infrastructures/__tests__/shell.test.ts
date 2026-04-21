@@ -15,15 +15,19 @@ type ExecImpl = (command: string, opts: object, cb: ExecCallback) => void
 
 const mockExec = vi.mocked(exec)
 
+function stubExec(error: (Error & { code?: number }) | null, stdout: string, stderr: string): void {
+  mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
+    cb(error, stdout, stderr)
+  }) as ExecImpl as typeof exec)
+}
+
 describe('execShell', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('resolves with exitCode 0 when exec succeeds', async () => {
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(null, 'stdout text', 'stderr text')
-    }) as ExecImpl as typeof exec)
+    stubExec(null, 'stdout text', 'stderr text')
 
     const result = await execShell('echo hello', '/tmp')
 
@@ -31,9 +35,7 @@ describe('execShell', () => {
   })
 
   it('resolves with stdout from the exec callback', async () => {
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(null, 'hello stdout', '')
-    }) as ExecImpl as typeof exec)
+    stubExec(null, 'hello stdout', '')
 
     const result = await execShell('echo hello', '/tmp')
 
@@ -41,9 +43,7 @@ describe('execShell', () => {
   })
 
   it('resolves with stderr from the exec callback', async () => {
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(null, '', 'hello stderr')
-    }) as ExecImpl as typeof exec)
+    stubExec(null, '', 'hello stderr')
 
     const result = await execShell('echo hello', '/tmp')
 
@@ -51,10 +51,7 @@ describe('execShell', () => {
   })
 
   it('resolves with error.code as exitCode when exec errors with a code', async () => {
-    const error = Object.assign(new Error('command failed'), { code: 127 })
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(error, '', 'command not found')
-    }) as ExecImpl as typeof exec)
+    stubExec(Object.assign(new Error('command failed'), { code: 127 }), '', 'command not found')
 
     const result = await execShell('bad-cmd', '/tmp')
 
@@ -62,10 +59,7 @@ describe('execShell', () => {
   })
 
   it('resolves with exitCode 0 when error exists but code is undefined', async () => {
-    const error = new Error('no exit code') as Error & { code?: number }
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(error, '', '')
-    }) as ExecImpl as typeof exec)
+    stubExec(new Error('no exit code') as Error & { code?: number }, '', '')
 
     const result = await execShell('bad-cmd', '/tmp')
 
@@ -73,10 +67,7 @@ describe('execShell', () => {
   })
 
   it('resolves with stdout even when exec errors', async () => {
-    const error = Object.assign(new Error('partial failure'), { code: 1 })
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(error, 'partial output', '')
-    }) as ExecImpl as typeof exec)
+    stubExec(Object.assign(new Error('partial failure'), { code: 1 }), 'partial output', '')
 
     const result = await execShell('partial-cmd', '/tmp')
 
@@ -84,10 +75,7 @@ describe('execShell', () => {
   })
 
   it('resolves with stderr even when exec errors', async () => {
-    const error = Object.assign(new Error('command failed'), { code: 1 })
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(error, '', 'error diagnostics')
-    }) as ExecImpl as typeof exec)
+    stubExec(Object.assign(new Error('command failed'), { code: 1 }), '', 'error diagnostics')
 
     const result = await execShell('bad-cmd', '/tmp')
 
@@ -95,9 +83,7 @@ describe('execShell', () => {
   })
 
   it('passes the command string to exec', async () => {
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(null, '', '')
-    }) as ExecImpl as typeof exec)
+    stubExec(null, '', '')
 
     await execShell('ls -la', '/tmp')
 
@@ -105,9 +91,7 @@ describe('execShell', () => {
   })
 
   it('passes the cwd option to exec', async () => {
-    mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-      cb(null, '', '')
-    }) as ExecImpl as typeof exec)
+    stubExec(null, '', '')
 
     await execShell('ls', '/home/user')
 

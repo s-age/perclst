@@ -5,7 +5,30 @@ paths:
   - src/**/*.test.ts
 ---
 
+## File placement and size
+
 Test files live at `{dir}/__tests__/{stem}.test.ts` relative to the source file.
+
+When a single test file would exceed **500 lines**, split it into a subdirectory instead of deleting or trimming tests. Do **not** reduce coverage to fit a line limit.
+
+```
+# single file (under 500 lines)
+src/infrastructures/__tests__/claudeCode.test.ts
+
+# split into subdirectory (500+ lines)
+src/infrastructures/__tests__/claudeCode/
+  utils.test.ts          ← small methods (resolveJsonlPath, countJsonlLines, …)
+  buildArgs.test.ts      ← one logical group per file
+  runClaude.test.ts
+  writeMcpConfig.test.ts
+  streamStdout.test.ts
+```
+
+**Splitting rules:**
+- One `describe` group (or a cluster of small related ones) per file
+- Each file declares only the mocks it needs — no shared mock module
+- `vi.hoisted` + `vi.mock` are repeated per file; vitest isolates them automatically
+- The subdirectory name matches the source file stem (`claudeCode/` for `claudeCode.ts`)
 
 ## Imports
 
@@ -143,6 +166,35 @@ Review agents signal failure via a temp file, not exit codes or stdout.
 - The task field includes `ng_output_path: .claude/tmp/<task-name>` — the procedure writes plain-text feedback there **only on failure**.
 - `PipelineService` checks `existsSync` after each agent run: file present → rejection (content becomes feedback, file deleted, engine jumps to rejection target); absent → pass.
 - Always delete the file immediately after reading to prevent stale false rejections on retries.
+
+## Call-count assertions
+
+Only assert call counts when the **number itself is meaningful behavior** — e.g. early-exit (stops after first match) or a retry/loop limit. Do not assert call counts just to confirm the loop ran N times as a side effect of the happy path; that duplicates setup for no coverage gain.
+
+```ts
+// GOOD — count asserts early-exit behavior
+it('stops after first match and does not recurse into subsequent entries', () => {
+  ...
+  expect(fs.readdirSync).toHaveBeenCalledTimes(1)
+})
+
+// BAD — count just mirrors loop depth, adds no new information
+it('calls existsSync twice when package.json is one level up', () => {
+  // identical setup to the return-value test above — delete this
+})
+```
+
+## Test names must express behavior, not implementation
+
+Name tests after the observable contract, not the internal mechanism.
+
+```ts
+// BAD — names the iteration order (implementation detail)
+it('returns first match when .test file precedes .spec in iteration order', ...)
+
+// GOOD — names the specified preference
+it('prefers .test file over .spec file when both exist', ...)
+```
 
 ## No redundant happy-path tests
 
