@@ -18,7 +18,8 @@
       "oneOf": [
         { "$ref": "#/$defs/AgentTask" },
         { "$ref": "#/$defs/ScriptTask" },
-        { "$ref": "#/$defs/NestedPipelineTask" }
+        { "$ref": "#/$defs/NestedPipelineTask" },
+        { "$ref": "#/$defs/ChildPipelineTask" }
       ]
     },
     "RejectedConfig": {
@@ -118,6 +119,27 @@
           "minItems": 1,
           "items": { "$ref": "#/$defs/PipelineTask" },
           "description": "Agent and/or script tasks to run in order."
+        }
+      }
+    },
+    "ChildPipelineTask": {
+      "type": "object",
+      "required": ["type", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "child" },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the child pipeline JSON file. Resolved relative to the parent pipeline file's directory."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for this child pipeline step."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Set to true when this task has completed. Written automatically by the runner."
         }
       }
     }
