@@ -1,7 +1,6 @@
 import type { AnalyzeResult, RewindTurn, ClaudeCodeTurn } from '@src/types/analysis'
 import type { TurnRow, RowFilter } from '@src/types/display'
 import type { IAnalyzeDomain } from '@src/domains/ports/analysis'
-import { flattenTurns, applyRowFilter } from '@src/domains/turns'
 
 export type { AnalyzeResult, RewindTurn }
 
@@ -17,7 +16,7 @@ export class AnalyzeService {
   }
 
   formatTurns(turns: ClaudeCodeTurn[], filter: RowFilter): TurnRow[] {
-    return applyRowFilter(flattenTurns(turns), filter)
+    return this.domain.formatTurns(turns, filter)
   }
 
   async resolveTurnByIndex(sessionId: string, index: number): Promise<string | undefined> {

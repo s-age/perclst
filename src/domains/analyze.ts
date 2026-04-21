@@ -4,9 +4,11 @@ import type {
   ClaudeCodeTurn,
   RewindTurn
 } from '@src/types/analysis'
+import type { TurnRow, RowFilter } from '@src/types/display'
 import type { IAnalyzeDomain } from '@src/domains/ports/analysis'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
+import { flattenTurns, applyRowFilter } from '@src/domains/turns'
 
 export function buildSummaryStats(turns: ClaudeCodeTurn[]): {
   turnsBreakdown: AnalysisSummary['turnsBreakdown']
@@ -63,6 +65,10 @@ export class AnalyzeDomain implements IAnalyzeDomain {
     const { turnsBreakdown, toolUses } = buildSummaryStats(turns)
     const summary: AnalysisSummary = { turns, turnsBreakdown, toolUses, tokens }
     return { session, summary }
+  }
+
+  formatTurns(turns: ClaudeCodeTurn[], filter: RowFilter): TurnRow[] {
+    return applyRowFilter(flattenTurns(turns), filter)
   }
 
   async getRewindTurns(sessionId: string): Promise<RewindTurn[]> {

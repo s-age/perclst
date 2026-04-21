@@ -1,15 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AnalyzeService } from '../analyzeService'
-import { flattenTurns, applyRowFilter } from '@src/domains/turns'
 import type { AnalyzeResult, RewindTurn, ClaudeCodeTurn } from '@src/types/analysis'
 import type { TurnRow, RowFilter } from '@src/types/display'
 import type { IAnalyzeDomain } from '@src/domains/ports/analysis'
 import type { Session } from '@src/types/session'
-
-vi.mock('@src/domains/turns', () => ({
-  flattenTurns: vi.fn(),
-  applyRowFilter: vi.fn()
-}))
 
 const mockSession: Session = {
   id: 'session-123',
@@ -76,7 +70,8 @@ const mockRewindTurns: RewindTurn[] = [
 function makeMockDomain(): IAnalyzeDomain {
   return {
     analyze: vi.fn().mockResolvedValue(mockAnalyzeResult),
-    getRewindTurns: vi.fn().mockResolvedValue(mockRewindTurns)
+    getRewindTurns: vi.fn().mockResolvedValue(mockRewindTurns),
+    formatTurns: vi.fn()
   }
 }
 
@@ -159,26 +154,19 @@ describe('AnalyzeService', () => {
 
   describe('formatTurns', () => {
     const mockTurns: ClaudeCodeTurn[] = [{ toolCalls: [], userMessage: 'hello' }]
-    const flatRows: TurnRow[] = [{ n: 1, role: 'user', content: 'hello' }]
     const filteredRows: TurnRow[] = [{ n: 1, role: 'user', content: 'hello' }]
     const filter: RowFilter = { head: 10 }
 
     beforeEach(() => {
-      vi.mocked(flattenTurns).mockReturnValue(flatRows)
-      vi.mocked(applyRowFilter).mockReturnValue(filteredRows)
+      vi.mocked(domain.formatTurns).mockReturnValue(filteredRows)
     })
 
-    it('passes turns to flattenTurns', () => {
+    it('delegates to domain with turns and filter', () => {
       service.formatTurns(mockTurns, filter)
-      expect(flattenTurns).toHaveBeenCalledWith(mockTurns)
+      expect(domain.formatTurns).toHaveBeenCalledWith(mockTurns, filter)
     })
 
-    it('passes flattenTurns result and filter to applyRowFilter', () => {
-      service.formatTurns(mockTurns, filter)
-      expect(applyRowFilter).toHaveBeenCalledWith(flatRows, filter)
-    })
-
-    it('returns applyRowFilter result', () => {
+    it('returns domain result', () => {
       const result = service.formatTurns(mockTurns, filter)
       expect(result).toBe(filteredRows)
     })
