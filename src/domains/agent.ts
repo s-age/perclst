@@ -20,7 +20,7 @@ export class AgentDomain implements IAgentDomain {
   ): Promise<AgentResponse> {
     let systemPrompt: string | undefined
     if (session.procedure) {
-      systemPrompt = this.procedureRepo.load(session.procedure)
+      systemPrompt = this.procedureRepo.load(session.procedure, session.working_dir)
       debug.print('Loaded procedure', { procedure: session.procedure })
     }
 

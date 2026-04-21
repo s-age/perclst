@@ -45,7 +45,7 @@ describe('AgentDomain', () => {
     const response = await domain.run(session, 'Hello', false)
 
     expect(response.content).toBe('Mock response')
-    expect(procedureRepo.load).toHaveBeenCalledWith('conductor')
+    expect(procedureRepo.load).toHaveBeenCalledWith('conductor', '/tmp')
     expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'start',
