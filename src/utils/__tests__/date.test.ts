@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import dayjs from 'dayjs'
 import { now, toISO, toLocaleString, toTimestamp } from '../date'
 
 const FIXED_ISO = '2024-06-15T12:00:00.000Z'
@@ -48,6 +49,17 @@ describe('toISO', () => {
     const other = now().add(1, 'hour')
     expect(toISO(other)).toBe('2024-06-15T13:00:00.000Z')
   })
+
+  it('returns ISO string for Unix epoch', () => {
+    const epoch = dayjs('1970-01-01T00:00:00.000Z')
+    expect(toISO(epoch)).toBe('1970-01-01T00:00:00.000Z')
+  })
+
+  it('returns ISO string for far future date', () => {
+    const future = dayjs('2100-12-31T23:59:59.999Z')
+    const result = toISO(future)
+    expect(result).toBe('2100-12-31T23:59:59.999Z')
+  })
 })
 
 describe('toLocaleString', () => {
@@ -67,6 +79,23 @@ describe('toLocaleString', () => {
     const b = toLocaleString('2024-12-31T23:59:59.000Z')
     expect(a).not.toBe(b)
   })
+
+  it('handles Unix epoch (1970-01-01)', () => {
+    const result = toLocaleString('1970-01-01T00:00:00.000Z')
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('handles far future date (year 2100)', () => {
+    const result = toLocaleString('2100-12-31T23:59:59.000Z')
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('handles invalid ISO string gracefully', () => {
+    const result = toLocaleString('not-a-valid-iso')
+    expect(typeof result).toBe('string')
+  })
 })
 
 describe('toTimestamp', () => {
@@ -82,5 +111,19 @@ describe('toTimestamp', () => {
     const t1 = toTimestamp('2024-01-01T00:00:00.000Z')
     const t2 = toTimestamp('2024-01-02T00:00:00.000Z')
     expect(t2 - t1).toBe(86400000)
+  })
+
+  it('returns 0 for Unix epoch', () => {
+    expect(toTimestamp('1970-01-01T00:00:00.000Z')).toBe(0)
+  })
+
+  it('returns a positive number for dates after epoch', () => {
+    const timestamp = toTimestamp('2024-06-15T12:00:00.000Z')
+    expect(timestamp).toBeGreaterThan(0)
+  })
+
+  it('returns NaN for invalid ISO string', () => {
+    const timestamp = toTimestamp('not-a-valid-iso')
+    expect(Number.isNaN(timestamp)).toBe(true)
   })
 })
