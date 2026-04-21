@@ -12,4 +12,12 @@ export class PermissionPipeDomain implements IPermissionPipeDomain {
   respond(result: PermissionResult): void {
     this.repo.respond(result)
   }
+
+  async askPermission(args: {
+    tool_name: string
+    input: Record<string, unknown>
+    tool_use_id?: string
+  }): Promise<PermissionResult> {
+    return this.repo.askPermission(args)
+  }
 }

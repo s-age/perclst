@@ -1,11 +1,11 @@
 import type { IPipelineFileDomain } from '@src/domains/ports/pipelineFile'
-import type { IFileMoveRepository } from '@src/repositories/ports/fileMove'
+import type { IPipelineFileRepository } from '@src/repositories/ports/fileMove'
 import type { IGitRepository } from '@src/repositories/ports/git'
 import { resolve, dirname, basename, join } from '@src/utils/path'
 
 export class PipelineFileDomain implements IPipelineFileDomain {
   constructor(
-    private readonly fileMoveRepo: IFileMoveRepository,
+    private readonly fileMoveRepo: IPipelineFileRepository,
     private readonly gitRepo: IGitRepository
   ) {}
 
@@ -61,11 +61,7 @@ export class PipelineFileDomain implements IPipelineFileDomain {
   }
 
   cleanTmpDir(): void {
-    try {
-      this.gitRepo.removeGlob('.claude/tmp/*')
-    } catch {
-      // ignore
-    }
+    this.fileMoveRepo.cleanDir('.claude/tmp/')
   }
 
   loadRawPipeline(absolutePath: string): unknown {

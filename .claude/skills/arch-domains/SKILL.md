@@ -118,6 +118,8 @@ export class AnalyzeDomain {
 - Never import from `cli`, `services`, or `infrastructures` — `infrastructures` access must go through `repositories`
 - Never import `zod` — validation is the validators layer's exclusive responsibility
 - Never access the file system, spawn processes, or call external APIs directly — delegate to repository functions or injected repository interfaces
+- Never read `process.env` — environment configuration is infrastructure state; routing or branching based on env vars belongs in the repository implementation, not the domain
+- Never expose transport variants (e.g. `askViaIPC` / `askViaTTY`) in a repository port — the port must expose a single abstract method; which transport is used is an implementation detail of the repository class
 - Never define a port type (`IXxx`) in a domain implementation file — domain ports belong in `src/domains/ports/`, repository ports in `src/repositories/ports/`
 - Never import a concrete repository class — inject the interface or call exported functions; never `new XxxRepository()` inside a domain
 - Never call `services` — domains sit below services in the dependency chain

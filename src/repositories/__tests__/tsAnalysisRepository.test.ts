@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { TsAnalysisRepository } from '../tsAnalysisRepository'
 import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
@@ -6,7 +6,7 @@ describe('TsAnalysisRepository', () => {
   let repo: TsAnalysisRepository
 
   describe('getReferences', () => {
-    beforeEach(() => {
+    beforeAll(() => {
       repo = new TsAnalysisRepository(new TsAnalyzer())
     })
 
