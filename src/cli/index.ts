@@ -16,6 +16,7 @@ import { runCommand } from './commands/run'
 import { curateCommand } from './commands/curate'
 import { inspectCommand } from './commands/inspect'
 import { retrieveCommand } from './commands/retrieve'
+import { surveyCommand } from './commands/survey'
 import { assertNoSingleDashMultiCharOptions } from '@src/validators/cli/argFormat'
 import { setupContainer } from '@src/core/di/setup'
 
@@ -192,6 +193,15 @@ program
   .description('Search the knowledge base for one or more keywords')
   .argument('<keywords...>', 'Keywords to search for')
   .action(retrieveCommand)
+
+// Survey command
+program
+  .command('survey')
+  .description('Survey the codebase for bug investigation or pre-implementation research')
+  .argument('[query]', 'Natural-language query describing what to investigate')
+  .option('--refresh', 'Refresh codebase catalogs from current source')
+  .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
+  .action(surveyCommand)
 
 // Inspect command
 program
