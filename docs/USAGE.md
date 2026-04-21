@@ -206,6 +206,27 @@ perclst start "Promote all entries in knowledge/draft/ into structured knowledge
   --output-only
 ```
 
+## `retrieve`
+
+Search the project knowledge base for one or more keywords and return a structured summary of findings. Shorthand for running the `meta-retrieve-knowledge` procedure with `--output-only`.
+
+```bash
+perclst retrieve "keyword"
+perclst retrieve "keyword1" "keyword2" "keyword3"
+```
+
+Use this before starting a design or implementation task to surface prior decisions, gotchas, and patterns recorded in `knowledge/`.
+
+Equivalent to:
+
+```bash
+perclst start "Search the knowledge base for the following keywords and return a structured summary of findings: keyword1, keyword2" \
+  --procedure meta-retrieve-knowledge \
+  --output-only
+```
+
+> `--output-only` is not a CLI flag on `retrieve` — it is applied internally. `perclst retrieve "kw" --output-only` will error.
+
 ## `run`
 
 Execute a pipeline of agent tasks defined in a JSON file. Tasks run serially. If a task specifies a `name` and a session with that name already exists, the task resumes that session; otherwise a new session is created.

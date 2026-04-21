@@ -15,6 +15,7 @@ import { rewindCommand } from './commands/rewind'
 import { runCommand } from './commands/run'
 import { curateCommand } from './commands/curate'
 import { inspectCommand } from './commands/inspect'
+import { retrieveCommand } from './commands/retrieve'
 import { assertNoSingleDashMultiCharOptions } from '@src/validators/cli/argFormat'
 import { setupContainer } from '@src/core/di/setup'
 
@@ -184,6 +185,13 @@ program
   .command('curate')
   .description('Promote all knowledge/draft/ entries into structured knowledge/ files')
   .action(curateCommand)
+
+// Retrieve command
+program
+  .command('retrieve')
+  .description('Search the knowledge base for one or more keywords')
+  .argument('<keywords...>', 'Keywords to search for')
+  .action(retrieveCommand)
 
 // Inspect command
 program
