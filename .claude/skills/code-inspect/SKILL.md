@@ -18,12 +18,18 @@ When inspecting a diff, work through these steps in order:
    - Large blocks of commented-out code added in this diff
    - Temporary or generated files that should not be committed (`.env`, `*.log`, `dist/`, `node_modules/`)
 
-4. **Classify each finding** using exactly one severity label:
-   - `CRITICAL` — sensitive data leak; must block push
+4. **Check for architecture violations** in changed `.ts` files under `src/`:
+   - Identify which layer each changed file belongs to (cli / validators / services / domains / repositories / infrastructures / utils / types)
+   - Check added import lines against the unidirectional import rules from the `arch` skill
+   - Flag any import that a layer is forbidden from making (e.g. `cli` importing `repositories`, `services` importing `infrastructures`)
+   - Classify as `CRITICAL` — architecture violations break the layer contract and must be fixed before push
+
+5. **Classify each finding** using exactly one severity label:
+   - `CRITICAL` — sensitive data leak or architecture violation; must block push
    - `WARNING` — likely unintentional (debug log, temp file, commented-out block)
    - `INFO` — minor issue worth noting but not blocking
 
-5. **Write the report** in this format:
+6. **Write the report** in this format:
 
    ```
    ## Inspection Report

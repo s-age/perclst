@@ -7,7 +7,8 @@ flowchart TD
     Start([Start]) --> ReadDiff[Read the git diff from the task]
     ReadDiff --> ReviewCode[Review code changes for quality issues]
     ReviewCode --> CheckSensitive[Check for sensitive data leaks]
-    CheckSensitive --> AnyIssues{Issues found?}
+    CheckSensitive --> CheckArch[Check for architecture violations in changed TypeScript files]
+    CheckArch --> AnyIssues{Issues found?}
     AnyIssues -- Yes --> Report[Report findings by severity]
     AnyIssues -- No --> Clean[Report clean — no issues found]
     Report --> HasCritical{Any CRITICAL issues?}
@@ -18,3 +19,4 @@ flowchart TD
 ```
 
 Consult the `code-inspect` skill for inspection criteria, severity classification, and report format.
+Consult the `arch` skill for layer definitions and unidirectional import rules when checking architecture violations.
