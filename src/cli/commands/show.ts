@@ -9,18 +9,17 @@ import { toLocaleString } from '@src/utils/date'
 import { flattenTurns, applyRowFilter } from '@src/utils/turns'
 import { parseShowSession } from '@src/validators/cli/showSession'
 
-const CONTENT_MAX = 120
-
 type RawShowOptions = {
   format?: string
   order?: string
   head?: string
   tail?: string
+  length?: string
 }
 
-function truncate(text: string): string {
+function truncate(text: string, max: number): string {
   const single = ansis.strip(text).replace(/\n/g, ' ')
-  return single.length > CONTENT_MAX ? single.slice(0, CONTENT_MAX - 1) + '…' : single
+  return single.length > max ? single.slice(0, max - 1) + '…' : single
 }
 
 export async function showCommand(sessionId: string, options: RawShowOptions) {
@@ -62,13 +61,15 @@ export async function showCommand(sessionId: string, options: RawShowOptions) {
     }
 
     stdout.print('')
-    const table = new Table({
+    const tableOpts: ConstructorParameters<typeof Table>[0] = {
       head: ['N', 'role', 'content'],
-      style: { head: [], border: [] },
-      colWidths: [5, 13, CONTENT_MAX + 4]
-    })
+      style: { head: [], border: [] }
+    }
+    if (input.length !== undefined) tableOpts.colWidths = [5, 13, input.length + 4]
+    const table = new Table(tableOpts)
     for (const row of rows) {
-      table.push([String(row.n), row.role, truncate(row.content)])
+      const content = input.length !== undefined ? truncate(row.content, input.length) : row.content
+      table.push([String(row.n), row.role, content])
     }
     stdout.print(table.toString())
   } catch (error) {

@@ -82,14 +82,16 @@ perclst show <session> --format json      # includes thoughts and tool_history
 # Filter turns
 perclst show <session> --tail 30          # last 30 turns (useful for reviewing failures)
 perclst show <session> --head 10          # first 10 turns
-perclst show <session> --tail 30 --order desc   # last 30 turns, newest first
+perclst show <session> --tail 30 --order desc       # last 30 rows, newest first
+perclst show <session> --tail 30 --length 120       # last 30 rows, truncated to 120 chars
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--head <n>` | Show first N turns |
-| `--tail <n>` | Show last N turns |
-| `--order <asc\|desc>` | Turn display order (default: `asc`) |
+| `--head <n>` | Show first N rows |
+| `--tail <n>` | Show last N rows |
+| `--order <asc\|desc>` | Row display order (default: `asc`) |
+| `--length <n>` | Truncate content to N characters (default: full) |
 
 ## `analyze`
 

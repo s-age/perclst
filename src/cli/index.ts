@@ -119,6 +119,7 @@ program
   .option('--head <n>', 'Show first N turns')
   .option('--tail <n>', 'Show last N turns')
   .option('--order <order>', 'Turn display order (asc|desc)', 'asc')
+  .option('--length <n>', 'Truncate content to N characters')
   .action(showCommand)
 
 // Analyze command
