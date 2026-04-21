@@ -21,12 +21,14 @@
     {
       "type": "child",
       "path": "unit-test__repositories__config.json",
-      "name": "unit-test-repositories-config"
+      "name": "unit-test-repositories-config",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__repositories__file-move-repository.json",
-      "name": "unit-test-repositories-file-move-repository"
+      "name": "unit-test-repositories-file-move-repository",
+      "done": true
     },
     {
       "type": "child",
