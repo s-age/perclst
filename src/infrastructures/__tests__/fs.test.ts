@@ -2,6 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import * as fsSync from 'fs'
 import * as fsPromises from 'fs/promises'
 import * as os from 'os'
+import { join } from 'path'
 import {
   readJson,
   writeJson,
@@ -10,6 +11,11 @@ import {
   listFiles,
   ensureDir,
   readText,
+  writeText,
+  removeFileSync,
+  cleanDir,
+  listDirEntries,
+  isDirectory,
   homeDir,
   currentWorkingDir
 } from '../fs'
@@ -21,7 +27,7 @@ vi.mock('os')
 
 describe('fs module', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   describe('readJson', () => {
@@ -46,7 +52,7 @@ describe('fs module', () => {
         throw new Error('ENOENT: no such file or directory')
       })
 
-      expect(() => readJson('/nonexistent.json')).toThrow()
+      expect(() => readJson('/nonexistent.json')).toThrow('ENOENT')
     })
   })
 
@@ -69,7 +75,7 @@ describe('fs module', () => {
       writeJson('/path/to/file.json', mockData)
 
       const writtenContent = vi.mocked(fsSync.writeFileSync).mock.calls[0][1]
-      expect(writtenContent).toContain('\n')
+      expect(writtenContent).toContain('  "a"')
     })
 
     it('should throw error when write fails', () => {
@@ -112,7 +118,7 @@ describe('fs module', () => {
     it('should reject when file does not exist', async () => {
       vi.mocked(fsPromises.unlink).mockRejectedValue(new Error('ENOENT: no such file or directory'))
 
-      await expect(removeFile('/nonexistent.json')).rejects.toThrow()
+      await expect(removeFile('/nonexistent.json')).rejects.toThrow('ENOENT')
     })
 
     it('should reject when permission denied', async () => {
@@ -220,7 +226,188 @@ describe('fs module', () => {
         throw new Error('ENOENT: no such file or directory')
       })
 
-      expect(() => readText('/nonexistent.txt')).toThrow()
+      expect(() => readText('/nonexistent.txt')).toThrow('ENOENT')
+    })
+  })
+
+  describe('writeText', () => {
+    it('should write content to file with utf-8 encoding', () => {
+      writeText('/path/to/file.txt', 'hello world')
+
+      expect(fsSync.writeFileSync).toHaveBeenCalledWith('/path/to/file.txt', 'hello world', 'utf-8')
+    })
+
+    it('should write empty string content', () => {
+      writeText('/path/to/file.txt', '')
+
+      expect(fsSync.writeFileSync).toHaveBeenCalledWith('/path/to/file.txt', '', 'utf-8')
+    })
+
+    it('should throw when writeFileSync throws', () => {
+      vi.mocked(fsSync.writeFileSync).mockImplementation(() => {
+        throw new Error('EACCES: permission denied')
+      })
+
+      expect(() => writeText('/restricted/file.txt', 'content')).toThrow()
+    })
+  })
+
+  describe('removeFileSync', () => {
+    it('should call unlinkSync with the given path', () => {
+      removeFileSync('/path/to/file.txt')
+
+      expect(fsSync.unlinkSync).toHaveBeenCalledWith('/path/to/file.txt')
+    })
+
+    it('should throw when the file does not exist', () => {
+      vi.mocked(fsSync.unlinkSync).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory')
+      })
+
+      expect(() => removeFileSync('/nonexistent.txt')).toThrow('ENOENT')
+    })
+
+    it('should throw when permission is denied', () => {
+      vi.mocked(fsSync.unlinkSync).mockImplementation(() => {
+        throw new Error('EACCES: permission denied')
+      })
+
+      expect(() => removeFileSync('/restricted/file.txt')).toThrow('permission denied')
+    })
+  })
+
+  describe('cleanDir', () => {
+    it('should call unlinkSync for each file in the directory', () => {
+      const entry = { isFile: () => true, name: 'file.txt' }
+      vi.mocked(fsSync.existsSync).mockReturnValue(true)
+      vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
+        typeof fsSync.readdirSync
+      >)
+
+      cleanDir('/some/dir')
+
+      expect(fsSync.unlinkSync).toHaveBeenCalledWith(join('/some/dir', 'file.txt'))
+    })
+
+    it('should return early without reading dir when directory does not exist', () => {
+      vi.mocked(fsSync.existsSync).mockReturnValue(false)
+
+      cleanDir('/nonexistent/dir')
+
+      expect(fsSync.readdirSync).not.toHaveBeenCalled()
+    })
+
+    it('should not call unlinkSync when directory is empty', () => {
+      vi.mocked(fsSync.existsSync).mockReturnValue(true)
+      vi.mocked(fsSync.readdirSync).mockReturnValue(
+        [] as unknown as ReturnType<typeof fsSync.readdirSync>
+      )
+
+      cleanDir('/empty/dir')
+
+      expect(fsSync.unlinkSync).not.toHaveBeenCalled()
+    })
+
+    it('should not call unlinkSync for non-file entries', () => {
+      const entry = { isFile: () => false, name: 'subdir' }
+      vi.mocked(fsSync.existsSync).mockReturnValue(true)
+      vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
+        typeof fsSync.readdirSync
+      >)
+
+      cleanDir('/some/dir')
+
+      expect(fsSync.unlinkSync).not.toHaveBeenCalled()
+    })
+
+    it('should continue without throwing when unlinkSync throws for a locked file', () => {
+      const entry = { isFile: () => true, name: 'locked.txt' }
+      vi.mocked(fsSync.existsSync).mockReturnValue(true)
+      vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
+        typeof fsSync.readdirSync
+      >)
+      vi.mocked(fsSync.unlinkSync).mockImplementation(() => {
+        throw new Error('EBUSY: resource busy or locked')
+      })
+
+      expect(() => cleanDir('/some/dir')).not.toThrow()
+    })
+
+    it('should delete multiple files in the directory', () => {
+      const entries = [
+        { isFile: () => true, name: 'a.txt' },
+        { isFile: () => true, name: 'b.txt' }
+      ]
+      vi.mocked(fsSync.existsSync).mockReturnValue(true)
+      vi.mocked(fsSync.readdirSync).mockReturnValue(
+        entries as unknown as ReturnType<typeof fsSync.readdirSync>
+      )
+
+      cleanDir('/some/dir')
+
+      expect(fsSync.unlinkSync).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('listDirEntries', () => {
+    it('should return Dirent entries from the directory', () => {
+      const entry = { isFile: () => true, name: 'file.txt' }
+      vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
+        typeof fsSync.readdirSync
+      >)
+
+      const result = listDirEntries('/some/dir')
+
+      expect(result).toEqual([entry])
+      expect(fsSync.readdirSync).toHaveBeenCalledWith('/some/dir', { withFileTypes: true })
+    })
+
+    it('should return empty array when directory is empty', () => {
+      vi.mocked(fsSync.readdirSync).mockReturnValue(
+        [] as unknown as ReturnType<typeof fsSync.readdirSync>
+      )
+
+      const result = listDirEntries('/empty/dir')
+
+      expect(result).toEqual([])
+    })
+
+    it('should throw when directory does not exist', () => {
+      vi.mocked(fsSync.readdirSync).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory')
+      })
+
+      expect(() => listDirEntries('/nonexistent')).toThrow('ENOENT')
+    })
+  })
+
+  describe('isDirectory', () => {
+    it('should return true when path is a directory', () => {
+      vi.mocked(fsSync.statSync).mockReturnValue({ isDirectory: () => true } as ReturnType<
+        typeof fsSync.statSync
+      >)
+
+      const result = isDirectory('/some/dir')
+
+      expect(result).toBe(true)
+    })
+
+    it('should return false when path is a file', () => {
+      vi.mocked(fsSync.statSync).mockReturnValue({ isDirectory: () => false } as ReturnType<
+        typeof fsSync.statSync
+      >)
+
+      const result = isDirectory('/some/file.txt')
+
+      expect(result).toBe(false)
+    })
+
+    it('should throw when statSync throws', () => {
+      vi.mocked(fsSync.statSync).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory')
+      })
+
+      expect(() => isDirectory('/nonexistent')).toThrow()
     })
   })
 
@@ -234,33 +421,21 @@ describe('fs module', () => {
       expect(os.homedir).toHaveBeenCalled()
     })
 
-    it('should return path with correct user', () => {
-      vi.mocked(os.homedir).mockReturnValue('/Users/testuser')
+    it('should call os.homedir exactly once', () => {
+      vi.mocked(os.homedir).mockReturnValue('/home/testuser')
 
-      const result = homeDir()
+      homeDir()
 
-      expect(result).toBe('/Users/testuser')
+      expect(os.homedir).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('currentWorkingDir', () => {
-    it('should return current working directory', () => {
-      const originalCwd = process.cwd
+    it('should return the current working directory', () => {
+      vi.spyOn(process, 'cwd').mockReturnValue('/mocked/cwd')
 
-      expect(currentWorkingDir()).toBe(originalCwd())
-    })
-
-    it('should return absolute path', () => {
-      const result = currentWorkingDir()
-
-      expect(result).toBe(process.cwd())
-    })
-
-    it('should return a string', () => {
-      const result = currentWorkingDir()
-
-      expect(typeof result).toBe('string')
-      expect(result.length).toBeGreaterThan(0)
+      expect(currentWorkingDir()).toBe('/mocked/cwd')
+      expect(process.cwd).toHaveBeenCalled()
     })
   })
 })

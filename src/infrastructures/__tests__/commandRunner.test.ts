@@ -25,35 +25,101 @@ describe('runCommand', () => {
     vi.clearAllMocks()
   })
 
-  it('should return stdout, stderr, and exitCode 0 on successful command execution', async () => {
-    mocks.execAsync.mockResolvedValueOnce({
-      stdout: 'Success output',
-      stderr: ''
-    })
+  // ── Happy path ──────────────────────────────────────────────────────────────
+
+  it('should return exitCode 0 on successful execution', async () => {
+    mocks.execAsync.mockResolvedValueOnce({ stdout: 'Success output', stderr: '' })
 
     const result = await commandRunner.runCommand('echo hello', '/tmp')
 
-    expect(result).toEqual<RawCommandOutput>({
-      stdout: 'Success output',
-      stderr: '',
-      exitCode: 0
-    })
+    expect(result.exitCode).toBe(0)
   })
 
-  it('should return exitCode 0 when command succeeds with both stdout and stderr', async () => {
-    mocks.execAsync.mockResolvedValueOnce({
-      stdout: 'output',
-      stderr: 'warning'
-    })
+  it('should return stdout from successful execution', async () => {
+    mocks.execAsync.mockResolvedValueOnce({ stdout: 'Success output', stderr: '' })
+
+    const result = await commandRunner.runCommand('echo hello', '/tmp')
+
+    expect(result.stdout).toBe('Success output')
+  })
+
+  it('should return stderr from successful execution', async () => {
+    mocks.execAsync.mockResolvedValueOnce({ stdout: 'output', stderr: 'warning' })
 
     const result = await commandRunner.runCommand('npm run build', '/home/user')
 
-    expect(result.exitCode).toBe(0)
-    expect(result.stdout).toBe('output')
     expect(result.stderr).toBe('warning')
   })
 
-  it('should handle error with all error properties present', async () => {
+  it('should pass command to execAsync', async () => {
+    mocks.execAsync.mockResolvedValueOnce({ stdout: 'done', stderr: '' })
+
+    await commandRunner.runCommand('ls', '/home/user/project')
+
+    expect(mocks.execAsync).toHaveBeenCalledWith('ls', expect.any(Object))
+  })
+
+  it('should pass cwd option to execAsync', async () => {
+    mocks.execAsync.mockResolvedValueOnce({ stdout: 'done', stderr: '' })
+
+    await commandRunner.runCommand('ls', '/home/user/project')
+
+    expect(mocks.execAsync).toHaveBeenCalledWith(expect.any(String), {
+      cwd: '/home/user/project',
+      encoding: 'utf-8'
+    })
+  })
+
+  it('should pass encoding utf-8 to execAsync', async () => {
+    mocks.execAsync.mockResolvedValueOnce({ stdout: 'done', stderr: '' })
+
+    await commandRunner.runCommand('ls', '/tmp')
+
+    expect(mocks.execAsync).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ encoding: 'utf-8' })
+    )
+  })
+
+  // ── Error path: full error object ───────────────────────────────────────────
+
+  it('should return stdout from error object when command fails', async () => {
+    mocks.execAsync.mockRejectedValueOnce({
+      stdout: 'partial output',
+      stderr: 'error message',
+      code: 127
+    })
+
+    const result = await commandRunner.runCommand('invalid-command', '/tmp')
+
+    expect(result.stdout).toBe('partial output')
+  })
+
+  it('should return stderr from error object when command fails', async () => {
+    mocks.execAsync.mockRejectedValueOnce({
+      stdout: 'partial output',
+      stderr: 'error message',
+      code: 127
+    })
+
+    const result = await commandRunner.runCommand('invalid-command', '/tmp')
+
+    expect(result.stderr).toBe('error message')
+  })
+
+  it('should return exit code from error object when command fails', async () => {
+    mocks.execAsync.mockRejectedValueOnce({
+      stdout: 'partial output',
+      stderr: 'error message',
+      code: 127
+    })
+
+    const result = await commandRunner.runCommand('invalid-command', '/tmp')
+
+    expect(result.exitCode).toBe(127)
+  })
+
+  it('should return the full RawCommandOutput shape on error', async () => {
     mocks.execAsync.mockRejectedValueOnce({
       stdout: 'partial output',
       stderr: 'error message',
@@ -69,77 +135,50 @@ describe('runCommand', () => {
     })
   })
 
-  it('should use empty string for stdout when error object lacks stdout property', async () => {
-    mocks.execAsync.mockRejectedValueOnce({
-      stderr: 'error occurred',
-      code: 1
-    })
+  // ── Error path: missing stdout ───────────────────────────────────────────────
+
+  it('should default stdout to empty string when error object lacks stdout', async () => {
+    mocks.execAsync.mockRejectedValueOnce({ stderr: 'error occurred', code: 1 })
 
     const result = await commandRunner.runCommand('bad-command', '/tmp')
 
     expect(result.stdout).toBe('')
-    expect(result.stderr).toBe('error occurred')
-    expect(result.exitCode).toBe(1)
   })
 
-  it('should use empty string for stderr when error object lacks stderr property', async () => {
-    mocks.execAsync.mockRejectedValueOnce({
-      stdout: 'some output',
-      code: 2
-    })
+  // ── Error path: missing stderr ───────────────────────────────────────────────
+
+  it('should default stderr to empty string when error object lacks stderr', async () => {
+    mocks.execAsync.mockRejectedValueOnce({ stdout: 'some output', code: 2 })
 
     const result = await commandRunner.runCommand('another-bad-command', '/tmp')
 
-    expect(result.stdout).toBe('some output')
     expect(result.stderr).toBe('')
-    expect(result.exitCode).toBe(2)
   })
 
-  it('should default exit code to 1 when error object lacks code property', async () => {
-    mocks.execAsync.mockRejectedValueOnce({
-      stdout: 'output',
-      stderr: 'error'
-    })
+  // ── Error path: missing code ─────────────────────────────────────────────────
+
+  it('should default exitCode to 1 when error object lacks code', async () => {
+    mocks.execAsync.mockRejectedValueOnce({ stdout: 'output', stderr: 'error' })
 
     const result = await commandRunner.runCommand('cmd', '/tmp')
 
     expect(result.exitCode).toBe(1)
-    expect(result.stdout).toBe('output')
-    expect(result.stderr).toBe('error')
   })
 
-  it('should handle error object with all properties missing', async () => {
+  // ── Error path: completely empty error object ────────────────────────────────
+
+  it('should default all fields when error object is empty', async () => {
     mocks.execAsync.mockRejectedValueOnce({})
 
     const result = await commandRunner.runCommand('test-cmd', '/tmp')
 
-    expect(result).toEqual<RawCommandOutput>({
-      stdout: '',
-      stderr: '',
-      exitCode: 1
-    })
+    expect(result).toEqual<RawCommandOutput>({ stdout: '', stderr: '', exitCode: 1 })
   })
 
-  it('should pass command and cwd options to execAsync', async () => {
-    mocks.execAsync.mockResolvedValueOnce({
-      stdout: 'done',
-      stderr: ''
-    })
+  // ── Error path: non-zero exit codes preserved ────────────────────────────────
 
-    await commandRunner.runCommand('ls', '/home/user/project')
-
-    expect(mocks.execAsync).toHaveBeenCalledWith('ls', {
-      cwd: '/home/user/project',
-      encoding: 'utf-8'
-    })
-  })
-
-  it('should preserve non-zero exit codes from failed commands', async () => {
-    mocks.execAsync.mockRejectedValueOnce({
-      stdout: '',
-      stderr: 'Command failed',
-      code: 2
-    })
+  it('should preserve exit code 2 from failed command', async () => {
+    mocks.execAsync.mockRejectedValueOnce({ stdout: '', stderr: 'Command failed', code: 2 })
 
     const result = await commandRunner.runCommand('npm test', '/tmp')
 
