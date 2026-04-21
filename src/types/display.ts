@@ -5,3 +5,11 @@ export type DisplayOptions = {
   outputOnly?: boolean
   format?: 'text' | 'json'
 }
+
+export type TurnRow = { n: number; role: string; content: string }
+
+export type RowFilter = {
+  head?: number
+  tail?: number
+  order?: 'asc' | 'desc'
+}

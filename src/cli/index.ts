@@ -116,6 +116,9 @@ program
   .description('Show session details')
   .argument('<session-id>', 'Session ID')
   .option('-f, --format <format>', 'Output format (text|json)', 'text')
+  .option('--head <n>', 'Show first N turns')
+  .option('--tail <n>', 'Show last N turns')
+  .option('--order <order>', 'Turn display order (asc|desc)', 'asc')
   .action(showCommand)
 
 // Analyze command

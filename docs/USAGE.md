@@ -77,8 +77,19 @@ Show session details.
 
 ```bash
 perclst show <session>
-perclst show <session> --format json   # includes thoughts and tool_history
+perclst show <session> --format json      # includes thoughts and tool_history
+
+# Filter turns
+perclst show <session> --tail 30          # last 30 turns (useful for reviewing failures)
+perclst show <session> --head 10          # first 10 turns
+perclst show <session> --tail 30 --order desc   # last 30 turns, newest first
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--head <n>` | Show first N turns |
+| `--tail <n>` | Show last N turns |
+| `--order <asc\|desc>` | Turn display order (default: `asc`) |
 
 ## `analyze`
 
