@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "unit-test__domains__knowledge-search.json",
+      "name": "unit-test-domains-knowledge-search"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__permission-pipe.json",
+      "name": "unit-test-domains-permission-pipe"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__pipeline.json",
+      "name": "unit-test-domains-pipeline"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__pipeline-file.json",
+      "name": "unit-test-domains-pipeline-file"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__script.json",
+      "name": "unit-test-domains-script"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__test-strategy.json",
+      "name": "unit-test-domains-test-strategy"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__domains__ts-analysis.json",
+      "name": "unit-test-domains-ts-analysis"
+    }
+  ]
+}
