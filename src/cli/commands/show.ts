@@ -67,7 +67,10 @@ export async function showCommand(sessionId: string, options: RawShowOptions) {
     if (input.length !== undefined) tableOpts.colWidths = [5, 13, input.length + 4]
     const table = new Table(tableOpts)
     for (const row of rows) {
-      const content = input.length !== undefined ? truncate(row.content, input.length) : row.content
+      const content =
+        input.length !== undefined
+          ? truncate(row.content, input.length)
+          : ansis.strip(row.content).replace(/\n/g, '\\n')
       table.push([String(row.n), row.role, content])
     }
     stdout.print(table.toString())
