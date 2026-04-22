@@ -81,37 +81,44 @@
     {
       "type": "child",
       "path": "unit-test__cli__commands__show.json",
-      "name": "unit-test-cli-commands-show"
+      "name": "unit-test-cli-commands-show",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__start.json",
-      "name": "unit-test-cli-commands-start"
+      "name": "unit-test-cli-commands-start",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__survey.json",
-      "name": "unit-test-cli-commands-survey"
+      "name": "unit-test-cli-commands-survey",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__sweep.json",
-      "name": "unit-test-cli-commands-sweep"
+      "name": "unit-test-cli-commands-sweep",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__tag.json",
-      "name": "unit-test-cli-commands-tag"
+      "name": "unit-test-cli-commands-tag",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__display.json",
-      "name": "unit-test-cli-display"
+      "name": "unit-test-cli-display",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__pipeline-runner__utils.json",
-      "name": "unit-test-cli-pipeline-runner-utils"
+      "name": "unit-test-cli-pipeline-runner-utils",
+      "done": true
     }
   ]
 }
