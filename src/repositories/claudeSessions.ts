@@ -10,18 +10,63 @@ import {
   type RawAssistantEntry
 } from '@src/repositories/parsers/claudeSessionParser'
 
-function encodeWorkingDir(workingDir: string): string {
-  return workingDir.replace(/\//g, '-')
+const MAX_SANITIZED_LENGTH = 200
+
+function djb2Hash(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+  }
+  return hash
+}
+
+/**
+ * Mirrors Claude Code's sanitizePath: replaces all non-alphanumeric chars with
+ * hyphens, then truncates at 200 chars with a hash suffix for long paths.
+ * Claude Code runs under Bun and uses Bun.hash for the suffix; we use djb2
+ * (Node-stable). For paths > 200 chars, resolveProjectDir does a prefix scan
+ * so the hash mismatch is handled there.
+ */
+function sanitizeProjectDir(workingDir: string): string {
+  const sanitized = workingDir.replace(/[^a-zA-Z0-9]/g, '-')
+  if (sanitized.length <= MAX_SANITIZED_LENGTH) return sanitized
+  const hash = Math.abs(djb2Hash(workingDir)).toString(36)
+  return `${sanitized.slice(0, MAX_SANITIZED_LENGTH)}-${hash}`
+}
+
+/**
+ * Resolves the on-disk project directory for a given working dir path.
+ * For short paths, returns the exact sanitized name.
+ * For long paths (> 200 chars), falls back to prefix scan because Claude Code
+ * uses Bun.hash while we use djb2 — the suffix will differ.
+ */
+function resolveProjectDir(workingDir: string): string {
+  const projectsDir = join(homeDir(), '.claude', 'projects')
+  const sanitized = workingDir.replace(/[^a-zA-Z0-9]/g, '-')
+
+  if (sanitized.length <= MAX_SANITIZED_LENGTH) {
+    return join(projectsDir, sanitized)
+  }
+
+  const prefix = sanitized.slice(0, MAX_SANITIZED_LENGTH)
+  if (fileExists(projectsDir)) {
+    const match = listDirEntries(projectsDir).find(
+      (d) => d.isDirectory() && d.name.startsWith(prefix + '-')
+    )
+    if (match) return join(projectsDir, match.name)
+  }
+  // Fall back to our own hash if no match found on disk
+  return join(projectsDir, sanitizeProjectDir(workingDir))
 }
 
 function resolveJsonlPath(claudeSessionId: string, workingDir: string): string {
-  const encoded = encodeWorkingDir(workingDir)
-  return join(homeDir(), '.claude', 'projects', encoded, `${claudeSessionId}.jsonl`)
+  return join(resolveProjectDir(workingDir), `${claudeSessionId}.jsonl`)
 }
 
 /**
  * Decode an encoded project directory name back to an absolute working directory path.
- * The encoding is `workingDir.replace(/\//g, '-')`, so `-` can be either `/` or a literal `-`.
+ * Claude Code encodes by replacing all non-alphanumeric chars with `-`, so a `-` in
+ * the encoded name can represent `/`, `_`, `.`, or any other non-alphanumeric char.
  * This function searches the real filesystem to resolve the ambiguity.
  *
  * Returns the decoded path, or null if no unique real path can be found.
