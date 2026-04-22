@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "lint-fix-explicit-return-type-mcp",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-lint-fix-explicit-return-type-mcp",
+          "task": "Fix all @typescript-eslint/explicit-function-return-type violations in the following files:\n- src/mcp/tools/askPermission.ts\n- src/mcp/tools/knowledgeSearch.ts\n- src/mcp/tools/tsAnalyze.ts\n- src/mcp/tools/tsChecker.ts\n- src/mcp/tools/tsGetReferences.ts\n- src/mcp/tools/tsGetTypes.ts\n- src/mcp/tools/tsTestStrategist.ts\n\nAdd explicit return type annotations to all functions and arrow functions that are missing them. Use mcp__perclst__ts_analyze to inspect each file's structure and mcp__perclst__ts_get_types to confirm correct types. After editing, run `./node_modules/.bin/eslint src/mcp/tools/` to verify no violations remain.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-lint-fix-explicit-return-type-mcp",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-lint-fix-explicit-return-type-mcp",
+      "task": "Return types added and build/tests passing. Commit the changes with an appropriate conventional commit message (e.g. fix(lint): add explicit return types to mcp/tools).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

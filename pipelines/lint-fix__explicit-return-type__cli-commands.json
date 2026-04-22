@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "lint-fix-explicit-return-type-cli-commands",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-lint-fix-explicit-return-type-cli-commands",
+          "task": "Fix all @typescript-eslint/explicit-function-return-type violations in the following files:\n- src/cli/commands/analyze.ts\n- src/cli/commands/curate.ts\n- src/cli/commands/delete.ts\n- src/cli/commands/fork.ts\n- src/cli/commands/inspect.ts\n- src/cli/commands/list.ts\n- src/cli/commands/rename.ts\n- src/cli/commands/resume.ts\n- src/cli/commands/retrieve.ts\n- src/cli/commands/rewind.ts\n- src/cli/commands/run.ts\n- src/cli/commands/show.ts\n- src/cli/commands/start.ts\n- src/cli/commands/survey.ts\n- src/cli/commands/sweep.ts\n- src/cli/commands/tag.ts\n\nAdd explicit return type annotations to all functions and arrow functions that are missing them. Use mcp__perclst__ts_analyze to inspect each file's structure and mcp__perclst__ts_get_types to confirm correct types. After editing, run `./node_modules/.bin/eslint src/cli/commands/` to verify no violations remain in these files.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-lint-fix-explicit-return-type-cli-commands",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-lint-fix-explicit-return-type-cli-commands",
+      "task": "Return types added and build/tests passing. Commit the changes with an appropriate conventional commit message (e.g. fix(lint): add explicit return types to cli/commands).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
