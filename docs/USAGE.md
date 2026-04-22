@@ -310,7 +310,7 @@ Equivalent to:
 ```bash
 perclst start "Promote all entries in knowledge/draft/ into structured knowledge/ files." \
   --procedure meta-curate-knowledge \
-  --allowed-tools Write Read Bash \
+  --allowed-tools Write Read Bash Glob \
   --output-only
 ```
 
