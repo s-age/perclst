@@ -1,6 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { PipelineFileService } from '@src/services/pipelineFileService'
+import type { PipelineFileService } from '@src/services/pipelineFileService'
 import { stdout, stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
 import { parseInspectSession } from '@src/validators/cli/inspectSession'

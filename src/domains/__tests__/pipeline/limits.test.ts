@@ -48,7 +48,7 @@ describe('PipelineDomain - token and turn limits', () => {
         last_assistant_usage: undefined
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const tokens = (pipelineDomain as any).getContextTokens(response)
 
       expect(tokens).toBe(0)
@@ -65,7 +65,7 @@ describe('PipelineDomain - token and turn limits', () => {
         }
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const tokens = (pipelineDomain as any).getContextTokens(response)
 
       expect(tokens).toBe(1700) // 1000 + 300 + 400
@@ -82,7 +82,7 @@ describe('PipelineDomain - token and turn limits', () => {
         }
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const tokens = (pipelineDomain as any).getContextTokens(response)
 
       expect(tokens).toBe(750) // 500 + 250
@@ -97,7 +97,7 @@ describe('PipelineDomain - token and turn limits', () => {
         }
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const tokens = (pipelineDomain as any).getContextTokens(response)
 
       expect(tokens).toBe(600)
@@ -116,7 +116,7 @@ describe('PipelineDomain - token and turn limits', () => {
         }
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const result = (pipelineDomain as any).isLimitExceeded(response, 5, 5000)
 
       expect(result).toBe(false)
@@ -128,7 +128,7 @@ describe('PipelineDomain - token and turn limits', () => {
         last_assistant_usage: undefined
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const result = (pipelineDomain as any).isLimitExceeded(response, 5, -1)
 
       expect(result).toBe(true)
@@ -146,7 +146,7 @@ describe('PipelineDomain - token and turn limits', () => {
         }
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const result = (pipelineDomain as any).isLimitExceeded(response, -1, 5000)
 
       expect(result).toBe(true)
@@ -164,7 +164,7 @@ describe('PipelineDomain - token and turn limits', () => {
         }
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const result = (pipelineDomain as any).isLimitExceeded(response, -1, -1)
 
       expect(result).toBe(false)
@@ -176,7 +176,7 @@ describe('PipelineDomain - token and turn limits', () => {
         last_assistant_usage: undefined
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const result = (pipelineDomain as any).isLimitExceeded(response, 5, -1)
 
       expect(result).toBe(true)
@@ -193,7 +193,7 @@ describe('PipelineDomain - token and turn limits', () => {
         }
       } as AgentResponse
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const result = (pipelineDomain as any).isLimitExceeded(response, -1, 5000)
 
       expect(result).toBe(true)

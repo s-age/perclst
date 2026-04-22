@@ -1,4 +1,4 @@
-import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
+import type { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import {
   extractSymbols,
   extractImports,

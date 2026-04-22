@@ -239,7 +239,7 @@ describe('PipelineDomain - execution', () => {
       vi.mocked(sessionDomain.findByName).mockResolvedValue(null)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const result = await (pipelineDomain as any).resumeNamedSession(
         task,
         0,
@@ -268,7 +268,7 @@ describe('PipelineDomain - execution', () => {
       vi.mocked(agentDomain.run).mockResolvedValue(agentResponse)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const result = await (pipelineDomain as any).resumeNamedSession(
         task,
         0,

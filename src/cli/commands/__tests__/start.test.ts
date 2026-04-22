@@ -65,7 +65,7 @@ describe('startCommand', () => {
 
     // Setup validator mock
     mockParseStartSessionFn = vi.fn()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line local/no-any
     vi.mocked(parseStartSession as any).mockImplementation(mockParseStartSessionFn)
 
     // Spy on process.exit

@@ -1,6 +1,6 @@
 import type { ITestStrategyRepository } from '@src/repositories/ports/testStrategy'
 import type { RawFunctionInfo } from '@src/types/testStrategy'
-import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
+import type { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import { searchDir } from '@src/infrastructures/testFileDiscovery'
 import { fileExists, readText, readJson } from '@src/infrastructures/fs'
 import {

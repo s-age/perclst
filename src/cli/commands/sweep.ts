@@ -1,6 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { SessionService } from '@src/services/sessionService'
+import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
 import { parseSweepSession } from '@src/validators/cli/sweepSession'
 import { ValidationError } from '@src/errors/validationError'

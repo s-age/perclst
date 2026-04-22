@@ -1,6 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { AgentService } from '@src/services/agentService'
+import type { AgentService } from '@src/services/agentService'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
