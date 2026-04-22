@@ -162,7 +162,7 @@ function printDetailedTurns(turns: AnalysisSummary['turns']): void {
   }
 }
 
-export async function analyzeCommand(sessionId: string, options: RawAnalyzeOptions) {
+export async function analyzeCommand(sessionId: string, options: RawAnalyzeOptions): Promise<void> {
   try {
     const input = parseAnalyzeSession({ sessionId, ...options })
 

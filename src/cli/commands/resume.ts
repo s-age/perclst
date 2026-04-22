@@ -28,7 +28,7 @@ export async function resumeCommand(
   sessionId: string,
   instruction: string,
   options: RawResumeOptions
-) {
+): Promise<void> {
   try {
     debug.print('Resuming session', { session_id: sessionId })
 
@@ -41,7 +41,7 @@ export async function resumeCommand(
 
     const streaming = !input.outputOnly && input.format !== 'json'
     const onStreamEvent = streaming
-      ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+      ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
       : undefined
 
     const response = await agentService.resume(resolvedId, input.instruction, {

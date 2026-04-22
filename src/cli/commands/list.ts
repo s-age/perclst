@@ -10,7 +10,7 @@ type RawListOptions = {
   like?: string
 }
 
-export async function listCommand(options: RawListOptions) {
+export async function listCommand(options: RawListOptions): Promise<void> {
   try {
     const input = parseListSessions(options)
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)

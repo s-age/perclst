@@ -34,7 +34,7 @@ export async function rewindCommand(
   sessionId: string | undefined,
   indexStr: string | undefined,
   options: RawRewindOptions
-) {
+): Promise<void> {
   try {
     const input = parseRewindSession({
       sessionId,

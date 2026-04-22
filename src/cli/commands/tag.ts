@@ -4,7 +4,7 @@ import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
 import { parseTagSession } from '@src/validators/cli/tagSession'
 
-export async function tagCommand(sessionId: string, labels: string[]) {
+export async function tagCommand(sessionId: string, labels: string[]): Promise<void> {
   try {
     const input = parseTagSession({ sessionId, labels })
 

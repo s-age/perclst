@@ -15,7 +15,7 @@ type RawSweepOptions = {
   force?: boolean
 }
 
-export async function sweepCommand(options: RawSweepOptions) {
+export async function sweepCommand(options: RawSweepOptions): Promise<void> {
   try {
     const input = parseSweepSession({
       from: options.from,

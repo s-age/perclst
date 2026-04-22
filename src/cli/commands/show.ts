@@ -21,7 +21,7 @@ function truncate(text: string, max: number): string {
   return single.length > max ? single.slice(0, max - 1) + '…' : single
 }
 
-export async function showCommand(sessionId: string, options: RawShowOptions) {
+export async function showCommand(sessionId: string, options: RawShowOptions): Promise<void> {
   try {
     const input = parseShowSession({ sessionId, ...options })
 

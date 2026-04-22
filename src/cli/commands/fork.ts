@@ -27,7 +27,7 @@ export async function forkCommand(
   originalSessionId: string,
   prompt: string,
   options: RawForkOptions
-) {
+): Promise<void> {
   try {
     debug.print('Forking session', { original_session_id: originalSessionId })
 

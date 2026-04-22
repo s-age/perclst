@@ -81,7 +81,7 @@ function markTaskDone(pipeline: Pipeline, taskPath: number[], taskIndex: number)
 function makeChildLoader(
   pipelineFileService: PipelineFileService
 ): (absolutePath: string) => Pipeline {
-  return (absolutePath) => {
+  return (absolutePath: string): Pipeline => {
     const raw = pipelineFileService.loadRawPipeline(absolutePath)
     return parsePipeline(raw)
   }
@@ -192,7 +192,7 @@ async function executePipeline(
 
   const streaming = !input.outputOnly && input.format !== 'json'
   const onStreamEvent = streaming
-    ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+    ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
     : undefined
   const onTaskDone = (taskPath: number[], taskIndex: number): void => {
     markTaskDone(pipeline, taskPath, taskIndex)
@@ -218,7 +218,7 @@ async function executePipeline(
   stdout.print(`\nPipeline complete. ${count} task(s) finished.`)
 }
 
-export async function runCommand(pipelinePath: string, options: RawRunOptions) {
+export async function runCommand(pipelinePath: string, options: RawRunOptions): Promise<void> {
   try {
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
 

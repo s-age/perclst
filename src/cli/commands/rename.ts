@@ -8,7 +8,11 @@ type RawRenameOptions = {
   labels?: string[]
 }
 
-export async function renameCommand(sessionId: string, name: string, options: RawRenameOptions) {
+export async function renameCommand(
+  sessionId: string,
+  name: string,
+  options: RawRenameOptions
+): Promise<void> {
   try {
     const input = parseRenameSession({ sessionId, name, ...options })
 

@@ -25,7 +25,7 @@ type RawStartOptions = {
   format?: string
 }
 
-export async function startCommand(task: string, options: RawStartOptions) {
+export async function startCommand(task: string, options: RawStartOptions): Promise<void> {
   try {
     debug.print('Starting new agent session')
 
@@ -36,7 +36,7 @@ export async function startCommand(task: string, options: RawStartOptions) {
 
     const streaming = !input.outputOnly && input.format !== 'json'
     const onStreamEvent = streaming
-      ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+      ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
       : undefined
 
     const { sessionId, response } = await agentService.start(
