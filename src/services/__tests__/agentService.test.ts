@@ -12,7 +12,7 @@ const mockSession: Session = {
   procedure: 'conductor',
   claude_session_id: 'claude-id',
   working_dir: '/tmp',
-  metadata: { status: 'active', tags: [] }
+  metadata: { status: 'active', labels: [] }
 }
 
 const mockResponse = {
@@ -263,13 +263,13 @@ describe('AgentService', () => {
     it('should create session, run agent, update status, and return result', async () => {
       const result = await service.start(
         'Do a task',
-        { procedure: 'conductor', tags: ['tag1'], working_dir: '/tmp' },
+        { procedure: 'conductor', labels: ['tag1'], working_dir: '/tmp' },
         { model: 'claude-opus-4-6' }
       )
 
       expect(sessionDomain.create).toHaveBeenCalledWith({
         procedure: 'conductor',
-        tags: ['tag1'],
+        labels: ['tag1'],
         working_dir: '/tmp'
       })
       expect(sessionDomain.getPath).toHaveBeenCalledWith(mockSession.id)

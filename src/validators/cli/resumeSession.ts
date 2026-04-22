@@ -8,6 +8,7 @@ import { formatRule } from '../rules/format'
 const resumeSchema = schema({
   sessionId: stringRule({ required: true }),
   instruction: stringRule({ required: true }),
+  labels: stringArrayRule().optional(),
   allowedTools: stringArrayRule().optional(),
   disallowedTools: stringArrayRule().optional(),
   model: stringRule().optional(),

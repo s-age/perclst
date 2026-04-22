@@ -9,6 +9,7 @@ import { showCommand } from './commands/show'
 import { deleteCommand } from './commands/delete'
 import { analyzeCommand } from './commands/analyze'
 import { renameCommand } from './commands/rename'
+import { tagCommand } from './commands/tag'
 import { importCommand } from './commands/import'
 import { sweepCommand } from './commands/sweep'
 import { rewindCommand } from './commands/rewind'
@@ -34,7 +35,7 @@ program
   .argument('<task>', 'Task description')
   .option('-p, --procedure <name>', 'Procedure to use')
   .option('-n, --name <name>', 'Name for the session')
-  .option('-t, --tags <tags...>', 'Tags for the session')
+  .option('-l, --label <labels...>', 'Labels for the session')
   .option(
     '--allowed-tools <tools...>',
     'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)'
@@ -62,6 +63,7 @@ program
   .description('Resume an existing session')
   .argument('<session-id>', 'Session ID')
   .argument('<instruction>', 'Additional instruction')
+  .option('-l, --label <labels...>', 'Labels to add to the session (appends to existing)')
   .option(
     '--allowed-tools <tools...>',
     'Claude Code built-in tools to allow without prompting (e.g. WebFetch WebSearch Bash)'
@@ -112,7 +114,12 @@ program
   .action(forkCommand)
 
 // List command
-program.command('list').description('List all sessions').action(listCommand)
+program
+  .command('list')
+  .description('List all sessions')
+  .option('-l, --label <label>', 'Filter by label')
+  .option('--like <pattern>', 'Filter by name substring')
+  .action(listCommand)
 
 // Show command
 program
@@ -155,7 +162,16 @@ program
   .description('Rename a session')
   .argument('<session-id>', 'Session ID')
   .argument('<name>', 'New name for the session')
+  .option('-l, --label <labels...>', 'Set labels for the session (replaces existing)')
   .action(renameCommand)
+
+// Tag command
+program
+  .command('tag')
+  .description('Set labels on a session (replaces existing labels)')
+  .argument('<session-id>', 'Session ID or name')
+  .argument('<labels...>', 'Labels to set')
+  .action(tagCommand)
 
 // Import command
 program
@@ -164,6 +180,7 @@ program
   .argument('<claude-session-id>', 'Claude Code session ID')
   .option('-n, --name <name>', 'Name for the imported session')
   .option('--cwd <path>', 'Working directory of the Claude Code session (auto-detected if omitted)')
+  .option('-l, --label <labels...>', 'Labels for the imported session')
   .action(importCommand)
 
 // Rewind command

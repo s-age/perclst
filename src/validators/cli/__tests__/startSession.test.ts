@@ -16,7 +16,7 @@ describe('parseStartSession', () => {
       task: 'task',
       procedure: 'default',
       name: 'my-session',
-      tags: ['a', 'b'],
+      labels: ['a', 'b'],
       allowedTools: ['Bash', 'Read'],
       model: 'sonnet',
       maxTurns: 10,
@@ -29,7 +29,7 @@ describe('parseStartSession', () => {
     })
     expect(result.procedure).toBe('default')
     expect(result.name).toBe('my-session')
-    expect(result.tags).toEqual(['a', 'b'])
+    expect(result.labels).toEqual(['a', 'b'])
     expect(result.allowedTools).toEqual(['Bash', 'Read'])
     expect(result.model).toBe('sonnet')
     expect(result.maxTurns).toBe(10)

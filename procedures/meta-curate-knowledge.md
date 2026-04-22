@@ -36,3 +36,7 @@ flowchart TD
 ```
 
 Consult the `meta-librarian` skill for file format and classification criteria.
+
+## Step notes
+
+**DeleteEntry**: Run `rm <path>` via Bash to delete the draft file. These files are untracked by git — no `git rm` needed, plain `rm` is correct. Do not skip this step.

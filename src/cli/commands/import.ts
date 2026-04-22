@@ -7,6 +7,7 @@ import { parseImportSession } from '@src/validators/cli/importSession'
 type RawImportOptions = {
   name?: string
   cwd?: string
+  labels?: string[]
 }
 
 export async function importCommand(
@@ -19,7 +20,8 @@ export async function importCommand(
     const importService = container.resolve<ImportService>(TOKENS.ImportService)
     const session = await importService.import(input.claudeSessionId, {
       name: input.name,
-      cwd: input.cwd
+      cwd: input.cwd,
+      labels: input.labels
     })
 
     stdout.print(`Imported: ${session.id}`)

@@ -22,6 +22,7 @@ export async function inspectCommand(oldRef: string, newRef: string) {
       `Inspect the following git diff and produce a code inspection report:\n\n${diff}`,
       {
         procedure: 'code-inspector',
+        labels: ['inspect'],
         model: 'sonnet',
         allowedTools: ['Skill', 'mcp__perclst__knowledge_search'],
         outputOnly: true

@@ -43,8 +43,8 @@ export async function showCommand(sessionId: string, options: RawShowOptions) {
     stdout.print(`Status:  ${session.metadata.status}`)
     stdout.print(`Dir:     ${session.working_dir}`)
     if (session.procedure) stdout.print(`Proc:    ${session.procedure}`)
-    if (session.metadata.tags.length > 0) {
-      stdout.print(`Tags:    ${session.metadata.tags.join(', ')}`)
+    if (session.metadata.labels.length > 0) {
+      stdout.print(`Labels:  ${session.metadata.labels.join(', ')}`)
     }
 
     const { summary } = await analyzeService.analyze(resolvedId)

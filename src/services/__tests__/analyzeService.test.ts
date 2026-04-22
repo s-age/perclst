@@ -12,7 +12,7 @@ const mockSession: Session = {
   procedure: 'test-procedure',
   claude_session_id: 'claude-session-456',
   working_dir: '/home/user/project',
-  metadata: { status: 'active', tags: ['test', 'analysis'] }
+  metadata: { status: 'active', labels: ['test', 'analysis'] }
 }
 
 const mockAnalyzeResult: AnalyzeResult = {

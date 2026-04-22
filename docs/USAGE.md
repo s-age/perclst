@@ -23,6 +23,7 @@ Local operations — no agent required.
 - [`show`](#show)
 - [`analyze`](#analyze)
 - [`rename`](#rename)
+- [`tag`](#tag)
 - [`delete`](#delete)
 - [`sweep`](#sweep)
 - [`import`](#import)
@@ -46,6 +47,7 @@ Start a new agent session.
 perclst start "Implement feature X"
 perclst start "task" --procedure conductor
 perclst start "task" --name "my-session" --model opus
+perclst start "task" --label wip auth
 ```
 
 > For all options (procedures, tool permissions, output flags, etc.): `perclst start -h`
@@ -61,7 +63,10 @@ Resume an existing session with an additional instruction.
 ```bash
 perclst resume <session> "Continue the task"
 perclst resume <session> "quick follow-up" --model haiku
+perclst resume <session> "Continue" --label wip
 ```
+
+`--label` appends to existing labels (does not replace).
 
 > For all options: `perclst resume -h`
 
@@ -127,7 +132,14 @@ List all sessions.
 
 ```bash
 perclst list
+perclst list --label survey          # sessions with label "survey"
+perclst list --like "refactor"       # sessions whose name contains "refactor"
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--label <label>` | Filter to sessions that have this label |
+| `--like <pattern>` | Filter to sessions whose name contains this string |
 
 ## `show`
 
@@ -173,11 +185,29 @@ perclst analyze <session> --format json
 
 *Local — no agent.*
 
-Set a display name for a session.
+Set a display name for a session. Optionally replace its labels at the same time.
 
 ```bash
 perclst rename <session-id> "new-name"
+perclst rename <session-id> "new-name" --label wip refactor
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--label <labels...>` | Replace session labels with these values |
+
+## `tag`
+
+*Local — no agent.*
+
+Set labels on a session. Replaces all existing labels.
+
+```bash
+perclst tag <session> wip
+perclst tag <session> wip refactor auth
+```
+
+To add labels without replacing existing ones, use `resume --label` instead.
 
 ## `delete`
 
@@ -241,6 +271,8 @@ perclst inspect main HEAD
 perclst inspect abc1234 def5678
 ```
 
+Sessions created by this command are automatically labeled `inspect`.
+
 The agent produces a report like:
 
 ```
@@ -271,12 +303,14 @@ Promote all `knowledge/draft/` entries into structured `knowledge/` files. Short
 perclst curate
 ```
 
+Sessions created by this command are automatically labeled `curate`.
+
 Equivalent to:
 
 ```bash
 perclst start "Promote all entries in knowledge/draft/ into structured knowledge/ files." \
   --procedure meta-curate-knowledge \
-  --allowed-tools Write Read Bash \
+  --allowed-tools Write Read Bash Glob \
   --output-only
 ```
 
@@ -285,6 +319,8 @@ perclst start "Promote all entries in knowledge/draft/ into structured knowledge
 *Agent command — spawns Claude.*
 
 Survey the codebase for bug investigation or pre-implementation research. Spawns a sonnet agent that searches the knowledge base, consults layer catalogs, and traces symbols to answer: **where is the relevant code?** and **what already exists that could be reused?**
+
+Sessions created by this command are automatically labeled `survey`.
 
 ```bash
 # Investigate a topic
@@ -309,6 +345,8 @@ The agent returns a structured report with two sections:
 *Agent command — spawns Claude.*
 
 Search the project knowledge base for one or more keywords and return a structured summary of findings. Shorthand for running the `meta-retrieve-knowledge` procedure with `--output-only`.
+
+Sessions created by this command are automatically labeled `retrieve`.
 
 ```bash
 perclst retrieve "keyword"
@@ -537,6 +575,7 @@ Import an existing Claude Code session into perclst management.
 perclst import <claude-session-id>
 perclst import <claude-session-id> --name "My session"
 perclst import <claude-session-id> --cwd /path/to/working/dir
+perclst import <claude-session-id> --label wip legacy
 ```
 
 ---

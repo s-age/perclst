@@ -10,7 +10,7 @@ const mockSession: Session = {
   procedure: 'test',
   claude_session_id: 'test-id',
   working_dir: '/tmp',
-  metadata: { status: 'active', tags: [] }
+  metadata: { status: 'active', labels: [] }
 }
 
 function makeMockDomain(): ISessionDomain {
@@ -48,7 +48,7 @@ describe('SessionService', () => {
   })
 
   it('delegates create to domain', async () => {
-    const params = { procedure: 'p1', tags: ['t1'] }
+    const params = { procedure: 'p1', labels: ['t1'] }
     const result = await service.create(params)
     expect(domain.create).toHaveBeenCalledWith(params)
     expect(result).toBe(mockSession)

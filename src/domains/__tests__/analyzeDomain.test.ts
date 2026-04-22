@@ -31,7 +31,7 @@ const makeSession = (overrides: Partial<Session> = {}): Session => ({
   updated_at: '2026-01-01T00:00:00.000Z',
   claude_session_id: 'claude-abc',
   working_dir: '/home/user/project',
-  metadata: { status: 'active', tags: [] },
+  metadata: { status: 'active', labels: [] },
   ...overrides
 })
 

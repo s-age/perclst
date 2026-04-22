@@ -11,6 +11,7 @@ import type { AgentStreamEvent } from '@src/types/agent'
 import { parseResumeSession } from '@src/validators/cli/resumeSession'
 
 type RawResumeOptions = {
+  labels?: string[]
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
@@ -51,6 +52,10 @@ export async function resumeCommand(
       maxContextTokens: input.maxContextTokens,
       onStreamEvent
     })
+
+    if (input.labels && input.labels.length > 0) {
+      await sessionService.addLabels(resolvedId, input.labels)
+    }
 
     printResponse(
       response,

@@ -7,6 +7,7 @@ import { toISO } from '@src/utils/date'
 export type ImportOptions = {
   name?: string
   cwd?: string
+  labels?: string[]
 }
 
 export class ImportService {
@@ -31,7 +32,7 @@ export class ImportService {
       claude_session_id: claudeSessionId,
       working_dir: workingDir,
       metadata: {
-        tags: [],
+        labels: options.labels ?? [],
         status: 'completed'
       }
     }

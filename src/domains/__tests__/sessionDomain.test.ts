@@ -23,13 +23,13 @@ describe('SessionDomain', () => {
   it('should create a new session', async () => {
     const session = await domain.create({
       procedure: 'test-procedure',
-      tags: ['tag1', 'tag2'],
+      labels: ['tag1', 'tag2'],
       working_dir: '/tmp/test'
     })
 
     expect(session.id).toBeDefined()
     expect(session.procedure).toBe('test-procedure')
-    expect(session.metadata.tags).toContain('tag1')
+    expect(session.metadata.labels).toContain('tag1')
     expect(session.metadata.status).toBe('active')
     expect(mockSessionRepo.save).toHaveBeenCalledWith(session)
   })
@@ -49,9 +49,13 @@ describe('SessionDomain', () => {
       {
         id: 's1',
         updated_at: '2024-01-01T00:00:00.000Z',
-        metadata: { status: 'active', tags: [] }
+        metadata: { status: 'active', labels: [] }
       },
-      { id: 's2', updated_at: '2024-01-02T00:00:00.000Z', metadata: { status: 'active', tags: [] } }
+      {
+        id: 's2',
+        updated_at: '2024-01-02T00:00:00.000Z',
+        metadata: { status: 'active', labels: [] }
+      }
     ] as never[]
     vi.mocked(mockSessionRepo.list).mockReturnValue(mockSessions)
 
@@ -65,12 +69,12 @@ describe('SessionDomain', () => {
     const older = {
       id: 's1',
       updated_at: '2024-01-01T00:00:00.000Z',
-      metadata: { status: 'active', tags: [] }
+      metadata: { status: 'active', labels: [] }
     }
     const newer = {
       id: 's2',
       updated_at: '2024-01-02T00:00:00.000Z',
-      metadata: { status: 'active', tags: [] }
+      metadata: { status: 'active', labels: [] }
     }
     vi.mocked(mockSessionRepo.list).mockReturnValue([older, newer] as never[])
 
@@ -84,11 +88,11 @@ describe('SessionDomain', () => {
     const valid = {
       id: 's1',
       updated_at: '2024-01-01T00:00:00.000Z',
-      metadata: { status: 'active', tags: [] }
+      metadata: { status: 'active', labels: [] }
     }
     const invalid = {
       updated_at: '2024-01-01T00:00:00.000Z',
-      metadata: { status: 'active', tags: [] }
+      metadata: { status: 'active', labels: [] }
     }
     vi.mocked(mockSessionRepo.list).mockReturnValue([valid, invalid] as never[])
 
@@ -101,7 +105,7 @@ describe('SessionDomain', () => {
     const valid = {
       id: 's1',
       updated_at: '2024-01-01T00:00:00.000Z',
-      metadata: { status: 'active', tags: [] }
+      metadata: { status: 'active', labels: [] }
     }
     const invalid = { id: 's2', updated_at: '2024-01-01T00:00:00.000Z' }
     vi.mocked(mockSessionRepo.list).mockReturnValue([valid, invalid] as never[])
@@ -129,7 +133,7 @@ describe('SessionDomain', () => {
     const mockSession = {
       id: 'abc',
       updated_at: '2024-01-01T00:00:00.000Z',
-      metadata: { status: 'active', tags: [] }
+      metadata: { status: 'active', labels: [] }
     } as never
     vi.mocked(mockSessionRepo.load).mockReturnValue(mockSession)
 
