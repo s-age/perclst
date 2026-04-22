@@ -1,5 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { curateCommand } from '../curate'
+import { cwdPath } from '@src/utils/path'
 
 // Mock the dependencies
 vi.mock('@src/core/di/container')
@@ -41,7 +42,7 @@ describe('curateCommand', () => {
     await curateCommand()
 
     // Assert
-    const knowledgeDir = `${process.cwd()}/knowledge`
+    const knowledgeDir = cwdPath('knowledge')
     expect(vi.mocked(startCommand)).toHaveBeenCalledWith(
       `Promote all entries in ${knowledgeDir}/draft/ into structured ${knowledgeDir}/ files.`,
       {
