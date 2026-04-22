@@ -6,7 +6,7 @@ import { ValidationError } from '@src/errors/validationError'
 import { parseInspectSession } from '@src/validators/cli/inspectSession'
 import { startCommand } from './start'
 
-export async function inspectCommand(oldRef: string, newRef: string) {
+export async function inspectCommand(oldRef: string, newRef: string, options: { prompt?: string }) {
   try {
     const input = parseInspectSession({ old: oldRef, new: newRef })
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
@@ -18,8 +18,10 @@ export async function inspectCommand(oldRef: string, newRef: string) {
       return
     }
 
+    const additionalPrompt = options.prompt ? `\n\nAdditional instructions: ${options.prompt}` : ''
+
     await startCommand(
-      `Inspect the following git diff and produce a code inspection report:\n\n${diff}`,
+      `Inspect the following git diff and produce a code inspection report:${additionalPrompt}\n\n${diff}`,
       {
         procedure: 'code-inspector',
         labels: ['inspect'],

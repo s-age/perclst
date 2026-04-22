@@ -234,6 +234,7 @@ program
   .description('Run a pre-push code inspection between two git refs')
   .argument('<old>', 'Base git ref (older commit or branch)')
   .argument('<new>', 'Head git ref (newer commit or branch)')
+  .option('-p, --prompt <prompt>', 'Additional instruction appended to the inspection prompt')
   .action(inspectCommand)
 
 // Run command
