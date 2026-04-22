@@ -23,18 +23,26 @@ vi.mock('@src/infrastructures/claudeCode', () => ({
   ClaudeCodeInfra: MockClaudeCodeInfra
 }))
 
+const mockParseState = {}
+
 vi.mock('@src/repositories/parsers/claudeCodeParser', () => ({
-  parseStreamEvents: vi.fn(),
+  createParseState: vi.fn(),
+  processLine: vi.fn(),
+  finalizeParseState: vi.fn(),
   emitStreamEvents: vi.fn()
 }))
 
 import { ClaudeCodeRepository } from '../agentRepository'
-import { parseStreamEvents, emitStreamEvents } from '@src/repositories/parsers/claudeCodeParser'
+import {
+  createParseState,
+  processLine,
+  finalizeParseState,
+  emitStreamEvents
+} from '@src/repositories/parsers/claudeCodeParser'
 import { RawExitError } from '@src/errors/rawExitError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { APIError } from '@src/errors/apiError'
-import type { StartAction, ForkAction } from '@src/types/claudeCode'
-import type { RawOutput } from '@src/types/claudeCode'
+import type { StartAction, ForkAction, RawOutput } from '@src/types/claudeCode'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -95,7 +103,10 @@ describe('ClaudeCodeRepository', () => {
     mockInfra.resolveJsonlPath.mockReturnValue('/path/to/session.jsonl')
     mockInfra.countJsonlLines.mockReturnValue(0)
     mockInfra.runClaude.mockReturnValue(yieldLines())
-    vi.mocked(parseStreamEvents).mockReturnValue(stubRawOutput)
+    vi.mocked(createParseState).mockReturnValue(
+      mockParseState as ReturnType<typeof createParseState>
+    )
+    vi.mocked(finalizeParseState).mockReturnValue(stubRawOutput)
     repo = new ClaudeCodeRepository()
   })
 
@@ -104,19 +115,21 @@ describe('ClaudeCodeRepository', () => {
     // Happy path
     // -----------------------------------------------------------------------
 
-    it('returns the RawOutput produced by parseStreamEvents', async () => {
+    it('returns the RawOutput produced by finalizeParseState', async () => {
       const result = await repo.dispatch(startAction)
 
       expect(result).toBe(stubRawOutput)
     })
 
-    it('passes all yielded lines and the jsonl baseline to parseStreamEvents', async () => {
+    it('calls processLine for each yielded line and finalizeParseState with the jsonl baseline', async () => {
       mockInfra.runClaude.mockReturnValue(yieldLines('line1', 'line2'))
       mockInfra.countJsonlLines.mockReturnValue(5)
 
       await repo.dispatch(startAction)
 
-      expect(vi.mocked(parseStreamEvents)).toHaveBeenCalledWith(['line1', 'line2'], 5)
+      expect(vi.mocked(processLine)).toHaveBeenCalledWith(mockParseState, 'line1')
+      expect(vi.mocked(processLine)).toHaveBeenCalledWith(mockParseState, 'line2')
+      expect(vi.mocked(finalizeParseState)).toHaveBeenCalledWith(mockParseState, 5)
     })
 
     it('resolves the jsonl baseline using sessionId and workingDir for a start action', async () => {

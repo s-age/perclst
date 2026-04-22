@@ -1,5 +1,10 @@
 import { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
-import { parseStreamEvents, emitStreamEvents } from '@src/repositories/parsers/claudeCodeParser'
+import {
+  createParseState,
+  processLine,
+  finalizeParseState,
+  emitStreamEvents
+} from '@src/repositories/parsers/claudeCodeParser'
 import type { IClaudeCodeRepository } from '@src/repositories/ports/agent'
 import { RawExitError } from '@src/errors/rawExitError'
 import { APIError } from '@src/errors/apiError'
@@ -37,7 +42,7 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
       this.infra.resolveJsonlPath(baselineSessionId, baselineWorkingDir)
     )
 
-    const lines: string[] = []
+    const state = createParseState()
     const toolNameMap = new Map<string, string>()
 
     try {
@@ -47,7 +52,7 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
         action.workingDir,
         action.sessionFilePath
       )) {
-        lines.push(line)
+        processLine(state, line)
         if (onStreamEvent) emitStreamEvents(line, toolNameMap, onStreamEvent)
       }
     } catch (err) {
@@ -55,6 +60,6 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
       throw err
     }
 
-    return parseStreamEvents(lines, jsonlBaseline)
+    return finalizeParseState(state, jsonlBaseline)
   }
 }
