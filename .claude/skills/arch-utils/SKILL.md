@@ -7,7 +7,7 @@ paths:
 
 ## Role
 
-Pure functions and library wrappers — no I/O to external resources. Every export is either a stateless computation or a thin wrapper that keeps an external library from leaking into domain code. All layers may import from here; in return, `utils` must not import from any `src/` layer.
+Pure functions and library wrappers — no I/O to external resources. Every export is either a stateless computation or a thin wrapper that keeps an external library from leaking into domain code. All layers may import from here; in return, `utils` must not import from any `src/` layer except `types`.
 
 ## Files
 
@@ -21,8 +21,9 @@ Pure functions and library wrappers — no I/O to external resources. Every expo
 
 | May import | Must NOT import |
 |-----------|----------------|
-| External libraries (e.g. `dayjs`) | Any `src/` layer (`cli`, `services`, `domains`, `repositories`, `infrastructures`, `types`, `errors`, `constants`, …) |
+| External libraries (e.g. `dayjs`) | Any `src/` layer except `types` (`cli`, `validators`, `services`, `domains`, `repositories`, `infrastructures`, `errors`, `constants`, `core/di`, …) |
 | Node.js non-I/O built-ins (e.g. `crypto`) | — |
+| `src/types/` | — |
 
 `utils` is a dependency **sink** — it sits below every layer precisely because it has no internal dependencies.
 
@@ -75,7 +76,7 @@ export function readEnvId(): string { return process.env.SESSION_ID ?? '' }  // 
 
 ## Prohibitions
 
-- Never import from any `src/` layer — not even `types` or `constants`
+- Never import from any `src/` layer — not even `constants` (exception: `src/types/` is allowed)
 - Never perform file I/O, spawn processes, or make network calls — those belong in `infrastructures/`
 - Never import `zod` — Zod is confined to `src/validators/rules/` only
 - Never add domain-specific logic (session validation, business rules) — keep functions generic and reusable across all layers
