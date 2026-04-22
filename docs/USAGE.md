@@ -25,6 +25,18 @@ perclst resume <session> "quick follow-up" --model haiku
 
 > For all options: `perclst resume -h`
 
+## `chat`
+
+Resume a session interactively in Claude Code.
+
+`<session>` can be a session ID or session name.
+
+```bash
+perclst chat <session>
+```
+
+Hands off the terminal to `claude --resume <session-id>`. Useful when you know the session name but not the UUID.
+
 ## `fork`
 
 Branch a session into a new independent session.
