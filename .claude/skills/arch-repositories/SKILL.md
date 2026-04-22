@@ -23,7 +23,7 @@ Wraps infrastructure adapters into atomic, domain-meaningful operations. Exposes
 | `ports/agent.ts` | `IProcedureRepository`, `IClaudeCodeRepository` — port contracts consumed by `domains/` |
 | `ports/analysis.ts` | `IClaudeSessionRepository` — port contract consumed by `domains/` |
 | `parsers/claudeSessionParser.ts` | Raw JSONL types and pure parsing helpers for `claudeSessions.ts` |
-| `parsers/claudeCodeParser.ts` | `StreamEvent` types and `parseStreamEvents()` — converts raw stream-json lines into `RawOutput` |
+| `parsers/claudeCodeParser.ts` | `StreamEvent` types and incremental parse API (`createParseState`, `processLine`, `finalizeParseState`) — converts raw stream-json lines into `RawOutput`; `parseStreamEvents()` is a batch wrapper kept for test compatibility |
 | `parsers/tsAnalysisParser.ts` | Pure AST-to-type converters — `extractSymbols`, `extractImports`, `extractExports`, `extractTypeDefinition`; takes `SourceFile`, returns `@src/types/tsAnalysis` types |
 | `parsers/tsAstParser.ts` | AST upward traversal — `findContainingSymbol`; takes `SourceFile`, returns `ContainingSymbol` |
 
@@ -95,27 +95,34 @@ export type ISessionRepository = { ... }  // NG: belongs in src/repositories/por
 export class SessionRepository implements ISessionRepository { ... }
 ```
 
-**Consuming an `AsyncGenerator` from infrastructure** — collect raw lines via class instance, then parse in one shot
+**Consuming an `AsyncGenerator` from infrastructure** — process lines incrementally via a parse state, never buffer all lines
 
-Infrastructure adapters that stream process output yield raw `string` lines. The repository holds an instance of the infrastructure class and delegates to a `parsers/` function.
+Infrastructure adapters that stream process output yield raw `string` lines. The repository holds an instance of the infrastructure class, processes each line into a running parse state, and converts to a typed value only at the end. Buffering all lines in a `string[]` before parsing causes unbounded memory growth for long-running streams.
 
 ```ts
-// Good — agentRepository.ts: class instance, collect lines, then convert
+// Good — agentRepository.ts: incremental parse state, no line buffer
 import { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
-import { parseStreamEvents } from '@src/repositories/parsers/claudeCodeParser'
+import { createParseState, processLine, finalizeParseState } from '@src/repositories/parsers/claudeCodeParser'
 
 export class ClaudeCodeRepository implements IClaudeCodeRepository {
   private infra = new ClaudeCodeInfra()
 
   async dispatch(action: ClaudeAction): Promise<RawOutput> {
     const args = this.infra.buildArgs(action)
-    const lines: string[] = []
+    const state = createParseState()
     for await (const line of this.infra.runClaude(args, action.prompt, action.workingDir)) {
-      lines.push(line)
+      processLine(state, line)
     }
-    return parseStreamEvents(lines, jsonlBaseline)
+    return finalizeParseState(state, jsonlBaseline)
   }
 }
+
+// Bad — buffering all lines before parsing; causes memory growth proportional to stream length
+const lines: string[] = []
+for await (const line of this.infra.runClaude(...)) {
+  lines.push(line)  // NG: holds entire stdout in memory until stream ends
+}
+return parseStreamEvents(lines, jsonlBaseline)
 
 // Bad — parsing inside the infrastructure adapter
 // claudeCode.ts
