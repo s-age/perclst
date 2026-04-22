@@ -60,7 +60,7 @@ describe('PipelineService', () => {
     options?: Parameters<typeof service.run>[1]
   ): Promise<PipelineTaskResult[]> {
     const events: PipelineTaskResult[] = []
-    return (async () => {
+    return (async (): Promise<PipelineTaskResult[]> => {
       for await (const event of service.run(pipeline, options)) events.push(event)
       return events
     })()
@@ -183,7 +183,7 @@ describe('PipelineService', () => {
       const pipeline: Pipeline = {
         tasks: [{ type: 'child', path: '/absolute/sub.json', name: 'sub' }]
       }
-      const events = await (async () => {
+      const events = await (async (): Promise<PipelineTaskResult[]> => {
         const result: PipelineTaskResult[] = []
         for await (const e of service.run(pipeline, {
           loadChildPipeline,
