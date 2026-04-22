@@ -33,37 +33,44 @@
     {
       "type": "child",
       "path": "unit-test__cli__commands__import.json",
-      "name": "unit-test-cli-commands-import"
+      "name": "unit-test-cli-commands-import",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__inspect.json",
-      "name": "unit-test-cli-commands-inspect"
+      "name": "unit-test-cli-commands-inspect",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__list.json",
-      "name": "unit-test-cli-commands-list"
+      "name": "unit-test-cli-commands-list",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__rename.json",
-      "name": "unit-test-cli-commands-rename"
+      "name": "unit-test-cli-commands-rename",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__resume.json",
-      "name": "unit-test-cli-commands-resume"
+      "name": "unit-test-cli-commands-resume",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__retrieve.json",
-      "name": "unit-test-cli-commands-retrieve"
+      "name": "unit-test-cli-commands-retrieve",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__rewind.json",
-      "name": "unit-test-cli-commands-rewind"
+      "name": "unit-test-cli-commands-rewind",
+      "done": true
     },
     {
       "type": "child",
