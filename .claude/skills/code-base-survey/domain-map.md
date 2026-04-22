@@ -12,12 +12,13 @@ Port consumed by domains (repo side): `src/repositories/ports/<name>.ts`
 
 ## SessionDomain — `session.ts`
 
-**Responsibility**: Session lifecycle — creation, persistence, lookup, deletion, status transitions.
+**Responsibility**: Session lifecycle — creation, persistence, lookup, deletion, status transitions, and label management.
 
-Key methods: `create`, `get`, `list`, `delete`, `save`, `rename`, `findByName`, `resolveId`, `updateStatus`, `getPath`, `createRewind`, `sweep`
+Key methods: `create`, `get`, `list`, `delete`, `save`, `rename`, `setLabels`, `addLabels`, `findByName`, `resolveId`, `updateStatus`, `getPath`, `createRewind`, `sweep`
 
 `resolveId` accepts either a session ID or a name — this is the standard way to accept user input in CLI commands.
 `createRewind` forks a session at a past turn (always creates a new session; original is never mutated).
+`setLabels` replaces all labels on a session; `addLabels` appends without replacing existing labels.
 
 ---
 

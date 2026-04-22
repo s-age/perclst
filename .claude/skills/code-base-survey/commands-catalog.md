@@ -16,7 +16,9 @@ All `perclst` subcommands. Source of truth: `docs/USAGE.md`.
 | `fork <session> "<instruction>"` | Branch a session into a new independent session |
 | `rewind <session> <index>` | Fork from a past turn (index 0 = current tip) |
 
-Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--allowed-tools`, `--disallowed-tools`, `--max-turns`, `--max-context-tokens`, `--output-only`
+Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--label`, `--allowed-tools`, `--disallowed-tools`, `--max-turns`, `--max-context-tokens`, `--output-only`
+
+`--label` on `start`/`fork` sets initial labels. `--label` on `resume` **appends** to existing labels (does not replace).
 
 `rewind` flags: `--list` (show rewind points), `--length <n>` (chars per turn in list)
 
@@ -28,10 +30,13 @@ Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--
 |---|---|
 | `list` | List all sessions |
 | `show <session>` | Show session turns (flags: `--format json`, `--head`, `--tail`, `--order`, `--length`) |
-| `rename <session-id> "<name>"` | Set display name |
+| `rename <session-id> "<name>"` | Set display name; `--label <labels...>` replaces all labels at the same time |
+| `tag <session> <label...>` | Set labels on a session — **replaces** all existing labels |
 | `delete <session-id>` | Delete a session |
 | `sweep` | Bulk-delete by date, status, name pattern, or anon-only (`--dry-run` available) |
-| `import <claude-session-id>` | Import a Claude Code session into perclst management (`--name`, `--cwd`) |
+| `import <claude-session-id>` | Import a Claude Code session into perclst management (`--name`, `--cwd`, `--label`) |
+
+`list` flags: `--label <label>` (filter to sessions with this label), `--like <pattern>` (filter by name substring)
 
 `sweep` flags: `--from`, `--to`, `--status`, `--like`, `--anon-only`, `--dry-run`, `--force`
 
