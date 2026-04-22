@@ -67,7 +67,7 @@ mcp ──┼→ validators → services → domains → repositories → infras
 | `domains`          | `domains/ports` (intra), `repositories/ports`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `repositories`, `infrastructures`   |
 | `repositories`     | `repositories/ports` (intra), `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains`        |
 | `infrastructures`  | `types`, `errors`, `utils`, `constants`                                 | `cli`, `services`, `domains`, `repositories`        |
-| `utils`            | external libraries (e.g. `dayjs`); Node.js non-I/O built-ins (e.g. `crypto`) | all `src/` layers                             |
+| `utils`            | external libraries (e.g. `dayjs`); Node.js non-I/O built-ins (e.g. `crypto`); `types` | `cli`, `validators`, `services`, `domains`, `repositories`, `infrastructures`, `errors`, `constants`, `core/di` |
 | `types`            | nothing                                                                 | all other layers                                    |
 | `core/di/setup.ts` | all layers                                                              | — (sole exception: DI wiring is its responsibility) |
 
