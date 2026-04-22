@@ -75,7 +75,8 @@
     {
       "type": "child",
       "path": "unit-test__cli__commands__run.json",
-      "name": "unit-test-cli-commands-run"
+      "name": "unit-test-cli-commands-run",
+      "done": true
     },
     {
       "type": "child",
