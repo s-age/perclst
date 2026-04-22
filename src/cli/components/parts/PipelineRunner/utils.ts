@@ -18,7 +18,8 @@ export function initTasks(pipeline: Pipeline): TaskState[] {
   }))
 }
 
-function splitToLines(text: string, width: number, prefix: string): string[] {
+/** @internal exported for testing only */
+export function splitToLines(text: string, width: number, prefix: string): string[] {
   const lines: string[] = []
   for (let i = 0; i < text.length; i += width) {
     lines.push(`${prefix}${text.slice(i, i + width)}`)

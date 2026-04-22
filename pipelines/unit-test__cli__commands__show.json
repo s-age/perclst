@@ -1,0 +1,66 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-unit-test-cli-commands-show"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-cli-commands-show",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-cli-commands-show",
+          "task": "target_file_path: src/cli/commands/show.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-cli-commands-show",
+          "task": "target_file_path: src/cli/commands/show.ts\nng_output_path: .claude/tmp/review-unit-test-cli-commands-show",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-cli-commands-show",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-cli-commands-show",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-unit-test-cli-commands-show",
+      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(cli): ...).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
