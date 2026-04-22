@@ -2,16 +2,18 @@ import { stderr } from '@src/utils/output'
 import { startCommand } from './start'
 
 const SURVEY_TOOLS = [
+  'Skill',
   'Read',
   'Glob',
   'Grep',
+  'Write',
   'mcp__perclst__knowledge_search',
   'mcp__perclst__ts_analyze',
   'mcp__perclst__ts_get_references',
   'mcp__perclst__ts_get_types'
 ]
 
-const REFRESH_TOOLS = ['Read', 'Glob', 'Grep', 'Bash', 'Write', 'mcp__perclst__ts_analyze']
+const REFRESH_TOOLS = ['Skill', 'Read', 'Glob', 'Grep', 'Bash', 'Write', 'mcp__perclst__ts_analyze']
 
 type SurveyOptions = {
   refresh?: boolean

@@ -23,6 +23,7 @@ export async function inspectCommand(oldRef: string, newRef: string) {
       {
         procedure: 'code-inspector',
         model: 'sonnet',
+        allowedTools: ['Skill', 'mcp__perclst__knowledge_search'],
         outputOnly: true
       }
     )

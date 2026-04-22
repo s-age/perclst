@@ -29,7 +29,10 @@ flowchart TD
     Fix --> Verify
     Valid -- Yes --> DeleteEntry[Delete promoted entry from draft]
 
-    DeleteEntry --> PickEntry
+    DeleteEntry --> AnyMore{More draft\nentries?}
+    AnyMore -- Yes --> PickEntry
+    AnyMore -- No --> Commit["git add knowledge/ && git commit\n-m 'docs(knowledge): promote draft entries'"]
+    Commit --> Done
 ```
 
 Consult the `meta-librarian` skill for file format and classification criteria.
