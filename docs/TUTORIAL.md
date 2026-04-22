@@ -109,6 +109,12 @@ To continue: perclst resume e5f6g7h8-... "Try a different explanation this time"
 
 Use `rewind` when a response went in the wrong direction and you want to retry from just before it.
 
+`resume` does not have a `--name` option. To give the rewind session a name after resuming, use `rename`:
+
+```bash
+perclst rename e5f6g7h8-... tutorial-rewinded
+```
+
 > **Note**: `rewind tutorial 0` branches from the latest turn without discarding anything — equivalent to `fork` without a prompt.
 
 ## 8. Chat interactively
@@ -129,8 +135,8 @@ perclst sweep --like 'tutorial' --dry-run
 
 This matches all sessions whose name contains `tutorial` — including `tutorial-alt` from the fork and the rewind session created earlier.
 
-Once you're satisfied with the list, delete them:
+Once you're satisfied with the list, delete them. `--to` is omitted here (open-ended range), so `--force` is required to confirm:
 
 ```bash
-perclst sweep --like 'tutorial'
+perclst sweep --like 'tutorial' --force
 ```

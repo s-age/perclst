@@ -11,7 +11,29 @@ export async function chatCommand(sessionId: string): Promise<void> {
     const input = parseChatSession({ sessionId })
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const resolvedId = await sessionService.resolveId(input.sessionId)
-    spawnSync('claude', ['--resume', resolvedId], { stdio: 'inherit' })
+    const session = await sessionService.get(resolvedId)
+
+    const needsFork = !!session.rewind_source_claude_session_id
+    const claudeArgs = needsFork
+      ? [
+          '--resume',
+          session.rewind_source_claude_session_id!,
+          '--fork-session',
+          '--session-id',
+          session.claude_session_id,
+          ...(session.rewind_to_message_id
+            ? ['--resume-session-at', session.rewind_to_message_id]
+            : [])
+        ]
+      : ['--resume', session.claude_session_id]
+
+    spawnSync('claude', claudeArgs, { stdio: 'inherit' })
+
+    if (needsFork) {
+      session.rewind_source_claude_session_id = undefined
+      session.rewind_to_message_id = undefined
+      await sessionService.save(session)
+    }
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)

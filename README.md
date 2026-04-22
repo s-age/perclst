@@ -53,6 +53,8 @@ See [docs/INSTALLATION.md](docs/INSTALLATION.md) for full setup instructions.
 
 See [docs/USAGE.md](docs/USAGE.md) for the full command reference.
 
+New to perclst? Walk through the core workflow in [docs/TUTORIAL.md](docs/TUTORIAL.md).
+
 ## MCP Server
 
 The MCP server exists primarily to handle permission prompts in headless (`claude -p`) sessions. In headless mode there is no interactive UI, so permission requests would silently block. The bundled `ask_permission` tool intercepts these requests and routes them to the terminal via `/dev/tty`, letting you approve or deny each tool call with a `[y/N]` prompt without pre-approving everything upfront.

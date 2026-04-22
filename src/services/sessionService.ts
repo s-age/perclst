@@ -53,6 +53,10 @@ export class SessionService {
     return this.domain.createRewind(originalSessionId, messageId, name)
   }
 
+  async save(session: Session): Promise<void> {
+    return this.domain.save(session)
+  }
+
   async sweep(filter: SweepFilter, dryRun: boolean): Promise<Session[]> {
     return this.domain.sweep(filter, dryRun)
   }
