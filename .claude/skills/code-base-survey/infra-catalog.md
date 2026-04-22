@@ -13,11 +13,11 @@ The core adapter that spawns `claude -p` subprocesses.
 
 | Method | Signature | Returns |
 |---|---|---|
-| `resolveJsonlPath` | `(sessionId, workingDir)` | `string` — path to Claude's JSONL session file |
-| `countJsonlLines` | `(path)` | `number` — line count (used to detect resume offset) |
+| `resolveJsonlPath` | `(sessionId: string, workingDir: string)` | `string` — path to Claude's JSONL session file |
+| `countJsonlLines` | `(path: string)` | `number` — line count (used to detect resume offset) |
 | `buildArgs` | `(action: ClaudeAction)` | `string[]` — CLI args array |
-| `runClaude` | `(args, prompt, workingDir, sessionFilePath)` | `AsyncGenerator<string>` — streams JSONL output lines |
-| `writeStderr` | `(data)` | `void` — writes to stderr |
+| `runClaude` | `(args: string[], prompt: string, workingDir: string, sessionFilePath: string)` | `AsyncGenerator<string>` — streams JSONL output lines |
+| `writeStderr` | `(data: string)` | `void` — writes to stderr |
 
 MCP server path is resolved relative to this file at `MCP_SERVER_PATH`.
 
@@ -47,20 +47,20 @@ Used by `PipelineFileDomain` to move completed pipeline files to `done/`.
 
 | Function | Signature | Returns |
 |---|---|---|
-| `readJson<T>` | `(path)` | `T` |
-| `writeJson` | `(path, data)` | `void` |
-| `fileExists` | `(path)` | `boolean` |
-| `removeFile` | `(path)` | `Promise<void>` |
-| `listFiles` | `(dir)` | `string[]` — filenames only (not paths) |
-| `ensureDir` | `(path)` | `void` — mkdir -p |
-| `readText` | `(path)` | `string` |
-| `writeText` | `(path, content)` | `void` |
-| `removeFileSync` | `(path)` | `void` |
-| `cleanDir` | `(dir)` | `void` — removes all files in dir |
+| `readJson<T>` | `(path: string)` | `T` |
+| `writeJson` | `(path: string, data: unknown)` | `void` |
+| `fileExists` | `(path: string)` | `boolean` |
+| `removeFile` | `(path: string)` | `Promise<void>` |
+| `listFiles` | `(dir: string)` | `string[]` — filenames only (not paths) |
+| `ensureDir` | `(path: string)` | `void` — mkdir -p |
+| `readText` | `(path: string)` | `string` |
+| `writeText` | `(path: string, content: string)` | `void` |
+| `removeFileSync` | `(path: string)` | `void` |
+| `cleanDir` | `(dir: string)` | `void` — removes all files in dir |
 | `homeDir` | `()` | `string` — os.homedir() |
 | `currentWorkingDir` | `()` | `string` — process.cwd() |
-| `listDirEntries` | `(dir)` | `Dirent[]` — includes type info |
-| `isDirectory` | `(path)` | `boolean` |
+| `listDirEntries` | `(dir: string)` | `Dirent[]` — includes type info |
+| `isDirectory` | `(path: string)` | `boolean` |
 
 ---
 
@@ -119,8 +119,8 @@ ts-morph `Project` wrapper.
 
 | Method | Signature | Returns |
 |---|---|---|
-| `getSourceFile` | `(filePath)` | `SourceFile` — throws if not found |
-| `getSourceFileIfExists` | `(filePath)` | `SourceFile \| undefined` |
+| `getSourceFile` | `(filePath: string)` | `SourceFile` — throws if not found |
+| `getSourceFileIfExists` | `(filePath: string)` | `SourceFile \| undefined` |
 
 Constructor accepts `TsAnalyzerOptions` (tsconfig path, etc.).
 
@@ -133,6 +133,6 @@ Low-level TTY I/O for the TUI permission prompt. Used exclusively by `Permission
 | Function | Signature | Returns |
 |---|---|---|
 | `openTty` | `()` | `number \| null` — file descriptor |
-| `writeTty` | `(fd, data)` | `void` |
-| `readTty` | `(fd)` | `string` |
-| `closeTty` | `(fd)` | `void` |
+| `writeTty` | `(fd: number, data: string)` | `void` |
+| `readTty` | `(fd: number)` | `string` |
+| `closeTty` | `(fd: number)` | `void` |

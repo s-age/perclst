@@ -12,10 +12,13 @@ All `perclst` subcommands. Source of truth: `docs/USAGE.md`.
 |---|---|
 | `start "<task>"` | Start a new agent session |
 | `resume <session> "<instruction>"` | Resume a session with an additional instruction |
+| `chat <session>` | Hand off a session to Claude Code interactively (`claude --resume`) |
 | `fork <session> "<instruction>"` | Branch a session into a new independent session |
 | `rewind <session> <index>` | Fork from a past turn (index 0 = current tip) |
 
 Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--allowed-tools`, `--disallowed-tools`, `--max-turns`, `--max-context-tokens`, `--output-only`
+
+`rewind` flags: `--list` (show rewind points), `--length <n>` (chars per turn in list)
 
 ---
 
@@ -28,6 +31,9 @@ Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--
 | `rename <session-id> "<name>"` | Set display name |
 | `delete <session-id>` | Delete a session |
 | `sweep` | Bulk-delete by date, status, name pattern, or anon-only (`--dry-run` available) |
+| `import <claude-session-id>` | Import a Claude Code session into perclst management (`--name`, `--cwd`) |
+
+`sweep` flags: `--from`, `--to`, `--status`, `--like`, `--anon-only`, `--dry-run`, `--force`
 
 ---
 
@@ -36,7 +42,6 @@ Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--
 | Command | Purpose |
 |---|---|
 | `analyze <session>` | Turn breakdown, tool usage, token stats (`--print-detail`, `--format json`) |
-| `import <claude-session-id>` | Import a Claude Code session into perclst management (`--name`, `--cwd`) |
 
 ---
 

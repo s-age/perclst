@@ -31,10 +31,13 @@ Use `toISO` for session file storage; use `toLocaleString` for display output.
 
 | Export | Type | Purpose |
 |---|---|---|
+| `LogLevel` | `enum` | `DEBUG = 0`, `INFO = 1` |
 | `setLogLevel` | `(level: LogLevel) => void` | Sets current log level |
-| `stdout` | `{ print(message: string): void }` | Normal output |
-| `stderr` | `{ print(message: string, cause?: unknown): void }` | Error output |
-| `debug` | `{ print(message: string, meta?: Record<string, unknown>): void }` | Debug output (suppressed unless log level is debug) |
+| `stdout` | `{ print(message: string): void }` | Normal output to process.stdout |
+| `stderr` | `{ print(message: string, cause?: unknown): void }` | Error output to process.stderr |
+| `debug` | `{ print(message: string, meta?: Record<string, unknown>): void }` | Debug output (suppressed unless log level is DEBUG) |
+
+> Note: `ts_analyze` only detects `setLogLevel` in exports — `stdout`, `stderr`, `debug`, and `LogLevel` are `export const`/`export enum` and confirmed by reading the source directly.
 
 ---
 
@@ -44,14 +47,19 @@ Re-exports `resolve`, `dirname`, `basename`, `join` from Node `path`. Use this i
 
 ---
 
-## `src/utils/turns.ts` — turn display helpers
+## `src/utils/testStrategyHelpers.ts` — test strategy pure helpers
 
 | Function | Signature | Returns |
 |---|---|---|
-| `flattenTurns` | `(turns: ClaudeCodeTurn[])` | `TurnRow[]` — flat list for display |
-| `applyRowFilter` | `(rows: TurnRow[], filter: RowFilter)` | `TurnRow[]` — filtered/sliced |
+| `calcComplexity` | `(fn: RawFunctionInfo)` | `number` — cyclomatic complexity |
+| `calcSuggestedTestCaseCount` | `(complexity: number)` | `number` — recommended test case count |
+| `isCustomHook` | `(name: string)` | `boolean` — true if name starts with `use` |
+| `isComponent` | `(name: string)` | `boolean` — true if name starts with uppercase |
+| `findMatchingTest` | `(targetFilePath, testFilePath?)` | `string \| null` — resolved test file path |
+| `buildStrategy` | `(fn: RawFunctionInfo, framework: TestFramework, missing: MissingCoverage)` | `FunctionStrategy` |
+| `buildRecommendation` | `(strategy: FunctionStrategy)` | `string` — human-readable recommendation |
 
-Used by the `show` and `analyze` CLI commands.
+Pure helpers extracted from `TestStrategyDomain`. Consumed by `src/domains/testStrategy.ts`.
 
 ---
 

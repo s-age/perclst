@@ -1,6 +1,44 @@
 # Usage
 
+## Contents
+
+### Agent Commands
+Spawn a Claude agent — incur API usage and network time.
+
+- [`start`](#start)
+- [`resume`](#resume)
+- [`chat`](#chat)
+- [`fork`](#fork)
+- [`inspect`](#inspect)
+- [`curate`](#curate)
+- [`survey`](#survey)
+- [`retrieve`](#retrieve)
+- [`run`](#run) — depends on pipeline contents
+
+### Session Management
+Local operations — no agent required.
+
+- [`rewind`](#rewind)
+- [`list`](#list)
+- [`show`](#show)
+- [`analyze`](#analyze)
+- [`rename`](#rename)
+- [`delete`](#delete)
+- [`sweep`](#sweep)
+- [`import`](#import)
+
+### Reference
+
+- [Tool Permissions](#tool-permissions)
+- [Graceful Termination](#graceful-termination)
+- [Output](#output)
+- [Configuration](#configuration)
+
+---
+
 ## `start`
+
+*Agent command — spawns Claude.*
 
 Start a new agent session.
 
@@ -13,6 +51,8 @@ perclst start "task" --name "my-session" --model opus
 > For all options (procedures, tool permissions, output flags, etc.): `perclst start -h`
 
 ## `resume`
+
+*Agent command — spawns Claude.*
 
 Resume an existing session with an additional instruction.
 
@@ -27,6 +67,8 @@ perclst resume <session> "quick follow-up" --model haiku
 
 ## `chat`
 
+*Agent command — hands off to Claude Code interactively.*
+
 Resume a session interactively in Claude Code.
 
 `<session>` can be a session ID or session name.
@@ -38,6 +80,8 @@ perclst chat <session>
 Hands off the terminal to `claude --resume <session-id>`. Useful when you know the session name but not the UUID.
 
 ## `fork`
+
+*Agent command — spawns Claude.*
 
 Branch a session into a new independent session.
 
@@ -51,6 +95,8 @@ perclst fork <session> "Try a different fix" --name "hotfix-attempt-2"
 > For all options: `perclst fork -h`
 
 ## `rewind`
+
+*Local — no agent.*
 
 Create a new session branching from a past point in a session's conversation history.
 
@@ -75,6 +121,8 @@ perclst resume <session> "Try a different approach"
 
 ## `list`
 
+*Local — no agent.*
+
 List all sessions.
 
 ```bash
@@ -82,6 +130,8 @@ perclst list
 ```
 
 ## `show`
+
+*Local — no agent.*
 
 Show session details.
 
@@ -107,6 +157,8 @@ perclst show <session> --tail 30 --length 120       # last 30 rows, truncated to
 
 ## `analyze`
 
+*Local — no agent.*
+
 Turn breakdown, tool usage, and token stats from a Claude Code jsonl session.
 
 `<session>` can be a session ID or session name.
@@ -119,6 +171,8 @@ perclst analyze <session> --format json
 
 ## `rename`
 
+*Local — no agent.*
+
 Set a display name for a session.
 
 ```bash
@@ -127,6 +181,8 @@ perclst rename <session-id> "new-name"
 
 ## `delete`
 
+*Local — no agent.*
+
 Delete a single session.
 
 ```bash
@@ -134,6 +190,8 @@ perclst delete <session-id>
 ```
 
 ## `sweep`
+
+*Local — no agent.*
 
 Bulk-delete sessions matching a set of filters. At least one filter option is required. Date filters operate on `created_at`.
 
@@ -173,6 +231,8 @@ perclst sweep --to 2025-03-31 --status completed --anon-only
 
 ## `inspect`
 
+*Agent command — spawns Claude.*
+
 Run a pre-push code inspection between two git refs. Spawns a sonnet agent that reviews the diff for code quality issues, sensitive data leaks, and unintentional artifacts.
 
 ```bash
@@ -203,6 +263,8 @@ If `CRITICAL` findings are present (API key, personal data leak, etc.), the repo
 
 ## `curate`
 
+*Agent command — spawns Claude.*
+
 Promote all `knowledge/draft/` entries into structured `knowledge/` files. Shorthand for running the `meta-curate-knowledge` procedure with the required tool permissions.
 
 ```bash
@@ -219,6 +281,8 @@ perclst start "Promote all entries in knowledge/draft/ into structured knowledge
 ```
 
 ## `survey`
+
+*Agent command — spawns Claude.*
 
 Survey the codebase for bug investigation or pre-implementation research. Spawns a sonnet agent that searches the knowledge base, consults layer catalogs, and traces symbols to answer: **where is the relevant code?** and **what already exists that could be reused?**
 
@@ -242,6 +306,8 @@ The agent returns a structured report with two sections:
 
 ## `retrieve`
 
+*Agent command — spawns Claude.*
+
 Search the project knowledge base for one or more keywords and return a structured summary of findings. Shorthand for running the `meta-retrieve-knowledge` procedure with `--output-only`.
 
 ```bash
@@ -262,6 +328,8 @@ perclst start "Search the knowledge base for the following keywords and return a
 > `--output-only` is not a CLI flag on `retrieve` — it is applied internally. `perclst retrieve "kw" --output-only` will error.
 
 ## `run`
+
+*Hybrid — spawns agents only if the pipeline includes agent tasks.*
 
 Execute a pipeline of agent tasks defined in a JSON file. Tasks run serially. If a task specifies a `name` and a session with that name already exists, the task resumes that session; otherwise a new session is created.
 
@@ -460,6 +528,8 @@ This pipeline runs as follows:
 The `pipelines/` directory in this repository contains the pipelines used in perclst's own development — unit-test generation, code review loops, and refactoring workflows. These are real operational examples, not toy samples.
 
 ## `import`
+
+*Local — no agent.*
 
 Import an existing Claude Code session into perclst management.
 

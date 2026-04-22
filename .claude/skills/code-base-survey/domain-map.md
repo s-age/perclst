@@ -27,6 +27,7 @@ Key methods: `create`, `get`, `list`, `delete`, `save`, `rename`, `findByName`, 
 
 Key methods: `run`, `resume`, `fork`, `isLimitExceeded`
 
+`run(session, instruction, isResume, options)` is the unified entry point; `resume` and `fork` are convenience wrappers.
 Depends on `IClaudeCodeRepository` (spawns process) and `IProcedureRepository` (loads procedure prompts).
 
 ---
@@ -35,7 +36,7 @@ Depends on `IClaudeCodeRepository` (spawns process) and `IProcedureRepository` (
 
 **Responsibility**: Reads Claude Code JSONL session files and produces analysis stats.
 
-Key methods: `analyze` → `AnalyzeResult` (turn breakdown, tool usage, token stats), `getRewindTurns`
+Key methods: `analyze(sessionId)` → `AnalyzeResult` (turn breakdown, tool usage, token stats), `formatTurns(turns, filter)` → `TurnRow[]`, `getRewindTurns(sessionId)` → `RewindTurn[]`
 
 `buildSummaryStats` is an exported pure function used internally.
 
@@ -55,7 +56,7 @@ Thin orchestrator; actual command execution is in `commandRunner.ts` via `ICheck
 
 **Responsibility**: Validates a Claude Code session ID for import and resolves its working directory.
 
-Key methods: `validateSession`, `resolveWorkingDir`
+Key methods: `resolveWorkingDir(claudeSessionId)`, `validateSession(claudeSessionId, workingDir)`
 
 ---
 
@@ -65,7 +66,10 @@ Key methods: `validateSession`, `resolveWorkingDir`
 
 Key methods: `search(options)` → `KnowledgeSearchResult`, `hasDraftEntries()`
 
-Query syntax: space = AND, `|` = OR. Pure functions `parseQuery`, `extractKeywords`, `matchFile`, `extractTitle`, `extractExcerpt` are the core matching logic.
+Exported pure functions: `parseQuery(query)` → `string[][]`, `extractKeywords(query)` → `string[]`.
+Internal helpers (not exported): `matchFile`, `extractTitle`, `extractExcerpt`.
+
+Query syntax: space = AND, `|` = OR.
 
 ---
 
@@ -75,7 +79,7 @@ Query syntax: space = AND, `|` = OR. Pure functions `parseQuery`, `extractKeywor
 
 Key methods: `runAgentTask`, `runWithLimit`, `resolveRejection`, `resolveScriptRejection`, `buildExecuteOptions`, `buildRejectedInstruction`, `getRejectionFeedback`, `getWorkingDirectory`, `findOuterRejectionTarget`
 
-`GRACEFUL_TERMINATION_PROMPT` is the prompt sent when turn/token limits are hit.
+`GRACEFUL_TERMINATION_PROMPT` is an exported constant — the prompt sent when turn/token limits are hit.
 Rejection feedback from review agents is stored via `IRejectionFeedbackRepository` (file-based temp storage).
 
 ---
@@ -104,7 +108,7 @@ The MCP tool writes a permission request; the TUI polls via `pollRequest` and ca
 
 **Responsibility**: Executes shell commands within pipelines. Returns `ScriptResult` (stdout, stderr, exitCode).
 
-Key methods: `run(command, cwd)`
+Key methods: `run(command: string, cwd: string)` → `Promise<ScriptResult>`
 
 ---
 
@@ -112,9 +116,9 @@ Key methods: `run(command, cwd)`
 
 **Responsibility**: Analyzes a TypeScript file for test coverage gaps and calculates cyclomatic complexity.
 
-Key methods: `analyze(options)` → `TestStrategyResult`
+Key methods: `analyze(options: TestStrategyOptions)` → `TestStrategyResult`
 
-Pure helpers: `calcComplexity`, `calcSuggestedTestCaseCount`, `isCustomHook`, `isComponent`, `findMatchingTest`, `buildStrategy`, `buildRecommendation`
+Pure helpers (`calcComplexity`, `calcSuggestedTestCaseCount`, `isCustomHook`, `isComponent`, `findMatchingTest`, `buildStrategy`, `buildRecommendation`) live in `src/utils/testStrategyHelpers.ts`.
 
 ---
 
@@ -122,6 +126,16 @@ Pure helpers: `calcComplexity`, `calcSuggestedTestCaseCount`, `isCustomHook`, `i
 
 **Responsibility**: TypeScript AST analysis — symbols, references, type definitions.
 
-Key methods: `analyze(filePath)` → `TypeScriptAnalysis`, `getReferences`, `getReferencesRecursive`, `getTypeDefinitions`
+Key methods: `analyze(filePath)` → `TypeScriptAnalysis`, `getReferences(filePath, symbolName, options)` → `ReferenceInfo[]`, `getReferencesRecursive(filePath, symbolName, options)` → `RecursiveReferenceInfo[]`, `getTypeDefinitions(filePath, symbolName)` → `TypeDefinition | null`
 
 Backs the `ts_analyze`, `ts_get_references`, `ts_get_types` MCP tools.
+
+---
+
+## TurnsDomain — `turns.ts`
+
+**Responsibility**: Turn display helpers — flatten and filter Claude Code turn arrays for CLI output.
+
+Key functions: `flattenTurns(turns: ClaudeCodeTurn[])` → `TurnRow[]`, `applyRowFilter(rows: TurnRow[], filter: RowFilter)` → `TurnRow[]`
+
+Used by `AnalyzeDomain.formatTurns` and the `show` CLI command.

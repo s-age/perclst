@@ -7,15 +7,19 @@ Use these when working in `src/` — they reduce round-trips vs. manual file rea
 
 ## `ts_analyze` — file surface map
 
+**Source**: `src/mcp/tools/tsAnalyze.ts` → `executeTsAnalyze`
 **Input**: `file_path: string`
 **Output**: All symbols (functions, classes, variables) with types, constructor params, public methods; plus all imports and exports.
 
 **When to use**: First step before writing tests or reviewing a file. Gives a complete symbol map without reading line by line.
 
+> Note: `ts_analyze` only lists function-kind exports. `export const` and `export enum` exports are present in the symbols list but absent from the exports array — read the source file to confirm when in doubt.
+
 ---
 
 ## `ts_get_types` — symbol type signature
 
+**Source**: `src/mcp/tools/tsGetTypes.ts` → `executeTsGetTypes`
 **Input**: `file_path: string`, `symbol_name: string`
 **Output**: Parameter types and return type for the named symbol.
 
@@ -25,6 +29,7 @@ Use these when working in `src/` — they reduce round-trips vs. manual file rea
 
 ## `ts_get_references` — call site finder
 
+**Source**: `src/mcp/tools/tsGetReferences.ts` → `executeTsGetReferences`
 **Input**: `file_path: string`, `symbol_name: string`, `include_test?: boolean` (default: false), `recursive?: boolean` (default: true)
 **Output**: All call sites of the symbol. With `recursive: true`, follows callers up the chain.
 
@@ -34,6 +39,7 @@ Use these when working in `src/` — they reduce round-trips vs. manual file rea
 
 ## `ts_checker` — lint + build + test in one shot
 
+**Source**: `src/mcp/tools/tsChecker.ts` → `executeTsChecker`
 **Input**: `project_root?`, `lint_command?`, `build_command?`, `test_command?` (all optional, auto-detected)
 **Output**: `{ ok: boolean, lint: {...}, build: {...}, test: {...} }`
 
@@ -45,6 +51,7 @@ Runs `npm run lint:fix` → `npm run build` → `npm run test:unit`.
 
 ## `ts_test_strategist` — test coverage analysis
 
+**Source**: `src/mcp/tools/tsTestStrategist.ts` → `executeTsTestStrategist`
 **Input**: `target_file_path: string`, `test_file_path?: string` (auto-discovered if omitted)
 **Output**: Untested functions, cyclomatic complexity per function, suggested mock dependencies, recommended test case counts.
 
@@ -54,6 +61,7 @@ Runs `npm run lint:fix` → `npm run build` → `npm run test:unit`.
 
 ## `knowledge_search` — knowledge base search
 
+**Source**: `src/mcp/tools/knowledgeSearch.ts` → `executeKnowledgeSearch`
 **Input**: `query: string` (AND/OR supported), `include_draft?: boolean` (default: false)
 **Output**: Matching knowledge entries with title, path, matched keywords, and excerpt.
 
@@ -65,6 +73,7 @@ Query syntax: spaces = AND, `|` = OR. Example: `"session resume | session fork"`
 
 ## `ask_permission` — TUI permission pipe
 
+**Source**: `src/mcp/tools/askPermission.ts` → `executeAskPermission`
 **Input**: `tool_name: string`, `input: Record<string, unknown>`, `tool_use_id?: string`
 **Output**: `PermissionResult` — allow/deny decision from the TUI operator.
 
