@@ -277,8 +277,8 @@ describe('fs module', () => {
   })
 
   describe('cleanDir', () => {
-    it('should call unlinkSync for each file in the directory', () => {
-      const entry = { isFile: () => true, name: 'file.txt' }
+    it('should call unlinkSync for each file in the directory', (): void => {
+      const entry = { isFile: (): boolean => true, name: 'file.txt' }
       vi.mocked(fsSync.existsSync).mockReturnValue(true)
       vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
         typeof fsSync.readdirSync
@@ -289,7 +289,7 @@ describe('fs module', () => {
       expect(fsSync.unlinkSync).toHaveBeenCalledWith(join('/some/dir', 'file.txt'))
     })
 
-    it('should return early without reading dir when directory does not exist', () => {
+    it('should return early without reading dir when directory does not exist', (): void => {
       vi.mocked(fsSync.existsSync).mockReturnValue(false)
 
       cleanDir('/nonexistent/dir')
@@ -308,8 +308,8 @@ describe('fs module', () => {
       expect(fsSync.unlinkSync).not.toHaveBeenCalled()
     })
 
-    it('should not call unlinkSync for non-file entries', () => {
-      const entry = { isFile: () => false, name: 'subdir' }
+    it('should not call unlinkSync for non-file entries', (): void => {
+      const entry = { isFile: (): boolean => false, name: 'subdir' }
       vi.mocked(fsSync.existsSync).mockReturnValue(true)
       vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
         typeof fsSync.readdirSync
@@ -320,8 +320,8 @@ describe('fs module', () => {
       expect(fsSync.unlinkSync).not.toHaveBeenCalled()
     })
 
-    it('should continue without throwing when unlinkSync throws for a locked file', () => {
-      const entry = { isFile: () => true, name: 'locked.txt' }
+    it('should continue without throwing when unlinkSync throws for a locked file', (): void => {
+      const entry = { isFile: (): boolean => true, name: 'locked.txt' }
       vi.mocked(fsSync.existsSync).mockReturnValue(true)
       vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
         typeof fsSync.readdirSync
@@ -333,10 +333,10 @@ describe('fs module', () => {
       expect(() => cleanDir('/some/dir')).not.toThrow()
     })
 
-    it('should delete multiple files in the directory', () => {
+    it('should delete multiple files in the directory', (): void => {
       const entries = [
-        { isFile: () => true, name: 'a.txt' },
-        { isFile: () => true, name: 'b.txt' }
+        { isFile: (): boolean => true, name: 'a.txt' },
+        { isFile: (): boolean => true, name: 'b.txt' }
       ]
       vi.mocked(fsSync.existsSync).mockReturnValue(true)
       vi.mocked(fsSync.readdirSync).mockReturnValue(
@@ -350,8 +350,8 @@ describe('fs module', () => {
   })
 
   describe('listDirEntries', () => {
-    it('should return Dirent entries from the directory', () => {
-      const entry = { isFile: () => true, name: 'file.txt' }
+    it('should return Dirent entries from the directory', (): void => {
+      const entry = { isFile: (): boolean => true, name: 'file.txt' }
       vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
         typeof fsSync.readdirSync
       >)
