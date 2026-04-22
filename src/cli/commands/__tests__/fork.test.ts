@@ -9,7 +9,6 @@ import { printResponse } from '@src/cli/display'
 import { parseForkSession } from '@src/validators/cli/forkSession'
 
 vi.mock('@src/core/di/container')
-vi.mock('@src/core/di/identifiers')
 vi.mock('@src/utils/output', () => ({
   stdout: { print: vi.fn() },
   stderr: { print: vi.fn() },

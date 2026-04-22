@@ -26,9 +26,6 @@ vi.mock('@src/core/di/container', () => ({
     resolve: mockContainerResolve
   }
 }))
-vi.mock('@src/core/di/identifiers', () => ({
-  TOKENS: { SessionService: Symbol('SessionService') }
-}))
 vi.mock('@src/utils/output', () => ({
   stdout: { print: mockStdoutPrint },
   stderr: { print: mockStderrPrint }

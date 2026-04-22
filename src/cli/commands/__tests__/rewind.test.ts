@@ -3,11 +3,9 @@ import { rewindCommand } from '../rewind'
 
 // Mock dependencies
 vi.mock('@src/core/di/container')
-vi.mock('@src/core/di/identifiers')
 vi.mock('@src/services/analyzeService')
 vi.mock('@src/services/sessionService')
 vi.mock('@src/utils/output')
-vi.mock('@src/errors/validationError')
 vi.mock('@src/validators/cli/rewindSession')
 
 import { container } from '@src/core/di/container'

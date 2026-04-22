@@ -7,7 +7,6 @@ import { stdout, stderr } from '@src/utils/output'
 import { parseRenameSession } from '@src/validators/cli/renameSession'
 
 vi.mock('@src/core/di/container')
-vi.mock('@src/core/di/identifiers')
 vi.mock('@src/services/sessionService')
 vi.mock('@src/utils/output')
 vi.mock('@src/validators/cli/renameSession')

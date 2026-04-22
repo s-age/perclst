@@ -14,7 +14,6 @@ import { showCommand } from '../../show'
 vi.mock('cli-table3')
 vi.mock('ansis')
 vi.mock('@src/core/di/container')
-vi.mock('@src/core/di/identifiers')
 vi.mock('@src/services/sessionService')
 vi.mock('@src/services/analyzeService')
 vi.mock('@src/utils/output')

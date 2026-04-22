@@ -4,7 +4,6 @@ import { chatCommand } from '../chat'
 // Mock imports
 vi.mock('child_process')
 vi.mock('@src/core/di/container')
-vi.mock('@src/core/di/identifiers')
 vi.mock('@src/validators/cli/chatSession')
 vi.mock('@src/utils/output')
 

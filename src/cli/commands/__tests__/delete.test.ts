@@ -3,7 +3,6 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 // Mock imports
 vi.mock('@src/validators/cli/deleteSession')
 vi.mock('@src/core/di/container')
-vi.mock('@src/core/di/identifiers')
 vi.mock('@src/utils/output')
 
 import { deleteCommand } from '../delete'

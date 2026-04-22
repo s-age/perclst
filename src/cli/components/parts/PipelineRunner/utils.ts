@@ -18,6 +18,7 @@ export function initTasks(pipeline: Pipeline): TaskState[] {
   }))
 }
 
+/** @internal exported for testing only */
 export function splitToLines(text: string, width: number, prefix: string): string[] {
   const lines: string[] = []
   for (let i = 0; i < text.length; i += width) {
