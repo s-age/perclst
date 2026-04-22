@@ -15,6 +15,7 @@ import { rewindCommand } from './commands/rewind'
 import { runCommand } from './commands/run'
 import { curateCommand } from './commands/curate'
 import { inspectCommand } from './commands/inspect'
+import { chatCommand } from './commands/chat'
 import { retrieveCommand } from './commands/retrieve'
 import { surveyCommand } from './commands/survey'
 import { assertNoSingleDashMultiCharOptions } from '@src/validators/cli/argFormat'
@@ -140,6 +141,13 @@ program
   .description('Delete a session')
   .argument('<session-id>', 'Session ID')
   .action(deleteCommand)
+
+// Chat command
+program
+  .command('chat')
+  .description('Resume a session interactively in Claude Code')
+  .argument('<session>', 'Session ID or name')
+  .action((session: string) => chatCommand(session))
 
 // Rename command
 program
