@@ -33,13 +33,17 @@ When you start running Claude Code seriously with `claude -p` (headless mode), y
 
 perclst's design maps onto Docker's execution model:
 
-| Docker | perclst |
-|---|---|
-| Base image | Model (`--model`) — capability level of the agent |
-| Commands / daemons in the image | Skills (`.claude/skills/`) — **How** rules, auto-injected when relevant files are accessed |
-| `ENTRYPOINT` | Procedure (`--procedure`) — **What** steps the agent follows, set once at session start |
-| `CMD` | Prompt — the instruction passed to each `start` / `resume` |
-| Running container | Session — one live instance of model + skills + procedure |
+| Docker | perclst | Description |
+|---|---|---|
+| Base image | Model (`--model`) | Capability level of the agent |
+| Commands / daemons in the image | Skills (`.claude/skills/`) | **How** rules — auto-injected when relevant files are accessed |
+| `ENTRYPOINT` | Procedure (`--procedure`) | **What** steps the agent follows, set once at session start |
+| `CMD` | Prompt | Instruction passed to each `start` / `resume` |
+| `--name` | `--name` | Human-readable name for an instance instead of a random ID |
+| Running container | Session | One live instance of model + skills + procedure |
+| `docker attach` | `perclst chat` | Attach your terminal to an existing instance to observe and interact in real time |
+| `docker volume` | Knowledge base (`knowledge/`) | Persistent data shared across sessions |
+| `docker compose` | Pipeline (`perclst run`) | Multi-agent workflow — tasks run serially, with named sessions and retry loops |
 
 **Skills vs Procedures**:
 - **Skills** carry *how* rules — coding conventions, import constraints, layer responsibilities. They are baked into the project (like binaries in an image) and activated automatically based on which files the agent touches.
