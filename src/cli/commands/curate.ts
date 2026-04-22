@@ -14,6 +14,7 @@ export async function curateCommand() {
 
   await startCommand('Promote all entries in knowledge/draft/ into structured knowledge/ files.', {
     procedure: 'meta-curate-knowledge',
+    labels: ['curate'],
     allowedTools: ['Skill', 'Write', 'Read', 'Bash'],
     outputOnly: true
   })

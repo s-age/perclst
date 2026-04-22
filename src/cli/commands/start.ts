@@ -12,7 +12,7 @@ import { parseStartSession } from '@src/validators/cli/startSession'
 type RawStartOptions = {
   procedure?: string
   name?: string
-  tags?: string[]
+  labels?: string[]
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
@@ -44,7 +44,7 @@ export async function startCommand(task: string, options: RawStartOptions) {
       {
         name: input.name,
         procedure: input.procedure,
-        tags: input.tags,
+        labels: input.labels,
         working_dir: process.cwd()
       },
       {

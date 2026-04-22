@@ -1,7 +1,7 @@
-import type { Session, CreateSessionParams, SweepFilter } from '@src/types/session'
+import type { Session, CreateSessionParams, SweepFilter, ListFilter } from '@src/types/session'
 import type { ISessionDomain } from '@src/domains/ports/session'
 
-export type { SweepFilter }
+export type { SweepFilter, ListFilter }
 
 export class SessionService {
   constructor(private domain: ISessionDomain) {}
@@ -18,8 +18,8 @@ export class SessionService {
     return this.domain.getPath(sessionId)
   }
 
-  async list(): Promise<Session[]> {
-    return this.domain.list()
+  async list(filter?: ListFilter): Promise<Session[]> {
+    return this.domain.list(filter)
   }
 
   async delete(sessionId: string): Promise<void> {
@@ -35,6 +35,14 @@ export class SessionService {
 
   async rename(sessionId: string, name: string): Promise<Session> {
     return this.domain.rename(sessionId, name)
+  }
+
+  async setLabels(sessionId: string, labels: string[]): Promise<Session> {
+    return this.domain.setLabels(sessionId, labels)
+  }
+
+  async addLabels(sessionId: string, labels: string[]): Promise<Session> {
+    return this.domain.addLabels(sessionId, labels)
   }
 
   async findByName(name: string): Promise<Session | null> {

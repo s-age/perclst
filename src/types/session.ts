@@ -11,7 +11,7 @@ export type Session = {
 
   metadata: {
     parent_session_id?: string
-    tags: string[]
+    labels: string[]
     status: 'active' | 'completed' | 'failed'
   }
 }
@@ -20,7 +20,7 @@ export type CreateSessionParams = {
   name?: string
   procedure?: string
   parent_session_id?: string
-  tags?: string[]
+  labels?: string[]
   working_dir: string
 }
 
@@ -35,4 +35,9 @@ export type SweepFilter = {
   status?: string
   like?: string
   anonOnly?: boolean
+}
+
+export type ListFilter = {
+  label?: string
+  like?: string
 }

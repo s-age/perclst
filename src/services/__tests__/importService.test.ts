@@ -65,7 +65,7 @@ describe('ImportService', () => {
       expect(result.created_at).toBe('2024-01-15T10:30:00Z')
       expect(result.updated_at).toBe('2024-01-15T10:30:00Z')
       expect(result.metadata.status).toBe('completed')
-      expect(result.metadata.tags).toEqual([])
+      expect(result.metadata.labels).toEqual([])
     })
 
     it('should validate session and use provided cwd', async () => {
@@ -111,7 +111,7 @@ describe('ImportService', () => {
           created_at: '2024-01-15T10:30:00Z',
           updated_at: '2024-01-15T10:30:00Z',
           metadata: {
-            tags: [],
+            labels: [],
             status: 'completed'
           }
         })
@@ -161,7 +161,7 @@ describe('ImportService', () => {
         claude_session_id: claudeSessionId,
         working_dir: expect.any(String),
         metadata: {
-          tags: expect.any(Array),
+          labels: expect.any(Array),
           status: expect.any(String)
         }
       })
@@ -203,12 +203,12 @@ describe('ImportService', () => {
       expect(toISO).toHaveBeenCalledWith()
     })
 
-    it('should set metadata tags to empty array', async () => {
+    it('should set metadata labels to empty array', async () => {
       const claudeSessionId = 'claude-session-yz4'
 
       const result = await importService.import(claudeSessionId)
 
-      expect(result.metadata.tags).toEqual([])
+      expect(result.metadata.labels).toEqual([])
     })
 
     it('should set metadata status to completed', async () => {

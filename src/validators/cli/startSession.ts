@@ -9,7 +9,7 @@ const startSchema = schema({
   task: stringRule({ required: true }),
   procedure: stringRule().optional(),
   name: stringRule().optional(),
-  tags: stringArrayRule().optional(),
+  labels: stringArrayRule().optional(),
   allowedTools: stringArrayRule().optional(),
   disallowedTools: stringArrayRule().optional(),
   model: stringRule().optional(),

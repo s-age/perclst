@@ -3,11 +3,21 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
+import { parseListSessions } from '@src/validators/cli/listSessions'
 
-export async function listCommand() {
+type RawListOptions = {
+  label?: string
+  like?: string
+}
+
+export async function listCommand(options: RawListOptions) {
   try {
+    const input = parseListSessions(options)
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-    const sessions = await sessionService.list()
+    const sessions = await sessionService.list({
+      label: input.label,
+      like: input.like
+    })
 
     if (sessions.length === 0) {
       stdout.print('No sessions found')
@@ -15,7 +25,7 @@ export async function listCommand() {
     }
 
     const table = new Table({
-      head: ['Status', 'Name', 'ID', 'Working Dir', 'Procedure'],
+      head: ['Status', 'Name', 'ID', 'Working Dir', 'Procedure', 'Labels'],
       style: { head: [], border: [] }
     })
 
@@ -25,7 +35,8 @@ export async function listCommand() {
         session.name ?? '—',
         session.id,
         session.working_dir,
-        session.procedure ?? '—'
+        session.procedure ?? '—',
+        session.metadata.labels.join(', ') || '—'
       ])
     }
 

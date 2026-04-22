@@ -16,7 +16,7 @@ describe('AgentDomain', () => {
     procedure: 'conductor',
     claude_session_id: 'claude-id',
     working_dir: '/tmp',
-    metadata: { status: 'active' as const, tags: [] }
+    metadata: { status: 'active' as const, labels: [] }
   }
 
   beforeEach(() => {
