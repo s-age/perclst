@@ -32,7 +32,7 @@ type StreamEvent = {
   }
 }
 
-type ParseState = {
+export type ParseState = {
   thoughts: ThinkingBlock[]
   toolMap: Map<string, ToolUseRecord>
   permissionToolIds: Set<string>
@@ -142,8 +142,8 @@ export function emitStreamEvents(
   }
 }
 
-export function parseStreamEvents(lines: string[], jsonlBaseline: number): RawOutput {
-  const state: ParseState = {
+export function createParseState(): ParseState {
+  return {
     thoughts: [],
     toolMap: new Map(),
     permissionToolIds: new Set(),
@@ -153,31 +153,33 @@ export function parseStreamEvents(lines: string[], jsonlBaseline: number): RawOu
     assistantEventCount: 0,
     userToolResultEventCount: 0
   }
+}
 
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    let event: StreamEvent
-    try {
-      event = JSON.parse(trimmed) as StreamEvent
-    } catch {
-      continue
-    }
-    if (event.type === 'assistant') processAssistantEvent(event, state)
-    else if (event.type === 'user') processUserEvent(event, state)
-    else if (event.type === 'result') {
-      state.finalContent = event.result ?? ''
-      if (event.usage) {
-        state.usage = {
-          input_tokens: event.usage.input_tokens,
-          output_tokens: event.usage.output_tokens,
-          cache_read_input_tokens: event.usage.cache_read_input_tokens,
-          cache_creation_input_tokens: event.usage.cache_creation_input_tokens
-        }
+export function processLine(state: ParseState, line: string): void {
+  const trimmed = line.trim()
+  if (!trimmed) return
+  let event: StreamEvent
+  try {
+    event = JSON.parse(trimmed) as StreamEvent
+  } catch {
+    return
+  }
+  if (event.type === 'assistant') processAssistantEvent(event, state)
+  else if (event.type === 'user') processUserEvent(event, state)
+  else if (event.type === 'result') {
+    state.finalContent = event.result ?? ''
+    if (event.usage) {
+      state.usage = {
+        input_tokens: event.usage.input_tokens,
+        output_tokens: event.usage.output_tokens,
+        cache_read_input_tokens: event.usage.cache_read_input_tokens,
+        cache_creation_input_tokens: event.usage.cache_creation_input_tokens
       }
     }
   }
+}
 
+export function finalizeParseState(state: ParseState, jsonlBaseline: number): RawOutput {
   const messageCount =
     jsonlBaseline + 1 + state.assistantEventCount + state.userToolResultEventCount
   return {
@@ -188,4 +190,10 @@ export function parseStreamEvents(lines: string[], jsonlBaseline: number): RawOu
     last_assistant_usage: state.lastAssistantUsage,
     message_count: messageCount
   }
+}
+
+export function parseStreamEvents(lines: string[], jsonlBaseline: number): RawOutput {
+  const state = createParseState()
+  for (const line of lines) processLine(state, line)
+  return finalizeParseState(state, jsonlBaseline)
 }
