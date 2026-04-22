@@ -21,7 +21,8 @@
     {
       "type": "child",
       "path": "lint-fix__explicit-return-type__infrastructures.json",
-      "name": "lint-fix-explicit-return-type-infrastructures"
+      "name": "lint-fix-explicit-return-type-infrastructures",
+      "done": true
     },
     {
       "type": "child",
