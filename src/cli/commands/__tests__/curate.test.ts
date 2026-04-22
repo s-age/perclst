@@ -41,8 +41,9 @@ describe('curateCommand', () => {
     await curateCommand()
 
     // Assert
+    const knowledgeDir = `${process.cwd()}/knowledge`
     expect(vi.mocked(startCommand)).toHaveBeenCalledWith(
-      'Promote all entries in knowledge/draft/ into structured knowledge/ files.',
+      `Promote all entries in ${knowledgeDir}/draft/ into structured ${knowledgeDir}/ files.`,
       {
         procedure: 'meta-curate-knowledge',
         labels: ['curate'],
