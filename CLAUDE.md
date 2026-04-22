@@ -115,6 +115,7 @@ perclst resume <session-id> "quick follow-up" --model haiku
 Use `--procedure <name>` to set agent behavior:
 
 - **meta-curate-knowledge**: Promotes `knowledge/draft/` entries into structured `knowledge/` files
+- **plan-feature**: Surveys the codebase for a feature, writes a design plan in `plans/`, and produces an implementation pipeline in `pipelines/`
 
 > **Note**: Some procedures require file write access. The `meta-curate-knowledge` procedure needs
 > `--allowed-tools Write Read Bash` or it will stall on permission prompts:
