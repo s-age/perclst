@@ -8,7 +8,9 @@ describe('TsAnalysisRepository', () => {
   describe('getReferences', () => {
     beforeAll(() => {
       repo = new TsAnalysisRepository(new TsAnalyzer())
-    })
+      // Trigger lazy Project initialization here so individual tests only pay for the query cost
+      repo.analyzeFile('src/domains/analyze.ts')
+    }, 30000)
 
     it('should find references to a class', () => {
       const refs = repo.getReferences('src/domains/analyze.ts', 'AnalyzeDomain')

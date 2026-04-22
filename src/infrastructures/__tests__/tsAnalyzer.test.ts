@@ -9,41 +9,61 @@ describe('TsAnalyzer', () => {
   let mockAddSourceFileAtPathIfExists: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
+    vi.clearAllMocks()
     mockAddSourceFileAtPath = vi.fn()
     mockAddSourceFileAtPathIfExists = vi.fn()
-    vi.mocked(Project).mockImplementation(function (this: any) {
-      this.addSourceFileAtPath = mockAddSourceFileAtPath
-      this.addSourceFileAtPathIfExists = mockAddSourceFileAtPathIfExists
-      return this
+    vi.mocked(Project).mockImplementation(function (this: object) {
+      Object.assign(this, {
+        addSourceFileAtPath: mockAddSourceFileAtPath,
+        addSourceFileAtPathIfExists: mockAddSourceFileAtPathIfExists
+      })
+      return this as unknown as InstanceType<typeof Project>
     })
   })
 
   describe('constructor', () => {
-    it('should create an instance with default options', () => {
+    it('should create an instance with default options without calling Project', () => {
       expect(() => new TsAnalyzer()).not.toThrow()
+      expect(vi.mocked(Project)).not.toHaveBeenCalled()
     })
 
-    it('should pass tsconfig.json to Project by default', () => {
-      new TsAnalyzer()
+    it('should pass tsconfig.json to Project on first file access', () => {
+      const analyzer = new TsAnalyzer()
+      mockAddSourceFileAtPath.mockReturnValue({})
+      analyzer.getSourceFile('any.ts')
       expect(vi.mocked(Project)).toHaveBeenCalledWith({ tsConfigFilePath: 'tsconfig.json' })
     })
 
-    it('should create an instance when skipAddingFilesFromTsConfig is true', () => {
+    it('should create an instance when skipAddingFilesFromTsConfig is true without calling Project', () => {
       expect(() => new TsAnalyzer({ skipAddingFilesFromTsConfig: true })).not.toThrow()
+      expect(vi.mocked(Project)).not.toHaveBeenCalled()
     })
 
-    it('should pass skipAddingFilesFromTsConfig to Project', () => {
-      new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
+    it('should pass skipAddingFilesFromTsConfig to Project on first file access', () => {
+      const analyzer = new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
+      mockAddSourceFileAtPathIfExists.mockReturnValue(undefined)
+      analyzer.getSourceFileIfExists('any.ts')
       expect(vi.mocked(Project)).toHaveBeenCalledWith({ skipAddingFilesFromTsConfig: true })
     })
 
-    it('should create an instance with an explicit tsConfigFilePath', () => {
+    it('should create an instance with an explicit tsConfigFilePath without calling Project', () => {
       expect(() => new TsAnalyzer({ tsConfigFilePath: 'tsconfig.json' })).not.toThrow()
+      expect(vi.mocked(Project)).not.toHaveBeenCalled()
     })
 
-    it('should pass the explicit tsConfigFilePath to Project', () => {
-      new TsAnalyzer({ tsConfigFilePath: 'custom.tsconfig.json' })
+    it('should pass the explicit tsConfigFilePath to Project on first file access', () => {
+      const analyzer = new TsAnalyzer({ tsConfigFilePath: 'custom.tsconfig.json' })
+      mockAddSourceFileAtPath.mockReturnValue({})
+      analyzer.getSourceFile('any.ts')
       expect(vi.mocked(Project)).toHaveBeenCalledWith({ tsConfigFilePath: 'custom.tsconfig.json' })
+    })
+
+    it('should reuse the same Project instance across multiple calls', () => {
+      const analyzer = new TsAnalyzer()
+      mockAddSourceFileAtPath.mockReturnValue({})
+      analyzer.getSourceFile('a.ts')
+      analyzer.getSourceFile('b.ts')
+      expect(vi.mocked(Project)).toHaveBeenCalledTimes(1)
     })
   })
 
