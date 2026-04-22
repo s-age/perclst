@@ -269,7 +269,13 @@ Run a pre-push code inspection between two git refs. Spawns a sonnet agent that 
 perclst inspect <old> <new>
 perclst inspect main HEAD
 perclst inspect abc1234 def5678
+perclst inspect main HEAD -p "日本語で答えて"
+perclst inspect main HEAD --prompt "be brief, summary only"
 ```
+
+| Option | Description |
+|--------|-------------|
+| `-p, --prompt <prompt>` | Additional instruction appended to the inspection prompt |
 
 Sessions created by this command are automatically labeled `inspect`.
 
