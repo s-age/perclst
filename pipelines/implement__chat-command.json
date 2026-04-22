@@ -1,0 +1,82 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-implement-chat-validator .claude/tmp/review-implement-chat-command"
+    },
+    {
+      "type": "pipeline",
+      "name": "implement-chat-validator",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-chat-validator",
+          "task": "target_file_path: src/validators/cli/chatSession.ts\n\nCreate this new file. It is a minimal CLI input validator for the `chat` command.\n\nReference: src/validators/cli/showSession.ts (copy its structure exactly — only `sessionId: stringRule({ required: true })` is needed).\n\nExport:\n- `ChatSessionInput` type\n- `parseChatSession(raw: unknown): ChatSessionInput` function\n\nDo not add anything beyond what is shown in plans/chat-command.md.",
+          "allowed_tools": ["Read", "Write", "Bash", "mcp__perclst__ts_analyze", "mcp__perclst__ts_get_types"]
+        },
+        {
+          "type": "agent",
+          "name": "review-implement-chat-validator",
+          "task": "target_file_path: src/validators/cli/chatSession.ts\nng_output_path: .claude/tmp/review-implement-chat-validator\n\nReview the newly created file. Check:\n1. Exports match: `ChatSessionInput`, `parseChatSession`\n2. Schema has only `sessionId: stringRule({ required: true })`\n3. No extra logic, no comments, no unused imports\n4. Import paths are correct relative to the validators directory",
+          "procedure": "review-arch",
+          "allowed_tools": ["Read", "Bash", "mcp__perclst__ts_analyze", "mcp__perclst__ts_get_types"],
+          "rejected": {
+            "to": "implement-chat-validator",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build",
+          "rejected": {
+            "to": "implement-chat-validator",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-chat-validator",
+      "task": "src/validators/cli/chatSession.ts is complete and builds. Commit it.\n\nCommit message: feat(validators): add chatSession validator for chat command",
+      "allowed_tools": ["Read", "Bash"]
+    },
+    {
+      "type": "pipeline",
+      "name": "implement-chat-command",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-chat-command",
+          "task": "target_file_paths: src/cli/commands/chat.ts, src/cli/index.ts\n\nCreate src/cli/commands/chat.ts and modify src/cli/index.ts.\n\nRead plans/chat-command.md for the exact implementation. Key points:\n- chat.ts: import spawnSync from child_process; use parseChatSession, SessionService.resolveId, then spawnSync('claude', ['--resume', resolvedId], { stdio: 'inherit' }); catch ValidationError → stderr.print + process.exit(1)\n- index.ts: add import for chatCommand and register .command('chat') with .argument('<session>', 'Session ID or name')\n\nTemplate for chat.ts: src/cli/commands/delete.ts\nTemplate for index.ts registration block: look at how 'show' or 'delete' commands are registered in index.ts",
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "mcp__perclst__ts_analyze", "mcp__perclst__ts_get_types", "mcp__perclst__ts_get_references"]
+        },
+        {
+          "type": "agent",
+          "name": "review-implement-chat-command",
+          "task": "target_file_paths: src/cli/commands/chat.ts, src/cli/index.ts\nng_output_path: .claude/tmp/review-implement-chat-command\n\nReview both files. Check:\n1. chat.ts uses spawnSync with { stdio: 'inherit' } — not spawn or exec\n2. chat.ts does NOT do raw process spawn in infra — the spawnSync call is acceptable in cli layer for this pure OS hand-off\n3. ValidationError is caught; other errors fall to else branch\n4. process.exit(1) is called in catch\n5. index.ts registers the command with argument '<session>' and calls chatCommand\n6. No extra options added beyond what plans/chat-command.md specifies",
+          "procedure": "review-arch",
+          "allowed_tools": ["Read", "Bash", "mcp__perclst__ts_analyze", "mcp__perclst__ts_get_types", "mcp__perclst__ts_get_references"],
+          "rejected": {
+            "to": "implement-chat-command",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-chat-command",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-chat-command",
+      "task": "src/cli/commands/chat.ts and src/cli/index.ts are complete, build and tests pass. Commit both files together.\n\nCommit message: feat(cli): add chat command to resume sessions interactively in Claude Code",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
