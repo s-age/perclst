@@ -198,7 +198,7 @@ export function buildTurns(
   let totalCacheCreation = 0
   let pending: RawAssistantEntry[] = []
 
-  const flush = () => {
+  const flush = (): void => {
     if (pending.length === 0) return
     const merged = mergeAssistantGroup(pending, toolResultMap)
     if (merged) {

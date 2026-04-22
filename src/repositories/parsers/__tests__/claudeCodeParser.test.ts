@@ -5,12 +5,27 @@ function lines(...events: object[]): string[] {
   return events.map((e) => JSON.stringify(e))
 }
 
-const assistantEvent = (content: object[], usage?: object) => ({
+const assistantEvent = (
+  content: object[],
+  usage?: object
+): {
+  type: string
+  message: { role: string; content: object[]; usage?: object | undefined }
+} => ({
   type: 'assistant',
   message: { role: 'assistant', content, ...(usage ? { usage } : {}) }
 })
 
-const userToolResultEvent = (toolUseId: string, content: string) => ({
+const userToolResultEvent = (
+  toolUseId: string,
+  content: string
+): {
+  type: string
+  message: {
+    role: string
+    content: { type: string; tool_use_id: string; content: string }[]
+  }
+} => ({
   type: 'user',
   message: {
     role: 'user',
@@ -18,7 +33,14 @@ const userToolResultEvent = (toolUseId: string, content: string) => ({
   }
 })
 
-const resultEvent = (result: string, usage?: object) => ({
+const resultEvent = (
+  result: string,
+  usage?: object
+): {
+  type: string
+  result: string
+  usage?: object | undefined
+} => ({
   type: 'result',
   result,
   ...(usage ? { usage } : {})

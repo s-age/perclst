@@ -13,7 +13,7 @@ const { mockInfra, MockClaudeCodeInfra } = vi.hoisted(() => {
   }
   // regular function (not arrow) so it is newable; returning an object from a constructor makes
   // `new` yield that object — i.e. `new ClaudeCodeInfra()` will be `infra`
-  function MockInfra() {
+  function MockInfra(): typeof infra {
     return infra
   }
   return { mockInfra: infra, MockClaudeCodeInfra: MockInfra }
