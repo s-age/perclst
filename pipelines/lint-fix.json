@@ -9,7 +9,8 @@
     {
       "type": "child",
       "path": "lint-fix__explicit-return-type__cli-components.json",
-      "name": "lint-fix-explicit-return-type-cli-components"
+      "name": "lint-fix-explicit-return-type-cli-components",
+      "done": true
     },
     {
       "type": "child",

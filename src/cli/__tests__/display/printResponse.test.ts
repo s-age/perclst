@@ -7,10 +7,14 @@ import type { DisplayOptions } from '@src/types/display'
 // Mock modules
 vi.mock('ansis', () => ({
   default: {
-    hex: vi.fn((color: string) => (s: string) => `[hex:${color}]${s}[/hex]`),
-    dim: vi.fn((s: string) => `[dim]${s}[/dim]`),
-    bgRgb: vi.fn(() => ({
-      whiteBright: vi.fn((s: string) => `[bg-rgb]${s}[/bg-rgb]`)
+    hex: vi.fn(
+      (color: string) =>
+        (s: string): string =>
+          `[hex:${color}]${s}[/hex]`
+    ),
+    dim: vi.fn((s: string): string => `[dim]${s}[/dim]`),
+    bgRgb: vi.fn((): { whiteBright: (s: string) => string } => ({
+      whiteBright: vi.fn((s: string): string => `[bg-rgb]${s}[/bg-rgb]`)
     }))
   }
 }))
@@ -37,14 +41,14 @@ const baseResponse: AgentResponse = {
   }
 }
 
-describe('printResponse', () => {
-  beforeEach(() => {
+describe('printResponse', (): void => {
+  beforeEach((): void => {
     vi.clearAllMocks()
     process.env.NO_COLOR = undefined
   })
 
-  describe('json format output', () => {
-    it('outputs JSON when format is json', () => {
+  describe('json format output', (): void => {
+    it('outputs JSON when format is json', (): void => {
       const opts: DisplayOptions = { format: 'json' }
 
       printResponse(baseResponse, opts)
@@ -58,7 +62,7 @@ describe('printResponse', () => {
       expect(parsed.model).toBe('claude-sonnet-4-6')
     })
 
-    it('includes session_id in JSON output when provided', () => {
+    it('includes session_id in JSON output when provided', (): void => {
       const opts: DisplayOptions = { format: 'json' }
 
       printResponse(baseResponse, opts, undefined, { sessionId: 'session-123' })
@@ -70,7 +74,7 @@ describe('printResponse', () => {
       expect(parsed.session_id).toBe('session-123')
     })
 
-    it('sets session_id to null in JSON when not provided', () => {
+    it('sets session_id to null in JSON when not provided', (): void => {
       const opts: DisplayOptions = { format: 'json' }
 
       printResponse(baseResponse, opts)
@@ -82,7 +86,7 @@ describe('printResponse', () => {
       expect(parsed.session_id).toBeNull()
     })
 
-    it('includes usage stats in JSON output', () => {
+    it('includes usage stats in JSON output', (): void => {
       const opts: DisplayOptions = { format: 'json' }
 
       printResponse(baseResponse, opts)
@@ -95,7 +99,7 @@ describe('printResponse', () => {
       expect(parsed.usage.output_tokens).toBe(500)
     })
 
-    it('includes optional message_count in JSON when present', () => {
+    it('includes optional message_count in JSON when present', (): void => {
       const response: AgentResponse = { ...baseResponse, message_count: 5 }
       const opts: DisplayOptions = { format: 'json' }
 
@@ -108,7 +112,7 @@ describe('printResponse', () => {
       expect(parsed.message_count).toBe(5)
     })
 
-    it('omits message_count from JSON when not present', () => {
+    it('omits message_count from JSON when not present', (): void => {
       const opts: DisplayOptions = { format: 'json' }
 
       printResponse(baseResponse, opts)
@@ -120,7 +124,7 @@ describe('printResponse', () => {
       expect(parsed).not.toHaveProperty('message_count')
     })
 
-    it('returns early and does not print text output when format is json', () => {
+    it('returns early and does not print text output when format is json', (): void => {
       const opts: DisplayOptions = { format: 'json' }
 
       printResponse(baseResponse, opts)
@@ -130,8 +134,8 @@ describe('printResponse', () => {
     })
   })
 
-  describe('text format thoughts section', () => {
-    it('prints thoughts header when thoughts present', () => {
+  describe('text format thoughts section', (): void => {
+    it('prints thoughts header when thoughts present', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         thoughts: [{ type: 'thinking', thinking: 'First thought' }]
@@ -143,7 +147,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Thoughts'))
     })
 
-    it('prints each thought content with dim styling', () => {
+    it('prints each thought content with dim styling', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         thoughts: [
@@ -159,7 +163,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Second thought'))
     })
 
-    it('skips thoughts when silentThoughts option is true', () => {
+    it('skips thoughts when silentThoughts option is true', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         thoughts: [{ type: 'thinking', thinking: 'Hidden thought' }]
@@ -171,7 +175,7 @@ describe('printResponse', () => {
       expect(stdout.print).not.toHaveBeenCalledWith(expect.stringContaining('Thoughts'))
     })
 
-    it('skips thoughts when outputOnly option is true', () => {
+    it('skips thoughts when outputOnly option is true', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         thoughts: [{ type: 'thinking', thinking: 'Hidden thought' }]
@@ -183,7 +187,7 @@ describe('printResponse', () => {
       expect(stdout.print).not.toHaveBeenCalledWith(expect.stringContaining('Thoughts'))
     })
 
-    it('skips thoughts header when thoughts array is empty', () => {
+    it('skips thoughts header when thoughts array is empty', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         thoughts: []
@@ -195,7 +199,7 @@ describe('printResponse', () => {
       expect(stdout.print).not.toHaveBeenCalledWith(expect.stringContaining('Thoughts'))
     })
 
-    it('skips thoughts when thoughts field is undefined', () => {
+    it('skips thoughts when thoughts field is undefined', (): void => {
       const opts: DisplayOptions = {}
 
       printResponse(baseResponse, opts)
@@ -204,8 +208,8 @@ describe('printResponse', () => {
     })
   })
 
-  describe('text format tool history section', () => {
-    it('prints tool calls header when tool_history present', () => {
+  describe('text format tool history section', (): void => {
+    it('prints tool calls header when tool_history present', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         tool_history: [
@@ -223,7 +227,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Tool Calls'))
     })
 
-    it('prints tool name with label formatting', () => {
+    it('prints tool name with label formatting', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         tool_history: [
@@ -241,7 +245,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Bash'))
     })
 
-    it('prints tool input as JSON', () => {
+    it('prints tool input as JSON', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         tool_history: [
@@ -258,7 +262,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('input:'))
     })
 
-    it('prints tool result when result is present', () => {
+    it('prints tool result when result is present', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         tool_history: [
@@ -276,7 +280,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('result:'))
     })
 
-    it('skips result output when result is undefined', () => {
+    it('skips result output when result is undefined', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         tool_history: [
@@ -294,7 +298,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('WebFetch'))
     })
 
-    it('skips tool calls when silentToolResponse option is true', () => {
+    it('skips tool calls when silentToolResponse option is true', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         tool_history: [
@@ -312,7 +316,7 @@ describe('printResponse', () => {
       expect(stdout.print).not.toHaveBeenCalledWith(expect.stringContaining('Tool Calls'))
     })
 
-    it('skips tool calls when outputOnly option is true', () => {
+    it('skips tool calls when outputOnly option is true', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         tool_history: [
@@ -330,7 +334,7 @@ describe('printResponse', () => {
       expect(stdout.print).not.toHaveBeenCalledWith(expect.stringContaining('Tool Calls'))
     })
 
-    it('skips tool calls header when tool_history is empty', () => {
+    it('skips tool calls header when tool_history is empty', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         tool_history: []
@@ -342,7 +346,7 @@ describe('printResponse', () => {
       expect(stdout.print).not.toHaveBeenCalledWith(expect.stringContaining('Tool Calls'))
     })
 
-    it('skips tool calls when tool_history is undefined', () => {
+    it('skips tool calls when tool_history is undefined', (): void => {
       const opts: DisplayOptions = {}
 
       printResponse(baseResponse, opts)
@@ -351,8 +355,8 @@ describe('printResponse', () => {
     })
   })
 
-  describe('text format agent response section', () => {
-    it('always prints agent response header', () => {
+  describe('text format agent response section', (): void => {
+    it('always prints agent response header', (): void => {
       const opts: DisplayOptions = {}
 
       printResponse(baseResponse, opts)
@@ -360,7 +364,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Agent Response'))
     })
 
-    it('prints agent response content', () => {
+    it('prints agent response content', (): void => {
       const opts: DisplayOptions = {}
 
       printResponse(baseResponse, opts)
@@ -368,7 +372,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Agent response content'))
     })
 
-    it('prints even when response content is empty', () => {
+    it('prints even when response content is empty', (): void => {
       const response: AgentResponse = {
         content: '',
         model: 'claude-sonnet-4-6',
@@ -382,8 +386,8 @@ describe('printResponse', () => {
     })
   })
 
-  describe('text format usage section', () => {
-    it('prints usage section when usage present', () => {
+  describe('text format usage section', (): void => {
+    it('prints usage section when usage present', (): void => {
       const opts: DisplayOptions = {}
 
       printResponse(baseResponse, opts)
@@ -391,7 +395,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Token Usage'))
     })
 
-    it('prints input tokens count', () => {
+    it('prints input tokens count', (): void => {
       const opts: DisplayOptions = {}
 
       printResponse(baseResponse, opts)
@@ -399,7 +403,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('1000'))
     })
 
-    it('prints output tokens count', () => {
+    it('prints output tokens count', (): void => {
       const opts: DisplayOptions = {}
 
       printResponse(baseResponse, opts)
@@ -407,7 +411,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('500'))
     })
 
-    it('includes message_count in usage when present', () => {
+    it('includes message_count in usage when present', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         message_count: 10
@@ -419,7 +423,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Messages'))
     })
 
-    it('includes cache_read_input_tokens in usage when present', () => {
+    it('includes cache_read_input_tokens in usage when present', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         usage: {
@@ -435,7 +439,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Cache read'))
     })
 
-    it('includes cache_creation_input_tokens in usage when present', () => {
+    it('includes cache_creation_input_tokens in usage when present', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         usage: {
@@ -451,7 +455,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Cache creation'))
     })
 
-    it('calculates context window percentage correctly', () => {
+    it('calculates context window percentage correctly', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         usage: {
@@ -467,7 +471,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('50%'))
     })
 
-    it('uses last_assistant_usage for context window calculation when available', () => {
+    it('uses last_assistant_usage for context window calculation when available', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         usage: {
@@ -487,7 +491,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('25%'))
     })
 
-    it('skips usage section when silentUsage option is true', () => {
+    it('skips usage section when silentUsage option is true', (): void => {
       const opts: DisplayOptions = { silentUsage: true }
 
       printResponse(baseResponse, opts)
@@ -495,7 +499,7 @@ describe('printResponse', () => {
       expect(stdout.print).not.toHaveBeenCalledWith(expect.stringContaining('Token Usage'))
     })
 
-    it('skips usage section when outputOnly option is true', () => {
+    it('skips usage section when outputOnly option is true', (): void => {
       const opts: DisplayOptions = { outputOnly: true }
 
       printResponse(baseResponse, opts)
@@ -503,7 +507,7 @@ describe('printResponse', () => {
       expect(stdout.print).not.toHaveBeenCalledWith(expect.stringContaining('Token Usage'))
     })
 
-    it('skips usage section when response has no usage', () => {
+    it('skips usage section when response has no usage', (): void => {
       const response: AgentResponse = {
         content: 'Response',
         model: 'claude-sonnet-4-6'
@@ -516,8 +520,8 @@ describe('printResponse', () => {
     })
   })
 
-  describe('displayConfig handling', () => {
-    it('passes displayConfig to display functions', () => {
+  describe('displayConfig handling', (): void => {
+    it('passes displayConfig to display functions', (): void => {
       const config: DisplayConfig = { header_color: '#AABBCC', no_color: false }
       const opts: DisplayOptions = {}
 
@@ -526,7 +530,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalled()
     })
 
-    it('respects no_color setting in displayConfig', () => {
+    it('respects no_color setting in displayConfig', (): void => {
       const config: DisplayConfig = { no_color: true }
       const opts: DisplayOptions = {}
 
@@ -535,7 +539,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalled()
     })
 
-    it('uses default config when displayConfig not provided', () => {
+    it('uses default config when displayConfig not provided', (): void => {
       const opts: DisplayOptions = {}
 
       printResponse(baseResponse, opts)
@@ -544,8 +548,8 @@ describe('printResponse', () => {
     })
   })
 
-  describe('combined scenarios', () => {
-    it('outputs all sections when all data present and not silenced', () => {
+  describe('combined scenarios', (): void => {
+    it('outputs all sections when all data present and not silenced', (): void => {
       const response: AgentResponse = {
         content: 'Response text',
         model: 'claude-sonnet-4-6',
@@ -570,7 +574,7 @@ describe('printResponse', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Token Usage'))
     })
 
-    it('silences everything with outputOnly flag', () => {
+    it('silences everything with outputOnly flag', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         thoughts: [{ type: 'thinking', thinking: 'Thought' }],

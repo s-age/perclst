@@ -14,21 +14,21 @@ import { stdout, stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
 import { parseRewindSession } from '@src/validators/cli/rewindSession'
 
-describe('rewindCommand', () => {
+describe('rewindCommand', (): void => {
   let mockAnalyzeService: ReturnType<typeof vi.fn>
   let mockSessionService: ReturnType<typeof vi.fn>
   let mockParseRewindSession: ReturnType<typeof vi.fn>
   let mockContainerResolve: ReturnType<typeof vi.fn>
   let exitSpy: ReturnType<typeof vi.spyOn>
 
-  const setupMockContainer = () => {
+  const setupMockContainer = (): void => {
     mockContainerResolve.mockImplementation((token: string) => {
       if (token === TOKENS.SessionService) return mockSessionService
       if (token === TOKENS.AnalyzeService) return mockAnalyzeService
     })
   }
 
-  beforeEach(() => {
+  beforeEach((): void => {
     vi.clearAllMocks()
 
     mockAnalyzeService = {
@@ -52,12 +52,12 @@ describe('rewindCommand', () => {
     })
   })
 
-  afterEach(() => {
+  afterEach((): void => {
     exitSpy.mockRestore()
   })
 
-  describe('list mode', () => {
-    it('should call handleListMode and return when list option is true', async () => {
+  describe('list mode', (): void => {
+    it('should call handleListMode and return when list option is true', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: undefined,
@@ -81,7 +81,7 @@ describe('rewindCommand', () => {
       expect(mockAnalyzeService.getRewindTurns).toHaveBeenCalledWith('resolved-id')
     })
 
-    it('should print "No assistant turns found." when no turns exist', async () => {
+    it('should print "No assistant turns found." when no turns exist', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: undefined,
@@ -98,7 +98,7 @@ describe('rewindCommand', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('No assistant turns found.')
     })
 
-    it('should print turns with truncation when text exceeds display length', async () => {
+    it('should print turns with truncation when text exceeds display length', async (): Promise<void> => {
       const turns = [
         { index: 0, text: 'Short message' },
         { index: 1, text: 'A'.repeat(150) }
@@ -121,8 +121,8 @@ describe('rewindCommand', () => {
     })
   })
 
-  describe('rewind to index mode', () => {
-    it('should create rewind session and print success message when index is valid', async () => {
+  describe('rewind to index mode', (): void => {
+    it('should create rewind session and print success message when index is valid', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: 5,
@@ -151,7 +151,7 @@ describe('rewindCommand', () => {
       )
     })
 
-    it('should exit with error when index argument is missing and list is not set', async () => {
+    it('should exit with error when index argument is missing and list is not set', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: undefined,
@@ -175,8 +175,8 @@ describe('rewindCommand', () => {
     })
   })
 
-  describe('error handling', () => {
-    it('should catch ValidationError and print error message', async () => {
+  describe('error handling', (): void => {
+    it('should catch ValidationError and print error message', async (): Promise<void> => {
       const validationError = new ValidationError('Invalid session ID')
       mockParseRewindSession.mockImplementation(() => {
         throw validationError
@@ -194,7 +194,7 @@ describe('rewindCommand', () => {
       expect(exitSpy).toHaveBeenCalledWith(1)
     })
 
-    it('should catch RangeError and print error message', async () => {
+    it('should catch RangeError and print error message', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: 999,
@@ -217,7 +217,7 @@ describe('rewindCommand', () => {
       expect(exitSpy).toHaveBeenCalledWith(1)
     })
 
-    it('should catch generic Error and print generic failure message', async () => {
+    it('should catch generic Error and print generic failure message', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: 5,
@@ -241,8 +241,8 @@ describe('rewindCommand', () => {
     })
   })
 
-  describe('dependency resolution', () => {
-    it('should resolve SessionService from container', async () => {
+  describe('dependency resolution', (): void => {
+    it('should resolve SessionService from container', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: undefined,
@@ -259,7 +259,7 @@ describe('rewindCommand', () => {
       expect(mockContainerResolve).toHaveBeenCalledWith(TOKENS.SessionService)
     })
 
-    it('should resolve AnalyzeService from container', async () => {
+    it('should resolve AnalyzeService from container', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: undefined,
@@ -276,7 +276,7 @@ describe('rewindCommand', () => {
       expect(mockContainerResolve).toHaveBeenCalledWith(TOKENS.AnalyzeService)
     })
 
-    it('should resolve session ID using session service', async () => {
+    it('should resolve session ID using session service', async (): Promise<void> => {
       const input = {
         sessionId: 'short-id',
         index: undefined,
@@ -294,8 +294,8 @@ describe('rewindCommand', () => {
     })
   })
 
-  describe('input validation', () => {
-    it('should pass sessionId, index, and options to parseRewindSession', async () => {
+  describe('input validation', (): void => {
+    it('should pass sessionId, index, and options to parseRewindSession', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: 5,
@@ -318,7 +318,7 @@ describe('rewindCommand', () => {
       })
     })
 
-    it('should handle undefined sessionId in parseRewindSession call', async () => {
+    it('should handle undefined sessionId in parseRewindSession call', async (): Promise<void> => {
       mockParseRewindSession.mockImplementation(() => {
         throw new ValidationError('Session ID is required')
       })
@@ -337,7 +337,7 @@ describe('rewindCommand', () => {
       })
     })
 
-    it('should handle undefined indexStr in parseRewindSession call', async () => {
+    it('should handle undefined indexStr in parseRewindSession call', async (): Promise<void> => {
       const input = {
         sessionId: 'session-1',
         index: undefined,
@@ -361,12 +361,12 @@ describe('rewindCommand', () => {
   })
 })
 
-describe('handleListMode (internal function via rewindCommand)', () => {
-  beforeEach(() => {
+describe('handleListMode (internal function via rewindCommand)', (): void => {
+  beforeEach((): void => {
     vi.clearAllMocks()
   })
 
-  it('should display turns with proper indexing and formatting when list contains multiple turns', async () => {
+  it('should display turns with proper indexing and formatting when list contains multiple turns', async (): Promise<void> => {
     const turns = [
       { index: 0, text: 'First response' },
       { index: 1, text: 'Second response' },
@@ -400,7 +400,7 @@ describe('handleListMode (internal function via rewindCommand)', () => {
     expect(vi.mocked(stdout).print).toHaveBeenCalledWith(`  2: ${'A'.repeat(100)}…`)
   })
 
-  it('should respect custom display length from parsed input', async () => {
+  it('should respect custom display length from parsed input', async (): Promise<void> => {
     const longText = 'B'.repeat(300)
     const turns = [{ index: 0, text: longText }]
     const input = {

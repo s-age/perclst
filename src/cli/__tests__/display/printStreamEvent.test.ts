@@ -6,10 +6,14 @@ import type { DisplayConfig } from '@src/types/config'
 // Mock modules
 vi.mock('ansis', () => ({
   default: {
-    hex: vi.fn((color: string) => (s: string) => `[hex:${color}]${s}[/hex]`),
-    dim: vi.fn((s: string) => `[dim]${s}[/dim]`),
-    bgRgb: vi.fn(() => ({
-      whiteBright: vi.fn((s: string) => `[bg-rgb]${s}[/bg-rgb]`)
+    hex: vi.fn(
+      (color: string) =>
+        (s: string): string =>
+          `[hex:${color}]${s}[/hex]`
+    ),
+    dim: vi.fn((s: string): string => `[dim]${s}[/dim]`),
+    bgRgb: vi.fn((): { whiteBright: (s: string) => string } => ({
+      whiteBright: vi.fn((s: string): string => `[bg-rgb]${s}[/bg-rgb]`)
     }))
   }
 }))
@@ -27,14 +31,14 @@ vi.mock('@src/constants/config', () => ({
 
 import { stdout } from '@src/utils/output'
 
-describe('printStreamEvent', () => {
-  beforeEach(() => {
+describe('printStreamEvent', (): void => {
+  beforeEach((): void => {
     vi.clearAllMocks()
     process.env.NO_COLOR = undefined
   })
 
-  describe('thought event', () => {
-    it('prints thinking header', () => {
+  describe('thought event', (): void => {
+    it('prints thinking header', (): void => {
       const event: AgentStreamEvent = {
         type: 'thought',
         thinking: 'I am thinking about this'
@@ -45,7 +49,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Thinking'))
     })
 
-    it('prints thinking content with dim styling', () => {
+    it('prints thinking content with dim styling', (): void => {
       const event: AgentStreamEvent = {
         type: 'thought',
         thinking: 'I am thinking about this'
@@ -56,7 +60,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('I am thinking about this'))
     })
 
-    it('calls stdout.print twice for thought event', () => {
+    it('calls stdout.print twice for thought event', (): void => {
       const event: AgentStreamEvent = {
         type: 'thought',
         thinking: 'test thought'
@@ -67,7 +71,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledTimes(2)
     })
 
-    it('handles multiline thinking content', () => {
+    it('handles multiline thinking content', (): void => {
       const event: AgentStreamEvent = {
         type: 'thought',
         thinking: 'Line 1\nLine 2\nLine 3'
@@ -79,8 +83,8 @@ describe('printStreamEvent', () => {
     })
   })
 
-  describe('tool_use event', () => {
-    it('prints tool label with bracketed name', () => {
+  describe('tool_use event', (): void => {
+    it('prints tool label with bracketed name', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_use',
         name: 'WebFetch',
@@ -92,7 +96,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('[WebFetch]'))
     })
 
-    it('prints tool input as JSON', () => {
+    it('prints tool input as JSON', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_use',
         name: 'Bash',
@@ -105,7 +109,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('ls -la'))
     })
 
-    it('handles complex input objects', () => {
+    it('handles complex input objects', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_use',
         name: 'Monitor',
@@ -118,7 +122,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('tail -f log'))
     })
 
-    it('handles empty input object', () => {
+    it('handles empty input object', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_use',
         name: 'TaskOutput',
@@ -131,8 +135,8 @@ describe('printStreamEvent', () => {
     })
   })
 
-  describe('tool_result event', () => {
-    it('prints result label', () => {
+  describe('tool_result event', (): void => {
+    it('prints result label', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_result',
         result: 'Command output here'
@@ -143,7 +147,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('result:'))
     })
 
-    it('formats simple text results', () => {
+    it('formats simple text results', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_result',
         result: 'Simple text result'
@@ -154,7 +158,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('Simple text result'))
     })
 
-    it('formats JSON results with pretty-printing', () => {
+    it('formats JSON results with pretty-printing', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_result',
         result: '{"key": "value", "nested": {"field": "data"}}'
@@ -165,7 +169,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalledWith(expect.stringContaining('key'))
     })
 
-    it('formats multiline results with indentation', () => {
+    it('formats multiline results with indentation', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_result',
         result: 'Line 1\nLine 2\nLine 3'
@@ -176,7 +180,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalled()
     })
 
-    it('handles ContentBlock array format', () => {
+    it('handles ContentBlock array format', (): void => {
       const contentBlocks = JSON.stringify([
         { type: 'text', text: '{"result": "data"}' },
         { type: 'text', text: 'Additional text' }
@@ -193,8 +197,8 @@ describe('printStreamEvent', () => {
     })
   })
 
-  describe('displayConfig handling', () => {
-    it('applies custom header_color when provided', () => {
+  describe('displayConfig handling', (): void => {
+    it('applies custom header_color when provided', (): void => {
       const event: AgentStreamEvent = {
         type: 'thought',
         thinking: 'test'
@@ -206,7 +210,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalled()
     })
 
-    it('respects no_color setting in displayConfig', () => {
+    it('respects no_color setting in displayConfig', (): void => {
       const event: AgentStreamEvent = {
         type: 'thought',
         thinking: 'test'
@@ -218,7 +222,7 @@ describe('printStreamEvent', () => {
       expect(stdout.print).toHaveBeenCalled()
     })
 
-    it('uses default config when displayConfig not provided', () => {
+    it('uses default config when displayConfig not provided', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_use',
         name: 'TestTool',
