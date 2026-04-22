@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import type { RawFunctionInfo, FunctionStrategy, TestFramework } from '@src/types/testStrategy'
+import type { RawFunctionInfo, FunctionStrategy } from '@src/types/testStrategy'
+import {
+  calcComplexity,
+  calcSuggestedTestCaseCount,
+  isCustomHook,
+  isComponent,
+  findMatchingTest,
+  buildStrategy,
+  buildRecommendation
+} from '@src/utils/testStrategyHelpers'
 
 // ============================================================================
 // calcComplexity tests
@@ -7,10 +16,6 @@ import type { RawFunctionInfo, FunctionStrategy, TestFramework } from '@src/type
 
 describe('calcComplexity', () => {
   it('calculates complexity as 1 + branches + loops + logicalOps + catches', () => {
-    const calcComplexity = (raw: RawFunctionInfo): number => {
-      return 1 + raw.branchCount + raw.loopCount + raw.logicalOpCount + raw.catchCount
-    }
-
     const raw: RawFunctionInfo = {
       name: 'testFunc',
       class_name: null,
@@ -32,10 +37,6 @@ describe('calcComplexity', () => {
 
 describe('calcSuggestedTestCaseCount', () => {
   it('returns 1 + branches + 1-for-loop + catches when loops exist', () => {
-    const calcSuggestedTestCaseCount = (raw: RawFunctionInfo): number => {
-      return 1 + raw.branchCount + (raw.loopCount > 0 ? 1 : 0) + raw.catchCount
-    }
-
     const raw: RawFunctionInfo = {
       name: 'testFunc',
       class_name: null,
@@ -51,10 +52,6 @@ describe('calcSuggestedTestCaseCount', () => {
   })
 
   it('returns 1 + branches + 0 + catches when no loops', () => {
-    const calcSuggestedTestCaseCount = (raw: RawFunctionInfo): number => {
-      return 1 + raw.branchCount + (raw.loopCount > 0 ? 1 : 0) + raw.catchCount
-    }
-
     const raw: RawFunctionInfo = {
       name: 'testFunc',
       class_name: null,
@@ -76,26 +73,14 @@ describe('calcSuggestedTestCaseCount', () => {
 
 describe('isCustomHook', () => {
   it('returns true for names starting with "use" and length > 3', () => {
-    const isCustomHook = (name: string): boolean => {
-      return name.startsWith('use') && name.length > 3
-    }
-
     expect(isCustomHook('useEffect')).toBe(true)
   })
 
   it('returns false for names not starting with "use"', () => {
-    const isCustomHook = (name: string): boolean => {
-      return name.startsWith('use') && name.length > 3
-    }
-
     expect(isCustomHook('myFunction')).toBe(false)
   })
 
   it('returns false for "use" exactly (length <= 3)', () => {
-    const isCustomHook = (name: string): boolean => {
-      return name.startsWith('use') && name.length > 3
-    }
-
     expect(isCustomHook('use')).toBe(false)
   })
 })
@@ -106,42 +91,18 @@ describe('isCustomHook', () => {
 
 describe('isComponent', () => {
   it('returns true when first character is uppercase letter', () => {
-    const isComponent = (name: string): boolean => {
-      return (
-        name.length > 0 && name[0] === name[0].toUpperCase() && name[0] !== name[0].toLowerCase()
-      )
-    }
-
     expect(isComponent('MyComponent')).toBe(true)
   })
 
   it('returns false when first character is lowercase', () => {
-    const isComponent = (name: string): boolean => {
-      return (
-        name.length > 0 && name[0] === name[0].toUpperCase() && name[0] !== name[0].toLowerCase()
-      )
-    }
-
     expect(isComponent('myComponent')).toBe(false)
   })
 
   it('returns false when first character is non-alphabetic', () => {
-    const isComponent = (name: string): boolean => {
-      return (
-        name.length > 0 && name[0] === name[0].toUpperCase() && name[0] !== name[0].toLowerCase()
-      )
-    }
-
     expect(isComponent('1Component')).toBe(false)
   })
 
   it('returns false when empty string', () => {
-    const isComponent = (name: string): boolean => {
-      return (
-        name.length > 0 && name[0] === name[0].toUpperCase() && name[0] !== name[0].toLowerCase()
-      )
-    }
-
     expect(isComponent('')).toBe(false)
   })
 })
@@ -152,52 +113,16 @@ describe('isComponent', () => {
 
 describe('findMatchingTest', () => {
   it('returns matching test function by name', () => {
-    const findMatchingTest = (functionName: string, testFunctions: string[]): string | null => {
-      const words = functionName
-        .replace(/([A-Z])/g, ' $1')
-        .trim()
-        .toLowerCase()
-      for (const tf of testFunctions) {
-        const lower = tf.toLowerCase()
-        if (lower.includes(words) || lower.includes(functionName.toLowerCase())) return tf
-      }
-      return null
-    }
-
     const result = findMatchingTest('getUserId', ['test_getUserId', 'other test'])
     expect(result).toBe('test_getUserId')
   })
 
   it('returns matching test function with case-insensitive search', () => {
-    const findMatchingTest = (functionName: string, testFunctions: string[]): string | null => {
-      const words = functionName
-        .replace(/([A-Z])/g, ' $1')
-        .trim()
-        .toLowerCase()
-      for (const tf of testFunctions) {
-        const lower = tf.toLowerCase()
-        if (lower.includes(words) || lower.includes(functionName.toLowerCase())) return tf
-      }
-      return null
-    }
-
     const result = findMatchingTest('calculateTotal', ['CALCULATETOTAL_test', 'other'])
     expect(result).toBe('CALCULATETOTAL_test')
   })
 
   it('returns null when no matching test function found', () => {
-    const findMatchingTest = (functionName: string, testFunctions: string[]): string | null => {
-      const words = functionName
-        .replace(/([A-Z])/g, ' $1')
-        .trim()
-        .toLowerCase()
-      for (const tf of testFunctions) {
-        const lower = tf.toLowerCase()
-        if (lower.includes(words) || lower.includes(functionName.toLowerCase())) return tf
-      }
-      return null
-    }
-
     const result = findMatchingTest('myFunction', ['unrelatedTest', 'otherTest'])
     expect(result).toBeNull()
   })
@@ -208,59 +133,6 @@ describe('findMatchingTest', () => {
 // ============================================================================
 
 describe('buildStrategy', () => {
-  const buildStrategy = (
-    raw: RawFunctionInfo,
-    framework: TestFramework,
-    testFunctions: string[]
-  ) => {
-    const isCustomHook = (name: string): boolean => name.startsWith('use') && name.length > 3
-    const isComponent = (name: string): boolean =>
-      name.length > 0 && name[0] === name[0].toUpperCase() && name[0] !== name[0].toLowerCase()
-    const calcComplexity = (raw: RawFunctionInfo): number =>
-      1 + raw.branchCount + raw.loopCount + raw.logicalOpCount + raw.catchCount
-    const calcSuggestedTestCaseCount = (raw: RawFunctionInfo): number =>
-      1 + raw.branchCount + (raw.loopCount > 0 ? 1 : 0) + raw.catchCount
-    const findMatchingTest = (functionName: string, testFunctions: string[]): string | null => {
-      const words = functionName
-        .replace(/([A-Z])/g, ' $1')
-        .trim()
-        .toLowerCase()
-      for (const tf of testFunctions) {
-        const lower = tf.toLowerCase()
-        if (lower.includes(words) || lower.includes(functionName.toLowerCase())) return tf
-      }
-      return null
-    }
-
-    const hook = !raw.class_name && isCustomHook(raw.name)
-    const component = !raw.class_name && isComponent(raw.name)
-    const complexity = calcComplexity(raw)
-    const existingTest = findMatchingTest(raw.name, testFunctions)
-
-    const missingCoverage: FunctionStrategy['missing_coverage'] = []
-    if (!existingTest) {
-      const label = hook ? 'hook' : component ? 'component' : 'function'
-      missingCoverage.push({
-        type: 'missing_test_function',
-        details: `No test found for ${label} '${raw.name}'`,
-        lineno: raw.lineno
-      })
-    }
-
-    return {
-      function_name: raw.name,
-      class_name: raw.class_name,
-      recommended_framework: framework,
-      existing_test_function: existingTest,
-      complexity,
-      suggested_test_case_count: calcSuggestedTestCaseCount(raw),
-      missing_coverage: missingCoverage,
-      suggested_mocks: raw.referencedImports,
-      is_custom_hook: hook,
-      is_component: component
-    }
-  }
-
   it('builds strategy with existing test', () => {
     const raw: RawFunctionInfo = {
       name: 'getUserId',
@@ -338,39 +210,6 @@ describe('buildStrategy', () => {
 // ============================================================================
 
 describe('buildRecommendation', () => {
-  const buildRecommendation = (strategies: FunctionStrategy[]): string => {
-    const hooks = strategies.filter((s) => s.is_custom_hook)
-    const components = strategies.filter((s) => s.is_component && !s.is_custom_hook)
-    const others = strategies.filter((s) => !s.is_custom_hook && !s.is_component)
-    const untested = (arr: FunctionStrategy[]) =>
-      arr.filter((s) => !s.existing_test_function).length
-
-    const recs: string[] = []
-    const uh = untested(hooks)
-    const uc = untested(components)
-    const uo = untested(others)
-    if (uh > 0) recs.push(`${uh}/${hooks.length} custom hook(s) are missing unit tests.`)
-    if (uc > 0) recs.push(`${uc}/${components.length} component(s) are missing unit tests.`)
-    if (uo > 0) recs.push(`${uo}/${others.length} function(s) are missing unit tests.`)
-
-    const highComplexity = strategies.filter((s) => s.complexity > 10)
-    if (highComplexity.length > 0) {
-      const names = highComplexity
-        .slice(0, 3)
-        .map((f) => f.function_name)
-        .join(', ')
-      recs.push(
-        `${highComplexity.length} function(s) have high complexity (e.g., ${names}). Testing is recommended.`
-      )
-    }
-
-    const needMocks = strategies.filter((s) => s.suggested_mocks.length > 0)
-    if (needMocks.length > 0)
-      recs.push(`${needMocks.length} function(s) need mocking for dependencies.`)
-
-    return recs.length > 0 ? recs.join(' ') : 'Test coverage is good.'
-  }
-
   it('returns "Test coverage is good." when all tests exist', () => {
     const strategies: FunctionStrategy[] = [
       {

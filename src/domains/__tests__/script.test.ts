@@ -26,7 +26,7 @@ describe('ScriptDomain', () => {
 
     it('returns the ScriptResult from shellRepo.exec', async () => {
       const mockResult: ScriptResult = {
-        code: 0,
+        exitCode: 0,
         stdout: 'file1.txt\nfile2.txt',
         stderr: ''
       }
@@ -38,7 +38,7 @@ describe('ScriptDomain', () => {
     })
 
     it('handles different command strings', async () => {
-      const mockResult: ScriptResult = { code: 0, stdout: '', stderr: '' }
+      const mockResult: ScriptResult = { exitCode: 0, stdout: '', stderr: '' }
       mockShellRepo.exec.mockResolvedValueOnce(mockResult)
 
       await scriptDomain.run('npm install', '/project')
@@ -48,7 +48,7 @@ describe('ScriptDomain', () => {
 
     it('handles ScriptResult with non-zero exit code', async () => {
       const mockResult: ScriptResult = {
-        code: 1,
+        exitCode: 1,
         stdout: '',
         stderr: 'error occurred'
       }
@@ -56,7 +56,7 @@ describe('ScriptDomain', () => {
 
       const result = await scriptDomain.run('false', '/home')
 
-      expect(result.code).toBe(1)
+      expect(result.exitCode).toBe(1)
       expect(result.stderr).toBe('error occurred')
     })
 
@@ -71,7 +71,7 @@ describe('ScriptDomain', () => {
 
     it('passes through stdout and stderr from exec result', async () => {
       const mockResult: ScriptResult = {
-        code: 0,
+        exitCode: 0,
         stdout: 'success output',
         stderr: 'warning message'
       }
@@ -84,7 +84,7 @@ describe('ScriptDomain', () => {
     })
 
     it('clears mocks between calls', async () => {
-      const mockResult: ScriptResult = { code: 0, stdout: '', stderr: '' }
+      const mockResult: ScriptResult = { exitCode: 0, stdout: '', stderr: '' }
       mockShellRepo.exec.mockResolvedValueOnce(mockResult)
 
       await scriptDomain.run('cmd1', '/path1')
