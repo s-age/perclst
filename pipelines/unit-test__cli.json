@@ -3,27 +3,32 @@
     {
       "type": "child",
       "path": "unit-test__cli__commands__analyze.json",
-      "name": "unit-test-cli-commands-analyze"
+      "name": "unit-test-cli-commands-analyze",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__chat.json",
-      "name": "unit-test-cli-commands-chat"
+      "name": "unit-test-cli-commands-chat",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__curate.json",
-      "name": "unit-test-cli-commands-curate"
+      "name": "unit-test-cli-commands-curate",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__delete.json",
-      "name": "unit-test-cli-commands-delete"
+      "name": "unit-test-cli-commands-delete",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__cli__commands__fork.json",
-      "name": "unit-test-cli-commands-fork"
+      "name": "unit-test-cli-commands-fork",
+      "done": true
     },
     {
       "type": "child",
