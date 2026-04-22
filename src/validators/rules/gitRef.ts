@@ -4,7 +4,7 @@ import { z } from 'zod'
 // Rejects shell metacharacters to prevent command injection via execSync.
 const GIT_REF_RE = /^[a-zA-Z0-9._\-/]+$/
 
-export function gitRefRule() {
+export function gitRefRule(): z.ZodString {
   return z
     .string()
     .min(1)

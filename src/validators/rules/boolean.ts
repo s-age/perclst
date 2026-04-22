@@ -1,5 +1,5 @@
 import { z } from 'zod'
 
-export function booleanRule() {
+export function booleanRule(): z.ZodBoolean {
   return z.boolean()
 }

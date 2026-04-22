@@ -27,17 +27,20 @@
     {
       "type": "child",
       "path": "lint-fix__explicit-return-type__mcp.json",
-      "name": "lint-fix-explicit-return-type-mcp"
+      "name": "lint-fix-explicit-return-type-mcp",
+      "done": true
     },
     {
       "type": "child",
       "path": "lint-fix__explicit-return-type__repositories.json",
-      "name": "lint-fix-explicit-return-type-repositories"
+      "name": "lint-fix-explicit-return-type-repositories",
+      "done": true
     },
     {
       "type": "child",
       "path": "lint-fix__explicit-return-type__utils-services.json",
-      "name": "lint-fix-explicit-return-type-utils-services"
+      "name": "lint-fix-explicit-return-type-utils-services",
+      "done": true
     },
     {
       "type": "child",
