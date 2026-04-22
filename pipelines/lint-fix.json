@@ -3,7 +3,8 @@
     {
       "type": "child",
       "path": "lint-fix__explicit-return-type__cli-commands.json",
-      "name": "lint-fix-explicit-return-type-cli-commands"
+      "name": "lint-fix-explicit-return-type-cli-commands",
+      "done": true
     },
     {
       "type": "child",

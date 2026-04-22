@@ -104,14 +104,14 @@ export function usePipelineRun({
   panelWidth,
   onDone,
   onError
-}: Props) {
+}: Props): { tasks: TaskState[]; allLines: string[]; done: boolean; error: string | null } {
   const [tasks, setTasks] = useState<TaskState[]>(() => initTasks(pipeline))
   const [allLines, setAllLines] = useState<string[]>([])
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const onStreamEvent = (event: AgentStreamEvent) => {
+    const onStreamEvent = (event: AgentStreamEvent): void => {
       const lines = formatStreamLines(event, panelWidth)
       setAllLines((prev) => {
         const next = [...prev, ...lines]

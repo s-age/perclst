@@ -25,7 +25,7 @@ export function TaskRow({
   maxRetries,
   spinnerFrame = 0,
   depth = 0
-}: TaskRowProps) {
+}: TaskRowProps): JSX.Element {
   const indent = '  '.repeat(depth)
   const num = `${index + 1}.`
   const label = name ?? command ?? `[${taskType}]`

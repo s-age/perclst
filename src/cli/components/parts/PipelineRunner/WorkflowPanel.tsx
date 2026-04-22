@@ -36,7 +36,7 @@ function renderTasks(
   })
 }
 
-export function WorkflowPanel({ tasks, done, error, spinnerFrame }: Props) {
+export function WorkflowPanel({ tasks, done, error, spinnerFrame }: Props): JSX.Element {
   return (
     <Box flexDirection="column" width="40%" paddingRight={1}>
       <Text bold>Workflow</Text>
