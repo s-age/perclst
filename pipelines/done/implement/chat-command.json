@@ -55,10 +55,7 @@
       "type": "agent",
       "name": "implement-chat-validator",
       "task": "src/validators/cli/chatSession.ts is complete and builds. Commit it.\n\nCommit message: feat(validators): add chatSession validator for chat command",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -114,10 +111,7 @@
       "type": "agent",
       "name": "implement-chat-command",
       "task": "src/cli/commands/chat.ts and src/cli/index.ts are complete, build and tests pass. Commit both files together.\n\nCommit message: feat(cli): add chat command to resume sessions interactively in Claude Code",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     }
   ]
