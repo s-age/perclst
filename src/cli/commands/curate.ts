@@ -1,3 +1,4 @@
+import { cwdPath } from '@src/utils/path'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { KnowledgeSearchService } from '@src/services/knowledgeSearchService'
@@ -12,10 +13,14 @@ export async function curateCommand() {
     return
   }
 
-  await startCommand('Promote all entries in knowledge/draft/ into structured knowledge/ files.', {
-    procedure: 'meta-curate-knowledge',
-    labels: ['curate'],
-    allowedTools: ['Skill', 'Write', 'Read', 'Bash', 'Glob'],
-    outputOnly: true
-  })
+  const knowledgeDir = cwdPath('knowledge')
+  await startCommand(
+    `Promote all entries in ${knowledgeDir}/draft/ into structured ${knowledgeDir}/ files.`,
+    {
+      procedure: 'meta-curate-knowledge',
+      labels: ['curate'],
+      allowedTools: ['Skill', 'Write', 'Read', 'Bash', 'Glob'],
+      outputOnly: true
+    }
+  )
 }

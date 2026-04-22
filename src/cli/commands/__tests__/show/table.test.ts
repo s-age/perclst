@@ -67,7 +67,9 @@ describe('showCommand — table formatting', () => {
     }))
 
     // Setup Table constructor mock
-    vi.mocked(Table).mockImplementation(function () { return mockTableInstance as never })
+    vi.mocked(Table).mockImplementation(function () {
+      return mockTableInstance as never
+    })
 
     // Setup ansis.strip to return input as-is (default)
     vi.mocked(ansis.strip).mockImplementation((text: string) => text)

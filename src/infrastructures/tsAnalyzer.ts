@@ -6,13 +6,24 @@ type TsAnalyzerOptions =
   | { tsConfigFilePath?: string; skipAddingFilesFromTsConfig?: false }
 
 export class TsAnalyzer {
-  private project: Project
+  private _project: Project | null = null
+  private readonly options: TsAnalyzerOptions
 
   constructor(options: TsAnalyzerOptions = {}) {
-    this.project =
-      options.skipAddingFilesFromTsConfig === true
-        ? new Project({ skipAddingFilesFromTsConfig: true })
-        : new Project({ tsConfigFilePath: options.tsConfigFilePath ?? 'tsconfig.json' })
+    this.options = options
+  }
+
+  private get project(): Project {
+    if (!this._project) {
+      if (this.options.skipAddingFilesFromTsConfig === true) {
+        this._project = new Project({ skipAddingFilesFromTsConfig: true })
+      } else {
+        this._project = new Project({
+          tsConfigFilePath: this.options.tsConfigFilePath ?? 'tsconfig.json'
+        })
+      }
+    }
+    return this._project
   }
 
   getSourceFile(filePath: string): SourceFile {
