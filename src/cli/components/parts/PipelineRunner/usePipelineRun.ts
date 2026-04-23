@@ -76,24 +76,35 @@ function applyResult(
   }
 }
 
+type RunPipelineConfig = {
+  pipelineService: PipelineService
+  pipeline: Pipeline
+  runOptions: PipelineRunOptions
+}
+
+type RunPipelineHandlers = {
+  setters: Setters
+  callbacks: { onDone: () => void; onError: (err: Error) => void }
+}
+
 async function runPipeline(
-  pipelineService: PipelineService,
-  pipeline: Pipeline,
-  runOptions: PipelineRunOptions,
-  setters: Setters,
-  onDone: () => void,
-  onError: (err: Error) => void
+  config: RunPipelineConfig,
+  handlers: RunPipelineHandlers
 ): Promise<void> {
   try {
-    for await (const result of pipelineService.run(pipeline, runOptions, undefined as never)) {
-      applyResult(result, setters)
+    for await (const result of config.pipelineService.run(
+      config.pipeline,
+      config.runOptions,
+      undefined as never
+    )) {
+      applyResult(result, handlers.setters)
     }
-    setters.setDone(true)
-    onDone()
+    handlers.setters.setDone(true)
+    handlers.callbacks.onDone()
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    setters.setError(msg)
-    onError(err instanceof Error ? err : new Error(msg))
+    handlers.setters.setError(msg)
+    handlers.callbacks.onError(err instanceof Error ? err : new Error(msg))
   }
 }
 
@@ -120,12 +131,8 @@ export function usePipelineRun({
     }
     const runOptions: PipelineRunOptions = { ...options, onStreamEvent }
     void runPipeline(
-      pipelineService,
-      pipeline,
-      runOptions,
-      { setTasks, setAllLines, setDone, setError },
-      onDone,
-      onError
+      { pipelineService, pipeline, runOptions },
+      { setters: { setTasks, setAllLines, setDone, setError }, callbacks: { onDone, onError } }
     )
   }, [])
 

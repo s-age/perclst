@@ -45,7 +45,8 @@
     {
       "type": "child",
       "path": "lint-fix__explicit-return-type__validators.json",
-      "name": "lint-fix-explicit-return-type-validators"
+      "name": "lint-fix-explicit-return-type-validators",
+      "done": true
     },
     {
       "type": "child",

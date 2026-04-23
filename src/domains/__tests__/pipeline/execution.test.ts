@@ -50,9 +50,7 @@ describe('PipelineDomain - execution', () => {
         session,
         'instruction',
         false,
-        execOpts,
-        5,
-        5000
+        { execOpts, limits: { maxTurns: 5, maxContextTokens: 5000 } }
       )
 
       expect(result).toEqual(agentResponse)
@@ -75,7 +73,10 @@ describe('PipelineDomain - execution', () => {
         .mockResolvedValueOnce(termResponse)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
-      await pipelineDomain.runWithLimit(session, 'instruction', false, execOpts, 5, -1)
+      await pipelineDomain.runWithLimit(session, 'instruction', false, {
+        execOpts,
+        limits: { maxTurns: 5, maxContextTokens: -1 }
+      })
 
       expect(agentDomain.run).toHaveBeenCalledTimes(2)
       const secondCall = vi.mocked(agentDomain.run).mock.calls[1]
@@ -103,7 +104,10 @@ describe('PipelineDomain - execution', () => {
         .mockResolvedValueOnce(termResponse)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
-      await pipelineDomain.runWithLimit(session, 'instruction', false, execOpts, -1, 4000)
+      await pipelineDomain.runWithLimit(session, 'instruction', false, {
+        execOpts,
+        limits: { maxTurns: -1, maxContextTokens: 4000 }
+      })
 
       expect(agentDomain.run).toHaveBeenCalledTimes(2)
     })
@@ -130,7 +134,7 @@ describe('PipelineDomain - execution', () => {
         maxContextTokens: 5000
       }
 
-      const result = await pipelineDomain.runAgentTask(task, 0, [0], options)
+      const result = await pipelineDomain.runAgentTask(task, { index: 0, taskPath: [0] }, options)
 
       expect(result.action).toBe('started')
       expect(result.sessionId).toBe('new-session-id')
@@ -157,7 +161,7 @@ describe('PipelineDomain - execution', () => {
         maxContextTokens: 5000
       }
 
-      const result = await pipelineDomain.runAgentTask(task, 0, [0], options)
+      const result = await pipelineDomain.runAgentTask(task, { index: 0, taskPath: [0] }, options)
 
       expect(result.action).toBe('resumed')
       expect(result.sessionId).toBe('existing-session-id')
@@ -186,7 +190,7 @@ describe('PipelineDomain - execution', () => {
         maxContextTokens: 5000
       }
 
-      await pipelineDomain.runAgentTask(task, 0, [0], options)
+      await pipelineDomain.runAgentTask(task, { index: 0, taskPath: [0] }, options)
 
       expect(sessionDomain.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -220,7 +224,7 @@ describe('PipelineDomain - execution', () => {
         maxContextTokens: 5000
       }
 
-      await pipelineDomain.runAgentTask(task, 0, [0], options, rejected)
+      await pipelineDomain.runAgentTask(task, { index: 0, taskPath: [0] }, options, rejected)
 
       const runCall = vi.mocked(agentDomain.run).mock.calls[0]
       expect(runCall[1]).toContain('[Retry 1]')
@@ -271,12 +275,12 @@ describe('PipelineDomain - execution', () => {
       // eslint-disable-next-line local/no-any
       const result = await (pipelineDomain as any).resumeNamedSession(
         task,
-        0,
-        [0],
-        'new instruction',
-        execOpts,
-        5,
-        5000
+        { index: 0, taskPath: [0] },
+        {
+          instruction: 'new instruction',
+          execOpts,
+          limits: { maxTurns: 5, maxContextTokens: 5000 }
+        }
       )
 
       expect(result).not.toBeNull()

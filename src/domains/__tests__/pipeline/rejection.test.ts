@@ -64,7 +64,11 @@ describe('PipelineDomain - rejection handling', () => {
         ]
       }
 
-      const result = pipelineDomain.resolveRejection(pipeline, 'retry_target', 0, 1, 3, 'feedback')
+      const result = pipelineDomain.resolveRejection(
+        pipeline,
+        { toName: 'retry_target', feedback: 'feedback' },
+        { taskIndex: 0, currentCount: 1, maxRetries: 3 }
+      )
 
       expect(result.newCount).toBe(2)
       expect(result.targetIndex).toBe(1)
@@ -88,7 +92,11 @@ describe('PipelineDomain - rejection handling', () => {
         ]
       }
 
-      const result = pipelineDomain.resolveRejection(pipeline, 'nested', 0, 0, 2, 'feedback')
+      const result = pipelineDomain.resolveRejection(
+        pipeline,
+        { toName: 'nested', feedback: 'feedback' },
+        { taskIndex: 0, currentCount: 0, maxRetries: 2 }
+      )
 
       expect(result.targetIndex).toBe(0)
       expect(result.context.task).toEqual(agentTask)
@@ -100,7 +108,11 @@ describe('PipelineDomain - rejection handling', () => {
       }
 
       expect(() => {
-        pipelineDomain.resolveRejection(pipeline, 'nonexistent', 0, 0, 2, 'feedback')
+        pipelineDomain.resolveRejection(
+          pipeline,
+          { toName: 'nonexistent', feedback: 'feedback' },
+          { taskIndex: 0, currentCount: 0, maxRetries: 2 }
+        )
       }).toThrow("Rejection target 'nonexistent' not found in pipeline")
     })
 
@@ -110,7 +122,11 @@ describe('PipelineDomain - rejection handling', () => {
       }
 
       expect(() => {
-        pipelineDomain.resolveRejection(pipeline, 'target', 0, 2, 2, 'feedback')
+        pipelineDomain.resolveRejection(
+          pipeline,
+          { toName: 'target', feedback: 'feedback' },
+          { taskIndex: 0, currentCount: 2, maxRetries: 2 }
+        )
       }).toThrow('Max retries exceeded at task 0: 2')
     })
 
@@ -119,7 +135,11 @@ describe('PipelineDomain - rejection handling', () => {
         tasks: [{ type: 'agent', name: 'target', task: 'task' }]
       }
 
-      pipelineDomain.resolveRejection(pipeline, 'target', 0, 1, 3, 'feedback')
+      pipelineDomain.resolveRejection(
+        pipeline,
+        { toName: 'target', feedback: 'feedback' },
+        { taskIndex: 0, currentCount: 1, maxRetries: 3 }
+      )
 
       expect(vi.mocked(debug.print)).toHaveBeenCalledWith("Rejecting to 'target' (retry 2/3)")
     })
@@ -141,7 +161,10 @@ describe('PipelineDomain - rejection handling', () => {
         stderr: ''
       }
 
-      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, 0, 0)
+      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, {
+        taskIndex: 0,
+        currentCount: 0
+      })
 
       expect(rejection).toBeUndefined()
     })
@@ -161,7 +184,10 @@ describe('PipelineDomain - rejection handling', () => {
         stderr: 'Error'
       }
 
-      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, 0, 0)
+      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, {
+        taskIndex: 0,
+        currentCount: 0
+      })
 
       expect(rejection).toBeUndefined()
     })
@@ -182,7 +208,10 @@ describe('PipelineDomain - rejection handling', () => {
         stderr: 'error message'
       }
 
-      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, 0, 0)
+      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, {
+        taskIndex: 0,
+        currentCount: 0
+      })
 
       expect(rejection).toBeDefined()
       expect(rejection?.newCount).toBe(1)
@@ -228,7 +257,10 @@ describe('PipelineDomain - rejection handling', () => {
         stderr: ''
       }
 
-      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, 0, 0)
+      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, {
+        taskIndex: 0,
+        currentCount: 0
+      })
 
       expect(rejection?.context.feedback).toBe('some output')
     })
@@ -249,7 +281,10 @@ describe('PipelineDomain - rejection handling', () => {
         stderr: ''
       }
 
-      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, 2, 2)
+      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, {
+        taskIndex: 2,
+        currentCount: 2
+      })
 
       expect(rejection?.newCount).toBe(3)
     })

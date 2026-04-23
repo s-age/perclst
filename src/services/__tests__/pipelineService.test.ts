@@ -25,7 +25,7 @@ describe('PipelineService', () => {
   let service: PipelineService
   const mockPipelineDomain: IPipelineDomain = {
     runWithLimit: vi.fn<
-      [Session, string, boolean, object, number, number],
+      [Session, string, boolean, { execOpts: object; limits: { maxTurns: number; maxContextTokens: number } }],
       Promise<AgentResponse>
     >(),
     buildRejectedInstruction: vi.fn<[AgentPipelineTask, object], string>(),
@@ -34,7 +34,7 @@ describe('PipelineService', () => {
     resolveRejection: vi.fn(),
     buildExecuteOptions: vi.fn(),
     runAgentTask: vi.fn<
-      [AgentPipelineTask, number, number[], object, object?],
+      [AgentPipelineTask, { index: number; taskPath: number[] }, object, object?],
       Promise<AgentTaskResult>
     >(),
     findOuterRejectionTarget: vi.fn<[object], number | undefined>(),
@@ -48,8 +48,8 @@ describe('PipelineService', () => {
     vi.clearAllMocks()
     vi.mocked(mockPipelineDomain.getWorkingDirectory).mockReturnValue('/test/cwd')
     vi.mocked(mockPipelineDomain.runAgentTask).mockImplementation(
-      async (task, taskIndex, taskPath) => {
-        return stubAgentResult({ taskIndex, taskPath })
+      async (task, taskLocation) => {
+        return stubAgentResult({ taskIndex: taskLocation.index, taskPath: taskLocation.taskPath })
       }
     )
     service = new PipelineService(mockPipelineDomain, mockScriptDomain)

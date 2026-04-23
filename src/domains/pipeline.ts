@@ -49,19 +49,18 @@ export class PipelineDomain implements IPipelineDomain {
 
   resolveRejection(
     pipeline: Pipeline,
-    toName: string,
-    taskIndex: number,
-    currentCount: number,
-    maxRetries: number,
-    feedback: string
+    target: { toName: string; feedback: string },
+    retryState: { taskIndex: number; currentCount: number; maxRetries: number }
   ): RejectionResult {
-    const newCount = currentCount + 1
-    if (newCount > maxRetries) throw new PipelineMaxRetriesError(taskIndex, maxRetries)
+    const newCount = retryState.currentCount + 1
+    if (newCount > retryState.maxRetries)
+      throw new PipelineMaxRetriesError(retryState.taskIndex, retryState.maxRetries)
 
     const targetIndex = pipeline.tasks.findIndex(
-      (t) => (t.type === 'agent' || t.type === 'pipeline') && t.name === toName
+      (t) => (t.type === 'agent' || t.type === 'pipeline') && t.name === target.toName
     )
-    if (targetIndex === -1) throw new Error(`Rejection target '${toName}' not found in pipeline`)
+    if (targetIndex === -1)
+      throw new Error(`Rejection target '${target.toName}' not found in pipeline`)
 
     const targetTask = pipeline.tasks[targetIndex]
     const task =
@@ -71,21 +70,28 @@ export class PipelineDomain implements IPipelineDomain {
             (t) => t.type === 'agent'
           ) as AgentPipelineTask) ?? ({ type: 'agent', task: '' } as AgentPipelineTask))
 
-    debug.print(`Rejecting to '${toName}' (retry ${newCount}/${maxRetries})`)
-    return { targetIndex, context: { retry_count: newCount, task, feedback }, newCount }
+    debug.print(`Rejecting to '${target.toName}' (retry ${newCount}/${retryState.maxRetries})`)
+    return {
+      targetIndex,
+      context: { retry_count: newCount, task, feedback: target.feedback },
+      newCount
+    }
   }
 
-  async runWithLimit(
+  private async runWithLimit(
     session: Session,
     instruction: string,
     isResume: boolean,
-    execOpts: ExecuteOptions,
-    maxTurns: number,
-    maxContextTokens: number
+    config: { execOpts: ExecuteOptions; limits: { maxTurns: number; maxContextTokens: number } }
   ): Promise<AgentResponse> {
-    let response = await this.agentDomain.run(session, instruction, isResume, execOpts)
-    if (this.isLimitExceeded(response, maxTurns, maxContextTokens)) {
-      response = await this.agentDomain.run(session, GRACEFUL_TERMINATION_PROMPT, true, execOpts)
+    let response = await this.agentDomain.run(session, instruction, isResume, config.execOpts)
+    if (this.isLimitExceeded(response, config.limits.maxTurns, config.limits.maxContextTokens)) {
+      response = await this.agentDomain.run(
+        session,
+        GRACEFUL_TERMINATION_PROMPT,
+        true,
+        config.execOpts
+      )
     }
     return response
   }
@@ -101,8 +107,7 @@ export class PipelineDomain implements IPipelineDomain {
 
   async runAgentTask(
     task: AgentPipelineTask,
-    index: number,
-    taskPath: number[],
+    taskLocation: { index: number; taskPath: number[] },
     options: PipelineRunOptions,
     rejected?: RejectedContext
   ): Promise<AgentTaskResult> {
@@ -112,15 +117,11 @@ export class PipelineDomain implements IPipelineDomain {
     const instruction = rejected ? this.buildRejectedInstruction(task, rejected) : task.task
 
     if (task.name) {
-      const resumed = await this.resumeNamedSession(
-        task,
-        index,
-        taskPath,
+      const resumed = await this.resumeNamedSession(task, taskLocation, {
         instruction,
         execOpts,
-        maxTurns,
-        maxContextTokens
-      )
+        limits: { maxTurns, maxContextTokens }
+      })
       if (resumed) return resumed
     }
 
@@ -130,18 +131,14 @@ export class PipelineDomain implements IPipelineDomain {
       working_dir: this.getWorkingDirectory()
     })
     const sessionFilePath = this.sessionDomain.getPath(session.id)
-    const response = await this.runWithLimit(
-      session,
-      instruction,
-      false,
-      { ...execOpts, sessionFilePath },
-      maxTurns,
-      maxContextTokens
-    )
+    const response = await this.runWithLimit(session, instruction, false, {
+      execOpts: { ...execOpts, sessionFilePath },
+      limits: { maxTurns, maxContextTokens }
+    })
     await this.sessionDomain.updateStatus(session.id, 'active')
     return {
-      taskPath,
-      taskIndex: index,
+      taskPath: taskLocation.taskPath,
+      taskIndex: taskLocation.index,
       name: task.name,
       sessionId: session.id,
       response,
@@ -151,28 +148,24 @@ export class PipelineDomain implements IPipelineDomain {
 
   private async resumeNamedSession(
     task: AgentPipelineTask,
-    index: number,
-    taskPath: number[],
-    instruction: string,
-    execOpts: ExecuteOptions,
-    maxTurns: number,
-    maxContextTokens: number
+    taskLocation: { index: number; taskPath: number[] },
+    executionConfig: {
+      instruction: string
+      execOpts: ExecuteOptions
+      limits: { maxTurns: number; maxContextTokens: number }
+    }
   ): Promise<AgentTaskResult | null> {
     const existing = await this.sessionDomain.findByName(task.name!)
     if (!existing) return null
     const sessionFilePath = this.sessionDomain.getPath(existing.id)
-    const response = await this.runWithLimit(
-      existing,
-      instruction,
-      true,
-      { ...execOpts, sessionFilePath },
-      maxTurns,
-      maxContextTokens
-    )
+    const response = await this.runWithLimit(existing, executionConfig.instruction, true, {
+      execOpts: { ...executionConfig.execOpts, sessionFilePath },
+      limits: executionConfig.limits
+    })
     await this.sessionDomain.updateStatus(existing.id, 'active')
     return {
-      taskPath,
-      taskIndex: index,
+      taskPath: taskLocation.taskPath,
+      taskIndex: taskLocation.index,
       name: task.name,
       sessionId: existing.id,
       response,
@@ -211,18 +204,18 @@ export class PipelineDomain implements IPipelineDomain {
     pipeline: Pipeline,
     task: ScriptPipelineTask,
     result: ScriptResult,
-    taskIndex: number,
-    currentCount: number
+    retryState: { taskIndex: number; currentCount: number }
   ): RejectionResult | undefined {
     if (result.exitCode === 0 || !task.rejected) return undefined
     const feedback = [result.stdout, result.stderr].filter(Boolean).join('\n')
     return this.resolveRejection(
       pipeline,
-      task.rejected.to,
-      taskIndex,
-      currentCount,
-      task.rejected.max_retries ?? 1,
-      feedback
+      { toName: task.rejected.to, feedback },
+      {
+        taskIndex: retryState.taskIndex,
+        currentCount: retryState.currentCount,
+        maxRetries: task.rejected.max_retries ?? 1
+      }
     )
   }
 }
