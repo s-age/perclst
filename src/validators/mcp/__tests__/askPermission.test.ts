@@ -73,7 +73,7 @@ describe('askPermissionParams', () => {
       ).toThrow()
     })
 
-    it('should reject empty string for tool_name', () => {
+    it('should accept empty string for tool_name', () => {
       expect(() =>
         schema.parse({
           tool_name: '',
