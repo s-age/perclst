@@ -1,0 +1,66 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-unit-test-mcp-ts-analyze"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-mcp-ts-analyze",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-mcp-ts-analyze",
+          "task": "target_file_path: src/mcp/tools/tsAnalyze.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-mcp-ts-analyze",
+          "task": "target_file_path: src/mcp/tools/tsAnalyze.ts\nng_output_path: .claude/tmp/review-unit-test-mcp-ts-analyze",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-mcp-ts-analyze",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-mcp-ts-analyze",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-unit-test-mcp-ts-analyze",
+      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(mcp): ...).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
