@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ask-permission.json",
+      "name": "unit-test-validators-mcp-ask-permission"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__knowledge-search.json",
+      "name": "unit-test-validators-mcp-knowledge-search"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-analyze.json",
+      "name": "unit-test-validators-mcp-ts-analyze"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-checker.json",
+      "name": "unit-test-validators-mcp-ts-checker"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-get-references.json",
+      "name": "unit-test-validators-mcp-ts-get-references"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-get-types.json",
+      "name": "unit-test-validators-mcp-ts-get-types"
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-test-strategist.json",
+      "name": "unit-test-validators-mcp-ts-test-strategist"
+    }
+  ]
+}
