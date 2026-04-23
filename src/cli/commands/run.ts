@@ -38,7 +38,17 @@ function printTaskResult(
   config: Config,
   streaming: boolean
 ): void {
-  if (result.kind === 'task_start' || result.kind === 'retry' || result.kind === 'pipeline_end') {
+  if (result.kind === 'retry' || result.kind === 'pipeline_end') {
+    return
+  }
+  if (result.kind === 'task_start') {
+    if (result.taskType === 'child') {
+      const num = taskLabel(result.taskPath, result.taskIndex)
+      const label = result.name
+        ? `${result.name} (${result.childPath})`
+        : (result.childPath ?? '[child]')
+      stdout.print(`\nTask ${num} [child]: ${label}`)
+    }
     return
   }
   if (result.kind === 'script') {
