@@ -12,6 +12,7 @@ import type { AgentResponse } from '@src/types/agent'
 import type { IPipelineDomain } from '@src/domains/ports/pipeline'
 import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
 import { debug } from '@src/utils/output'
+import { PipelineAbortedError } from '@src/errors/pipelineAbortedError'
 
 export type { PipelineRunOptions } from '@src/types/pipeline'
 
@@ -64,6 +65,7 @@ export class PipelineService {
     }
     let i = 0
     while (i < pipeline.tasks.length) {
+      if (options.signal?.aborted) throw new PipelineAbortedError()
       const task = pipeline.tasks[i]
       if (task.done) {
         i++
