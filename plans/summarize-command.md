@@ -91,7 +91,7 @@ async summarize(filter: ListFilter): Promise<SessionSummaryStats> {
     const effectiveId = session.rewind_source_claude_session_id ?? session.claude_session_id
     const data = this.claudeSessionRepo.readSession(effectiveId, session.working_dir, session.rewind_to_message_id)
     const { turnsBreakdown, tokens } = buildSummaryStatsFromData(data)
-    turns     += turnsBreakdown.userInstructions
+    turns     += turnsBreakdown.total
     toolCalls += turnsBreakdown.toolCalls
     totalInput          += tokens.totalInput
     totalOutput         += tokens.totalOutput
@@ -397,7 +397,7 @@ async summarize(filter: ListFilter): Promise<SessionSummaryRow[]> {
       rows.push({
         name: session.name ?? session.id,
         id: session.id,
-        turns: turnsBreakdown.userInstructions,
+        turns: turnsBreakdown.total,
         toolCalls: turnsBreakdown.toolCalls,
         tokens: data.tokens
       })

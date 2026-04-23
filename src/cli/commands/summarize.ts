@@ -17,13 +17,13 @@ export async function summarizeCommand(options: RawSummarizeOptions): Promise<vo
     const analyzeService = container.resolve<AnalyzeService>(TOKENS.AnalyzeService)
     const rows = await analyzeService.summarize({ label: input.label, like: input.like })
 
-    if (rows.length === 0) {
-      stdout.print('No sessions found')
+    if (input.format === 'json') {
+      stdout.print(JSON.stringify(rows, null, 2))
       return
     }
 
-    if (input.format === 'json') {
-      stdout.print(JSON.stringify(rows, null, 2))
+    if (rows.length === 0) {
+      stdout.print('No sessions found')
       return
     }
 
