@@ -1,0 +1,75 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-unit-test-validators-cli-chat-session",
+      "done": true
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-validators-cli-chat-session",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-unit-test-validators-cli-chat-session",
+          "task": "target_file_path: src/validators/cli/chatSession.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "done": true
+        },
+        {
+          "type": "agent",
+          "name": "review-unit-test-validators-cli-chat-session",
+          "task": "target_file_path: src/validators/cli/chatSession.ts\nng_output_path: .claude/tmp/review-unit-test-validators-cli-chat-session",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-unit-test-validators-cli-chat-session",
+            "max_retries": 3
+          },
+          "done": true
+        },
+        {
+          "type": "script",
+          "command": "npm run test:unit",
+          "rejected": {
+            "to": "implement-unit-test-validators-cli-chat-session",
+            "max_retries": 3
+          },
+          "done": true
+        }
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "implement-unit-test-validators-cli-chat-session",
+      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(validators): ...).",
+      "model": "haiku",
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
+    }
+  ]
+}

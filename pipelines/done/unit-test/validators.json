@@ -1,70 +1,190 @@
 {
   "tasks": [
     {
-      "type": "agent",
-      "name": "unit-test-validators-fork-session",
-      "task": "target_file_path: src/validators/cli/forkSession.ts",
-      "procedure": "implement-unit-test",
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Edit",
-        "Bash",
-        "mcp__perclst__ts_test_strategist",
-        "mcp__perclst__ts_checker"
-      ]
+      "type": "child",
+      "path": "unit-test__validators__schema.json",
+      "name": "unit-test-validators-schema",
+      "done": true
     },
     {
-      "type": "script",
-      "command": "npm run test:unit",
-      "rejected": {
-        "to": "unit-test-validators-fork-session",
-        "max_retries": 3
-      }
+      "type": "child",
+      "path": "unit-test__validators__cli__analyze-session.json",
+      "name": "unit-test-validators-cli-analyze-session",
+      "done": true
     },
     {
-      "type": "agent",
-      "name": "unit-test-validators-rewind-session",
-      "task": "target_file_path: src/validators/cli/rewindSession.ts",
-      "procedure": "implement-unit-test",
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Edit",
-        "Bash",
-        "mcp__perclst__ts_test_strategist",
-        "mcp__perclst__ts_checker"
-      ]
+      "type": "child",
+      "path": "unit-test__validators__cli__arg-format.json",
+      "name": "unit-test-validators-cli-arg-format",
+      "done": true
     },
     {
-      "type": "script",
-      "command": "npm run test:unit",
-      "rejected": {
-        "to": "unit-test-validators-rewind-session",
-        "max_retries": 3
-      }
+      "type": "child",
+      "path": "unit-test__validators__cli__chat-session.json",
+      "name": "unit-test-validators-cli-chat-session",
+      "done": true
     },
     {
-      "type": "agent",
-      "name": "unit-test-validators-sweep-session",
-      "task": "target_file_path: src/validators/cli/sweepSession.ts",
-      "procedure": "implement-unit-test",
-      "allowed_tools": [
-        "Read",
-        "Write",
-        "Edit",
-        "Bash",
-        "mcp__perclst__ts_test_strategist",
-        "mcp__perclst__ts_checker"
-      ]
+      "type": "child",
+      "path": "unit-test__validators__cli__delete-session.json",
+      "name": "unit-test-validators-cli-delete-session",
+      "done": true
     },
     {
-      "type": "script",
-      "command": "npm run test:unit",
-      "rejected": {
-        "to": "unit-test-validators-sweep-session",
-        "max_retries": 3
-      }
+      "type": "child",
+      "path": "unit-test__validators__cli__fork-session.json",
+      "name": "unit-test-validators-cli-fork-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__import-session.json",
+      "name": "unit-test-validators-cli-import-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__inspect-session.json",
+      "name": "unit-test-validators-cli-inspect-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__list-sessions.json",
+      "name": "unit-test-validators-cli-list-sessions",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__rename-session.json",
+      "name": "unit-test-validators-cli-rename-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__resume-session.json",
+      "name": "unit-test-validators-cli-resume-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__rewind-session.json",
+      "name": "unit-test-validators-cli-rewind-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__run-pipeline.json",
+      "name": "unit-test-validators-cli-run-pipeline",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__show-session.json",
+      "name": "unit-test-validators-cli-show-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__start-session.json",
+      "name": "unit-test-validators-cli-start-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__summarize-sessions.json",
+      "name": "unit-test-validators-cli-summarize-sessions",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__sweep-session.json",
+      "name": "unit-test-validators-cli-sweep-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__cli__tag-session.json",
+      "name": "unit-test-validators-cli-tag-session",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ask-permission.json",
+      "name": "unit-test-validators-mcp-ask-permission",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__knowledge-search.json",
+      "name": "unit-test-validators-mcp-knowledge-search",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-analyze.json",
+      "name": "unit-test-validators-mcp-ts-analyze",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-checker.json",
+      "name": "unit-test-validators-mcp-ts-checker",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-get-references.json",
+      "name": "unit-test-validators-mcp-ts-get-references",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-get-types.json",
+      "name": "unit-test-validators-mcp-ts-get-types",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__mcp__ts-test-strategist.json",
+      "name": "unit-test-validators-mcp-ts-test-strategist",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__rules__boolean.json",
+      "name": "unit-test-validators-rules-boolean",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__rules__format.json",
+      "name": "unit-test-validators-rules-format",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__rules__git-ref.json",
+      "name": "unit-test-validators-rules-git-ref",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__rules__int.json",
+      "name": "unit-test-validators-rules-int",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__rules__string.json",
+      "name": "unit-test-validators-rules-string",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "unit-test__validators__rules__string-array.json",
+      "name": "unit-test-validators-rules-string-array",
+      "done": true
     }
   ]
 }
