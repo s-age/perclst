@@ -57,11 +57,14 @@ export class PipelineService {
     outerRejection?: RejectedContext,
     taskPath: number[] = []
   ): AsyncGenerator<PipelineTaskResult> {
-    const retryCount = new Map<number, number>()
-    const pendingRejections = new Map<number, RejectedContext>()
+    const context = {
+      pipeline,
+      retryCount: new Map<number, number>(),
+      pendingRejections: new Map<number, RejectedContext>()
+    }
     if (outerRejection) {
       const targetIndex = this.pipelineDomain.findOuterRejectionTarget(pipeline)
-      if (targetIndex !== undefined) pendingRejections.set(targetIndex, outerRejection)
+      if (targetIndex !== undefined) context.pendingRejections.set(targetIndex, outerRejection)
     }
     let i = 0
     while (i < pipeline.tasks.length) {
@@ -71,47 +74,45 @@ export class PipelineService {
         i++
         continue
       }
-      debug.print(`Pipeline task ${i + 1}/${pipeline.tasks.length}`, { type: task.type })
-      const name = task.type !== 'script' ? task.name : undefined
-      const childPath = task.type === 'child' ? task.path : undefined
-      yield {
-        kind: 'task_start' as const,
-        taskPath,
-        taskIndex: i,
-        name,
-        taskType: task.type,
-        childPath
-      }
-
-      const rejection = pendingRejections.get(i)
-      pendingRejections.delete(i)
-      let jumpTo: number | undefined
-      if (task.type === 'agent') {
-        jumpTo = yield* this.runAgentStep(task, { i, taskPath }, options, {
-          rejection,
-          pipeline,
-          retryCount,
-          pendingRejections
-        })
-      } else if (task.type === 'pipeline') {
-        yield* this.runNestedPipeline(task, { i, taskPath }, options, rejection)
-      } else if (task.type === 'child') {
-        yield* this.runChildPipeline(task, { i, taskPath }, options, rejection)
-      } else {
-        jumpTo = yield* this.runScriptStep(
-          task,
-          { i, taskPath },
-          {
-            pipeline,
-            retryCount,
-            pendingRejections
-          }
-        )
-      }
-      if (jumpTo === undefined) {
-        options.onTaskDone?.(taskPath, i)
-      }
+      const jumpTo = yield* this.processTask(task, { i, taskPath }, options, context)
+      if (jumpTo === undefined) options.onTaskDone?.(taskPath, i)
       i = jumpTo ?? i + 1
+    }
+  }
+
+  private async *processTask(
+    task: Pipeline['tasks'][number],
+    taskLocation: { i: number; taskPath: number[] },
+    options: PipelineRunOptions,
+    context: {
+      pipeline: Pipeline
+      retryCount: Map<number, number>
+      pendingRejections: Map<number, RejectedContext>
+    }
+  ): AsyncGenerator<PipelineTaskResult, number | undefined> {
+    debug.print(`Pipeline task ${taskLocation.i + 1}/${context.pipeline.tasks.length}`, {
+      type: task.type
+    })
+    const name = task.type !== 'script' ? task.name : undefined
+    const childPath = task.type === 'child' ? task.path : undefined
+    yield {
+      kind: 'task_start' as const,
+      taskPath: taskLocation.taskPath,
+      taskIndex: taskLocation.i,
+      name,
+      taskType: task.type,
+      childPath
+    }
+    const rejection = context.pendingRejections.get(taskLocation.i)
+    context.pendingRejections.delete(taskLocation.i)
+    if (task.type === 'agent') {
+      return yield* this.runAgentStep(task, taskLocation, options, { rejection, ...context })
+    } else if (task.type === 'pipeline') {
+      yield* this.runNestedPipeline(task, taskLocation, options, rejection)
+    } else if (task.type === 'child') {
+      yield* this.runChildPipeline(task, taskLocation, options, rejection)
+    } else {
+      return yield* this.runScriptStep(task, taskLocation, context)
     }
   }
 

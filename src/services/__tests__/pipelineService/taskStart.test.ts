@@ -21,7 +21,6 @@ const stubAgentResult = (overrides: Partial<AgentTaskResult> = {}): AgentTaskRes
 describe('PipelineService', () => {
   let service: PipelineService
   const mockPipelineDomain: IPipelineDomain = {
-    runWithLimit: vi.fn(),
     buildRejectedInstruction: vi.fn(),
     getRejectionFeedback: vi.fn(),
     getWorkingDirectory: vi.fn(),

@@ -37,7 +37,6 @@ const stubRejectionResult = (targetIndex: number, newCount = 1) =>
 describe('PipelineService', () => {
   let service: PipelineService
   const mockPipelineDomain: IPipelineDomain = {
-    runWithLimit: vi.fn(),
     buildRejectedInstruction: vi.fn(),
     getRejectionFeedback: vi.fn(),
     getWorkingDirectory: vi.fn(),

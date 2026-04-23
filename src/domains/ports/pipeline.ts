@@ -1,4 +1,4 @@
-import type { AgentResponse, ExecuteOptions } from '@src/types/agent'
+import type { ExecuteOptions } from '@src/types/agent'
 import type {
   AgentPipelineTask,
   Pipeline,
@@ -6,7 +6,7 @@ import type {
   RejectedContext,
   ScriptPipelineTask
 } from '@src/types/pipeline'
-import type { Session } from '@src/types/session'
+import type { AgentResponse } from '@src/types/agent'
 import type { ScriptResult } from '@src/domains/ports/script'
 
 export type RejectionResult = {
@@ -25,30 +25,18 @@ export type AgentTaskResult = {
 }
 
 export type IPipelineDomain = {
-  runWithLimit(
-    session: Session,
-    instruction: string,
-    isResume: boolean,
-    execOpts: ExecuteOptions,
-    maxTurns: number,
-    maxContextTokens: number
-  ): Promise<AgentResponse>
   buildRejectedInstruction(task: AgentPipelineTask, rejected: RejectedContext): string
   getRejectionFeedback(taskName: string): Promise<string | undefined>
   getWorkingDirectory(): string
   resolveRejection(
     pipeline: Pipeline,
-    toName: string,
-    taskIndex: number,
-    currentCount: number,
-    maxRetries: number,
-    feedback: string
+    target: { toName: string; feedback: string },
+    retryState: { taskIndex: number; currentCount: number; maxRetries: number }
   ): RejectionResult
   buildExecuteOptions(task: AgentPipelineTask, options: PipelineRunOptions): ExecuteOptions
   runAgentTask(
     task: AgentPipelineTask,
-    index: number,
-    taskPath: number[],
+    taskLocation: { index: number; taskPath: number[] },
     options: PipelineRunOptions,
     rejected?: RejectedContext
   ): Promise<AgentTaskResult>
@@ -57,7 +45,6 @@ export type IPipelineDomain = {
     pipeline: Pipeline,
     task: ScriptPipelineTask,
     result: ScriptResult,
-    taskIndex: number,
-    currentCount: number
+    retryState: { taskIndex: number; currentCount: number }
   ): RejectionResult | undefined
 }
