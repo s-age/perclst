@@ -3,7 +3,7 @@ import type {
   AnalysisSummary,
   ClaudeCodeTurn,
   RewindTurn,
-  SessionSummaryStats
+  SessionSummaryRow
 } from '@src/types/analysis'
 import type { TurnRow, RowFilter } from '@src/types/display'
 import type { ListFilter } from '@src/types/session'
@@ -73,15 +73,9 @@ export class AnalyzeDomain implements IAnalyzeDomain {
     return applyRowFilter(flattenTurns(turns), filter)
   }
 
-  async summarize(filter: ListFilter): Promise<SessionSummaryStats> {
+  async summarize(filter: ListFilter): Promise<SessionSummaryRow[]> {
     const sessions = await this.sessionDomain.list(filter)
-
-    let turns = 0
-    let toolCalls = 0
-    let totalInput = 0
-    let totalOutput = 0
-    let totalCacheRead = 0
-    let totalCacheCreation = 0
+    const rows: SessionSummaryRow[] = []
 
     for (const session of sessions) {
       try {
@@ -92,23 +86,19 @@ export class AnalyzeDomain implements IAnalyzeDomain {
           session.rewind_to_message_id
         )
         const { turnsBreakdown } = buildSummaryStats(data.turns)
-        turns += turnsBreakdown.userInstructions
-        toolCalls += turnsBreakdown.toolCalls
-        totalInput += data.tokens.totalInput
-        totalOutput += data.tokens.totalOutput
-        totalCacheRead += data.tokens.totalCacheRead
-        totalCacheCreation += data.tokens.totalCacheCreation
+        rows.push({
+          name: session.name ?? session.id,
+          id: session.id,
+          turns: turnsBreakdown.userInstructions,
+          toolCalls: turnsBreakdown.toolCalls,
+          tokens: data.tokens
+        })
       } catch {
         // skip sessions with missing JSONL files
       }
     }
 
-    return {
-      sessions: sessions.length,
-      turns,
-      toolCalls,
-      tokens: { totalInput, totalOutput, totalCacheRead, totalCacheCreation }
-    }
+    return rows
   }
 
   async getRewindTurns(sessionId: string): Promise<RewindTurn[]> {
