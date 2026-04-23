@@ -60,7 +60,7 @@ function upsertAtPath(
       return tasks.map((t, i) => (i === index ? fns.updater(t) : t))
     }
     const next = [...tasks]
-    next[index] = fns.creator()
+    next.push(fns.creator())
     return next
   }
   const [head, ...rest] = path

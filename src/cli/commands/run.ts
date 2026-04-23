@@ -45,7 +45,7 @@ function printTaskResult(
     if (result.taskType === 'child') {
       const num = taskLabel(result.taskPath, result.taskIndex)
       const label = result.name
-        ? `${result.name} (${result.childPath})`
+        ? `${result.name} (${result.childPath ?? ''})`
         : (result.childPath ?? '[child]')
       stdout.print(`\nTask ${num} [child]: ${label}`)
     }
