@@ -16,6 +16,7 @@ const mockSession: Session = {
 function makeMockDomain(): ISessionDomain {
   return {
     create: vi.fn().mockResolvedValue(mockSession),
+    save: vi.fn().mockResolvedValue(undefined),
     get: vi.fn().mockResolvedValue(mockSession),
     getPath: vi.fn().mockReturnValue('/tmp/sessions/test-id.json'),
     list: vi.fn().mockResolvedValue([mockSession]),
@@ -27,6 +28,14 @@ function makeMockDomain(): ISessionDomain {
     rename: vi.fn().mockResolvedValue({
       ...mockSession,
       id: 'renamed-id'
+    }),
+    setLabels: vi.fn().mockResolvedValue({
+      ...mockSession,
+      metadata: { ...mockSession.metadata, labels: ['tag1'] }
+    }),
+    addLabels: vi.fn().mockResolvedValue({
+      ...mockSession,
+      metadata: { ...mockSession.metadata, labels: ['existing', 'new'] }
     }),
     findByName: vi.fn().mockResolvedValue(mockSession),
     resolveId: vi.fn().mockResolvedValue('test-id'),
@@ -145,5 +154,22 @@ describe('SessionService', () => {
     const result = await service.sweep(filter, false)
     expect(domain.sweep).toHaveBeenCalledWith(filter, false)
     expect(result).toEqual([mockSession])
+  })
+
+  it('delegates setLabels to domain', async () => {
+    const result = await service.setLabels('test-id', ['tag1'])
+    expect(domain.setLabels).toHaveBeenCalledWith('test-id', ['tag1'])
+    expect(result.metadata.labels).toEqual(['tag1'])
+  })
+
+  it('delegates addLabels to domain', async () => {
+    const result = await service.addLabels('test-id', ['new'])
+    expect(domain.addLabels).toHaveBeenCalledWith('test-id', ['new'])
+    expect(result.metadata.labels).toEqual(['existing', 'new'])
+  })
+
+  it('delegates save to domain', async () => {
+    await service.save(mockSession)
+    expect(domain.save).toHaveBeenCalledWith(mockSession)
   })
 })
