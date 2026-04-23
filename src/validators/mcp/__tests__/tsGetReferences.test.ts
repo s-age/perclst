@@ -240,7 +240,9 @@ describe('tsGetReferencesParams schema', () => {
 
     it('has a description', () => {
       const description = getDescription(tsGetReferencesParams.recursive)
-      expect(description).toContain('Recursively follow callers up the call chain')
+      expect(description).toBe(
+        'Recursively follow callers up the call chain until no more references are found (default: true). Set to false for direct references only.'
+      )
     })
 
     it('rejects strings', () => {
