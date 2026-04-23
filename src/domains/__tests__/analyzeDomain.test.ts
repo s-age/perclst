@@ -14,7 +14,12 @@ const mockSessionDomain: ISessionDomain = {
   delete: vi.fn(),
   updateStatus: vi.fn(),
   rename: vi.fn(),
-  findByName: vi.fn()
+  setLabels: vi.fn(),
+  addLabels: vi.fn(),
+  findByName: vi.fn(),
+  resolveId: vi.fn(),
+  createRewind: vi.fn(),
+  sweep: vi.fn()
 }
 
 const mockClaudeSessionRepo: IClaudeSessionRepository = {
@@ -77,6 +82,23 @@ describe('AnalyzeDomain', () => {
         tokens: { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0 }
       }
       expect(result).toEqual({ session, summary: expectedSummary })
+    })
+
+    it('should read from rewind_source_claude_session_id when set', async () => {
+      const session = makeSession({
+        rewind_source_claude_session_id: 'source-xyz',
+        rewind_to_message_id: 'msg-5'
+      })
+      vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
+      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(makeSessionData())
+
+      await domain.analyze('session-1')
+
+      expect(mockClaudeSessionRepo.readSession).toHaveBeenCalledWith(
+        'source-xyz',
+        session.working_dir,
+        'msg-5'
+      )
     })
   })
 
@@ -161,6 +183,98 @@ describe('AnalyzeDomain', () => {
       const result = await domain.getRewindTurns('session-1')
 
       expect(result).toEqual([])
+    })
+  })
+
+  describe('formatTurns', () => {
+    it('should return flattened turn rows from the provided turns', () => {
+      const turns = [
+        { userMessage: 'Hello', toolCalls: [] },
+        { assistantText: 'Response', toolCalls: [] }
+      ]
+
+      const result = domain.formatTurns(turns, {})
+
+      expect(result).toHaveLength(2)
+      expect(result[0]).toEqual({ n: 1, role: 'user', content: 'Hello' })
+      expect(result[1]).toEqual({ n: 2, role: 'assistant', content: 'Response' })
+    })
+
+    it('should apply a tail filter to the flattened rows', () => {
+      const turns = [
+        { userMessage: 'First', toolCalls: [] },
+        { assistantText: 'Second', toolCalls: [] },
+        { userMessage: 'Third', toolCalls: [] }
+      ]
+
+      const result = domain.formatTurns(turns, { tail: 2 })
+
+      expect(result).toHaveLength(2)
+      expect(result[0].content).toBe('Second')
+      expect(result[1].content).toBe('Third')
+    })
+  })
+
+  describe('summarize', () => {
+    it('should return an empty array when there are no sessions', async () => {
+      vi.mocked(mockSessionDomain.list).mockResolvedValue([])
+
+      const result = await domain.summarize({})
+
+      expect(result).toEqual([])
+    })
+
+    it('should build a summary row for each session', async () => {
+      const session = makeSession()
+      vi.mocked(mockSessionDomain.list).mockResolvedValue([session])
+      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(makeSessionData())
+
+      const result = await domain.summarize({})
+
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('session-1')
+    })
+
+    it('should use session.name when present and fall back to id otherwise', async () => {
+      const withName = makeSession({ name: 'My Session' })
+      const withoutName = makeSession({ id: 'session-2' })
+      vi.mocked(mockSessionDomain.list).mockResolvedValue([withName, withoutName])
+      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(makeSessionData())
+
+      const result = await domain.summarize({})
+
+      expect(result[0].name).toBe('My Session')
+      expect(result[1].name).toBe('session-2')
+    })
+
+    it('should read from rewind_source_claude_session_id when set', async () => {
+      const session = makeSession({ rewind_source_claude_session_id: 'source-abc' })
+      vi.mocked(mockSessionDomain.list).mockResolvedValue([session])
+      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(makeSessionData())
+
+      await domain.summarize({})
+
+      expect(mockClaudeSessionRepo.readSession).toHaveBeenCalledWith(
+        'source-abc',
+        session.working_dir,
+        undefined
+      )
+    })
+
+    it('should skip sessions whose JSONL file cannot be read', async () => {
+      const ok = makeSession({ id: 'ok-session' })
+      const bad = makeSession({ id: 'bad-session' })
+      vi.mocked(mockSessionDomain.list).mockResolvedValue([ok, bad])
+      vi.mocked(mockClaudeSessionRepo.readSession)
+        .mockReturnValueOnce(makeSessionData())
+        .mockImplementationOnce(() => {
+          throw new Error('ENOENT')
+        })
+
+      const result = await domain.summarize({})
+
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('ok-session')
     })
   })
 })
