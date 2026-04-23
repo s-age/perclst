@@ -3,22 +3,26 @@
     {
       "type": "child",
       "path": "unit-test__mcp__server.json",
-      "name": "unit-test-mcp-server"
+      "name": "unit-test-mcp-server",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__mcp__ask-permission.json",
-      "name": "unit-test-mcp-ask-permission"
+      "name": "unit-test-mcp-ask-permission",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__mcp__knowledge-search.json",
-      "name": "unit-test-mcp-knowledge-search"
+      "name": "unit-test-mcp-knowledge-search",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__mcp__ts-analyze.json",
-      "name": "unit-test-mcp-ts-analyze"
+      "name": "unit-test-mcp-ts-analyze",
+      "done": true
     },
     {
       "type": "child",
