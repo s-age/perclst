@@ -58,8 +58,9 @@ export type ClaudeSessionData = {
   tokens: AnalysisSummary['tokens']
 }
 
-export type SessionSummaryStats = {
-  sessions: number
+export type SessionSummaryRow = {
+  name: string
+  id: string
   turns: number
   toolCalls: number
   tokens: {
