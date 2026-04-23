@@ -1,0 +1,10 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "task": "Read README.md and describe what this project does in exactly one English sentence.",
+      "model": "haiku",
+      "allowed_tools": ["Read"]
+    }
+  ]
+}
