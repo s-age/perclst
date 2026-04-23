@@ -134,7 +134,8 @@ function printGitDiffSummary(
 
 async function executeTUIPipeline(
   input: RunPipelineInput,
-  pipelineFileService: PipelineFileService
+  pipelineFileService: PipelineFileService,
+  onChildPipelineDone: (absolutePath: string) => void
 ): Promise<void> {
   process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
@@ -165,7 +166,13 @@ async function executeTUIPipeline(
     const app = render(
       React.createElement(PipelineRunner, {
         pipeline,
-        options: { model: input.model, onTaskDone, loadChildPipeline, pipelineDir },
+        options: {
+          model: input.model,
+          onTaskDone,
+          loadChildPipeline,
+          pipelineDir,
+          onChildPipelineDone
+        },
         pipelineService,
         permissionPipeService,
         config,
@@ -184,7 +191,8 @@ async function executeTUIPipeline(
 
 async function executePipeline(
   input: RunPipelineInput,
-  pipelineFileService: PipelineFileService
+  pipelineFileService: PipelineFileService,
+  onChildPipelineDone: (absolutePath: string) => void
 ): Promise<void> {
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
@@ -219,7 +227,8 @@ async function executePipeline(
     onStreamEvent,
     onTaskDone,
     loadChildPipeline,
-    pipelineDir
+    pipelineDir,
+    onChildPipelineDone
   })) {
     count++
     printTaskResult(result, input, config, streaming)
@@ -237,15 +246,28 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions): 
     const input = parseRunOptions({ pipelinePath, ...options })
     const headBefore = pipelineFileService.getHead()
 
+    const completedChildPaths: string[] = []
+    const onChildPipelineDone = (absolutePath: string): void => {
+      completedChildPaths.push(absolutePath)
+    }
+
     if (process.stdout.isTTY && !input.batch) {
-      await executeTUIPipeline(input, pipelineFileService)
+      await executeTUIPipeline(input, pipelineFileService, onChildPipelineDone)
     } else {
-      await executePipeline(input, pipelineFileService)
+      await executePipeline(input, pipelineFileService, onChildPipelineDone)
     }
 
     const headAfter = pipelineFileService.getHead()
     if (headBefore && headAfter && headBefore !== headAfter) {
       printGitDiffSummary(pipelineFileService, headBefore, headAfter)
+    }
+
+    for (const childPath of completedChildPaths) {
+      const childDonePath = pipelineFileService.moveToDone(childPath)
+      if (childDonePath) {
+        stdout.print(`\nMoved to: ${childDonePath}`)
+        pipelineFileService.commitMove(childPath, childDonePath)
+      }
     }
 
     const donePath = pipelineFileService.moveToDone(input.pipelinePath)

@@ -149,6 +149,7 @@ export class PipelineService {
       ...taskLocation.taskPath,
       taskLocation.i
     ])
+    options.onChildPipelineDone?.(absolutePath)
     yield {
       kind: 'pipeline_end' as const,
       taskPath: taskLocation.taskPath,
