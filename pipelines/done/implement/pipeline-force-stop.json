@@ -1,0 +1,40 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "implement__pipeline-force-stop__01-foundation.json",
+      "name": "01-foundation",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "implement__pipeline-force-stop__02-infra.json",
+      "name": "02-infra",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "implement__pipeline-force-stop__03-repository.json",
+      "name": "03-repository",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "implement__pipeline-force-stop__04-domain.json",
+      "name": "04-domain",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "implement__pipeline-force-stop__05-service.json",
+      "name": "05-service",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "implement__pipeline-force-stop__06-di-cli.json",
+      "name": "06-di-cli",
+      "done": true
+    }
+  ]
+}
