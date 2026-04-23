@@ -27,22 +27,26 @@
     {
       "type": "child",
       "path": "unit-test__mcp__ts-checker.json",
-      "name": "unit-test-mcp-ts-checker"
+      "name": "unit-test-mcp-ts-checker",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__mcp__ts-get-references.json",
-      "name": "unit-test-mcp-ts-get-references"
+      "name": "unit-test-mcp-ts-get-references",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__mcp__ts-get-types.json",
-      "name": "unit-test-mcp-ts-get-types"
+      "name": "unit-test-mcp-ts-get-types",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__mcp__ts-test-strategist.json",
-      "name": "unit-test-mcp-ts-test-strategist"
+      "name": "unit-test-mcp-ts-test-strategist",
+      "done": true
     }
   ]
 }
