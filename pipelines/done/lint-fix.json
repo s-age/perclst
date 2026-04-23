@@ -51,7 +51,8 @@
     {
       "type": "child",
       "path": "lint-fix__max-params.json",
-      "name": "lint-fix-max-params"
+      "name": "lint-fix-max-params",
+      "done": true
     }
   ]
 }
