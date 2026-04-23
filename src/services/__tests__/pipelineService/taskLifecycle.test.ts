@@ -107,9 +107,12 @@ describe('PipelineService', () => {
           feedback: ''
         }
       })
-      vi.mocked(mockPipelineDomain.runAgentTask).mockImplementation(
-        async (_task, taskIndex, taskPath) =>
-          stubAgentResult({ taskIndex, taskPath, name: taskIndex === 0 ? 'target' : 'rejector' })
+      vi.mocked(mockPipelineDomain.runAgentTask).mockImplementation(async (_task, taskLocation) =>
+        stubAgentResult({
+          taskIndex: taskLocation.index,
+          taskPath: taskLocation.taskPath,
+          name: taskLocation.index === 0 ? 'target' : 'rejector'
+        })
       )
 
       const pipeline: Pipeline = {
