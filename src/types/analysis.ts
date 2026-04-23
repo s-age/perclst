@@ -57,3 +57,16 @@ export type ClaudeSessionData = {
   turns: ClaudeCodeTurn[]
   tokens: AnalysisSummary['tokens']
 }
+
+export type SessionSummaryRow = {
+  name: string
+  id: string
+  turns: number
+  toolCalls: number
+  tokens: {
+    totalInput: number
+    totalOutput: number
+    totalCacheRead: number
+    totalCacheCreation: number
+  }
+}

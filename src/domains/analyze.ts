@@ -2,9 +2,11 @@ import type {
   AnalyzeResult,
   AnalysisSummary,
   ClaudeCodeTurn,
-  RewindTurn
+  RewindTurn,
+  SessionSummaryRow
 } from '@src/types/analysis'
 import type { TurnRow, RowFilter } from '@src/types/display'
+import type { ListFilter } from '@src/types/session'
 import type { IAnalyzeDomain } from '@src/domains/ports/analysis'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
@@ -69,6 +71,34 @@ export class AnalyzeDomain implements IAnalyzeDomain {
 
   formatTurns(turns: ClaudeCodeTurn[], filter: RowFilter): TurnRow[] {
     return applyRowFilter(flattenTurns(turns), filter)
+  }
+
+  async summarize(filter: ListFilter): Promise<SessionSummaryRow[]> {
+    const sessions = await this.sessionDomain.list(filter)
+    const rows: SessionSummaryRow[] = []
+
+    for (const session of sessions) {
+      try {
+        const effectiveId = session.rewind_source_claude_session_id ?? session.claude_session_id
+        const data = this.claudeSessionRepo.readSession(
+          effectiveId,
+          session.working_dir,
+          session.rewind_to_message_id
+        )
+        const { turnsBreakdown } = buildSummaryStats(data.turns)
+        rows.push({
+          name: session.name ?? session.id,
+          id: session.id,
+          turns: turnsBreakdown.total,
+          toolCalls: turnsBreakdown.toolCalls,
+          tokens: data.tokens
+        })
+      } catch {
+        // skip sessions with missing JSONL files
+      }
+    }
+
+    return rows
   }
 
   async getRewindTurns(sessionId: string): Promise<RewindTurn[]> {

@@ -5,6 +5,7 @@ import { startCommand } from './commands/start'
 import { resumeCommand } from './commands/resume'
 import { forkCommand } from './commands/fork'
 import { listCommand } from './commands/list'
+import { summarizeCommand } from './commands/summarize'
 import { showCommand } from './commands/show'
 import { deleteCommand } from './commands/delete'
 import { analyzeCommand } from './commands/analyze'
@@ -120,6 +121,15 @@ program
   .option('-l, --label <label>', 'Filter by label')
   .option('--like <pattern>', 'Filter by name substring')
   .action(listCommand)
+
+// Summarize command
+program
+  .command('summarize')
+  .description('Aggregate statistics across sessions')
+  .option('--like <pattern>', 'Filter sessions by name substring')
+  .option('-l, --label <value>', 'Filter sessions by label')
+  .option('-f, --format <fmt>', 'Output format: text (default) or json')
+  .action((options) => summarizeCommand(options))
 
 // Show command
 program

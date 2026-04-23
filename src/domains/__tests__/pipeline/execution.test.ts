@@ -46,12 +46,10 @@ describe('PipelineDomain - execution', () => {
       vi.mocked(agentDomain.run).mockResolvedValue(agentResponse)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
-      const result = await pipelineDomain.runWithLimit(
-        session,
-        'instruction',
-        false,
-        { execOpts, limits: { maxTurns: 5, maxContextTokens: 5000 } }
-      )
+      const result = await pipelineDomain.runWithLimit(session, 'instruction', false, {
+        execOpts,
+        limits: { maxTurns: 5, maxContextTokens: 5000 }
+      })
 
       expect(result).toEqual(agentResponse)
       expect(agentDomain.run).toHaveBeenCalledTimes(1)
