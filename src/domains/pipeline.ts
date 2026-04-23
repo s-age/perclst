@@ -101,7 +101,8 @@ export class PipelineDomain implements IPipelineDomain {
       allowedTools: task.allowed_tools ?? options.allowedTools,
       disallowedTools: task.disallowed_tools ?? options.disallowedTools,
       model: task.model ?? options.model,
-      onStreamEvent: options.onStreamEvent
+      onStreamEvent: options.onStreamEvent,
+      signal: options.signal
     }
   }
 

@@ -12,6 +12,7 @@ export const TOKENS = {
   TestStrategyDomain: Symbol.for('TestStrategyDomain'),
   ScriptDomain: Symbol.for('ScriptDomain'),
   // Services
+  AbortService: Symbol.for('AbortService'),
   SessionService: Symbol.for('SessionService'),
   AgentService: Symbol.for('AgentService'),
   PipelineService: Symbol.for('PipelineService'),

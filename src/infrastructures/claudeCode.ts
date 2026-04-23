@@ -57,11 +57,13 @@ export class ClaudeCodeInfra {
     return path
   }
 
+  // eslint-disable-next-line local/max-params
   async *runClaude(
     args: string[],
     prompt: string,
     workingDir: string,
-    sessionFilePath?: string
+    sessionFilePath?: string,
+    signal?: AbortSignal
   ): AsyncGenerator<string> {
     const mcpConfigPath = this.writeMcpConfig()
     const fullArgs = [
@@ -90,11 +92,18 @@ export class ClaudeCodeInfra {
     child.stderr.on('data', (chunk: Buffer) => {
       stderr += chunk.toString()
     })
+
+    const onAbort = (): void => {
+      if (!child.killed) child.kill('SIGTERM')
+    }
+    signal?.addEventListener('abort', onAbort, { once: true })
+
     child.stdin.write(prompt, 'utf-8')
     child.stdin.end()
     try {
       yield* this.streamStdout(child.stdout)
     } finally {
+      signal?.removeEventListener('abort', onAbort)
       if (child.exitCode === null && !child.killed) child.kill()
       try {
         unlinkSync(mcpConfigPath)
@@ -102,6 +111,8 @@ export class ClaudeCodeInfra {
         /* ignore */
       }
     }
+
+    if (signal?.aborted) return
     if (spawnError) throw spawnError
     const exitCode = await closePromise
     if (exitCode !== 0) throw new RawExitError(exitCode, stderr)

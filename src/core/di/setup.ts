@@ -13,6 +13,7 @@ import { AnalyzeDomain } from '@src/domains/analyze'
 import { ImportDomain } from '@src/domains/import'
 import { CheckerDomain } from '@src/domains/checker'
 import { TestStrategyDomain } from '@src/domains/testStrategy'
+import { AbortService } from '@src/services/abortService'
 import { SessionService } from '@src/services/sessionService'
 import { AgentService } from '@src/services/agentService'
 import { AnalyzeService } from '@src/services/analyzeService'
@@ -165,6 +166,7 @@ function registerServices(config: ReturnType<typeof loadConfig>, domains: Domain
     knowledgeSearchDomain,
     tsAnalysisDomain
   } = domains
+  container.register(TOKENS.AbortService, new AbortService())
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain, config))
   container.register(TOKENS.PipelineService, new PipelineService(pipelineDomain, scriptDomain))

@@ -52,6 +52,7 @@ describe('AgentDomain', () => {
         system: 'You are a conductor.',
         prompt: 'Hello'
       }),
+      undefined,
       undefined
     )
   })
@@ -67,6 +68,7 @@ describe('AgentDomain', () => {
         type: 'start',
         system: undefined
       }),
+      undefined,
       undefined
     )
   })
@@ -79,6 +81,7 @@ describe('AgentDomain', () => {
         type: 'resume',
         prompt: 'Continue'
       }),
+      undefined,
       undefined
     )
   })
@@ -90,6 +93,7 @@ describe('AgentDomain', () => {
       expect.objectContaining({
         model: 'claude-opus-4-6'
       }),
+      undefined,
       undefined
     )
   })

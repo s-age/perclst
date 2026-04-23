@@ -6,6 +6,7 @@ import { TOKENS } from '@src/core/di/identifiers'
 import type { PipelineService } from '@src/services/pipelineService'
 import type { PipelineTaskResult } from '@src/services/pipelineService'
 import type { PermissionPipeService } from '@src/services/permissionPipeService'
+import type { AbortService } from '@src/services/abortService'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { APIError } from '@src/errors/apiError'
@@ -192,7 +193,8 @@ async function executeTUIPipeline(
 async function executePipeline(
   input: RunPipelineInput,
   pipelineFileService: PipelineFileService,
-  onChildPipelineDone: (absolutePath: string) => void
+  onChildPipelineDone: (absolutePath: string) => void,
+  signal?: AbortSignal
 ): Promise<void> {
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
@@ -228,7 +230,8 @@ async function executePipeline(
     onTaskDone,
     loadChildPipeline,
     pipelineDir,
-    onChildPipelineDone
+    onChildPipelineDone,
+    signal
   })) {
     count++
     printTaskResult(result, input, config, streaming)
@@ -238,10 +241,14 @@ async function executePipeline(
 }
 
 export async function runCommand(pipelinePath: string, options: RawRunOptions): Promise<void> {
+  const abortService = container.resolve<AbortService>(TOKENS.AbortService)
+
   try {
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
 
     await checkUncommittedChanges(pipelineFileService)
+
+    process.once('SIGINT', () => abortService.abort())
 
     const input = parseRunOptions({ pipelinePath, ...options })
     const headBefore = pipelineFileService.getHead()
@@ -254,7 +261,7 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions): 
     if (process.stdout.isTTY && !input.batch) {
       await executeTUIPipeline(input, pipelineFileService, onChildPipelineDone)
     } else {
-      await executePipeline(input, pipelineFileService, onChildPipelineDone)
+      await executePipeline(input, pipelineFileService, onChildPipelineDone, abortService.signal)
     }
 
     const headAfter = pipelineFileService.getHead()
@@ -277,6 +284,10 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions): 
     }
     pipelineFileService.cleanTmpDir()
   } catch (error) {
+    if (abortService.signal.aborted) {
+      stdout.print('Aborted.')
+      process.exit(130)
+    }
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)
     } else if (error instanceof PipelineMaxRetriesError) {

@@ -9,6 +9,7 @@ export type IProcedureRepository = {
 export type IClaudeCodeRepository = {
   dispatch(
     action: ClaudeAction,
-    onStreamEvent?: (event: AgentStreamEvent) => void
+    onStreamEvent?: (event: AgentStreamEvent) => void,
+    signal?: AbortSignal
   ): Promise<RawOutput>
 }

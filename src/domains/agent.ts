@@ -38,7 +38,8 @@ export class AgentDomain implements IAgentDomain {
       isResume
         ? { type: 'resume', ...baseArgs }
         : { type: 'start', system: systemPrompt, ...baseArgs },
-      options.onStreamEvent
+      options.onStreamEvent,
+      options.signal
     )
 
     if (!raw.content) {
@@ -126,7 +127,8 @@ export class AgentDomain implements IAgentDomain {
         workingDir: newSession.working_dir,
         sessionFilePath: options.sessionFilePath
       },
-      options.onStreamEvent
+      options.onStreamEvent,
+      options.signal
     )
 
     if (!raw.content) {

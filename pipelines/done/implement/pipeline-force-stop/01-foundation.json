@@ -1,0 +1,64 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-force-stop-foundation",
+      "done": true
+    },
+    {
+      "type": "pipeline",
+      "name": "force-stop-foundation",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-force-stop-foundation",
+          "task": "Read plans/pipeline-force-stop.md for the full design, gotchas, and reuse notes before writing any code.\n\nImplement the foundation layer changes for the pipeline-force-stop feature:\n\n1. Create src/errors/pipelineAbortedError.ts\n   - Follow the exact pattern in src/errors/pipelineMaxRetriesError.ts (see R1 in the plan)\n   - No constructor params\n   - Message: 'Pipeline aborted by user'\n   - Must set this.name = 'PipelineAbortedError'\n\n2. Modify src/types/pipeline.ts\n   - Add `signal?: AbortSignal` to the PipelineRunOptions type\n\n3. Modify src/types/agent.ts\n   - Add `signal?: AbortSignal` to the ExecuteOptions type\n\nRun ts_checker after all changes to verify lint + build + tests pass.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-force-stop-foundation",
+          "task": "target_path: src/errors\nng_output_path: .claude/tmp/review-force-stop-foundation\n\nAlso review src/types/pipeline.ts and src/types/agent.ts.\n\nCheck the pipeline-force-stop foundation layer changes:\n1. src/errors/pipelineAbortedError.ts: new class, extends Error, sets this.name, message is 'Pipeline aborted by user', no constructor params\n2. src/types/pipeline.ts: PipelineRunOptions has signal?: AbortSignal added\n3. src/types/agent.ts: ExecuteOptions has signal?: AbortSignal added\n4. No layer violations: types/ files may not import from any src/ layer",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-force-stop-foundation",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-force-stop-foundation",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-force-stop-foundation",
+      "task": "Foundation layer changes are complete and passing. Commit the following files with an appropriate conventional commit message:\n- src/errors/pipelineAbortedError.ts (new)\n- src/types/pipeline.ts (signal added to PipelineRunOptions)\n- src/types/agent.ts (signal added to ExecuteOptions)\n\nSuggested message: feat(errors,types): add PipelineAbortedError and signal to run options",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
