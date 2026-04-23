@@ -2,9 +2,9 @@
   "tasks": [
     {
       "type": "script",
-      "command": "rm -f .claude/tmp/review-summarize-types .claude/tmp/review-summarize-port-domain .claude/tmp/review-summarize-service .claude/tmp/review-summarize-validator .claude/tmp/review-summarize-cli"
+      "command": "rm -f .claude/tmp/review-summarize-types .claude/tmp/review-summarize-port-domain .claude/tmp/review-summarize-service .claude/tmp/review-summarize-validator .claude/tmp/review-summarize-cli",
+      "done": true
     },
-
     {
       "type": "pipeline",
       "name": "implement-summarize-types",
@@ -13,18 +13,27 @@
           "type": "agent",
           "name": "implement-summarize-types",
           "task": "target_file_path: src/types/analysis.ts\n\nAdd the `SessionSummaryStats` type to the end of the file.\n\nExact shape to add:\n\n```ts\nexport type SessionSummaryStats = {\n  sessions: number\n  turns: number\n  toolCalls: number\n  tokens: {\n    totalInput: number\n    totalOutput: number\n    totalCacheRead: number\n    totalCacheCreation: number\n  }\n}\n```\n\nNo other changes. No imports needed (all fields are primitives).",
-          "allowed_tools": ["Read", "Edit", "Bash"]
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash"
+          ],
+          "done": true
         },
         {
           "type": "agent",
           "name": "review-summarize-types",
           "task": "target_file_path: src/types/analysis.ts\nng_output_path: .claude/tmp/review-summarize-types\n\nReview the change. Check:\n1. `SessionSummaryStats` is exported\n2. Shape matches the plan exactly: sessions, turns, toolCalls, tokens.{totalInput,totalOutput,totalCacheRead,totalCacheCreation} — all number\n3. No other types were modified\n4. No imports added (none needed)",
           "procedure": "review-arch",
-          "allowed_tools": ["Read", "Bash"],
+          "allowed_tools": [
+            "Read",
+            "Bash"
+          ],
           "rejected": {
             "to": "implement-summarize-types",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -32,17 +41,22 @@
           "rejected": {
             "to": "implement-summarize-types",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
       "name": "commit-summarize-types",
       "task": "src/types/analysis.ts is updated and builds. Commit it.\n\nCommit message: feat(types): add SessionSummaryStats type for summarize command",
-      "allowed_tools": ["Read", "Bash"]
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
     },
-
     {
       "type": "pipeline",
       "name": "implement-summarize-port-domain",
@@ -57,7 +71,8 @@
             "Bash",
             "mcp__perclst__ts_analyze",
             "mcp__perclst__ts_get_types"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -73,7 +88,8 @@
           "rejected": {
             "to": "implement-summarize-port-domain",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -81,17 +97,22 @@
           "rejected": {
             "to": "implement-summarize-port-domain",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
       "name": "commit-summarize-port-domain",
       "task": "src/domains/ports/analysis.ts and src/domains/analyze.ts are updated and build. Commit both files together.\n\nCommit message: feat(domains): implement AnalyzeDomain.summarize() for session stat aggregation",
-      "allowed_tools": ["Read", "Bash"]
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
     },
-
     {
       "type": "pipeline",
       "name": "implement-summarize-service",
@@ -100,18 +121,27 @@
           "type": "agent",
           "name": "implement-summarize-service",
           "task": "target_file_path: src/services/analyzeService.ts\n\nAdd a pass-through `summarize` method to `AnalyzeService`:\n\n```ts\nasync summarize(filter: ListFilter): Promise<SessionSummaryStats> {\n  return this.domain.summarize(filter)\n}\n```\n\nAdd the necessary imports: `ListFilter` from `@src/types/session` and `SessionSummaryStats` from `@src/types/analysis`.\n\nNo other changes.",
-          "allowed_tools": ["Read", "Edit", "Bash"]
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash"
+          ],
+          "done": true
         },
         {
           "type": "agent",
           "name": "review-summarize-service",
           "task": "target_file_path: src/services/analyzeService.ts\nng_output_path: .claude/tmp/review-summarize-service\n\nReview the change. Check:\n1. `summarize(filter: ListFilter): Promise<SessionSummaryStats>` is added\n2. Body is exactly `return this.domain.summarize(filter)` — no logic in service layer\n3. Imports for `ListFilter` and `SessionSummaryStats` are correct\n4. No other methods were modified",
           "procedure": "review-arch",
-          "allowed_tools": ["Read", "Bash"],
+          "allowed_tools": [
+            "Read",
+            "Bash"
+          ],
           "rejected": {
             "to": "implement-summarize-service",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -119,17 +149,22 @@
           "rejected": {
             "to": "implement-summarize-service",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
       "name": "commit-summarize-service",
       "task": "src/services/analyzeService.ts is updated and builds. Commit it.\n\nCommit message: feat(services): add summarize pass-through to AnalyzeService",
-      "allowed_tools": ["Read", "Bash"]
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
     },
-
     {
       "type": "pipeline",
       "name": "implement-summarize-validator",
@@ -144,18 +179,23 @@
             "Bash",
             "mcp__perclst__ts_analyze",
             "mcp__perclst__ts_get_types"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
           "name": "review-summarize-validator",
           "task": "target_file_path: src/validators/cli/summarizeSessions.ts\nng_output_path: .claude/tmp/review-summarize-validator\n\nReview the new file. Check:\n1. `format` uses `formatRule()` — not `stringRule().optional()`\n2. `label` and `like` use `stringRule().optional()`\n3. Exports: `SummarizeSessionsInput` and `parseSummarizeSessions`\n4. No extra fields, no comments, no unused imports\n5. Import paths are correct relative to the validators directory",
           "procedure": "review-arch",
-          "allowed_tools": ["Read", "Bash"],
+          "allowed_tools": [
+            "Read",
+            "Bash"
+          ],
           "rejected": {
             "to": "implement-summarize-validator",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -163,17 +203,22 @@
           "rejected": {
             "to": "implement-summarize-validator",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
       "name": "commit-summarize-validator",
       "task": "src/validators/cli/summarizeSessions.ts is created and builds. Commit it.\n\nCommit message: feat(validators): add summarizeSessions validator",
-      "allowed_tools": ["Read", "Bash"]
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
     },
-
     {
       "type": "pipeline",
       "name": "implement-summarize-cli",
@@ -190,7 +235,8 @@
             "mcp__perclst__ts_analyze",
             "mcp__perclst__ts_get_types",
             "mcp__perclst__ts_get_references"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -207,7 +253,8 @@
           "rejected": {
             "to": "implement-summarize-cli",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -215,15 +262,21 @@
           "rejected": {
             "to": "implement-summarize-cli",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
       "name": "commit-summarize-cli",
       "task": "src/cli/commands/summarize.ts and src/cli/index.ts are complete, build and tests pass. Commit both files together.\n\nCommit message: feat(cli): add summarize command for session stat aggregation",
-      "allowed_tools": ["Read", "Bash"]
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
     }
   ]
 }
