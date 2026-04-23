@@ -218,7 +218,7 @@ program
 
 ---
 
-## Verification
+## Verification (v1 — superseded)
 
 After all files: `ts_checker()` — must return `{ ok: true }`.
 
@@ -331,3 +331,101 @@ columns in the text-table path (JSON output should stay raw numeric).
 When no sessions match the filter, `sessions.length === 0`.  The loop produces all-zero
 stats, which is valid JSON but confusing as a text table.  Consider outputting
 `'No sessions found'` (same string used in `list.ts`) instead of an all-zero row.
+
+---
+
+## v2 Redesign
+
+**Motivation**: v1 aggregated all matching sessions into a single row. The intended output is
+one row per session — a stats-enriched version of `list`.
+
+### Design change
+
+| | v1 | v2 |
+|---|---|---|
+| Return type | `SessionSummaryStats` (aggregate) | `SessionSummaryRow[]` (per-session) |
+| `sessions` field | count of matched sessions | removed |
+| `name` / `id` fields | absent | added (for display) |
+| CLI table | 1 row | 1 row per session |
+
+### New type (`src/types/analysis.ts`)
+
+Replace `SessionSummaryStats` with `SessionSummaryRow`:
+
+```ts
+export type SessionSummaryRow = {
+  name: string
+  id: string
+  turns: number
+  toolCalls: number
+  tokens: {
+    totalInput: number
+    totalOutput: number
+    totalCacheRead: number
+    totalCacheCreation: number
+  }
+}
+```
+
+`name` is `session.name ?? session.id`.
+
+### Updated signatures
+
+```ts
+// IAnalyzeDomain (src/domains/ports/analysis.ts)
+summarize(filter: ListFilter): Promise<SessionSummaryRow[]>
+
+// AnalyzeDomain (src/domains/analyze.ts)
+async summarize(filter: ListFilter): Promise<SessionSummaryRow[]>
+
+// AnalyzeService (src/services/analyzeService.ts)
+async summarize(filter: ListFilter): Promise<SessionSummaryRow[]>
+```
+
+### Updated domain implementation (`src/domains/analyze.ts`)
+
+```ts
+async summarize(filter: ListFilter): Promise<SessionSummaryRow[]> {
+  const sessions = await this.sessionDomain.list(filter)
+  const rows: SessionSummaryRow[] = []
+
+  for (const session of sessions) {
+    try {
+      const effectiveId = session.rewind_source_claude_session_id ?? session.claude_session_id
+      const data = this.claudeSessionRepo.readSession(effectiveId, session.working_dir, session.rewind_to_message_id)
+      const { turnsBreakdown } = buildSummaryStats(data.turns)
+      rows.push({
+        name: session.name ?? session.id,
+        id: session.id,
+        turns: turnsBreakdown.userInstructions,
+        toolCalls: turnsBreakdown.toolCalls,
+        tokens: data.tokens
+      })
+    } catch {
+      // skip sessions with missing JSONL files
+    }
+  }
+
+  return rows
+}
+```
+
+### Updated CLI (`src/cli/commands/summarize.ts`)
+
+Table columns: `['Name', 'Turns', 'Tool Calls', 'Tokens In', 'Tokens Out', 'Cache Read', 'Cache Creation']`
+
+One row per `SessionSummaryRow`. Token columns use `.toLocaleString()` in text path; JSON path outputs the raw array.
+
+Empty case: `rows.length === 0` → print `'No sessions found'`.
+
+### Files to change (v2)
+
+| File | Change |
+|------|--------|
+| `src/types/analysis.ts` | Replace `SessionSummaryStats` with `SessionSummaryRow` |
+| `src/domains/ports/analysis.ts` | Update import + return type |
+| `src/domains/analyze.ts` | Rewrite `summarize()` to return `SessionSummaryRow[]` |
+| `src/services/analyzeService.ts` | Update import + return type |
+| `src/cli/commands/summarize.ts` | Redesign display: one row per session |
+
+`src/validators/cli/summarizeSessions.ts` — no change needed.

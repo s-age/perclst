@@ -1,0 +1,178 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-summarize-v2-types .claude/tmp/review-summarize-v2-port-domain .claude/tmp/review-summarize-v2-service .claude/tmp/review-summarize-v2-cli"
+    },
+
+    {
+      "type": "pipeline",
+      "name": "implement-summarize-v2-types",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-summarize-v2-types",
+          "task": "target_file_path: src/types/analysis.ts\n\nReplace the existing `SessionSummaryStats` type with `SessionSummaryRow`.\n\nRead plans/summarize-command.md § \"v2 Redesign / New type\" for the exact shape.\n\nNew type:\n\n```ts\nexport type SessionSummaryRow = {\n  name: string\n  id: string\n  turns: number\n  toolCalls: number\n  tokens: {\n    totalInput: number\n    totalOutput: number\n    totalCacheRead: number\n    totalCacheCreation: number\n  }\n}\n```\n\nDelete `SessionSummaryStats` entirely. No other types should be modified.",
+          "allowed_tools": ["Read", "Edit", "Bash"]
+        },
+        {
+          "type": "agent",
+          "name": "review-summarize-v2-types",
+          "task": "target_file_path: src/types/analysis.ts\nng_output_path: .claude/tmp/review-summarize-v2-types\n\nReview the change. Check:\n1. `SessionSummaryRow` is exported with fields: name, id, turns, toolCalls, tokens.{totalInput,totalOutput,totalCacheRead,totalCacheCreation}\n2. `SessionSummaryStats` is completely removed\n3. No other types were modified",
+          "procedure": "review-arch",
+          "allowed_tools": ["Read", "Bash"],
+          "rejected": {
+            "to": "implement-summarize-v2-types",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build 2>&1 | grep -v 'SessionSummaryStats' | head -30; exit 0"
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-summarize-v2-types",
+      "task": "src/types/analysis.ts is updated. Commit it.\n\nCommit message: refactor(types): replace SessionSummaryStats with per-session SessionSummaryRow",
+      "allowed_tools": ["Read", "Bash"]
+    },
+
+    {
+      "type": "pipeline",
+      "name": "implement-summarize-v2-port-domain",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-summarize-v2-port-domain",
+          "task": "target_file_paths: src/domains/ports/analysis.ts, src/domains/analyze.ts\n\nRead plans/summarize-command.md § \"v2 Redesign\" before writing any code.\n\n## src/domains/ports/analysis.ts\n\nUpdate the import from `@src/types/analysis`: replace `SessionSummaryStats` with `SessionSummaryRow`.\nUpdate the `summarize` method signature: `summarize(filter: ListFilter): Promise<SessionSummaryRow[]>`\n\n## src/domains/analyze.ts\n\nRewrite `summarize()` to return `SessionSummaryRow[]` — one entry per session.\n\nNew implementation:\n```ts\nasync summarize(filter: ListFilter): Promise<SessionSummaryRow[]> {\n  const sessions = await this.sessionDomain.list(filter)\n  const rows: SessionSummaryRow[] = []\n\n  for (const session of sessions) {\n    try {\n      const effectiveId = session.rewind_source_claude_session_id ?? session.claude_session_id\n      const data = this.claudeSessionRepo.readSession(effectiveId, session.working_dir, session.rewind_to_message_id)\n      const { turnsBreakdown } = buildSummaryStats(data.turns)\n      rows.push({\n        name: session.name ?? session.id,\n        id: session.id,\n        turns: turnsBreakdown.userInstructions,\n        toolCalls: turnsBreakdown.toolCalls,\n        tokens: data.tokens\n      })\n    } catch {\n      // skip sessions with missing JSONL files\n    }\n  }\n\n  return rows\n}\n```\n\nUpdate the import in analyze.ts: replace `SessionSummaryStats` with `SessionSummaryRow`.",
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-summarize-v2-port-domain",
+          "task": "target_file_paths: src/domains/ports/analysis.ts, src/domains/analyze.ts\nng_output_path: .claude/tmp/review-summarize-v2-port-domain\n\nReview both files. Check:\n1. `IAnalyzeDomain.summarize` returns `Promise<SessionSummaryRow[]>` (not the old `SessionSummaryStats`)\n2. `AnalyzeDomain.summarize()` returns `SessionSummaryRow[]` — one push per session\n3. `name: session.name ?? session.id` is used\n4. `readSession()` is called without `await` (synchronous)\n5. Each iteration is wrapped in try/catch — missing JSONL skipped silently\n6. `SessionSummaryStats` is not referenced anywhere in these files\n7. No import rule violations",
+          "procedure": "review-arch",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-summarize-v2-port-domain",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build",
+          "rejected": {
+            "to": "implement-summarize-v2-port-domain",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-summarize-v2-port-domain",
+      "task": "src/domains/ports/analysis.ts and src/domains/analyze.ts are updated and build. Commit both.\n\nCommit message: refactor(domains): summarize() returns SessionSummaryRow[] per session",
+      "allowed_tools": ["Read", "Bash"]
+    },
+
+    {
+      "type": "pipeline",
+      "name": "implement-summarize-v2-service",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-summarize-v2-service",
+          "task": "target_file_path: src/services/analyzeService.ts\n\nUpdate the `summarize` method: replace `SessionSummaryStats` with `SessionSummaryRow` in both the import and the return type annotation.\n\nThe body stays the same: `return this.domain.summarize(filter)`\n\nNo other changes.",
+          "allowed_tools": ["Read", "Edit", "Bash"]
+        },
+        {
+          "type": "agent",
+          "name": "review-summarize-v2-service",
+          "task": "target_file_path: src/services/analyzeService.ts\nng_output_path: .claude/tmp/review-summarize-v2-service\n\nReview the change. Check:\n1. `summarize` returns `Promise<SessionSummaryRow[]>`\n2. Import uses `SessionSummaryRow` — `SessionSummaryStats` is gone\n3. Body is still just `return this.domain.summarize(filter)` — no logic added",
+          "procedure": "review-arch",
+          "allowed_tools": ["Read", "Bash"],
+          "rejected": {
+            "to": "implement-summarize-v2-service",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build",
+          "rejected": {
+            "to": "implement-summarize-v2-service",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-summarize-v2-service",
+      "task": "src/services/analyzeService.ts is updated and builds. Commit it.\n\nCommit message: refactor(services): update summarize() to return SessionSummaryRow[]",
+      "allowed_tools": ["Read", "Bash"]
+    },
+
+    {
+      "type": "pipeline",
+      "name": "implement-summarize-v2-cli",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-summarize-v2-cli",
+          "task": "target_file_path: src/cli/commands/summarize.ts\n\nRedesign the command to display one row per session.\n\nRead plans/summarize-command.md § \"v2 Redesign / Updated CLI\" before writing.\n\nKey changes:\n- `analyzeService.summarize()` now returns `SessionSummaryRow[]` — iterate the array\n- Empty case: `rows.length === 0` → `stdout.print('No sessions found')` and return\n- Table columns: `['Name', 'Turns', 'Tool Calls', 'Tokens In', 'Tokens Out', 'Cache Read', 'Cache Creation']`\n- One `table.push([...])` per row; Name = `row.name`, token columns use `.toLocaleString()`\n- JSON path: `stdout.print(JSON.stringify(rows, null, 2))` (raw array, numeric values)\n- Update the import type from `SessionSummaryStats` to `SessionSummaryRow` if it was explicitly imported (check the file first)\n\nTemplate for iteration pattern: src/cli/commands/list.ts (`for (const session of sessions) { table.push([...]) }`)",
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-summarize-v2-cli",
+          "task": "target_file_path: src/cli/commands/summarize.ts\nng_output_path: .claude/tmp/review-summarize-v2-cli\n\nReview the changes. Check:\n1. Iterates `rows` (the array) — one `table.push` per `SessionSummaryRow`\n2. Empty guard: `rows.length === 0` → 'No sessions found'\n3. Table head starts with 'Name' column\n4. Token columns use `.toLocaleString()` in text path\n5. JSON path outputs the raw array with numeric values (no `.toLocaleString()`)\n6. No reference to `SessionSummaryStats` remains\n7. No import rule violations",
+          "procedure": "review-arch",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "implement-summarize-v2-cli",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-summarize-v2-cli",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-summarize-v2-cli",
+      "task": "src/cli/commands/summarize.ts is updated, builds and tests pass. Commit it.\n\nCommit message: feat(cli): redesign summarize to show one row per session",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
