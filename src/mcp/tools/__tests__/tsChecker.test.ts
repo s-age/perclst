@@ -2,9 +2,11 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { CheckerResult } from '@src/types/checker'
+import type { CheckerService } from '@src/services/checkerService'
 import { executeTsChecker } from '../tsChecker'
 
 vi.mock('@src/core/di/container')
+vi.mock('@src/core/di/identifiers')
 
 type MockCheckerService = {
   check: ReturnType<typeof vi.fn>
@@ -12,7 +14,6 @@ type MockCheckerService = {
 
 describe('tsChecker', () => {
   let mockCheckerService: MockCheckerService
-  let mockResolve: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -21,9 +22,7 @@ describe('tsChecker', () => {
       check: vi.fn()
     }
 
-    mockResolve = vi.fn().mockReturnValue(mockCheckerService)
-    // eslint-disable-next-line local/no-any -- library-dependent type, container is mocked and doesn't have specific resolve typing
-    ;(container.resolve as any) = mockResolve
+    vi.mocked(container.resolve).mockReturnValue(mockCheckerService as unknown as CheckerService)
   })
 
   describe('executeTsChecker', () => {
@@ -38,7 +37,7 @@ describe('tsChecker', () => {
 
       await executeTsChecker({})
 
-      expect(mockResolve).toHaveBeenCalledWith(TOKENS.CheckerService)
+      expect(container.resolve).toHaveBeenCalledWith(TOKENS.CheckerService)
     })
 
     it('should pass all arguments to service.check with camelCase keys', async () => {

@@ -8,21 +8,19 @@ vi.mock('@src/core/di/container')
 vi.mock('@src/core/di/identifiers')
 
 describe('executeAskPermission', () => {
-  let mockService: Partial<PermissionPipeService>
+  let mockService: { askPermission: ReturnType<typeof vi.fn> }
 
   beforeEach(() => {
     vi.clearAllMocks()
     mockService = {
       askPermission: vi.fn()
     }
-    // eslint-disable-next-line local/no-any -- mocking DI container that uses generic types
-    ;(container.resolve as any).mockReturnValue(mockService)
+    vi.mocked(container.resolve).mockReturnValue(mockService as unknown as PermissionPipeService)
   })
 
   it('should resolve PermissionPipeService from container', async () => {
     const args = { tool_name: 'TestTool', input: {} }
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue({ status: 'granted' })
+    mockService.askPermission.mockResolvedValue({ status: 'granted' })
 
     await executeAskPermission(args)
 
@@ -35,8 +33,7 @@ describe('executeAskPermission', () => {
       input: { key: 'value' },
       tool_use_id: 'test-id-123'
     }
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue({ status: 'granted' })
+    mockService.askPermission.mockResolvedValue({ status: 'granted' })
 
     await executeAskPermission(args)
 
@@ -45,8 +42,7 @@ describe('executeAskPermission', () => {
 
   it('should return MCP response with stringified result', async () => {
     const serviceResult = { status: 'granted', message: 'Permission allowed' }
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue(serviceResult)
+    mockService.askPermission.mockResolvedValue(serviceResult)
     const args = { tool_name: 'TestTool', input: {} }
 
     const result = await executeAskPermission(args)
@@ -63,8 +59,7 @@ describe('executeAskPermission', () => {
 
   it('should handle simple object results from service', async () => {
     const serviceResult = { allowed: true }
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue(serviceResult)
+    mockService.askPermission.mockResolvedValue(serviceResult)
     const args = { tool_name: 'WebFetch', input: {} }
 
     const result = await executeAskPermission(args)
@@ -74,8 +69,7 @@ describe('executeAskPermission', () => {
 
   it('should handle array results from service', async () => {
     const serviceResult = [{ id: 1 }, { id: 2 }]
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue(serviceResult)
+    mockService.askPermission.mockResolvedValue(serviceResult)
     const args = { tool_name: 'Bash', input: {} }
 
     const result = await executeAskPermission(args)
@@ -85,8 +79,7 @@ describe('executeAskPermission', () => {
 
   it('should handle string results from service', async () => {
     const serviceResult = 'permission denied'
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue(serviceResult)
+    mockService.askPermission.mockResolvedValue(serviceResult)
     const args = { tool_name: 'TestTool', input: {} }
 
     const result = await executeAskPermission(args)
@@ -95,8 +88,7 @@ describe('executeAskPermission', () => {
   })
 
   it('should handle null results from service', async () => {
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue(null)
+    mockService.askPermission.mockResolvedValue(null)
     const args = { tool_name: 'TestTool', input: {} }
 
     const result = await executeAskPermission(args)
@@ -106,8 +98,7 @@ describe('executeAskPermission', () => {
 
   it('should work with optional tool_use_id omitted', async () => {
     const serviceResult = { status: 'ok' }
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue(serviceResult)
+    mockService.askPermission.mockResolvedValue(serviceResult)
     const args = { tool_name: 'Bash', input: { command: 'ls' } }
 
     const result = await executeAskPermission(args)
@@ -118,8 +109,7 @@ describe('executeAskPermission', () => {
 
   it('should propagate errors from service', async () => {
     const error = new Error('Service failed')
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockRejectedValue(error)
+    mockService.askPermission.mockRejectedValue(error)
     const args = { tool_name: 'TestTool', input: {} }
 
     await expect(executeAskPermission(args)).rejects.toThrow('Service failed')
@@ -131,8 +121,7 @@ describe('executeAskPermission', () => {
       permissions: [{ resource: 'file', action: 'read', granted: true }],
       nested: { deep: { value: 42 } }
     }
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue(serviceResult)
+    mockService.askPermission.mockResolvedValue(serviceResult)
     const args = { tool_name: 'TestTool', input: { some: 'input' } }
 
     const result = await executeAskPermission(args)
@@ -143,8 +132,7 @@ describe('executeAskPermission', () => {
   })
 
   it('should always return response with exactly one text content item', async () => {
-    // eslint-disable-next-line local/no-any -- mocking vi.fn() type
-    ;(mockService.askPermission as any).mockResolvedValue({ data: 'test' })
+    mockService.askPermission.mockResolvedValue({ data: 'test' })
     const args = { tool_name: 'TestTool', input: {} }
 
     const result = await executeAskPermission(args)

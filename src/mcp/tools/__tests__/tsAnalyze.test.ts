@@ -3,9 +3,10 @@ import { executeTsAnalyze } from '../tsAnalyze'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { TsAnalysisService } from '@src/services/tsAnalysisService'
-import type { TypeScriptAnalysis } from '@src/mcp/types'
+import type { TypeScriptAnalysis } from '@src/types/tsAnalysis'
 
 vi.mock('@src/core/di/container')
+vi.mock('@src/core/di/identifiers')
 
 describe('executeTsAnalyze', () => {
   let mockTsAnalysisService: { analyze: ReturnType<typeof vi.fn> }

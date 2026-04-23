@@ -5,6 +5,7 @@ import { TOKENS } from '@src/core/di/identifiers'
 import type { KnowledgeSearchService } from '@src/services/knowledgeSearchService'
 
 vi.mock('@src/core/di/container')
+vi.mock('@src/core/di/identifiers')
 
 describe('executeKnowledgeSearch', () => {
   let mockService: Partial<KnowledgeSearchService>
