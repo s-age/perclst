@@ -2,7 +2,7 @@ import type {
   AnalyzeResult,
   RewindTurn,
   ClaudeCodeTurn,
-  SessionSummaryStats
+  SessionSummaryRow
 } from '@src/types/analysis'
 import type { TurnRow, RowFilter } from '@src/types/display'
 import type { ListFilter } from '@src/types/session'
@@ -25,7 +25,7 @@ export class AnalyzeService {
     return this.domain.formatTurns(turns, filter)
   }
 
-  async summarize(filter: ListFilter): Promise<SessionSummaryStats> {
+  async summarize(filter: ListFilter): Promise<SessionSummaryRow[]> {
     return this.domain.summarize(filter)
   }
 
