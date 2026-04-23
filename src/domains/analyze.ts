@@ -89,7 +89,7 @@ export class AnalyzeDomain implements IAnalyzeDomain {
         rows.push({
           name: session.name ?? session.id,
           id: session.id,
-          turns: turnsBreakdown.userInstructions,
+          turns: turnsBreakdown.total,
           toolCalls: turnsBreakdown.toolCalls,
           tokens: data.tokens
         })
