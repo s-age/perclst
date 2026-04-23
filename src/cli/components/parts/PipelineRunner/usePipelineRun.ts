@@ -47,6 +47,28 @@ function updateAtPath(
   )
 }
 
+type UpsertFns = { updater: (t: TaskState) => TaskState; creator: () => TaskState }
+
+function upsertAtPath(
+  tasks: TaskState[],
+  path: number[],
+  index: number,
+  fns: UpsertFns
+): TaskState[] {
+  if (path.length === 0) {
+    if (index < tasks.length) {
+      return tasks.map((t, i) => (i === index ? fns.updater(t) : t))
+    }
+    const next = [...tasks]
+    next.push(fns.creator())
+    return next
+  }
+  const [head, ...rest] = path
+  return tasks.map((t, i) =>
+    i === head ? { ...t, children: upsertAtPath(t.children ?? [], rest, index, fns) } : t
+  )
+}
+
 type PipelineResult =
   Awaited<ReturnType<PipelineService['run']>> extends AsyncGenerator<infer T> ? T : never
 
@@ -57,9 +79,26 @@ function applyResult(
   if (result.kind === 'task_start') {
     const sep = taskSep(result.taskPath, result.taskIndex, result.name, result.taskType)
     setAllLines((prev) => (prev.length > 0 ? [...prev, '', sep] : [sep]))
-    setTasks((prev) =>
-      updateAtPath(prev, result.taskPath, result.taskIndex, (t) => ({ ...t, status: 'running' }))
-    )
+    if (result.taskType === 'child') {
+      setTasks((prev) =>
+        updateAtPath(prev, result.taskPath, result.taskIndex, (t) => ({
+          ...t,
+          status: 'running',
+          children: []
+        }))
+      )
+    } else {
+      setTasks((prev) =>
+        upsertAtPath(prev, result.taskPath, result.taskIndex, {
+          updater: (t) => ({ ...t, status: 'running' }),
+          creator: () => ({
+            name: result.name,
+            taskType: result.taskType,
+            status: 'running' as const
+          })
+        })
+      )
+    }
   } else if (result.kind === 'retry') {
     setTasks((prev) =>
       updateAtPath(prev, result.taskPath, result.taskIndex, (t) => ({

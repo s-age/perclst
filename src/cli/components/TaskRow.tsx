@@ -7,7 +7,7 @@ type TaskRowProps = {
   index: number
   name?: string
   command?: string
-  taskType: 'agent' | 'script' | 'pipeline'
+  taskType: 'agent' | 'script' | 'pipeline' | 'child'
   status: 'pending' | 'running' | 'done' | 'failed' | 'retrying'
   retryCount?: number
   maxRetries?: number

@@ -32,6 +32,7 @@ export type PipelineTaskResult =
       taskIndex: number
       name?: string
       taskType: 'agent' | 'script' | 'pipeline' | 'child'
+      childPath?: string
     }
   | {
       kind: 'retry'
@@ -70,7 +71,15 @@ export class PipelineService {
       }
       debug.print(`Pipeline task ${i + 1}/${pipeline.tasks.length}`, { type: task.type })
       const name = task.type !== 'script' ? task.name : undefined
-      yield { kind: 'task_start' as const, taskPath, taskIndex: i, name, taskType: task.type }
+      const childPath = task.type === 'child' ? task.path : undefined
+      yield {
+        kind: 'task_start' as const,
+        taskPath,
+        taskIndex: i,
+        name,
+        taskType: task.type,
+        childPath
+      }
 
       const rejection = pendingRejections.get(i)
       pendingRejections.delete(i)
