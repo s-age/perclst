@@ -21,14 +21,23 @@ describe('assertNoSingleDashMultiCharOptions', () => {
 
   it('should not exit when given double-dash options', () => {
     assertNoSingleDashMultiCharOptions(['--name', '--verbose', '--output'])
+
+    expect(exitSpy).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
   })
 
   it('should not exit when given single-dash single-char options', () => {
     assertNoSingleDashMultiCharOptions(['-v', '-n', '-h'])
+
+    expect(exitSpy).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
   })
 
   it('should not exit when given non-option arguments', () => {
     assertNoSingleDashMultiCharOptions(['value', 'another-value', 'path/to/file'])
+
+    expect(exitSpy).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
   })
 
   it('should not exit when given mixed valid arguments', () => {
@@ -39,10 +48,16 @@ describe('assertNoSingleDashMultiCharOptions', () => {
       '-v',
       '--output-only'
     ])
+
+    expect(exitSpy).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
   })
 
   it('should not match single-dash followed by digit', () => {
     assertNoSingleDashMultiCharOptions(['-123'])
+
+    expect(exitSpy).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
   })
 
   // Error path: single-dash multi-char options
