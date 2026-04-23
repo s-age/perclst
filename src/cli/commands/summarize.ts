@@ -15,21 +15,21 @@ export async function summarizeCommand(options: RawSummarizeOptions): Promise<vo
   try {
     const input = parseSummarizeSessions(options)
     const analyzeService = container.resolve<AnalyzeService>(TOKENS.AnalyzeService)
-    const stats = await analyzeService.summarize({ label: input.label, like: input.like })
+    const rows = await analyzeService.summarize({ label: input.label, like: input.like })
 
-    if (stats.sessions === 0) {
+    if (rows.length === 0) {
       stdout.print('No sessions found')
       return
     }
 
     if (input.format === 'json') {
-      stdout.print(JSON.stringify(stats, null, 2))
+      stdout.print(JSON.stringify(rows, null, 2))
       return
     }
 
     const table = new Table({
       head: [
-        'Sessions',
+        'Name',
         'Turns',
         'Tool Calls',
         'Tokens In',
@@ -40,15 +40,17 @@ export async function summarizeCommand(options: RawSummarizeOptions): Promise<vo
       style: { head: [], border: [] }
     })
 
-    table.push([
-      stats.sessions,
-      stats.turns,
-      stats.toolCalls,
-      stats.tokens.totalInput.toLocaleString(),
-      stats.tokens.totalOutput.toLocaleString(),
-      stats.tokens.totalCacheRead.toLocaleString(),
-      stats.tokens.totalCacheCreation.toLocaleString()
-    ])
+    for (const row of rows) {
+      table.push([
+        row.name,
+        row.turns,
+        row.toolCalls,
+        row.tokens.totalInput.toLocaleString(),
+        row.tokens.totalOutput.toLocaleString(),
+        row.tokens.totalCacheRead.toLocaleString(),
+        row.tokens.totalCacheCreation.toLocaleString()
+      ])
+    }
 
     stdout.print(table.toString())
   } catch (error) {
