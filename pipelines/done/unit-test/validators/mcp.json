@@ -3,37 +3,44 @@
     {
       "type": "child",
       "path": "unit-test__validators__mcp__ask-permission.json",
-      "name": "unit-test-validators-mcp-ask-permission"
+      "name": "unit-test-validators-mcp-ask-permission",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__validators__mcp__knowledge-search.json",
-      "name": "unit-test-validators-mcp-knowledge-search"
+      "name": "unit-test-validators-mcp-knowledge-search",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__validators__mcp__ts-analyze.json",
-      "name": "unit-test-validators-mcp-ts-analyze"
+      "name": "unit-test-validators-mcp-ts-analyze",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__validators__mcp__ts-checker.json",
-      "name": "unit-test-validators-mcp-ts-checker"
+      "name": "unit-test-validators-mcp-ts-checker",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__validators__mcp__ts-get-references.json",
-      "name": "unit-test-validators-mcp-ts-get-references"
+      "name": "unit-test-validators-mcp-ts-get-references",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__validators__mcp__ts-get-types.json",
-      "name": "unit-test-validators-mcp-ts-get-types"
+      "name": "unit-test-validators-mcp-ts-get-types",
+      "done": true
     },
     {
       "type": "child",
       "path": "unit-test__validators__mcp__ts-test-strategist.json",
-      "name": "unit-test-validators-mcp-ts-test-strategist"
+      "name": "unit-test-validators-mcp-ts-test-strategist",
+      "done": true
     }
   ]
 }
