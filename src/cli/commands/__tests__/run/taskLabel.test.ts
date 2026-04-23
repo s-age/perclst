@@ -30,6 +30,10 @@ describe('taskLabel', () => {
   let mockPipelineService: {
     run: ReturnType<typeof vi.fn>
   }
+  let mockAbortService: {
+    signal: AbortSignal
+    abort: ReturnType<typeof vi.fn>
+  }
   let mockStdout: { print: ReturnType<typeof vi.fn> }
 
   beforeEach(() => {
@@ -53,6 +57,12 @@ describe('taskLabel', () => {
       run: vi.fn()
     }
 
+    const mockSignal = new AbortController().signal
+    mockAbortService = {
+      signal: mockSignal,
+      abort: vi.fn()
+    }
+
     const mockConfig: Config = {
       display: { header_color: '#D97757', no_color: false }
     } as Config
@@ -60,6 +70,7 @@ describe('taskLabel', () => {
     vi.mocked(container).resolve = vi.fn((token) => {
       if (token === TOKENS.PipelineFileService) return mockPipelineFileService
       if (token === TOKENS.PipelineService) return mockPipelineService
+      if (token === TOKENS.AbortService) return mockAbortService
       if (token === TOKENS.Config) return mockConfig
       return null
     })
@@ -84,7 +95,8 @@ describe('taskLabel', () => {
     })
 
     const mockExit = vi.fn()
-    global.process = { ...process, exit: mockExit }
+    const mockOnce = vi.fn()
+    global.process = { ...process, exit: mockExit, once: mockOnce }
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
   })
 

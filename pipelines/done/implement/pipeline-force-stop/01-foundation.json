@@ -58,10 +58,7 @@
       "name": "commit-force-stop-foundation",
       "task": "Foundation layer changes are complete and passing. Commit the following files with an appropriate conventional commit message:\n- src/errors/pipelineAbortedError.ts (new)\n- src/types/pipeline.ts (signal added to PipelineRunOptions)\n- src/types/agent.ts (signal added to ExecuteOptions)\n\nSuggested message: feat(errors,types): add PipelineAbortedError and signal to run options",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ]
+      "allowed_tools": ["Read", "Bash"]
     }
   ]
 }

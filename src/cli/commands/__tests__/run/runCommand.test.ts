@@ -33,6 +33,10 @@ describe('runCommand', () => {
   let mockPipelineService: {
     run: ReturnType<typeof vi.fn>
   }
+  let mockAbortService: {
+    signal: AbortSignal
+    abort: ReturnType<typeof vi.fn>
+  }
   let mockStdout: { print: ReturnType<typeof vi.fn> }
   let mockStderr: { print: ReturnType<typeof vi.fn> }
 
@@ -59,6 +63,12 @@ describe('runCommand', () => {
       run: vi.fn()
     }
 
+    const mockSignal = new AbortController().signal
+    mockAbortService = {
+      signal: mockSignal,
+      abort: vi.fn()
+    }
+
     const mockConfig: Config = {
       display: { header_color: '#D97757', no_color: false }
     } as Config
@@ -66,6 +76,7 @@ describe('runCommand', () => {
     vi.mocked(container).resolve = vi.fn((token) => {
       if (token === TOKENS.PipelineFileService) return mockPipelineFileService
       if (token === TOKENS.PipelineService) return mockPipelineService
+      if (token === TOKENS.AbortService) return mockAbortService
       if (token === TOKENS.Config) return mockConfig
       return null
     })
@@ -89,8 +100,9 @@ describe('runCommand', () => {
     })
 
     const mockExit = vi.fn()
+    const mockOnce = vi.fn()
     // eslint-disable-next-line local/no-any
-    global.process = { ...process, exit: mockExit } as any
+    global.process = { ...process, exit: mockExit, once: mockOnce } as any
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
 
     const pipeline: Pipeline = { name: 'test', tasks: [] }
