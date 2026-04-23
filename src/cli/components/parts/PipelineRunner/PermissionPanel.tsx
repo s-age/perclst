@@ -7,7 +7,7 @@ type Props = {
   permRequest: PermissionRequest | null
 }
 
-export function PermissionPanel({ permRequest }: Props) {
+export function PermissionPanel({ permRequest }: Props): JSX.Element {
   return (
     <Box
       flexDirection="column"

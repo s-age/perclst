@@ -5,7 +5,7 @@ import type { KnowledgeSearchService } from '@src/services/knowledgeSearchServic
 import { stdout } from '@src/utils/output'
 import { startCommand } from './start'
 
-export async function curateCommand() {
+export async function curateCommand(): Promise<void> {
   const knowledgeService = container.resolve<KnowledgeSearchService>(TOKENS.KnowledgeSearchService)
 
   if (!knowledgeService.hasDraftEntries()) {

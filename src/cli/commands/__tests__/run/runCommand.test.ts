@@ -89,7 +89,7 @@ describe('runCommand', () => {
     })
 
     const mockExit = vi.fn()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line local/no-any
     global.process = { ...process, exit: mockExit } as any
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
 

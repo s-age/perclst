@@ -91,9 +91,9 @@ describe('markTaskDone', () => {
       name: 'test',
 
       tasks: [
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line local/no-any
         { type: 'script', command: 'test', done: false } as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line local/no-any
         { type: 'script', command: 'test2', done: false } as any
       ]
     }
@@ -122,9 +122,9 @@ describe('markTaskDone', () => {
         {
           type: 'pipeline',
           path: 'child.json',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line local/no-any
           tasks: [{ type: 'script', command: 'nested', done: false } as any]
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line local/no-any
         } as any
       ]
     }

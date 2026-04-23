@@ -7,7 +7,7 @@ export function listFilesRecursive(
 ): { absolute: string; relative: string }[] {
   if (!existsSync(dir)) return []
   const results: { absolute: string; relative: string }[] = []
-  const traverse = (current: string) => {
+  const traverse = (current: string): void => {
     for (const entry of readdirSync(current)) {
       const full = join(current, entry)
       if (statSync(full).isDirectory()) {

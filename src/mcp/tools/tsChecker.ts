@@ -2,7 +2,15 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { CheckerService } from '@src/services/checkerService'
 
-export const ts_checker = {
+export const ts_checker: {
+  name: string
+  description: string
+  inputSchema: {
+    type: string
+    properties: Record<string, { type: string; description: string }>
+    required: string[]
+  }
+} = {
   name: 'ts_checker',
   description:
     'Run lint (lint:fix), build, and unit tests in one shot and report errors/warnings for each. ' +
@@ -36,7 +44,7 @@ export async function executeTsChecker(args: {
   lint_command?: string
   build_command?: string
   test_command?: string
-}) {
+}): Promise<{ content: { type: 'text'; text: string }[] }> {
   const service = container.resolve<CheckerService>(TOKENS.CheckerService)
   const result = await service.check({
     projectRoot: args.project_root,

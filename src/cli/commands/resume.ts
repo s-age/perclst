@@ -1,7 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { AgentService } from '@src/services/agentService'
-import { SessionService } from '@src/services/sessionService'
+import type { AgentService } from '@src/services/agentService'
+import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
@@ -28,7 +28,7 @@ export async function resumeCommand(
   sessionId: string,
   instruction: string,
   options: RawResumeOptions
-) {
+): Promise<void> {
   try {
     debug.print('Resuming session', { session_id: sessionId })
 
@@ -41,7 +41,7 @@ export async function resumeCommand(
 
     const streaming = !input.outputOnly && input.format !== 'json'
     const onStreamEvent = streaming
-      ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+      ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
       : undefined
 
     const response = await agentService.resume(resolvedId, input.instruction, {

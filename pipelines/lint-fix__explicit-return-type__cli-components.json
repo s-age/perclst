@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "lint-fix-explicit-return-type-cli-components",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-lint-fix-explicit-return-type-cli-components",
+          "task": "Fix all @typescript-eslint/explicit-function-return-type violations in the following files:\n- src/cli/components/TaskRow.tsx\n- src/cli/components/parts/PipelineRunner/OutputPanel.tsx\n- src/cli/components/parts/PipelineRunner/PermissionPanel.tsx\n- src/cli/components/parts/PipelineRunner/WorkflowPanel.tsx\n- src/cli/components/parts/PipelineRunner/index.tsx\n- src/cli/components/parts/PipelineRunner/usePermission.ts\n- src/cli/components/parts/PipelineRunner/usePipelineRun.ts\n\nAdd explicit return type annotations to all functions and arrow functions that are missing them. These are Ink (React CLI) components and hooks — use JSX.Element for render functions and appropriate types for hooks. Use mcp__perclst__ts_analyze to inspect each file's structure and mcp__perclst__ts_get_types to confirm correct types. After editing, run `./node_modules/.bin/eslint src/cli/components/` to verify no violations remain in these files.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-lint-fix-explicit-return-type-cli-components",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-lint-fix-explicit-return-type-cli-components",
+      "task": "Return types added and build/tests passing. Commit the changes with an appropriate conventional commit message (e.g. fix(lint): add explicit return types to cli/components).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

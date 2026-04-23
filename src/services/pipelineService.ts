@@ -76,28 +76,25 @@ export class PipelineService {
       pendingRejections.delete(i)
       let jumpTo: number | undefined
       if (task.type === 'agent') {
-        jumpTo = yield* this.runAgentStep(
-          task,
-          i,
-          taskPath,
-          options,
+        jumpTo = yield* this.runAgentStep(task, { i, taskPath }, options, {
           rejection,
           pipeline,
           retryCount,
           pendingRejections
-        )
+        })
       } else if (task.type === 'pipeline') {
-        yield* this.runNestedPipeline(task, i, taskPath, options, rejection)
+        yield* this.runNestedPipeline(task, { i, taskPath }, options, rejection)
       } else if (task.type === 'child') {
-        yield* this.runChildPipeline(task, i, taskPath, options, rejection)
+        yield* this.runChildPipeline(task, { i, taskPath }, options, rejection)
       } else {
         jumpTo = yield* this.runScriptStep(
           task,
-          i,
-          taskPath,
-          pipeline,
-          retryCount,
-          pendingRejections
+          { i, taskPath },
+          {
+            pipeline,
+            retryCount,
+            pendingRejections
+          }
         )
       }
       if (jumpTo === undefined) {
@@ -109,20 +106,25 @@ export class PipelineService {
 
   private async *runNestedPipeline(
     task: NestedPipelineTask,
-    i: number,
-    taskPath: number[],
+    taskLocation: { i: number; taskPath: number[] },
     options: PipelineRunOptions,
     rejection: RejectedContext | undefined
   ): AsyncGenerator<PipelineTaskResult> {
     debug.print(`Running nested pipeline: ${task.name}`)
-    yield* this.run({ tasks: task.tasks }, options, rejection, [...taskPath, i])
-    yield { kind: 'pipeline_end' as const, taskPath, taskIndex: i }
+    yield* this.run({ tasks: task.tasks }, options, rejection, [
+      ...taskLocation.taskPath,
+      taskLocation.i
+    ])
+    yield {
+      kind: 'pipeline_end' as const,
+      taskPath: taskLocation.taskPath,
+      taskIndex: taskLocation.i
+    }
   }
 
   private async *runChildPipeline(
     task: ChildPipelineTask,
-    i: number,
-    taskPath: number[],
+    taskLocation: { i: number; taskPath: number[] },
     options: PipelineRunOptions,
     rejection: RejectedContext | undefined
   ): AsyncGenerator<PipelineTaskResult> {
@@ -134,30 +136,46 @@ export class PipelineService {
     const childDir = dirname(absolutePath)
     const childPipeline = options.loadChildPipeline(absolutePath)
     const childOptions = { ...options, pipelineDir: childDir }
-    yield* this.run(childPipeline, childOptions, rejection, [...taskPath, i])
-    yield { kind: 'pipeline_end' as const, taskPath, taskIndex: i }
+    yield* this.run(childPipeline, childOptions, rejection, [
+      ...taskLocation.taskPath,
+      taskLocation.i
+    ])
+    yield {
+      kind: 'pipeline_end' as const,
+      taskPath: taskLocation.taskPath,
+      taskIndex: taskLocation.i
+    }
   }
 
   private async *runAgentStep(
     task: AgentPipelineTask,
-    i: number,
-    taskPath: number[],
+    taskLocation: { i: number; taskPath: number[] },
     options: PipelineRunOptions,
-    rejection: RejectedContext | undefined,
-    pipeline: Pipeline,
-    retryCount: Map<number, number>,
-    pendingRejections: Map<number, RejectedContext>
+    rejectionState: {
+      rejection: RejectedContext | undefined
+      pipeline: Pipeline
+      retryCount: Map<number, number>
+      pendingRejections: Map<number, RejectedContext>
+    }
   ): AsyncGenerator<PipelineTaskResult, number | undefined> {
-    const result = await this.pipelineDomain.runAgentTask(task, i, taskPath, options, rejection)
+    const result = await this.pipelineDomain.runAgentTask(
+      task,
+      { index: taskLocation.i, taskPath: taskLocation.taskPath },
+      options,
+      rejectionState.rejection
+    )
     yield { kind: 'agent' as const, ...result }
-    const jumpTo = await this.handleAgentRejection(pipeline, task, i, retryCount, pendingRejections)
+    const jumpTo = await this.handleAgentRejection(rejectionState.pipeline, task, taskLocation.i, {
+      retryCount: rejectionState.retryCount,
+      pendingRejections: rejectionState.pendingRejections
+    })
     if (jumpTo !== undefined) {
       yield {
         kind: 'retry' as const,
-        taskPath,
-        taskIndex: i,
+        taskPath: taskLocation.taskPath,
+        taskIndex: taskLocation.i,
         name: task.name,
-        retryCount: retryCount.get(i) ?? 0,
+        retryCount: rejectionState.retryCount.get(taskLocation.i) ?? 0,
         maxRetries: task.rejected?.max_retries ?? 1
       }
     }
@@ -166,29 +184,28 @@ export class PipelineService {
 
   private async *runScriptStep(
     task: ScriptPipelineTask,
-    i: number,
-    taskPath: number[],
-    pipeline: Pipeline,
-    retryCount: Map<number, number>,
-    pendingRejections: Map<number, RejectedContext>
+    taskLocation: { i: number; taskPath: number[] },
+    pipelineState: {
+      pipeline: Pipeline
+      retryCount: Map<number, number>
+      pendingRejections: Map<number, RejectedContext>
+    }
   ): AsyncGenerator<PipelineTaskResult, number | undefined> {
-    const result = await this.runScriptTask(task, i, taskPath)
+    const result = await this.runScriptTask(task, taskLocation.i, taskLocation.taskPath)
     yield result
     const jumpTo = await this.handleScriptRejection(
-      pipeline,
+      pipelineState.pipeline,
       task,
-      result.result,
-      i,
-      retryCount,
-      pendingRejections
+      { i: taskLocation.i, scriptResult: result.result },
+      { retryCount: pipelineState.retryCount, pendingRejections: pipelineState.pendingRejections }
     )
     if (jumpTo !== undefined) {
       yield {
         kind: 'retry' as const,
-        taskPath,
-        taskIndex: i,
+        taskPath: taskLocation.taskPath,
+        taskIndex: taskLocation.i,
         name: undefined,
-        retryCount: retryCount.get(i) ?? 0,
+        retryCount: pipelineState.retryCount.get(taskLocation.i) ?? 0,
         maxRetries: task.rejected?.max_retries ?? 1
       }
     }
@@ -199,43 +216,40 @@ export class PipelineService {
     pipeline: Pipeline,
     task: AgentPipelineTask,
     i: number,
-    retryCount: Map<number, number>,
-    pendingRejections: Map<number, RejectedContext>
+    state: { retryCount: Map<number, number>; pendingRejections: Map<number, RejectedContext> }
   ): Promise<number | undefined> {
     if (!task.rejected || !task.name) return undefined
     const feedback = await this.pipelineDomain.getRejectionFeedback(task.name)
     if (!feedback) return undefined
     const { targetIndex, context, newCount } = this.pipelineDomain.resolveRejection(
       pipeline,
-      task.rejected.to,
-      i,
-      retryCount.get(i) ?? 0,
-      task.rejected.max_retries ?? 1,
-      feedback
+      { toName: task.rejected.to, feedback },
+      {
+        taskIndex: i,
+        currentCount: state.retryCount.get(i) ?? 0,
+        maxRetries: task.rejected.max_retries ?? 1
+      }
     )
-    retryCount.set(i, newCount)
-    pendingRejections.set(targetIndex, context)
+    state.retryCount.set(i, newCount)
+    state.pendingRejections.set(targetIndex, context)
     return targetIndex
   }
 
   private async handleScriptRejection(
     pipeline: Pipeline,
     task: ScriptPipelineTask,
-    scriptResult: ScriptResult,
-    i: number,
-    retryCount: Map<number, number>,
-    pendingRejections: Map<number, RejectedContext>
+    rejectionInfo: { i: number; scriptResult: ScriptResult },
+    state: { retryCount: Map<number, number>; pendingRejections: Map<number, RejectedContext> }
   ): Promise<number | undefined> {
     const rejection = this.pipelineDomain.resolveScriptRejection(
       pipeline,
       task,
-      scriptResult,
-      i,
-      retryCount.get(i) ?? 0
+      rejectionInfo.scriptResult,
+      { taskIndex: rejectionInfo.i, currentCount: state.retryCount.get(rejectionInfo.i) ?? 0 }
     )
     if (!rejection) return undefined
-    retryCount.set(i, rejection.newCount)
-    pendingRejections.set(rejection.targetIndex, rejection.context)
+    state.retryCount.set(rejectionInfo.i, rejection.newCount)
+    state.pendingRejections.set(rejection.targetIndex, rejection.context)
     return rejection.targetIndex
   }
 

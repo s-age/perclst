@@ -1,8 +1,8 @@
 import Table from 'cli-table3'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { AnalyzeService } from '@src/services/analyzeService'
-import { SessionService } from '@src/services/sessionService'
+import type { AnalyzeService } from '@src/services/analyzeService'
+import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
 import type { Session } from '@src/types/session'
 import type { AnalysisSummary } from '@src/types/analysis'
@@ -162,7 +162,7 @@ function printDetailedTurns(turns: AnalysisSummary['turns']): void {
   }
 }
 
-export async function analyzeCommand(sessionId: string, options: RawAnalyzeOptions) {
+export async function analyzeCommand(sessionId: string, options: RawAnalyzeOptions): Promise<void> {
   try {
     const input = parseAnalyzeSession({ sessionId, ...options })
 

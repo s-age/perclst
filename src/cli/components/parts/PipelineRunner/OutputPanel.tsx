@@ -17,7 +17,7 @@ export function OutputPanel({
   done,
   error,
   hasLines
-}: Props) {
+}: Props): JSX.Element {
   return (
     <Box
       flexDirection="column"

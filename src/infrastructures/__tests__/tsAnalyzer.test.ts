@@ -68,10 +68,10 @@ describe('TsAnalyzer', () => {
   })
 
   describe('getSourceFile', () => {
-    const mockSourceFile = { getFilePath: () => '/abs/src/domains/analyze.ts' }
+    const mockSourceFile = { getFilePath: (): string => '/abs/src/domains/analyze.ts' }
     let analyzer: TsAnalyzer
 
-    beforeEach(() => {
+    beforeEach((): void => {
       mockAddSourceFileAtPath.mockReturnValue(mockSourceFile)
       analyzer = new TsAnalyzer()
     })
@@ -95,10 +95,10 @@ describe('TsAnalyzer', () => {
   })
 
   describe('getSourceFileIfExists', () => {
-    const mockSourceFile = { getFilePath: () => '/abs/src/domains/analyze.ts' }
+    const mockSourceFile = { getFilePath: (): string => '/abs/src/domains/analyze.ts' }
     let analyzer: TsAnalyzer
 
-    beforeEach(() => {
+    beforeEach((): void => {
       analyzer = new TsAnalyzer()
     })
 
@@ -116,10 +116,10 @@ describe('TsAnalyzer', () => {
   })
 
   describe('constructor with skipAddingFilesFromTsConfig: true', () => {
-    const mockSourceFile = { getFilePath: () => '/abs/src/domains/analyze.ts' }
+    const mockSourceFile = { getFilePath: (): string => '/abs/src/domains/analyze.ts' }
     let analyzer: TsAnalyzer
 
-    beforeEach(() => {
+    beforeEach((): void => {
       analyzer = new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
     })
 

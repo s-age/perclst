@@ -2,7 +2,15 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { TestStrategistService } from '@src/services/testStrategistService'
 
-export const ts_test_strategist = {
+export const ts_test_strategist: {
+  name: string
+  description: string
+  inputSchema: {
+    type: string
+    properties: Record<string, { type: string; description: string }>
+    required: string[]
+  }
+} = {
   name: 'ts_test_strategist',
   description:
     'Formulate a unit test strategy for a TypeScript file — identifies untested functions, ' +
@@ -26,7 +34,7 @@ export const ts_test_strategist = {
 export async function executeTsTestStrategist(args: {
   target_file_path: string
   test_file_path?: string
-}) {
+}): Promise<{ content: { type: 'text'; text: string }[] }> {
   const service = container.resolve<TestStrategistService>(TOKENS.TestStrategistService)
   const result = service.analyze({
     targetFilePath: args.target_file_path,

@@ -7,12 +7,17 @@ import { stdout } from '@src/utils/output'
 
 type PrintResponseExtra = { sessionId: string }
 
-function makeDisplay(displayConfig?: DisplayConfig) {
+function makeDisplay(displayConfig?: DisplayConfig): {
+  header: (text: string) => string
+  greyBlock: (text: string) => string
+  toolLabel: (name: string) => string
+  dim: (s: string) => string
+} {
   const noColor = process.env.NO_COLOR !== undefined || (displayConfig?.no_color ?? false)
   const hex = displayConfig?.header_color ?? DEFAULT_HEADER_COLOR
 
-  const accent = noColor ? (s: string) => s : (s: string) => ansis.hex(hex)(s)
-  const dim = noColor ? (s: string) => s : (s: string) => ansis.dim(s)
+  const accent = noColor ? (s: string): string => s : (s: string): string => ansis.hex(hex)(s)
+  const dim = noColor ? (s: string): string => s : (s: string): string => ansis.dim(s)
 
   function header(text: string): string {
     const width = process.stdout.columns ?? 80

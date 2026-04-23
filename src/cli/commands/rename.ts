@@ -1,6 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { SessionService } from '@src/services/sessionService'
+import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
 import { parseRenameSession } from '@src/validators/cli/renameSession'
 
@@ -8,7 +8,11 @@ type RawRenameOptions = {
   labels?: string[]
 }
 
-export async function renameCommand(sessionId: string, name: string, options: RawRenameOptions) {
+export async function renameCommand(
+  sessionId: string,
+  name: string,
+  options: RawRenameOptions
+): Promise<void> {
   try {
     const input = parseRenameSession({ sessionId, name, ...options })
 

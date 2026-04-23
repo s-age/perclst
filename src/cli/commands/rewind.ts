@@ -1,7 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { AnalyzeService } from '@src/services/analyzeService'
-import { SessionService } from '@src/services/sessionService'
+import type { AnalyzeService } from '@src/services/analyzeService'
+import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
 import { parseRewindSession } from '@src/validators/cli/rewindSession'
@@ -34,7 +34,7 @@ export async function rewindCommand(
   sessionId: string | undefined,
   indexStr: string | undefined,
   options: RawRewindOptions
-) {
+): Promise<void> {
   try {
     const input = parseRewindSession({
       sessionId,

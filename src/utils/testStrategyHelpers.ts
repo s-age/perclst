@@ -72,7 +72,8 @@ export function buildRecommendation(strategies: FunctionStrategy[]): string {
   const hooks = strategies.filter((s) => s.is_custom_hook)
   const components = strategies.filter((s) => s.is_component && !s.is_custom_hook)
   const others = strategies.filter((s) => !s.is_custom_hook && !s.is_component)
-  const untested = (arr: FunctionStrategy[]) => arr.filter((s) => !s.existing_test_function).length
+  const untested = (arr: FunctionStrategy[]): number =>
+    arr.filter((s) => !s.existing_test_function).length
 
   const recs: string[] = []
   const uh = untested(hooks)

@@ -149,7 +149,7 @@ describe('TestStrategyDomain', () => {
 
   describe('detectFramework', () => {
     it('detects vitest when present in dependencies', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const detectFramework = (domain as any).detectFramework.bind(domain)
       const deps = { vitest: '^4.0.0', jest: '^29.0.0' }
 
@@ -157,7 +157,7 @@ describe('TestStrategyDomain', () => {
     })
 
     it('defaults to jest when vitest not found', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const detectFramework = (domain as any).detectFramework.bind(domain)
       const deps = { jest: '^29.0.0' }
 
@@ -165,7 +165,7 @@ describe('TestStrategyDomain', () => {
     })
 
     it('defaults to jest when deps is null', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const detectFramework = (domain as any).detectFramework.bind(domain)
 
       expect(detectFramework(null)).toBe('jest')
@@ -174,7 +174,7 @@ describe('TestStrategyDomain', () => {
 
   describe('errResult', () => {
     it('creates error result with provided message', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line local/no-any
       const errResult = (domain as any).errResult.bind(domain)
       const result = errResult('src/file.ts', 'Custom error message')
 

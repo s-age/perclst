@@ -15,7 +15,7 @@ export function PipelineRunner({
   permissionPipeService,
   onDone,
   onError
-}: PipelineRunnerProps) {
+}: PipelineRunnerProps): JSX.Element {
   const { stdout } = useStdout()
   const termRows = stdout.rows ?? 24
   const mainRows = termRows - PERM_PANEL_ROWS
@@ -24,7 +24,7 @@ export function PipelineRunner({
   const [spinnerFrame, setSpinnerFrame] = useState(0)
   useEffect(() => {
     const interval = setInterval(() => setSpinnerFrame((f) => f + 1), SPINNER_INTERVAL_MS)
-    return () => clearInterval(interval)
+    return (): void => clearInterval(interval)
   }, [])
 
   const { tasks, allLines, done, error } = usePipelineRun({

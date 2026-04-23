@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { ValidationError } from '@src/errors/validationError'
 
-export function schema<T extends z.ZodRawShape>(shape: T) {
+export function schema<T extends z.ZodRawShape>(shape: T): z.ZodObject<T> {
   return z.object(shape)
 }
 

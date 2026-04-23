@@ -20,7 +20,10 @@ type SurveyOptions = {
   outputOnly?: boolean
 }
 
-export async function surveyCommand(query: string | undefined, options: SurveyOptions) {
+export async function surveyCommand(
+  query: string | undefined,
+  options: SurveyOptions
+): Promise<void> {
   if (options.refresh) {
     await startCommand(
       'Refresh all codebase catalogs in .claude/skills/code-base-survey/ to reflect the current state of src/.',

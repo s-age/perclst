@@ -1,7 +1,7 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { AgentService } from '@src/services/agentService'
-import { SessionService } from '@src/services/sessionService'
+import type { AgentService } from '@src/services/agentService'
+import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
@@ -27,7 +27,7 @@ export async function forkCommand(
   originalSessionId: string,
   prompt: string,
   options: RawForkOptions
-) {
+): Promise<void> {
   try {
     debug.print('Forking session', { original_session_id: originalSessionId })
 

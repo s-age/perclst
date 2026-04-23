@@ -3,7 +3,9 @@ import { useInput } from 'ink'
 import type { PermissionPipeService } from '@src/services/permissionPipeService.js'
 import type { PermissionRequest } from '@src/types/permissionPipe.js'
 
-export function usePermission(service: PermissionPipeService | null) {
+export function usePermission(service: PermissionPipeService | null): {
+  permRequest: PermissionRequest | null
+} {
   const [permRequest, setPermRequest] = useState<PermissionRequest | null>(null)
 
   useEffect(() => {
@@ -12,10 +14,10 @@ export function usePermission(service: PermissionPipeService | null) {
       const req = service.pollRequest()
       if (req) setPermRequest(req)
     }, 100)
-    return () => clearInterval(interval)
+    return (): void => clearInterval(interval)
   }, [service])
 
-  useInput((input) => {
+  useInput((input): void => {
     if (!permRequest || !service) return
     const allow = input.toLowerCase() === 'y'
     service.respond(

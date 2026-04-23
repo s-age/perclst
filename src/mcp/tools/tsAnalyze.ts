@@ -2,7 +2,15 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { TsAnalysisService } from '@src/services/tsAnalysisService'
 
-export const ts_analyze = {
+export const ts_analyze: {
+  name: string
+  description: string
+  inputSchema: {
+    type: string
+    properties: { file_path: { type: string; description: string } }
+    required: string[]
+  }
+} = {
   name: 'ts_analyze',
   description:
     'Analyze TypeScript code structure (symbols with constructor params and public methods, imports, exports, variable declarations)',
@@ -18,7 +26,9 @@ export const ts_analyze = {
   }
 }
 
-export async function executeTsAnalyze(args: { file_path: string }) {
+export async function executeTsAnalyze(args: {
+  file_path: string
+}): Promise<{ content: { type: 'text'; text: string }[] }> {
   const service = container.resolve<TsAnalysisService>(TOKENS.TsAnalysisService)
   const analysis = service.analyze(args.file_path)
 

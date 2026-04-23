@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { SourceFile } from 'ts-morph'
 import { Project } from 'ts-morph'
 import {
   extractSymbols,
@@ -7,7 +8,7 @@ import {
   extractTypeDefinition
 } from '../tsAnalysisParser'
 
-function makeSourceFile(code: string) {
+function makeSourceFile(code: string): SourceFile {
   const project = new Project({ useInMemoryFileSystem: true })
   return project.createSourceFile('test.ts', code)
 }

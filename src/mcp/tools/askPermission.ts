@@ -6,7 +6,7 @@ export async function executeAskPermission(args: {
   tool_name: string
   input: Record<string, unknown>
   tool_use_id?: string
-}) {
+}): Promise<{ content: { type: 'text'; text: string }[] }> {
   const service = container.resolve<PermissionPipeService>(TOKENS.PermissionPipeService)
   const result = await service.askPermission(args)
   return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] }

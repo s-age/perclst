@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "type": "pipeline",
+      "name": "lint-fix-explicit-return-type-utils-services",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-lint-fix-explicit-return-type-utils-services",
+          "task": "Fix all @typescript-eslint/explicit-function-return-type violations in the following files:\n- src/utils/testStrategyHelpers.ts\n- src/services/__tests__/pipelineService.test.ts\n\nAdd explicit return type annotations to all functions and arrow functions that are missing them. In test files, vitest callback functions (it, describe, beforeEach, etc.) can be typed as returning void. Use mcp__perclst__ts_analyze to inspect each file's structure and mcp__perclst__ts_get_types to confirm correct types. After editing, run `./node_modules/.bin/eslint src/utils/testStrategyHelpers.ts src/services/__tests__/pipelineService.test.ts` to verify no violations remain.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-lint-fix-explicit-return-type-utils-services",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-lint-fix-explicit-return-type-utils-services",
+      "task": "Return types added and build/tests passing. Commit the changes with an appropriate conventional commit message (e.g. fix(lint): add explicit return types to utils and services tests).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

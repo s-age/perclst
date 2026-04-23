@@ -3,9 +3,9 @@ import { resolve, join, dirname } from 'path'
 import * as readline from 'readline'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { PipelineService } from '@src/services/pipelineService'
+import type { PipelineService } from '@src/services/pipelineService'
 import type { PipelineTaskResult } from '@src/services/pipelineService'
-import { PermissionPipeService } from '@src/services/permissionPipeService'
+import type { PermissionPipeService } from '@src/services/permissionPipeService'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { APIError } from '@src/errors/apiError'
@@ -17,7 +17,7 @@ import type { RunPipelineInput } from '@src/validators/cli/runPipeline'
 import type { Config } from '@src/types/config'
 import type { AgentStreamEvent } from '@src/types/agent'
 import type { Pipeline } from '@src/types/pipeline'
-import { PipelineFileService } from '@src/services/pipelineFileService'
+import type { PipelineFileService } from '@src/services/pipelineFileService'
 
 type RawRunOptions = {
   model?: string
@@ -81,7 +81,7 @@ function markTaskDone(pipeline: Pipeline, taskPath: number[], taskIndex: number)
 function makeChildLoader(
   pipelineFileService: PipelineFileService
 ): (absolutePath: string) => Pipeline {
-  return (absolutePath) => {
+  return (absolutePath: string): Pipeline => {
     const raw = pipelineFileService.loadRawPipeline(absolutePath)
     return parsePipeline(raw)
   }
@@ -192,7 +192,7 @@ async function executePipeline(
 
   const streaming = !input.outputOnly && input.format !== 'json'
   const onStreamEvent = streaming
-    ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+    ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
     : undefined
   const onTaskDone = (taskPath: number[], taskIndex: number): void => {
     markTaskDone(pipeline, taskPath, taskIndex)
@@ -218,7 +218,7 @@ async function executePipeline(
   stdout.print(`\nPipeline complete. ${count} task(s) finished.`)
 }
 
-export async function runCommand(pipelinePath: string, options: RawRunOptions) {
+export async function runCommand(pipelinePath: string, options: RawRunOptions): Promise<void> {
   try {
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
 

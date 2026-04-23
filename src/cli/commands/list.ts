@@ -1,7 +1,7 @@
 import Table from 'cli-table3'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { SessionService } from '@src/services/sessionService'
+import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
 import { parseListSessions } from '@src/validators/cli/listSessions'
 
@@ -10,7 +10,7 @@ type RawListOptions = {
   like?: string
 }
 
-export async function listCommand(options: RawListOptions) {
+export async function listCommand(options: RawListOptions): Promise<void> {
   try {
     const input = parseListSessions(options)
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)

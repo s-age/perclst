@@ -1,10 +1,10 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { SessionService } from '@src/services/sessionService'
+import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
 import { parseDeleteSession } from '@src/validators/cli/deleteSession'
 
-export async function deleteCommand(sessionId: string) {
+export async function deleteCommand(sessionId: string): Promise<void> {
   try {
     const input = parseDeleteSession({ sessionId })
 

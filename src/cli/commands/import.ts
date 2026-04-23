@@ -1,6 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { ImportService } from '@src/services/importService'
+import type { ImportService } from '@src/services/importService'
 import { stdout, stderr } from '@src/utils/output'
 import { parseImportSession } from '@src/validators/cli/importSession'
 

@@ -1,0 +1,61 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-lint-fix-max-params"
+    },
+    {
+      "type": "pipeline",
+      "name": "lint-fix-max-params",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-lint-fix-max-params",
+          "task": "Fix all local/max-params violations (functions with more than 4 parameters) in the following files:\n- src/cli/components/parts/PipelineRunner/usePipelineRun.ts\n- src/domains/pipeline.ts\n- src/services/pipelineService.ts\n\nFor each violating function, choose the most appropriate refactoring:\n1. Group tightly related parameters into a named options object type (preferred when parameters represent a single concept).\n2. Split the function if it has too many responsibilities.\n\nDefine new object types using `type` (not interface). Keep the public API consistent — update all call sites if a signature changes (use mcp__perclst__ts_get_references to find them). After editing, run `./node_modules/.bin/eslint src/cli/components/parts/PipelineRunner/usePipelineRun.ts src/domains/pipeline.ts src/services/pipelineService.ts` to verify no violations remain.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-lint-fix-max-params",
+          "task": "Review the local/max-params refactoring applied to:\n- src/cli/components/parts/PipelineRunner/usePipelineRun.ts\n- src/domains/pipeline.ts\n- src/services/pipelineService.ts\n\nng_output_path: .claude/tmp/review-lint-fix-max-params\n\nCheck:\n1. Parameter groupings are semantically coherent (names make sense together).\n2. New object types are well-named and use `type` (not interface).\n3. All call sites have been updated consistently.\n4. No behavior change — the refactoring is purely structural.\n5. No violations of the project layer architecture (no cross-layer imports).\n\nIf issues are found, write them to ng_output_path. If everything is correct, do not write the file.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-lint-fix-max-params",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-lint-fix-max-params",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "implement-lint-fix-max-params",
+      "task": "Refactoring complete, review passed, and build/tests passing. Commit the changes with an appropriate conventional commit message (e.g. refactor(lint): reduce parameter counts in pipeline and hook functions).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

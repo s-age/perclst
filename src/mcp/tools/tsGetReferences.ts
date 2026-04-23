@@ -2,7 +2,15 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { TsAnalysisService } from '@src/services/tsAnalysisService'
 
-export const ts_get_references = {
+export const ts_get_references: {
+  name: string
+  description: string
+  inputSchema: {
+    type: string
+    properties: Record<string, { type: string; description: string; default?: boolean }>
+    required: string[]
+  }
+} = {
   name: 'ts_get_references',
   description: 'Find all references to a TypeScript symbol',
   inputSchema: {
@@ -37,7 +45,7 @@ export async function executeTsGetReferences(args: {
   symbol_name: string
   include_test?: boolean
   recursive?: boolean
-}) {
+}): Promise<{ content: { type: 'text'; text: string }[] }> {
   const service = container.resolve<TsAnalysisService>(TOKENS.TsAnalysisService)
 
   const references = service.getReferences(args.file_path, args.symbol_name, {

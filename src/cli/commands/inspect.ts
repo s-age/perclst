@@ -1,12 +1,16 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { PipelineFileService } from '@src/services/pipelineFileService'
+import type { PipelineFileService } from '@src/services/pipelineFileService'
 import { stdout, stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
 import { parseInspectSession } from '@src/validators/cli/inspectSession'
 import { startCommand } from './start'
 
-export async function inspectCommand(oldRef: string, newRef: string, options: { prompt?: string }) {
+export async function inspectCommand(
+  oldRef: string,
+  newRef: string,
+  options: { prompt?: string } = {}
+): Promise<void> {
   try {
     const input = parseInspectSession({ old: oldRef, new: newRef })
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)

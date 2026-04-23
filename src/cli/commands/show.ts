@@ -2,8 +2,8 @@ import Table from 'cli-table3'
 import ansis from 'ansis'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { SessionService } from '@src/services/sessionService'
-import { AnalyzeService } from '@src/services/analyzeService'
+import type { SessionService } from '@src/services/sessionService'
+import type { AnalyzeService } from '@src/services/analyzeService'
 import { stdout, stderr } from '@src/utils/output'
 import { toLocaleString } from '@src/utils/date'
 import { parseShowSession } from '@src/validators/cli/showSession'
@@ -21,7 +21,7 @@ function truncate(text: string, max: number): string {
   return single.length > max ? single.slice(0, max - 1) + '…' : single
 }
 
-export async function showCommand(sessionId: string, options: RawShowOptions) {
+export async function showCommand(sessionId: string, options: RawShowOptions): Promise<void> {
   try {
     const input = parseShowSession({ sessionId, ...options })
 

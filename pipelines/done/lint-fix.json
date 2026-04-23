@@ -1,0 +1,58 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "lint-fix__explicit-return-type__cli-commands.json",
+      "name": "lint-fix-explicit-return-type-cli-commands",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "lint-fix__explicit-return-type__cli-components.json",
+      "name": "lint-fix-explicit-return-type-cli-components",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "lint-fix__explicit-return-type__cli-display-tests.json",
+      "name": "lint-fix-explicit-return-type-cli-display-tests",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "lint-fix__explicit-return-type__infrastructures.json",
+      "name": "lint-fix-explicit-return-type-infrastructures",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "lint-fix__explicit-return-type__mcp.json",
+      "name": "lint-fix-explicit-return-type-mcp",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "lint-fix__explicit-return-type__repositories.json",
+      "name": "lint-fix-explicit-return-type-repositories",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "lint-fix__explicit-return-type__utils-services.json",
+      "name": "lint-fix-explicit-return-type-utils-services",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "lint-fix__explicit-return-type__validators.json",
+      "name": "lint-fix-explicit-return-type-validators",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "lint-fix__max-params.json",
+      "name": "lint-fix-max-params",
+      "done": true
+    }
+  ]
+}

@@ -26,7 +26,7 @@ import { parseTagSession } from '@src/validators/cli/tagSession'
 import { container } from '@src/core/di/container'
 import { stdout, stderr } from '@src/utils/output'
 
-describe('tagCommand', () => {
+describe('tagCommand', (): void => {
   const mockSessionId = 'session-123'
   const mockLabels = ['important', 'review']
   const mockResolvedId = 'resolved-id-456'
@@ -36,7 +36,7 @@ describe('tagCommand', () => {
     setLabels: vi.fn()
   }
 
-  beforeEach(() => {
+  beforeEach((): void => {
     vi.clearAllMocks()
     vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('process.exit called')
@@ -47,7 +47,7 @@ describe('tagCommand', () => {
     sessionId?: string
     labels?: string[]
     resolvedId?: string
-  }) {
+  }): void {
     const sessionId = overrides?.sessionId ?? mockSessionId
     const labels = overrides?.labels ?? mockLabels
     const resolvedId = overrides?.resolvedId ?? mockResolvedId
@@ -61,20 +61,20 @@ describe('tagCommand', () => {
     })
   }
 
-  function setupParseFailure(error: Error) {
+  function setupParseFailure(error: Error): void {
     vi.mocked(parseTagSession).mockImplementation(() => {
       throw error
     })
   }
 
-  function setupResolveFailure(error: Error) {
+  function setupResolveFailure(error: Error): void {
     const parsedInput = { sessionId: mockSessionId, labels: mockLabels }
     vi.mocked(parseTagSession).mockReturnValue(parsedInput)
     vi.mocked(container.resolve).mockReturnValue(mockSessionService)
     vi.mocked(mockSessionService.resolveId).mockRejectedValue(error)
   }
 
-  function setupSetLabelsFailure(error: Error) {
+  function setupSetLabelsFailure(error: Error): void {
     const parsedInput = { sessionId: mockSessionId, labels: mockLabels }
     vi.mocked(parseTagSession).mockReturnValue(parsedInput)
     vi.mocked(container.resolve).mockReturnValue(mockSessionService)
@@ -82,8 +82,8 @@ describe('tagCommand', () => {
     vi.mocked(mockSessionService.setLabels).mockRejectedValue(error)
   }
 
-  describe('happy path', () => {
-    it('should parse session input', async () => {
+  describe('happy path', (): void => {
+    it('should parse session input', async (): Promise<void> => {
       setupSuccessfulMocks()
 
       await tagCommand(mockSessionId, mockLabels)
@@ -94,7 +94,7 @@ describe('tagCommand', () => {
       })
     })
 
-    it('should resolve session ID', async () => {
+    it('should resolve session ID', async (): Promise<void> => {
       setupSuccessfulMocks()
 
       await tagCommand(mockSessionId, mockLabels)
@@ -102,7 +102,7 @@ describe('tagCommand', () => {
       expect(mockSessionService.resolveId).toHaveBeenCalledWith(mockSessionId)
     })
 
-    it('should set labels on resolved session', async () => {
+    it('should set labels on resolved session', async (): Promise<void> => {
       setupSuccessfulMocks()
 
       await tagCommand(mockSessionId, mockLabels)
@@ -110,7 +110,7 @@ describe('tagCommand', () => {
       expect(mockSessionService.setLabels).toHaveBeenCalledWith(mockResolvedId, mockLabels)
     })
 
-    it('should print success message with session ID', async () => {
+    it('should print success message with session ID', async (): Promise<void> => {
       setupSuccessfulMocks()
 
       await tagCommand(mockSessionId, mockLabels)
@@ -118,7 +118,7 @@ describe('tagCommand', () => {
       expect(stdout.print).toHaveBeenCalledWith(`Labels set: ${mockResolvedId}`)
     })
 
-    it('should print labels in success message', async () => {
+    it('should print labels in success message', async (): Promise<void> => {
       const customLabels = ['tag1', 'tag2', 'tag3']
       setupSuccessfulMocks({ labels: customLabels })
 
@@ -127,7 +127,7 @@ describe('tagCommand', () => {
       expect(stdout.print).toHaveBeenCalledWith(`  Labels: ${customLabels.join(', ')}`)
     })
 
-    it('should handle empty labels list', async () => {
+    it('should handle empty labels list', async (): Promise<void> => {
       const emptyLabels: string[] = []
       setupSuccessfulMocks({ labels: emptyLabels })
 
@@ -137,8 +137,8 @@ describe('tagCommand', () => {
     })
   })
 
-  describe('error handling', () => {
-    it('should call stderr when validation fails', async () => {
+  describe('error handling', (): void => {
+    it('should call stderr when validation fails', async (): Promise<void> => {
       const validationError = new Error('Invalid session ID format')
       setupParseFailure(validationError)
 
@@ -151,7 +151,7 @@ describe('tagCommand', () => {
       expect(stderr.print).toHaveBeenCalledWith('Failed to set labels', validationError)
     })
 
-    it('should exit with code 1 when validation fails', async () => {
+    it('should exit with code 1 when validation fails', async (): Promise<void> => {
       const validationError = new Error('Invalid session ID format')
       setupParseFailure(validationError)
 
@@ -164,7 +164,7 @@ describe('tagCommand', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('should call stderr when resolveId fails', async () => {
+    it('should call stderr when resolveId fails', async (): Promise<void> => {
       const resolveError = new Error('Session not found')
       setupResolveFailure(resolveError)
 
@@ -177,7 +177,7 @@ describe('tagCommand', () => {
       expect(stderr.print).toHaveBeenCalledWith('Failed to set labels', resolveError)
     })
 
-    it('should exit with code 1 when resolveId fails', async () => {
+    it('should exit with code 1 when resolveId fails', async (): Promise<void> => {
       const resolveError = new Error('Session not found')
       setupResolveFailure(resolveError)
 
@@ -190,7 +190,7 @@ describe('tagCommand', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('should call stderr when setLabels fails', async () => {
+    it('should call stderr when setLabels fails', async (): Promise<void> => {
       const setLabelsError = new Error('Failed to update session')
       setupSetLabelsFailure(setLabelsError)
 
@@ -203,7 +203,7 @@ describe('tagCommand', () => {
       expect(stderr.print).toHaveBeenCalledWith('Failed to set labels', setLabelsError)
     })
 
-    it('should exit with code 1 when setLabels fails', async () => {
+    it('should exit with code 1 when setLabels fails', async (): Promise<void> => {
       const setLabelsError = new Error('Failed to update session')
       setupSetLabelsFailure(setLabelsError)
 
@@ -216,7 +216,7 @@ describe('tagCommand', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('should not call stdout when error occurs', async () => {
+    it('should not call stdout when error occurs', async (): Promise<void> => {
       const validationError = new Error('Invalid input')
       setupParseFailure(validationError)
 

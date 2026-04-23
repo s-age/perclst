@@ -1,6 +1,6 @@
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
-import { AgentService } from '@src/services/agentService'
+import type { AgentService } from '@src/services/agentService'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
@@ -25,7 +25,7 @@ type RawStartOptions = {
   format?: string
 }
 
-export async function startCommand(task: string, options: RawStartOptions) {
+export async function startCommand(task: string, options: RawStartOptions): Promise<void> {
   try {
     debug.print('Starting new agent session')
 
@@ -36,7 +36,7 @@ export async function startCommand(task: string, options: RawStartOptions) {
 
     const streaming = !input.outputOnly && input.format !== 'json'
     const onStreamEvent = streaming
-      ? (event: AgentStreamEvent) => printStreamEvent(event, config.display)
+      ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
       : undefined
 
     const { sessionId, response } = await agentService.start(

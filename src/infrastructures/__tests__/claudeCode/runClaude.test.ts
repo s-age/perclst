@@ -42,20 +42,28 @@ type ChildOptions = {
 
 // 'close' and 'error' handlers fire synchronously so closePromise/spawnError
 // are settled before runClaude's await.
-function makeChild(options: ChildOptions = {}) {
+function makeChild(options: ChildOptions = {}): {
+  stdin: { write: ReturnType<typeof vi.fn>; end: ReturnType<typeof vi.fn> }
+  stdout: AsyncGenerator<Buffer, void, unknown>
+  stderr: { on: ReturnType<typeof vi.fn> }
+  on: ReturnType<typeof vi.fn>
+  exitCode: number | null
+  killed: boolean
+  kill: ReturnType<typeof vi.fn>
+} {
   const { stdoutChunks = [], exitCode = 0, triggerError, stderrData } = options
 
   return {
     stdin: { write: vi.fn(), end: vi.fn() },
-    stdout: (async function* () {
+    stdout: (async function* (): AsyncGenerator<Buffer, void, unknown> {
       for (const chunk of stdoutChunks) yield Buffer.from(chunk)
     })(),
     stderr: {
-      on: vi.fn().mockImplementation((event: string, handler: (chunk: Buffer) => void) => {
+      on: vi.fn().mockImplementation((event: string, handler: (chunk: Buffer) => void): void => {
         if (event === 'data' && stderrData) handler(Buffer.from(stderrData))
       })
     },
-    on: vi.fn().mockImplementation((event: string, handler: (...args: unknown[]) => void) => {
+    on: vi.fn().mockImplementation((event: string, handler: (...args: unknown[]) => void): void => {
       if (event === 'close') handler(exitCode)
       if (event === 'error' && triggerError) handler(triggerError)
     }),
