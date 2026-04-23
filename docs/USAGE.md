@@ -22,6 +22,7 @@ Local operations — no agent required.
 - [`list`](#list)
 - [`show`](#show)
 - [`analyze`](#analyze)
+- [`summarize`](#summarize)
 - [`rename`](#rename)
 - [`tag`](#tag)
 - [`delete`](#delete)
@@ -180,6 +181,27 @@ perclst analyze <session>
 perclst analyze <session> --print-detail   # full turn content
 perclst analyze <session> --format json
 ```
+
+## `summarize`
+
+*Local — no agent.*
+
+Aggregate statistics across multiple sessions — sessions, turns, tool calls, and token usage in one row per session.
+
+```bash
+perclst summarize
+perclst summarize --label survey          # sessions with label "survey"
+perclst summarize --like "refactor"       # sessions whose name contains "refactor"
+perclst summarize --format json           # machine-readable output (emits [] when empty)
+```
+
+| Option | Description |
+|--------|-------------|
+| `--label <label>` | Filter to sessions that have this label |
+| `--like <pattern>` | Filter to sessions whose name contains this string |
+| `-f, --format <fmt>` | Output format: `text` (default) or `json` |
+
+---
 
 ## `rename`
 
