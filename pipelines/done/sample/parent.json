@@ -1,0 +1,16 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "sample__child1.json",
+      "name": "describe-readme",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "sample__child2.json",
+      "name": "describe-usage",
+      "done": true
+    }
+  ]
+}
