@@ -2,7 +2,8 @@
   "tasks": [
     {
       "type": "script",
-      "command": "rm -f .claude/tmp/review-unit-test-validators-cli-arg-format"
+      "command": "rm -f .claude/tmp/review-unit-test-validators-cli-arg-format",
+      "done": true
     },
     {
       "type": "pipeline",
@@ -24,7 +25,8 @@
             "mcp__perclst__ts_analyze",
             "mcp__perclst__ts_get_references",
             "mcp__perclst__ts_get_types"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -43,7 +45,8 @@
           "rejected": {
             "to": "implement-unit-test-validators-cli-arg-format",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -51,16 +54,22 @@
           "rejected": {
             "to": "implement-unit-test-validators-cli-arg-format",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
       "name": "implement-unit-test-validators-cli-arg-format",
       "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(validators): ...).",
       "model": "haiku",
-      "allowed_tools": ["Read", "Bash"]
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
     }
   ]
 }
