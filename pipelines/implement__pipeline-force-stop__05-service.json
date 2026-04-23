@@ -1,0 +1,64 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-force-stop-service"
+    },
+    {
+      "type": "pipeline",
+      "name": "force-stop-service",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-force-stop-service",
+          "task": "Read plans/pipeline-force-stop.md for the full design and gotcha G2 (container.register takes instances, NOT descriptors) before writing any code. Foundation through domain layers must already be committed.\n\nImplement the service layer changes for the pipeline-force-stop feature:\n\n1. Create src/services/abortService.ts (File 2 in the plan)\n   - Export class AbortService\n   - private controller = new AbortController()\n   - get signal(): AbortSignal — returns this.controller.signal\n   - abort(): void — calls this.controller.abort()\n   - No constructor params\n\n2. Modify src/services/pipelineService.ts (File 7 in the plan)\n   - Import PipelineAbortedError from src/errors/pipelineAbortedError.ts\n   - At the top of the while loop in run(), add: if (options.signal?.aborted) throw new PipelineAbortedError()\n   - This check fires between tasks (after a task completes, before the next starts)\n\nRun ts_checker after all changes.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-force-stop-service",
+          "task": "target_path: src/services\nng_output_path: .claude/tmp/review-force-stop-service\n\nReview the pipeline-force-stop service layer changes:\n1. src/services/abortService.ts: new class, private AbortController, signal getter, abort() method, no constructor params\n2. src/services/pipelineService.ts: while loop begins with `if (options.signal?.aborted) throw new PipelineAbortedError()`\n3. PipelineAbortedError is imported from src/errors/pipelineAbortedError.ts (not inline)\n4. No business logic in AbortService beyond signal delegation\n5. No layer violations: services/ must not import from repositories/ or infrastructures/",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-force-stop-service",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-force-stop-service",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-force-stop-service",
+      "task": "Service layer changes are complete and passing. Commit the following files with an appropriate conventional commit message:\n- src/services/abortService.ts (new)\n- src/services/pipelineService.ts (abort check added to while loop)\n\nSuggested message: feat(service): add AbortService and between-task abort check in pipelineService",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

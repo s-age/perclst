@@ -1,0 +1,64 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-force-stop-domain"
+    },
+    {
+      "type": "pipeline",
+      "name": "force-stop-domain",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-force-stop-domain",
+          "task": "Read plans/pipeline-force-stop.md for the full design and gotcha G5 (fork() not forwarding signal) before writing any code. Foundation, infrastructure, and repository layers must already be committed.\n\nImplement the domain layer changes for the pipeline-force-stop feature:\n\n1. Modify src/domains/agent.ts (File 11 in the plan)\n   - In run(): forward options.signal as the third argument to this.claudeCodeRepo.dispatch(action, onStreamEvent, options.signal)\n   - In fork(): also add signal forwarding to dispatch() — see G5 in the plan (fork() calls dispatch() too but the plan originally missed it)\n\n2. Modify src/domains/pipeline.ts (File 8 in the plan)\n   - In buildExecuteOptions(): add `signal: options.signal` to the returned ExecuteOptions object\n\nRun ts_checker after all changes.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-force-stop-domain",
+          "task": "target_path: src/domains\nng_output_path: .claude/tmp/review-force-stop-domain\n\nReview the pipeline-force-stop domain layer changes:\n1. src/domains/agent.ts: run() passes options.signal as third arg to dispatch(); fork() also forwards signal to dispatch()\n2. src/domains/pipeline.ts: buildExecuteOptions() includes signal: options.signal in the returned object\n3. No direct I/O calls (no fs, fetch, exec, ts-morph) in domains/\n4. No layer violations: domains/ must not import from infrastructures/ or services/",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-force-stop-domain",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-force-stop-domain",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-force-stop-domain",
+      "task": "Domain layer changes are complete and passing. Commit the following files with an appropriate conventional commit message:\n- src/domains/agent.ts (signal forwarded in run() and fork())\n- src/domains/pipeline.ts (signal forwarded in buildExecuteOptions())\n\nSuggested message: feat(domain): propagate AbortSignal through agent and pipeline domains",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

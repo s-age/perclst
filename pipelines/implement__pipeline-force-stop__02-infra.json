@@ -1,0 +1,64 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-force-stop-infra"
+    },
+    {
+      "type": "pipeline",
+      "name": "force-stop-infra",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-force-stop-infra",
+          "task": "Read plans/pipeline-force-stop.md for the full design and ALL reuse notes (R2, R3, R4) before writing any code. The foundation layer (errors/ and types/) must already be committed.\n\nImplement the infrastructure layer change for the pipeline-force-stop feature:\n\nModify src/infrastructures/claudeCode.ts (File 12 in the plan):\n- Add `signal?: AbortSignal` parameter to runClaude()\n- Define onAbort = (): void => { if (!child.killed) child.kill('SIGTERM') }\n- Register: signal?.addEventListener('abort', onAbort, { once: true })\n- In the finally block: call signal?.removeEventListener('abort', onAbort)\n  DO NOT add a redundant child.kill() — the existing finally guard already covers it (R2)\n- After the try/finally that yields stdout, add: if (signal?.aborted) return\n  This skips the non-zero exit check when the kill was intentional (R3)\n- Only reach the closePromise await and RawExitError throw when signal is not aborted\n\nKey gotchas:\n- R2: child.killed is true after SIGTERM, the existing finally guard skips the redundant kill\n- R3: closePromise resolves (not rejects) when child closes, so early return is safe\n- R4: classifyExitError is never reached on the abort path (runClaude returns, not throws)\n\nRun ts_checker after all changes.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-force-stop-infra",
+          "task": "target_path: src/infrastructures\nng_output_path: .claude/tmp/review-force-stop-infra\n\nReview src/infrastructures/claudeCode.ts for the pipeline-force-stop infra changes:\n1. runClaude() has new optional signal?: AbortSignal parameter\n2. Abort listener calls child.kill('SIGTERM') with !child.killed guard\n3. addEventListener uses { once: true }\n4. removeEventListener is called in finally\n5. No extra child.kill() added to finally (redundant — existing guard handles it)\n6. Early return `if (signal?.aborted) return` placed AFTER the try/finally block, BEFORE the closePromise await\n7. No layer violations: infrastructures/ must not import from repositories/, domains/, or services/",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-force-stop-infra",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-force-stop-infra",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-force-stop-infra",
+      "task": "Infrastructure layer changes are complete and passing. Commit src/infrastructures/claudeCode.ts with an appropriate conventional commit message.\n\nSuggested message: feat(infra): add AbortSignal support to runClaude — kill child on abort",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

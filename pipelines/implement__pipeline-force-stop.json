@@ -1,0 +1,28 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "perclst run pipelines/implement__pipeline-force-stop__01-foundation.json"
+    },
+    {
+      "type": "script",
+      "command": "perclst run pipelines/implement__pipeline-force-stop__02-infra.json"
+    },
+    {
+      "type": "script",
+      "command": "perclst run pipelines/implement__pipeline-force-stop__03-repository.json"
+    },
+    {
+      "type": "script",
+      "command": "perclst run pipelines/implement__pipeline-force-stop__04-domain.json"
+    },
+    {
+      "type": "script",
+      "command": "perclst run pipelines/implement__pipeline-force-stop__05-service.json"
+    },
+    {
+      "type": "script",
+      "command": "perclst run pipelines/implement__pipeline-force-stop__06-di-cli.json"
+    }
+  ]
+}

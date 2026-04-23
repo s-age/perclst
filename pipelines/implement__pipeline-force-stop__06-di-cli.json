@@ -1,0 +1,64 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-force-stop-di-cli"
+    },
+    {
+      "type": "pipeline",
+      "name": "force-stop-di-cli",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-force-stop-di-cli",
+          "task": "Read plans/pipeline-force-stop.md for the full design and ALL gotchas (G1–G5) before writing any code. All prior layers must already be committed.\n\nImplement the DI wiring and CLI changes for the pipeline-force-stop feature:\n\n1. Modify src/core/di/identifiers.ts (File 3 in the plan)\n   - Add `AbortService: Symbol.for('AbortService')` to the TOKENS object\n   - Place it under the Services section (alphabetical order or end of block)\n\n2. Modify src/core/di/setup.ts (File 4 in the plan)\n   - Import AbortService from src/services/abortService.ts\n   - In registerServices(): add `container.register(TOKENS.AbortService, new AbortService())`\n   - Use `new AbortService()` (instance) — NOT `{ useClass: AbortService }` (G2: container.register stores as-is)\n\n3. Modify src/cli/commands/run.ts (File 13 in the plan)\n   - Resolve abortService BEFORE the try block so it is accessible in catch:\n     `const abortService = container.resolve<AbortService>(TOKENS.AbortService)`\n   - Register SIGINT AFTER checkUncommittedChanges() returns (G3: reserve the once-shot for pipeline execution):\n     `process.once('SIGINT', () => abortService.abort())`\n   - Pass abortService.signal to executePipeline() (update the call + executePipeline signature if needed)\n   - In the catch block, check abortService.signal.aborted FIRST before all instanceof guards (G1: APIError from empty response races PipelineAbortedError):\n     `if (abortService.signal.aborted) { stdout.print('Aborted.'); process.exit(130) }`\n\nRun ts_checker after all changes.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-force-stop-di-cli",
+          "task": "target_path: src/core/di\nng_output_path: .claude/tmp/review-force-stop-di-cli\n\nAlso review src/cli/commands/run.ts.\n\nReview the pipeline-force-stop DI and CLI layer changes:\n1. src/core/di/identifiers.ts: TOKENS has AbortService: Symbol.for('AbortService')\n2. src/core/di/setup.ts: registers `new AbortService()` (instance, not descriptor)\n3. src/cli/commands/run.ts:\n   a. abortService resolved BEFORE the try block\n   b. process.once('SIGINT') registered AFTER checkUncommittedChanges() returns\n   c. signal passed to executePipeline()\n   d. catch block checks signal.aborted FIRST (before ValidationError and other instanceof guards)\n   e. Prints 'Aborted.' and calls process.exit(130) on abort\n4. cli/ does not import from repositories/ or infrastructures/\n5. DI consistency: TOKENS.AbortService token is registered in setup.ts",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-force-stop-di-cli",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-force-stop-di-cli",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-force-stop-di-cli",
+      "task": "DI and CLI layer changes are complete and passing. Commit the following files with an appropriate conventional commit message:\n- src/core/di/identifiers.ts (AbortService token added)\n- src/core/di/setup.ts (AbortService registered)\n- src/cli/commands/run.ts (SIGINT wired, signal passed, abort catch block)\n\nSuggested message: feat(cli): wire Ctrl+C abort — SIGINT → AbortService → pipeline signal",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

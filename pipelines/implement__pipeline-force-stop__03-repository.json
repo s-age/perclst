@@ -1,0 +1,64 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-force-stop-repository"
+    },
+    {
+      "type": "pipeline",
+      "name": "force-stop-repository",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "implement-force-stop-repository",
+          "task": "Read plans/pipeline-force-stop.md for the full design before writing any code. Foundation and infrastructure layers must already be committed.\n\nImplement the repository layer changes for the pipeline-force-stop feature:\n\n1. Modify src/repositories/ports/agent.ts (File 9 in the plan)\n   - Add optional third parameter `signal?: AbortSignal` to the dispatch() method on IClaudeCodeRepository\n   - This is a non-breaking change (optional param)\n\n2. Modify src/repositories/agentRepository.ts (File 10 in the plan)\n   - Update the dispatch() implementation signature to accept signal?\n   - Forward signal as the last argument when calling this.infra.runClaude(..., signal)\n\nRun ts_checker after all changes.",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__knowledge_search"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-force-stop-repository",
+          "task": "target_path: src/repositories\nng_output_path: .claude/tmp/review-force-stop-repository\n\nReview the pipeline-force-stop repository layer changes:\n1. src/repositories/ports/agent.ts: IClaudeCodeRepository.dispatch() has new optional third param signal?: AbortSignal\n2. src/repositories/agentRepository.ts: dispatch() implementation accepts and forwards signal to this.infra.runClaude()\n3. No business logic added to repository layer\n4. No layer violations: repositories/ must not import from domains/ or services/",
+          "procedure": "review-arch",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_get_references"
+          ],
+          "rejected": {
+            "to": "implement-force-stop-repository",
+            "max_retries": 3
+          }
+        },
+        {
+          "type": "script",
+          "command": "npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "implement-force-stop-repository",
+            "max_retries": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "commit-force-stop-repository",
+      "task": "Repository layer changes are complete and passing. Commit the following files with an appropriate conventional commit message:\n- src/repositories/ports/agent.ts (signal? added to dispatch)\n- src/repositories/agentRepository.ts (signal forwarded to runClaude)\n\nSuggested message: feat(repository): forward AbortSignal through dispatch to runClaude",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
