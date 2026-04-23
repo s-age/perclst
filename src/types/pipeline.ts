@@ -11,6 +11,7 @@ export type PipelineRunOptions = {
   onChildPipelineDone?: (absolutePath: string) => void
   loadChildPipeline?: (absolutePath: string) => Pipeline
   pipelineDir?: string
+  signal?: AbortSignal
 }
 
 export type RejectedContext = {

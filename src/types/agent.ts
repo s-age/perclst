@@ -32,6 +32,7 @@ export type ExecuteOptions = {
   sessionFilePath?: string
   resumeSessionAt?: string
   onStreamEvent?: (event: AgentStreamEvent) => void
+  signal?: AbortSignal
 }
 
 export type AgentRunOptions = {
