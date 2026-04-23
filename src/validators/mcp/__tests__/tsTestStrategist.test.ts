@@ -33,9 +33,7 @@ describe('tsTestStrategistParams schema', () => {
 
     it('has a description', () => {
       const description = getDescription(tsTestStrategistParams.target_file_path)
-      expect(description).toBe(
-        'Path to the target TypeScript implementation file (.ts or .tsx)'
-      )
+      expect(description).toBe('Path to the target TypeScript implementation file (.ts or .tsx)')
     })
 
     it('rejects arrays', () => {
@@ -101,9 +99,7 @@ describe('tsTestStrategistParams schema', () => {
 
     it('has a description', () => {
       const description = getDescription(tsTestStrategistParams.test_file_path)
-      expect(description).toBe(
-        'Path to the corresponding test file (auto-discovered if omitted)'
-      )
+      expect(description).toBe('Path to the corresponding test file (auto-discovered if omitted)')
     })
 
     it('rejects arrays', () => {
