@@ -30,7 +30,8 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
 
   async dispatch(
     action: ClaudeAction,
-    onStreamEvent?: (event: AgentStreamEvent) => void
+    onStreamEvent?: (event: AgentStreamEvent) => void,
+    signal?: AbortSignal
   ): Promise<RawOutput> {
     const args = this.infra.buildArgs(action)
 
@@ -50,7 +51,8 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
         args,
         action.prompt,
         action.workingDir,
-        action.sessionFilePath
+        action.sessionFilePath,
+        signal
       )) {
         processLine(state, line)
         if (onStreamEvent) emitStreamEvents(line, toolNameMap, onStreamEvent)
