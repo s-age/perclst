@@ -10,8 +10,6 @@ When creating, editing, or reviewing any file in `src/cli/`:
 - **Layer responsibility**: `index.ts` registers all `commander` v12 commands, calls `setupContainer()` once, then `program.parse()`. Command handlers resolve services via the DI container, delegate validation to `src/validators/cli/`, and forward business logic to `src/services/`. `display.ts` owns all terminal output (`printResponse`, `printStreamEvent`).
 - **Import allowlist**: `validators`, `services`, `types`, `errors`, `utils`, `constants`, `core/di` — never `repositories` or `infrastructures`.
 
-See [`references/commands.md`](./references/commands.md) for the full command-to-file map (21 commands + PipelineRunner components).
-
 ## Command handler — resolve → validate → call → output → catch
 
 ```ts
@@ -41,6 +39,8 @@ export async function startCommand(task: string, options: RawStartOptions) {
 ```
 
 ## `--output-only` implies all three `--silent-*` flags
+
+`--output-only` is a convenience flag meaning "show only the final text response." It collapses three independent flags into one: `outputOnly == silentThoughts && silentToolCalls && silentUsage`. Treat it as a shorthand, not a fourth flag.
 
 ```ts
 // Good

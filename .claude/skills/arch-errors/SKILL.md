@@ -1,6 +1,6 @@
 ---
 name: arch-errors
-description: "Required for any work in src/errors/. Load before creating, editing, reviewing, or investigating files in this layer. Covers one-class-per-file rule, naming conventions, constructor patterns, and the prohibition on importing other layers."
+description: "Required for any work in src/errors/. Covers one-class-per-file rule, naming conventions, constructor patterns, and the prohibition on importing other layers."
 paths:
   - 'src/errors/**/*.ts'
 ---

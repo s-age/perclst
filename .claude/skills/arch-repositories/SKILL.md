@@ -1,6 +1,6 @@
 ---
 name: arch-repositories
-description: "Required for any work in src/repositories/. Load before creating, editing, reviewing, or investigating files in this layer. Covers dual export, port type placement, atomic operations, and stream-parse patterns."
+description: "Required for any work in src/repositories/. Covers dual export, port type placement, atomic operations, and stream-parse patterns."
 paths:
   - 'src/repositories/**/*.ts'
 ---

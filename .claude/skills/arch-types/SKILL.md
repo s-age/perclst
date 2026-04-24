@@ -1,6 +1,6 @@
 ---
 name: arch-types
-description: "Required for any work in src/types/. Load before creating, editing, reviewing, or investigating files in this layer. Covers shared type placement rules, intra-layer imports, and the prohibition on importing other layers."
+description: "Required for any work in src/types/. Covers shared type placement rules, intra-layer imports, and the prohibition on importing other layers."
 paths:
   - 'src/types/**/*.ts'
 ---

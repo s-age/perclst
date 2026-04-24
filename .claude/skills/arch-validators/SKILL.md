@@ -1,6 +1,6 @@
 ---
 name: arch-validators
-description: "Required for any work in src/validators/. Load before creating, editing, reviewing, or investigating files in this layer. Covers Zod schema construction, rule functions, cli/ validator structure, and safeParse patterns."
+description: "Required for any work in src/validators/. Covers Zod schema construction, rule functions, cli/ validator structure, and safeParse patterns."
 paths:
   - 'src/validators/**/*.ts'
 ---
