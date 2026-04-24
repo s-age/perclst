@@ -35,7 +35,7 @@ flowchart TD
 
     NeedsSkill -- Yes --> NoteSkill[Record which skill provides the How;\nadd Consult line at bottom of file]
     NeedsSkill -- No --> WriteFile
-    NoteSkill --> WriteFile[Write procedures/<name>.md]
+    NoteSkill --> WriteFile[Write procedures/<skill>/<name>.md]
 
     WriteFile --> Verify[Verify all nodes describe What,\nnot How]
     Verify --> Valid{All nodes\nWhat-only?}
@@ -81,7 +81,7 @@ Rules:
 
 - Lowercase, hyphens only: `code-reviewer`, `meta-procedure-creator`
 - Name reflects the agent's role, not the task it was invoked for
-- File lives at `procedures/<name>.md`
+- File lives at `procedures/<skill>/<name>.md`
 
 **Name by purpose, not by the skill reused.**
 
@@ -94,3 +94,15 @@ A procedure orchestrates one or more skills — its name must describe what it a
 | `review-arch` | `arch-reviewer` | adjective before noun — role, not task |
 
 Use a **verb phrase**: `create-*`, `review-*`, `generate-*`, `promote-*`.
+
+## Placement
+
+File lives at `procedures/<skill>/` where `<skill>` is the **subject** — the skill that acts as the agent's primary role — not the domain being operated on.
+
+| Procedure | Skill dir | Reason |
+|:---|:---|:---|
+| `improve-arch-skill` | `meta-skill-creator/` | subject is skill improvement; arch is the target |
+| `meta-curate-knowledge` | `meta-librarian/` | subject is the librarian; knowledge is the target |
+| `review-arch` | `arch/` | subject is arch review; arch is both actor and domain |
+
+When in doubt: ask "which skill describes what this agent *is*?" — not "what does it operate on?"

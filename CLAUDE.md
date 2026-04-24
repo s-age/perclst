@@ -120,7 +120,7 @@ Use `--procedure <name>` to set agent behavior:
 > **Note**: Some procedures require file write access. The `meta-curate-knowledge` procedure needs
 > `--allowed-tools Write Read Bash Glob` or it will stall on permission prompts:
 > ```bash
-> perclst start "Promote all draft knowledge" --procedure meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only
+> perclst start "Promote all draft knowledge" --procedure meta-librarian/meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only
 > ```
 
 ## Development
@@ -141,7 +141,7 @@ npm run build && perclst start "test"
 - `src/lib/agent/claude-cli.ts` - Executes `claude -p` command
 - `src/lib/session/manager.ts` - Session CRUD operations
 - `src/lib/config/resolver.ts` - Config loading with priority
-- `procedures/*.md` - System prompt definitions
+- `procedures/**/*.md` - System prompt definitions (organized by skill)
 
 ## Session File Format
 
@@ -187,7 +187,7 @@ Drop a freeform `.md` file in `knowledge/draft/` with whatever detail you have. 
 
 > **Rule**: Only the `meta-curate-knowledge` procedure may write directly to `knowledge/` (outside of `draft/`). All other agents and conversations must write to `knowledge/draft/` only.
 
-> Run `perclst start "Curate all draft knowledge" --procedure meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only` to promote drafts.
+> Run `perclst start "Curate all draft knowledge" --procedure meta-librarian/meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only` to promote drafts.
 
 ## MCP Tools
 
@@ -219,8 +219,8 @@ This project exposes MCP tools for TypeScript analysis. Use them proactively whe
 ## Common Tasks
 
 **Add a new procedure**:
-1. Create `procedures/<name>.md`
-2. Use with `perclst start "task" --procedure <name>`
+1. Create `procedures/<skill>/<name>.md`
+2. Use with `perclst start "task" --procedure <skill>/<name>`
 
 **Change default model**:
 Edit `src/lib/config/types.ts` → `DEFAULT_CONFIG.model`

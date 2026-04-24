@@ -337,7 +337,7 @@ Equivalent to:
 
 ```bash
 perclst start "Promote all entries in knowledge/draft/ into structured knowledge/ files." \
-  --procedure meta-curate-knowledge \
+  --procedure meta-librarian/meta-curate-knowledge \
   --allowed-tools Write Read Bash Glob \
   --output-only
 ```
@@ -387,7 +387,7 @@ Equivalent to:
 
 ```bash
 perclst start "Search the knowledge base for the following keywords and return a structured summary of findings: keyword1, keyword2" \
-  --procedure meta-retrieve-knowledge \
+  --procedure meta-knowledge-concierge/meta-retrieve-knowledge \
   --output-only
 ```
 

@@ -12,7 +12,7 @@ Applies to any agent or conversation that captures knowledge during a task. Perc
 - All agents and conversations must write freeform notes to `knowledge/draft/` only.
 - Promotion from draft to structured knowledge is done by running:
   ```bash
-  perclst start "Promote all draft knowledge" --procedure meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only
+  perclst start "Promote all draft knowledge" --procedure meta-librarian/meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only
   ```
 - Writing directly to `knowledge/<subdir>/` bypasses curation and violates the project rule.
 
