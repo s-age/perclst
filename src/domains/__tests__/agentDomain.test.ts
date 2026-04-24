@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { IClaudeCodeRepository, IProcedureRepository } from '@src/repositories/ports/agent'
 import type { AgentResponse } from '@src/types/agent'
-import { AgentDomain } from '../agent'
+import { AgentDomain, HEADLESS_SKILL_NOTE } from '../agent'
 import { APIError } from '@src/errors/apiError'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
@@ -51,7 +51,7 @@ describe('AgentDomain', () => {
     expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'start',
-        system: 'You are a conductor.',
+        system: `${HEADLESS_SKILL_NOTE}\n\nYou are a conductor.`,
         prompt: 'Hello'
       }),
       undefined,
@@ -59,7 +59,7 @@ describe('AgentDomain', () => {
     )
   })
 
-  it('should run without a system prompt when no procedure is set', async () => {
+  it('should use headless skill note as system prompt when no procedure is set', async () => {
     const sessionWithoutProcedure = { ...session, procedure: undefined }
 
     await domain.run(sessionWithoutProcedure, 'Hello', false)
@@ -68,7 +68,7 @@ describe('AgentDomain', () => {
     expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'start',
-        system: undefined
+        system: HEADLESS_SKILL_NOTE
       }),
       undefined,
       undefined

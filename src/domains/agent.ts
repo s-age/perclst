@@ -5,6 +5,11 @@ import type { Session } from '@src/types/session'
 import { debug } from '@src/utils/output'
 import { APIError } from '@src/errors/apiError'
 
+export const HEADLESS_SKILL_NOTE = [
+  'The Skill tool is not available in this environment.',
+  'To load a skill, use the Read tool to read `.claude/skills/<skill-name>/SKILL.md` directly.'
+].join(' ')
+
 export class AgentDomain implements IAgentDomain {
   constructor(
     private model: string,
@@ -18,9 +23,10 @@ export class AgentDomain implements IAgentDomain {
     isResume: boolean,
     options: ExecuteOptions = {}
   ): Promise<AgentResponse> {
-    let systemPrompt: string | undefined
+    let systemPrompt: string = HEADLESS_SKILL_NOTE
     if (session.procedure) {
-      systemPrompt = this.procedureRepo.load(session.procedure, session.working_dir)
+      const procedure = this.procedureRepo.load(session.procedure, session.working_dir)
+      systemPrompt = `${HEADLESS_SKILL_NOTE}\n\n${procedure}`
       debug.print('Loaded procedure', { procedure: session.procedure })
     }
 
