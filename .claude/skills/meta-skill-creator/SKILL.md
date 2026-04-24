@@ -3,7 +3,6 @@ name: meta-skill-creator
 description: Create or review a SKILL.md file. Use when writing a new skill, auditing an existing one, or unsure how to structure skill content.
 paths:
   - '.claude/skills/**'
-disable-model-invocation: false
 ---
 
 Write all skill content in **English**, regardless of the project's primary language.
