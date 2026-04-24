@@ -37,7 +37,7 @@ const skillsDirs = [
 if (skillsDirs.length === 0) process.exit(0)
 
 // --- Parse YAML frontmatter from a skill file ---
-// Returns { name, paths } or null if no valid frontmatter
+// Returns { name, paths, autoInject } or null if no valid frontmatter
 function parseFrontmatter(content) {
   const match = content.match(/^---\n([\s\S]*?)\n---\n/)
   if (!match) return null
@@ -49,9 +49,13 @@ function parseFrontmatter(content) {
   const name = nameMatch?.[1].trim()
   if (!name) return null
 
+  // Extract auto-inject (defaults to true)
+  const autoInjectMatch = fm.match(/^auto-inject:\s*(.+)$/m)
+  const autoInject = autoInjectMatch ? autoInjectMatch[1].trim() !== 'false' : true
+
   // Extract paths (YAML list)
   const pathsMatch = fm.match(/^paths:\n((?:  - .+\n?)*)/m)
-  if (!pathsMatch) return { name, paths: [] }
+  if (!pathsMatch) return { name, paths: [], autoInject }
 
   const paths = pathsMatch[1]
     .split('\n')
@@ -66,7 +70,7 @@ function parseFrontmatter(content) {
     })
     .filter(Boolean)
 
-  return { name, paths }
+  return { name, paths, autoInject }
 }
 
 // --- Collect all skills from dirs ---
@@ -82,7 +86,7 @@ function collectSkills(skillsDirs) {
         if (!fm) continue
         // Body is everything after the closing ---
         const body = content.replace(/^---\n[\s\S]*?\n---\n/, '')
-        skills.push({ name: fm.name, paths: fm.paths, body })
+        skills.push({ name: fm.name, paths: fm.paths, autoInject: fm.autoInject, body })
       } catch {}
     }
   }
@@ -128,8 +132,9 @@ const skills = collectSkills(skillsDirs)
 let context = ''
 const newSkills = []
 
-for (const { name, paths, body } of skills) {
+for (const { name, paths, autoInject, body } of skills) {
   if (injectedSet.has(name)) continue
+  if (!autoInject) continue
   if (paths.length === 0) continue
 
   const matches = paths.some(pattern => matchesGlob(relPath, pattern))

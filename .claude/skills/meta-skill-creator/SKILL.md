@@ -1,6 +1,7 @@
 ---
 name: meta-skill-creator
 description: Create or review a SKILL.md file. Use when writing a new skill, auditing an existing one, or unsure how to structure skill content.
+auto-inject: false
 paths:
   - '.claude/skills/**'
 ---
@@ -33,6 +34,7 @@ Bad: `helper`, `stuff`, `myskill`, `utils`
 | `paths` | Gitignore-style globs. Limits auto-activation to matching files. |
 | `disable-model-invocation` | `true` prevents Claude from triggering the skill automatically — use for deployments, commits, or any action the user should invoke explicitly with `/skill-name`. `false` (default) for reference and knowledge skills with no side effects. |
 | `user-invocable` | Omit (default) to allow users to call the skill with `/skill-name`. Set `false` for background knowledge that Claude loads silently — e.g. a `legacy-system-context` skill explaining how an old system works. Running `/legacy-system-context` isn't a meaningful action for users, so hide it. |
+| `auto-inject` | `false` excludes the skill from hook-based injection in headless mode (`claude -p`). The skill can still be loaded by reading the SKILL.md directly. Default `true`. |
 | `allowed-tools` | Tools pre-approved while skill is active. Space-separated: `Bash(git *) Read`. |
 
 ## Content guidelines
