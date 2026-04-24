@@ -82,3 +82,15 @@ Rules:
 - Lowercase, hyphens only: `code-reviewer`, `meta-procedure-creator`
 - Name reflects the agent's role, not the task it was invoked for
 - File lives at `procedures/<name>.md`
+
+**Name by purpose, not by the skill reused.**
+
+A procedure orchestrates one or more skills — its name must describe what it accomplishes, not which skill it calls.
+
+| Good | Bad | Why bad |
+|:---|:---|:---|
+| `create-planning-pipeline` | `meta-pipeline-creator` | skill name, not purpose |
+| `curate-knowledge` | `meta-librarian` | skill name, not purpose |
+| `review-arch` | `arch-reviewer` | adjective before noun — role, not task |
+
+Use a **verb phrase**: `create-*`, `review-*`, `generate-*`, `promote-*`.
