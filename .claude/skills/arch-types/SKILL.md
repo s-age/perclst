@@ -1,6 +1,6 @@
 ---
 name: arch-types
-description: "Required for any work in src/types/. Load before creating, editing, reviewing, or investigating files in this layer. Covers shared type placement rules, intra-layer imports, and the prohibition on importing other layers."
+description: "Required for any work in src/types/. Covers shared type placement rules, intra-layer imports, and the prohibition on importing other layers."
 paths:
   - 'src/types/**/*.ts'
 ---
@@ -11,15 +11,22 @@ Holds **shared data types** for the codebase. Acts as a shared vocabulary layer 
 
 ## Files
 
-| File | Role |
-|------|------|
-| `common.ts` | `ThinkingBlock`, `ToolUseRecord` — low-level primitives shared across agent, infrastructure, and display logic |
-| `session.ts` | `Session`, `CreateSessionParams`, `ResumeSessionParams` |
-| `claudeCode.ts` | `ClaudeAction`, `RawOutput`, `IClaudeCodeRepository` |
-| `agent.ts` | `AgentResponse`, `ExecuteOptions` |
-| `config.ts` | `DisplayConfig`, `AgentLimitsConfig`, `Config` — configuration shape used across CLI, services, and repositories |
-| `display.ts` | `DisplayOptions` — display flag set shared between CLI commands and display helpers |
-| `analysis.ts` | `AnalyzeResult`, `ToolCall`, `ClaudeCodeTurn`, `AnalysisSummary` |
+| File | Key types |
+|------|-----------|
+| `common.ts` | `ThinkingBlock`, `ToolUseRecord` |
+| `session.ts` | `Session`, `CreateSessionParams`, `ResumeSessionParams`, `SweepFilter`, `ListFilter` |
+| `claudeCode.ts` | `ClaudeAction` (union of `StartAction`/`ResumeAction`/`ForkAction`), `RawOutput` |
+| `agent.ts` | `AgentResponse`, `AgentStreamEvent`, `ExecuteOptions`, `AgentRunOptions` |
+| `config.ts` | `DisplayConfig`, `AgentLimitsConfig`, `Config` |
+| `display.ts` | `DisplayOptions`, `TurnRow`, `RowFilter` |
+| `analysis.ts` | `AnalyzeResult`, `ToolCall`, `ClaudeCodeTurn`, `AnalysisSummary`, `ClaudeSessionData` |
+| `checker.ts` | `CheckerResult`, `CheckerOptions`, `RawCommandOutput`, `CommandResult` |
+| `tsAnalysis.ts` | `TypeScriptAnalysis`, `SymbolInfo`, `ImportInfo`, `ExportInfo`, `ReferenceInfo` |
+| `knowledgeSearch.ts` | `KnowledgeSearchOptions`, `KnowledgeSearchResult`, `KnowledgeMatch` |
+| `testStrategy.ts` | `TestStrategyResult`, `FunctionStrategy`, `RawFunctionInfo`, `TestFramework` |
+| `permissionPipe.ts` | `PermissionRequest`, `PermissionResult` |
+| `shell.ts` | `ShellResult` |
+| `pipeline.ts` | `Pipeline`, `PipelineTask`, `PipelineRunOptions`, `AgentPipelineTask` |
 
 ## Import Rules
 

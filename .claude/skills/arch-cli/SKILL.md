@@ -1,42 +1,20 @@
 ---
 name: arch-cli
-description: "Required for any work in src/cli/. Load before creating, editing, reviewing, or investigating files in this layer. Covers command registration, display logic, DI wiring, and commander v12 patterns."
+description: "Required for any work in src/cli/. Covers command registration, DI wiring, display output, and commander v12 patterns."
 paths:
   - 'src/cli/**/*.ts'
 ---
 
-## Role
+When creating, editing, or reviewing any file in `src/cli/`:
 
-Registers commands via `commander` v12, resolves services from the DI container, delegates input validation to `src/validators/cli/`, and delegates all business logic to `src/services/`. `display.ts` owns all terminal output formatting.
+- **Layer responsibility**: `index.ts` registers all `commander` v12 commands, calls `setupContainer()` once, then `program.parse()`. Command handlers resolve services via the DI container, delegate validation to `src/validators/cli/`, and forward business logic to `src/services/`. `display.ts` owns all terminal output (`printResponse`, `printStreamEvent`).
+- **Import allowlist**: `validators`, `services`, `types`, `errors`, `utils`, `constants`, `core/di` — never `repositories` or `infrastructures`.
 
-## Files
-
-| File | Role |
-|------|------|
-| `index.ts` | Calls `setupContainer()`, registers every command, calls `program.parse()` |
-| `display.ts` | `printResponse()` — renders agent response in text or JSON |
-| `commands/start.ts` | `start <task>` — creates and runs a new agent session |
-| `commands/resume.ts` | `resume <session-id> <instruction>` — resumes an existing session |
-| `commands/list.ts` | `list` — prints all sessions |
-| `commands/show.ts` | `show <session-id>` — prints session metadata or full JSON |
-| `commands/delete.ts` | `delete <session-id>` — removes a session |
-| `commands/rename.ts` | `rename <session-id> <name>` — sets a display name |
-| `commands/analyze.ts` | `analyze <session-id>` — analyzes a Claude Code jsonl session |
-| `commands/import.ts` | `import <claude-session-id>` — imports a raw Claude Code session |
-
-## Import Rules
-
-| May import | Must NOT import |
-|-----------|----------------|
-| `validators`, `services`, `types`, `errors`, `utils`, `constants`, `core/di` | `repositories`, `infrastructures` |
-
-## Patterns
-
-**Command handler** — resolve → validate → call → output → catch
+## Command handler — resolve → validate → call → output → catch
 
 ```ts
 // Good
-export async function startCommand(task: string, options: RawStartOptions) {
+export async function startCommand(task: string, options: RawStartOptions): Promise<void> {
   try {
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
     const config = container.resolve<Config>(TOKENS.Config)
@@ -45,9 +23,9 @@ export async function startCommand(task: string, options: RawStartOptions) {
     stdout.print(`Session created: ${sessionId}`)
     printResponse(response, input, config.display, { sessionId })
   } catch (error) {
-    if (error instanceof ValidationError) { stderr.print(`Invalid arguments: ${error.message}`) }
-    else if (error instanceof RateLimitError) { stderr.print(`...`) }
-    else { stderr.print('Failed to start session', error as Error) }
+    if (error instanceof ValidationError) stderr.print(`Invalid arguments: ${error.message}`)
+    else if (error instanceof RateLimitError) stderr.print(`Rate limit reached`)
+    else stderr.print('Failed to start session', error as Error)
     process.exit(1)
   }
 }
@@ -60,35 +38,36 @@ export async function startCommand(task: string, options: RawStartOptions) {
 }
 ```
 
-**`--output-only` flag** — implies all three `--silent-*` flags
+## `--output-only` implies all three `--silent-*` flags
+
+`--output-only` is a convenience flag meaning "show only the final text response." It collapses three independent flags into one: `outputOnly == silentThoughts && silentToolCalls && silentUsage`. Treat it as a shorthand, not a fourth flag.
 
 ```ts
 // Good
 const silentThoughts = opts.outputOnly || opts.silentThoughts
-
 // Bad — treats outputOnly as a fourth independent flag
 if (opts.outputOnly) { /* only hides one thing */ }
 ```
 
-**commander v12 option naming** — kebab-case in `.option()` → camelCase in handler
+## `commander` v12 — kebab-case options → camelCase in handler
 
 ```ts
 // Good
 .option('--allowed-tools <tools...>', '...')   // handler receives: options.allowedTools
 .option('--output-only', '...')                // handler receives: options.outputOnly
-
 // Bad
-.option('--allowedTools <tools...>', '...')    // commander won't camelCase this correctly
+.option('--allowedTools <tools...>', '...')    // commander won't auto-camelCase this
 ```
 
 ## Prohibitions
 
-- Never use `console.log` / `console.error` — always `stdout.print()` (normal output) / `stderr.print()` (errors), both from `@src/utils/output`
+- Never `console.log` / `console.error` — use `stdout.print()` / `stderr.print()` from `@src/utils/output`
 - Never import from `repositories/` or `infrastructures/` — route through a service
-- Never skip `parseXxx()` — always validate raw `options.*` before passing to services
+- Never pass raw `options.*` to services — always run through `parseXxx()` first
 - Never call `setupContainer()` inside command handlers — it belongs only in `index.ts`
 - Never instantiate services directly — use `container.resolve<T>(TOKENS.Xxx)`
 
 ## References
 
-- [`references/split-component.md`](./references/split-component.md) — how to split a large `src/cli/components/` file into a `parts/` subdirectory while keeping all import paths stable
+- [`references/commands.md`](./references/commands.md) — full command list and file roles
+- [`references/split-component.md`](./references/split-component.md) — splitting `src/cli/components/` files into a `parts/` subdirectory

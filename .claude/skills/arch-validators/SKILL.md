@@ -1,6 +1,6 @@
 ---
 name: arch-validators
-description: "Required for any work in src/validators/. Load before creating, editing, reviewing, or investigating files in this layer. Covers Zod schema construction, rule functions, cli/ validator structure, and safeParse patterns."
+description: "Required for any work in src/validators/. Covers Zod schema construction, rule functions, cli/ validator structure, and safeParse patterns."
 paths:
   - 'src/validators/**/*.ts'
 ---
@@ -11,30 +11,14 @@ Owns all input validation for every entry point (CLI, MCP, etc.). Zod is confine
 
 `validators/mcp/` files export Zod shape objects (`{ field: z.string() }`) consumed directly by `server.ts` for `server.tool()` registration. Unlike `cli/` validators, they do not use `safeParse()` or expose `parseXxx()` functions — the MCP SDK handles validation internally.
 
-## Files
+## Sublayers
 
-| File | Role |
-|------|------|
+| Sublayer | Convention |
+|----------|------------|
 | `schema.ts` | `schema()` builder + `safeParse()` — the only file that catches `ZodError` and converts to `ValidationError` |
-| `rules/string.ts` | `stringRule(opts)` — `z.string()` with optional `required`/`min`/`max` |
-| `rules/int.ts` | `intRule(opts)` — `z.coerce.number().int()` with optional `min`/`max` |
-| `rules/stringArray.ts` | `stringArrayRule()` — `z.array(z.string())` |
-| `rules/boolean.ts` | `booleanRule()` — `z.boolean()` |
-| `rules/format.ts` | `formatRule()` — `z.enum(['text', 'json']).default('text')` |
-| `cli/startSession.ts` | Validates `start` command options → `StartSessionInput` |
-| `cli/resumeSession.ts` | Validates `resume` command options → `ResumeSessionInput` |
-| `cli/showSession.ts` | Validates `show` command options → `ShowSessionInput` |
-| `cli/deleteSession.ts` | Validates `delete` command options → `DeleteSessionInput` |
-| `cli/renameSession.ts` | Validates `rename` command options → `RenameSessionInput` |
-| `cli/analyzeSession.ts` | Validates `analyze` command options → `AnalyzeSessionInput` |
-| `cli/importSession.ts` | Validates `import` command options → `ImportSessionInput` |
-| `mcp/askPermission.ts` | Zod shape for `ask_permission` tool params |
-| `mcp/tsAnalyze.ts` | Zod shape for `ts_analyze` tool params |
-| `mcp/tsGetReferences.ts` | Zod shape for `ts_get_references` tool params |
-| `mcp/tsGetTypes.ts` | Zod shape for `ts_get_types` tool params |
-| `mcp/tsTestStrategist.ts` | Zod shape for `ts_test_strategist` tool params |
-| `mcp/knowledgeSearch.ts` | Zod shape for `knowledge_search` tool params |
-| `mcp/tsChecker.ts` | Zod shape for `ts_checker` tool params |
+| `rules/` | One rule function per file: `stringRule`, `intRule`, `stringArrayRule`, `booleanRule`, `formatRule`, `gitRefRule` |
+| `cli/` | One module per CLI command — exports `parseXxx(raw: unknown): XxxInput` and the `XxxInput` type |
+| `mcp/` | One Zod shape object per MCP tool — exported as a plain object and consumed by `server.tool()` |
 
 ## Import Rules
 

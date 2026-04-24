@@ -1,31 +1,20 @@
 ---
 name: arch-repositories
-description: "Required for any work in src/repositories/. Load before creating, editing, reviewing, or investigating files in this layer. Covers atomic operation patterns, dual export style (class + functions), port type placement, and infrastructure adapter usage."
+description: "Required for any work in src/repositories/. Covers dual export, port type placement, atomic operations, and stream-parse patterns."
 paths:
   - 'src/repositories/**/*.ts'
 ---
 
-## Role
+Wraps infrastructure adapters into atomic, domain-meaningful operations. Never exposes raw Node.js I/O — all I/O flows through `infrastructures/`. Owns response shaping: raw infrastructure output (stdout lines, ts-morph handles, raw bytes) is converted to typed domain values here, never inside `infrastructures/`.
 
-Wraps infrastructure adapters into atomic, domain-meaningful operations. Exposes either a class implementing a port type (`IXxxRepository`) or standalone exported functions — never raw Node.js I/O. Also owns all response shaping: raw infrastructure output (process stdout lines, ts-morph `SourceFile` handles, raw file bytes) is converted into typed domain values here, never inside `infrastructures/`.
+## Directory layout
 
-## Files
-
-| File | Role |
-|------|------|
-| `sessions.ts` | Atomic CRUD for perclst sessions — `saveSession`, `loadSession`, `existsSession`, `deleteSession`, `listSessions`, `getSessionPath`; also exports `SessionRepository` |
-| `claudeSessions.ts` | Reads and parses Claude Code JSONL session files — `findEncodedDirBySessionId`, `decodeWorkingDir`, `validateSessionAtDir`, `readClaudeSession`; also exports `ClaudeSessionRepository` |
-| `agentRepository.ts` | Claude CLI adapter for domain use — consumes `ClaudeCodeInfra.runClaude()` generator, pipes lines through `claudeCodeParser.ts`, returns `RawOutput`; exports `ClaudeCodeRepository` implementing `IClaudeCodeRepository` |
-| `tsAnalysisRepository.ts` | TypeScript analysis — calls `TsAnalyzer.getSourceFile()`, delegates extraction to `parsers/tsAnalysisParser.ts` and `parsers/tsAstParser.ts`; exports `TsAnalysisRepository` |
-| `config.ts` | Config loading and path resolution — `loadConfig()`, `resolveSessionsDir()`, `resolveLogsDir()` (standalone functions only, no class) |
-| `procedures.ts` | Procedure markdown loader — `loadProcedure()`, `procedureExists()`; also exports `ProcedureRepository` |
-| `ports/session.ts` | `ISessionRepository` — port contract consumed by `domains/` |
-| `ports/agent.ts` | `IProcedureRepository`, `IClaudeCodeRepository` — port contracts consumed by `domains/` |
-| `ports/analysis.ts` | `IClaudeSessionRepository` — port contract consumed by `domains/` |
-| `parsers/claudeSessionParser.ts` | Raw JSONL types and pure parsing helpers for `claudeSessions.ts` |
-| `parsers/claudeCodeParser.ts` | `StreamEvent` types and incremental parse API (`createParseState`, `processLine`, `finalizeParseState`) — converts raw stream-json lines into `RawOutput`; `parseStreamEvents()` is a batch wrapper kept for test compatibility |
-| `parsers/tsAnalysisParser.ts` | Pure AST-to-type converters — `extractSymbols`, `extractImports`, `extractExports`, `extractTypeDefinition`; takes `SourceFile`, returns `@src/types/tsAnalysis` types |
-| `parsers/tsAstParser.ts` | AST upward traversal — `findContainingSymbol`; takes `SourceFile`, returns `ContainingSymbol` |
+```
+repositories/
+├── *.ts           # Implementations — class (+ optional standalone functions) per domain area
+├── ports/         # IXxx port contracts consumed by domains/; never defined elsewhere
+└── parsers/       # Pure format-specific parsing helpers; no I/O allowed
+```
 
 ## Import Rules
 
@@ -35,129 +24,22 @@ Wraps infrastructure adapters into atomic, domain-meaningful operations. Exposes
 
 ## Patterns
 
-**Dual export style** — class wrapping standalone functions; callers can use either form
+**Dual export** — class wraps standalone functions so callers can use either form; the standalone function is the unit of logic, the class a thin adapter. When there is no injected state (e.g. `config.ts`), export standalone functions only — no class.
 
-```ts
-// Good — sessions.ts: class delegates to the same standalone functions
-export type ISessionRepository = {
-  save(session: Session): void
-  load(sessionId: string): Session
-  exists(sessionId: string): boolean
-  delete(sessionId: string): Promise<void>
-  list(): Session[]
-}
+**Port type placement** — every `IXxx` interface lives in `src/repositories/ports/`, never in the implementation file. Import it with `import type { IXxx } from '@src/repositories/ports/...'`.
 
-export class SessionRepository implements ISessionRepository {
-  constructor(private sessionsDir: string) {}
-  save(session: Session): void { saveSession(this.sessionsDir, session) }
-  load(sessionId: string): Session { return loadSession(this.sessionsDir, sessionId) }
-}
+**Incremental stream parse** — consume an `AsyncGenerator` from infrastructure by maintaining a running parse state (`createParseState` / `processLine` / `finalizeParseState`). Never buffer all lines in a `string[]` before parsing; that causes unbounded memory growth for long-running streams.
 
-export function saveSession(sessionsDir: string, session: Session): void {
-  ensureDir(sessionsDir)
-  writeJson(getSessionPath(sessionsDir, session.id), session)  // infrastructure adapter
-}
+**Extend `fs.ts` before bypassing it** — `infrastructures/fs.ts` exposes JSON/text helpers (`readJson`, `writeJson`, `readText`, `fileExists`, `ensureDir`, etc.). If it lacks an operation you need, add it there first rather than importing `readFileSync` directly in a repository file.
 
-// Bad — repository calling raw Node.js fs directly
-import { writeFileSync } from 'fs'  // NG: raw I/O belongs in infrastructures/
-export function saveSession(sessionsDir: string, session: Session): void {
-  writeFileSync(path, JSON.stringify(session))
-}
-```
-
-**Functions-only repositories** — no class required when there is no injected state
-
-```ts
-// Good — config.ts: pure functions, no class
-export function loadConfig(): Config {
-  const localConfig = loadFromPath(join(`./${CONFIG_DIR_NAME}`, 'config.json'))
-  const globalConfig = loadFromPath(join(homedir(), CONFIG_DIR_NAME, 'config.json'))
-  return { ...DEFAULT_CONFIG, ...globalConfig, ...localConfig }
-}
-
-// Bad — wrapping stateless functions in a class for no reason
-export class ConfigRepository {
-  load(): Config { return loadConfig() }  // NG: unnecessary class overhead
-}
-```
-
-**Port type placement** — `src/repositories/ports/`
-
-Port types (`IXxx`) live in `src/repositories/ports/`, co-located by domain area. Never define them in the repository implementation files.
-
-```ts
-// Good — ISessionRepository is defined in src/repositories/ports/session.ts; import it here
-import type { ISessionRepository } from '@src/repositories/ports/session'
-export class SessionRepository implements ISessionRepository { ... }
-
-// Bad — defining the port type in the repository implementation file
-export type ISessionRepository = { ... }  // NG: belongs in src/repositories/ports/session.ts
-export class SessionRepository implements ISessionRepository { ... }
-```
-
-**Consuming an `AsyncGenerator` from infrastructure** — process lines incrementally via a parse state, never buffer all lines
-
-Infrastructure adapters that stream process output yield raw `string` lines. The repository holds an instance of the infrastructure class, processes each line into a running parse state, and converts to a typed value only at the end. Buffering all lines in a `string[]` before parsing causes unbounded memory growth for long-running streams.
-
-```ts
-// Good — agentRepository.ts: incremental parse state, no line buffer
-import { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
-import { createParseState, processLine, finalizeParseState } from '@src/repositories/parsers/claudeCodeParser'
-
-export class ClaudeCodeRepository implements IClaudeCodeRepository {
-  private infra = new ClaudeCodeInfra()
-
-  async dispatch(action: ClaudeAction): Promise<RawOutput> {
-    const args = this.infra.buildArgs(action)
-    const state = createParseState()
-    for await (const line of this.infra.runClaude(args, action.prompt, action.workingDir)) {
-      processLine(state, line)
-    }
-    return finalizeParseState(state, jsonlBaseline)
-  }
-}
-
-// Bad — buffering all lines before parsing; causes memory growth proportional to stream length
-const lines: string[] = []
-for await (const line of this.infra.runClaude(...)) {
-  lines.push(line)  // NG: holds entire stdout in memory until stream ends
-}
-return parseStreamEvents(lines, jsonlBaseline)
-
-// Bad — parsing inside the infrastructure adapter
-// claudeCode.ts
-async *runClaude(...): Promise<RawOutput> {
-  // collects stdout and calls parseStreamJson() here — NG
-}
-
-// Bad — calling raw fs from repository (infrastructure setup leaking up)
-// agentRepository.ts
-import { writeFileSync } from 'fs'  // NG: raw I/O belongs in infrastructures/
-writeFileSync(mcpConfigPath, buildMcpConfig(), 'utf-8')
-```
-
-**Extend `fs.ts` when an operation is missing, do not bypass it**
-
-`infrastructures/fs.ts` exposes JSON-centric helpers (`readJson`, `writeJson`, `fileExists`, `removeFile`, `listJsonFiles`, `ensureDir`). When a repository needs a text read or typed directory listing that `fs.ts` does not yet provide, add the wrapper to `fs.ts` first.
-
-```ts
-// Good — add readText() to fs.ts, then call it here
-import { readText } from '@src/infrastructures/fs'
-export function loadProcedure(name: string): string {
-  return readText(join(PROCEDURES_DIR, `${name}.md`))
-}
-
-// Bad — importing readFileSync directly in a repository file (current state in
-// procedures.ts and claudeSessions.ts — treat as technical debt, not a pattern to copy)
-import { readFileSync } from 'fs'  // NG: bypasses the infrastructure adapter
-```
+See `examples/patterns.md` for annotated Good/Bad code for each pattern above.
 
 ## Prohibitions
 
-- Never import from `cli`, `services`, or `domains` — the repository layer sits below all of them
-- Never call raw Node.js `fs` functions (`readFileSync`, `writeFileSync`, `readdirSync`, etc.) when `infrastructures/fs` provides the equivalent; if `fs.ts` lacks the operation, extend it there first
+- Never import from `cli`, `services`, or `domains`
+- Never call raw Node.js `fs` functions when `infrastructures/fs` provides the equivalent; extend `fs.ts` first if the operation is missing
 - Never add business logic (validation, branching on domain rules, cross-entity orchestration) — keep every exported function atomic and mechanical
-- Never instantiate a domain class — dependency flows downward only (`domains → repositories`, never the reverse)
+- Never instantiate a domain class — dependency flows downward only
 - Never define a port type (`IXxx`) in a repository implementation file — port types belong in `src/repositories/ports/`
-- Never import from sibling repository implementation files — each file is independent; shared utilities belong in `utils/` or `constants/`; format-specific parsing helpers belong in `parsers/`
-- Never shape data inside `infrastructures/` — if an infrastructure adapter returns raw output (lines, bytes, library handles), collect it here and convert it in a `parsers/` file
+- Never import from sibling repository implementation files — shared utilities belong in `utils/` or `constants/`; parsing helpers belong in `parsers/`
+- Never shape data inside `infrastructures/` — collect raw output here and convert it in a `parsers/` file

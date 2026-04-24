@@ -1,6 +1,6 @@
 ---
 name: arch-services
-description: "Required for any work in src/services/. Load before creating, editing, reviewing, or investigating files in this layer. Covers use-case orchestration, why pass-through services are intentional, and the stable API surface contract."
+description: "Required for any work in src/services/. Pass-through service rationale, import rules, orchestration patterns, and stable API surface contract."
 paths:
   - 'src/services/**/*.ts'
 ---
@@ -21,10 +21,18 @@ A service that delegates directly to one domain (e.g. `SessionService`) is **not
 
 | File | Role |
 |------|------|
-| `sessionService.ts` | Session CRUD — delegates to `ISessionDomain`; intentionally thin (no orchestration today; may grow) |
-| `agentService.ts` | Agent execution — orchestrates `ISessionDomain` + `IAgentDomain`; implements turn-limit and context-token-limit checks, graceful termination |
+| `sessionService.ts` | Session CRUD — thin pass-through to `ISessionDomain` |
+| `agentService.ts` | Agent execution — orchestrates `ISessionDomain` + `IAgentDomain`; turn-limit and context-token checks, graceful termination |
 | `analyzeService.ts` | Session analysis — delegates to `IAnalyzeDomain` |
-| `importService.ts` | Claude Code session import — coordinates `IImportDomain` (path resolution, validation) + `ISessionDomain` (persistence); assembles the `Session` record |
+| `importService.ts` | Claude Code session import — coordinates `IImportDomain` + `ISessionDomain`; assembles the `Session` record |
+| `abortService.ts` | Cancellation — wraps `AbortController`; provides `signal` and `abort()` to agent/pipeline callers |
+| `checkerService.ts` | Code quality — thin pass-through to `ICheckerDomain` (lint/build/test) |
+| `knowledgeSearchService.ts` | Knowledge base — delegates to `IKnowledgeSearchDomain`; search and draft-entry detection |
+| `permissionPipeService.ts` | Tool permission IPC — delegates to `IPermissionPipeDomain`; poll, respond, askPermission |
+| `pipelineFileService.ts` | Pipeline file I/O — delegates to `IPipelineFileDomain`; load, save, git diff, move-to-done |
+| `pipelineService.ts` | Pipeline execution — orchestrates `IPipelineDomain` + `IScriptDomain`; async generator; retry/rejection routing; nested/child pipelines |
+| `tsAnalysisService.ts` | TypeScript analysis — delegates to `ITsAnalysisDomain`; analyze, getReferences, getTypeDefinitions |
+| `testStrategistService.ts` | Test strategy — thin pass-through to `ITestStrategyDomain` |
 
 ## Import Rules
 
@@ -71,24 +79,6 @@ export class AgentService {
 
     await this.sessionDomain.updateStatus(session.id, 'active')
     return { sessionId: session.id, response }
-  }
-}
-```
-
-**Cross-domain data assembly**
-
-```ts
-// Good — ImportService combines two domains to build a new Session record
-export class ImportService {
-  constructor(private sessionDomain: ISessionDomain, private importDomain: IImportDomain) {}
-
-  async import(claudeSessionId: string, options: ImportOptions = {}): Promise<Session> {
-    const workingDir = options.cwd ?? this.importDomain.resolveWorkingDir(claudeSessionId)
-    if (options.cwd) this.importDomain.validateSession(claudeSessionId, workingDir)
-
-    const session: Session = { id: generateId(), claude_session_id: claudeSessionId, ... }
-    await this.sessionDomain.save(session)
-    return session
   }
 }
 ```
