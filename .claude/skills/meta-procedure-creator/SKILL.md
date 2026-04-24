@@ -3,16 +3,15 @@ name: meta-procedure-creator
 description: Author a new procedure file in procedures/. Use when asked to create or rewrite a procedure, or when designing an agent's behavior.
 paths:
   - 'procedures/**'
-disable-model-invocation: true
 ---
 
 Write all procedure files in **English**, regardless of the project's primary language.
 
 A procedure defines **What** an agent does — never How. How details belong in skills, which are injected at runtime.
 
-## Flowchart
+## Decision flowchart
 
-Every procedure must contain exactly one Mermaid flowchart that drives the agent's decisions:
+Follow this flowchart for every procedure authoring task:
 
 ```mermaid
 flowchart TD
@@ -54,7 +53,7 @@ A node is **What** if it names an outcome or decision. It is **How** if it descr
 | `Write the output file` | `Use Write tool with frontmatter template` |
 | `Verify completeness` | `Check that Keywords line is present` |
 
-If a node is How, strip it and add a `Consult the \`<skill>\` skill` line at the bottom of the procedure file instead.
+Strip How nodes and add a `Consult the \`<skill>\` skill` line at the bottom instead.
 
 ## File format
 
@@ -80,6 +79,6 @@ Rules:
 
 ## Naming
 
-- Use lowercase, hyphens only: `code-reviewer`, `meta-procedure-creator`
+- Lowercase, hyphens only: `code-reviewer`, `meta-procedure-creator`
 - Name reflects the agent's role, not the task it was invoked for
 - File lives at `procedures/<name>.md`
