@@ -61,7 +61,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -79,7 +80,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -95,7 +97,8 @@
           "rejected": {
             "to": "improve-skill-arch-cli-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -103,9 +106,11 @@
           "rejected": {
             "to": "improve-skill-arch-cli-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -115,7 +120,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -133,7 +139,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -149,7 +156,8 @@
           "rejected": {
             "to": "improve-skill-arch-domains-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -157,9 +165,11 @@
           "rejected": {
             "to": "improve-skill-arch-domains-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -169,7 +179,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -187,7 +198,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -203,7 +215,8 @@
           "rejected": {
             "to": "improve-skill-arch-errors-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -211,9 +224,11 @@
           "rejected": {
             "to": "improve-skill-arch-errors-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -223,7 +238,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -241,7 +257,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -257,7 +274,8 @@
           "rejected": {
             "to": "improve-skill-arch-infrastructures-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -265,9 +283,11 @@
           "rejected": {
             "to": "improve-skill-arch-infrastructures-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -277,7 +297,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -295,7 +316,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -311,7 +333,8 @@
           "rejected": {
             "to": "improve-skill-arch-mcp-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -319,9 +342,11 @@
           "rejected": {
             "to": "improve-skill-arch-mcp-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -331,7 +356,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -349,7 +375,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -365,7 +392,8 @@
           "rejected": {
             "to": "improve-skill-arch-repositories-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -373,9 +401,11 @@
           "rejected": {
             "to": "improve-skill-arch-repositories-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -385,7 +415,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -403,7 +434,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -419,7 +451,8 @@
           "rejected": {
             "to": "improve-skill-arch-services-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -427,9 +460,11 @@
           "rejected": {
             "to": "improve-skill-arch-services-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -439,7 +474,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -457,7 +493,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -473,7 +510,8 @@
           "rejected": {
             "to": "improve-skill-arch-types-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -481,9 +519,11 @@
           "rejected": {
             "to": "improve-skill-arch-types-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -493,7 +533,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -511,7 +552,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -527,7 +569,8 @@
           "rejected": {
             "to": "improve-skill-arch-utils-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -535,9 +578,11 @@
           "rejected": {
             "to": "improve-skill-arch-utils-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -547,7 +592,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     },
     {
       "type": "pipeline",
@@ -565,7 +611,8 @@
             "Edit",
             "Bash",
             "Glob"
-          ]
+          ],
+          "done": true
         },
         {
           "type": "agent",
@@ -581,7 +628,8 @@
           "rejected": {
             "to": "improve-skill-arch-validators-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         },
         {
           "type": "script",
@@ -589,9 +637,11 @@
           "rejected": {
             "to": "improve-skill-arch-validators-implementer",
             "max_retries": 3
-          }
+          },
+          "done": true
         }
-      ]
+      ],
+      "done": true
     },
     {
       "type": "agent",
@@ -601,7 +651,8 @@
       "allowed_tools": [
         "Read",
         "Bash"
-      ]
+      ],
+      "done": true
     }
   ]
 }
