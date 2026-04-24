@@ -1,224 +1,100 @@
 ---
 name: meta-pipeline-creator
-description: Author a new pipeline JSON file in pipelines/. Use when asked to create a pipeline, convert a manual workflow into an automated run, or add tasks to an existing pipeline.
+description: Author or edit pipeline JSON files in pipelines/. Trigger: create a pipeline, automate a workflow, or add tasks to an existing pipeline.
 paths:
   - 'pipelines/**'
-disable-model-invocation: true
 ---
 
 Write all pipeline content in **English**, regardless of the project's primary language.
 
-## Reading before writing
-
-Before drafting a pipeline:
+## Before writing
 
 1. Read `src/types/pipeline.ts` — authoritative schema for all task fields.
-2. Read an existing pipeline in `pipelines/` — use it as a structural reference.
-3. If tasks will use a procedure, read `procedures/<name>.md` to understand what inputs the agent needs and which tools it calls internally.
+2. Read an existing pipeline in `pipelines/` — use as structural reference.
+3. If tasks will use a procedure, read `procedures/<name>.md` to confirm required inputs and which tools it calls.
 
-## Naming pipeline files
+## Naming files
 
-**MANDATORY**: New pipeline files MUST be placed in the `pipelines/` root directory. NEVER create new pipeline files inside `pipelines/done/` — that directory is reserved exclusively for pipelines that have already been run and archived.
+Place new pipelines in `pipelines/` root. **Never** create files inside `pipelines/done/`.
 
-Pipeline filenames use `__` (double-underscore) as the namespace separator and `-` as the word separator within a segment:
-
-```
-<namespace>__<namespace>__<name>.json
-unit-test__infrastructures__commandrunner-projectroot.json
-```
-
-- Each `__`-separated segment becomes a directory level when the file is moved to `done/`
-- Use lowercase and hyphens within segments; no underscores, no camelCase
-- Always place the new file at `pipelines/<namespace>__<namespace>__<name>.json`, never in a subdirectory
+Filename format: `<namespace>__<namespace>__<name>.json`
+- `__` separates namespace segments; `-` separates words within a segment
+- All lowercase; no underscores within segments, no camelCase
 
 ## Naming tasks
 
-Task `name` doubles as the resume key — a second pipeline run resumes the named session instead of starting fresh. Choose names that are:
+`name` doubles as the resume key — a second run resumes the named session instead of starting fresh.
 
-- Scoped: `<pipeline-stem>-<target>` (e.g. `unit-test-domains-analyze`)
-- Stable: don't encode dates or run numbers
-- Unique across all pipelines in the repo
+- Format: `<taskName>-<role>` where role is a noun: `implementer`, `reviewer`, `committer`
+  (e.g. `unit-test-foo-service-implementer`, `unit-test-foo-service-reviewer`)
+- Stable: no dates or run numbers; unique across all pipelines in the repo
 
-Omit `name` only when the task must always start fresh (stateless or one-shot).
+Omit `name` only for stateless or one-shot tasks.
 
-## Choosing allowed_tools
+## `allowed_tools`
 
-Start from the minimum set the agent needs, then add:
+Start minimal, then add:
+1. Standard tools: `Read`, `Write`, `Edit`, `Bash`
+2. MCP tools the procedure calls — full name `mcp__<server>__<tool>` (e.g. `mcp__perclst__ts_test_strategist`). Missing MCP tools stall the run on a permission prompt.
 
-1. Standard tools the procedure reads/writes with: `Read`, `Write`, `Edit`, `Bash`
-2. **MCP tools the procedure calls** — list each by full name `mcp__<server>__<tool>`.
-   Without this, the run stalls on a permission prompt mid-automation.
-   Check the procedure's flowchart for tool names (e.g. `ts_test_strategist` → `mcp__perclst__ts_test_strategist`).
+## Procedures
 
-## Assigning procedures
+- Set `procedure` when the task description would otherwise duplicate the procedure's flowchart logic.
+- Keep `task` minimal — pass only required inputs (e.g. `target_file_path: src/foo.ts`).
+- `procedure` applies on session **start** only; ignored on resume.
 
-- Set `procedure` on agent tasks when the task description would otherwise duplicate the procedure's flowchart logic.
-- Keep `task` minimal when a procedure is set — pass only what the procedure needs as input (e.g. `target_file_path: src/foo.ts`).
-- `procedure` is applied on session **start** only; it is ignored on resume.
+## Nested pipelines
 
-## Nested pipeline tasks
+Use `type: "pipeline"` to group sequences under a named unit. `name` is required (doubles as `rejected.to` target).
 
-Use `type: "pipeline"` to group a sequence of tasks under a single named unit:
+Use a nested pipeline when:
+- An outer `script` rejection needs to re-run a multi-agent sequence, not just one agent.
+- Multiple independent targets each need isolated failure handling.
 
+Multiple targets → sibling `pipeline` tasks at the top level.
+
+## `ng_output_path` (review rejection)
+
+When a review agent should reject the implement agent:
+- Pass `ng_output_path: .claude/tmp/<review-agent-name>` in the review agent's `task`.
+- Set `rejected` on the review agent pointing to the implement agent.
+- The review agent writes rejection feedback to that file; perclst loops back with it as feedback.
+
+**Stale file cleanup**: Add a `script` task as the **first** item in the outer `tasks` array to delete the file before the pipeline runs:
 ```json
-{
-  "type": "pipeline",
-  "name": "unit-test-foo-service",
-  "tasks": [...]
-}
+{ "type": "script", "command": "rm -f .claude/tmp/<ng-output-path-name>" }
 ```
 
-`name` is required — it doubles as the `rejected.to` target for outer script tasks.
+## Script gates and rejection loops
 
-**When to use a nested pipeline:**
+Add a `script` task after each agent (or nested pipeline) that produces testable output:
+- `command`: `npm run test:unit` (not `npm run test`)
+- `rejected.to`: the agent or pipeline name to fix the failure
+- `rejected.max_retries`: 2–3 is usually sufficient
+- The referenced `name` must appear **before** the script task in the same `tasks` array
 
-- An outer `script` rejection needs to re-run a multi-agent sequence (implement → review → commit), not just a single agent.
-- Multiple independent targets (e.g. one service file each) should each get their own named pipeline so failures are isolated and `rejected.to` is unambiguous.
+## Commit task
 
-**Multiple independent targets** — place each as a sibling `pipeline` task at the top level:
+Assign the commit task to the **implement agent** (resume the same named session). Never create a standalone commit agent — the implement agent leaves knowledge after committing and has the full context of what changed and why.
 
-```json
-{
-  "tasks": [
-    { "type": "pipeline", "name": "unit-test-foo-service", "tasks": [...] },
-    { "type": "pipeline", "name": "unit-test-bar-service", "tasks": [...] }
-  ]
-}
-```
+Place the commit agent **outside** the nested pipeline, after the outer script gate. Use the **same `name`** as the implement agent so perclst resumes the existing session.
 
-## Agent-level rejection via `ng_output_path`
+See `examples/commit-pattern.json` for a complete working example.
 
-When a review agent should reject the preceding implement agent (within a nested pipeline), use the `ng_output_path` pattern:
-
-- Pass `ng_output_path: .claude/tmp/<review-agent-name>` in the review agent's `task` field.
-- The review agent writes rejection feedback to that file; perclst loops back to the implement agent with the file contents as feedback.
-- Set `rejected` on the review agent task (not the script task) pointing to the implement agent.
-
-```json
-{
-  "type": "agent",
-  "name": "review-unit-test-foo-service",
-  "task": "target_file_path: src/services/fooService.ts\nng_output_path: .claude/tmp/review-unit-test-foo-service",
-  "procedure": "review-unit-test",
-  "rejected": {
-    "to": "implement-unit-test-foo-service",
-    "max_retries": 3
-  }
-}
-```
-
-### Cleaning up stale `ng_output_path` files
-
-If a pipeline is re-run after a previous run that wrote to `ng_output_path`, the stale file will cause downstream agents to skip the "no issues" early-exit and proceed as if issues were found. To prevent this, add a `script` task at the top of the outer `tasks` array to delete the file before the review agent runs:
-
-```json
-{
-  "type": "script",
-  "command": "rm -f .claude/tmp/<ng-output-path-name>"
-}
-```
-
-This must be the **first** task in the outer array — before the initial review agent.
-
-## Script tasks and rejection loops
-
-Add a `script` task after agent tasks when external validation (e.g. `npm run test:unit`) should gate progress:
-
-- Set `rejected.to` to the **agent or pipeline** task name that should fix the failure.
-- Set `rejected.max_retries` (default 1); 2–3 is usually enough before aborting.
-- The named task must appear **before** the script task in the array.
-
-## Quality check gates
-
-Place a `script` gate immediately after each agent task (or nested pipeline) that produces testable output. Use `npm run test:unit` — not `npm run test` — as the validation command.
-
-```json
-{
-  "type": "script",
-  "command": "npm run test:unit",
-  "rejected": {
-    "to": "<preceding-agent-or-pipeline-name>",
-    "max_retries": 3
-  }
-}
-```
-
-When a pipeline has multiple independent agent tasks (e.g. one per file), give each its own gate so a failure is caught and fixed before the next agent starts.
-
-## Committing after a successful run
-
-The commit task **must always be assigned to the implement agent** (i.e. resume the same named session, not a separate agent task). Do not create a standalone `haiku` commit agent.
-
-**Why**: The implement agent has lived through the full implement → review → check-gate cycle. Resuming that session lets it write a commit message grounded in the actual changes it made and the feedback it received — which in turn feeds the knowledge accumulation pipeline. A separate commit agent has no context and produces shallow messages.
-
-The commit agent sits **outside** the nested pipeline, at the top-level `tasks` array — after the pipeline group and any outer script gate:
-
-```json
-{
-  "tasks": [
-    {
-      "type": "script",
-      "command": "rm -f .claude/tmp/review-unit-test-foo-service"
-    },
-    {
-      "type": "pipeline",
-      "name": "unit-test-foo-service",
-      "tasks": [
-        {
-          "type": "agent",
-          "name": "implement-unit-test-foo-service",
-          "task": "target_file_path: src/services/fooService.ts",
-          "procedure": "implement-unit-test",
-          "model": "haiku",
-          "allowed_tools": ["Read", "Write", "Edit", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker", "mcp__perclst__ts_analyze", "mcp__perclst__ts_get_references", "mcp__perclst__ts_get_types"]
-        },
-        {
-          "type": "agent",
-          "name": "review-unit-test-foo-service",
-          "task": "target_file_path: src/services/fooService.ts\nng_output_path: .claude/tmp/review-unit-test-foo-service",
-          "procedure": "review-unit-test",
-          "model": "haiku",
-          "allowed_tools": ["Read", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_analyze", "mcp__perclst__ts_get_references", "mcp__perclst__ts_get_types"],
-          "rejected": { "to": "implement-unit-test-foo-service", "max_retries": 3 }
-        },
-        {
-          "type": "script",
-          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
-          "rejected": { "to": "implement-unit-test-foo-service", "max_retries": 3 }
-        }
-      ]
-    },
-    {
-      "type": "agent",
-      "name": "implement-unit-test-foo-service",
-      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(layer): ...).",
-      "model": "haiku",
-      "allowed_tools": ["Read", "Bash"]
-    }
-  ]
-}
-```
-
-Note: reuse the **same `name`** as the implement agent so perclst resumes the existing session.
-
-## Running a pipeline
-
-After writing the file, run it with:
+## Running
 
 ```bash
 perclst run pipelines/<name>.json
 ```
 
-## Verification checklist
+## Checklist
 
-Before writing the file:
-
-- [ ] File is placed at `pipelines/<name>.json` — NOT inside `pipelines/done/` or any subdirectory
-- [ ] Filename uses `__` (double-underscore) as namespace separator, `-` within segments, all lowercase
+- [ ] File at `pipelines/<name>.json` — not in `pipelines/done/` or a subdirectory
+- [ ] Filename: `__` namespace separators, `-` word separators, all lowercase
 - [ ] Every MCP tool called by a procedure is listed in `allowed_tools`
-- [ ] `rejected.to` references an existing `name` (agent or pipeline) visible in the same `tasks` array scope
-- [ ] Task names are unique and follow `<stem>-<target>` convention
-- [ ] `task` text is minimal when a `procedure` is set
-- [ ] Each agent task that produces testable output is followed by a `npm run test:unit` gate
-- [ ] Review agents that use `ng_output_path` have `rejected` set pointing to the implement agent
-- [ ] Nested pipeline `name` is set (required for `rejected.to` targeting)
+- [ ] `rejected.to` names an existing task in the same `tasks` array scope
+- [ ] Task names unique, follow `<taskName>-<role>` convention (role is a noun: `implementer`, `reviewer`, `committer`)
+- [ ] `task` text minimal when `procedure` is set
+- [ ] Each agent with testable output is followed by a `npm run test:unit` gate
+- [ ] Review agents with `ng_output_path` have `rejected` pointing to the implement agent
+- [ ] Nested pipeline `name` is set
