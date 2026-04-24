@@ -305,6 +305,54 @@ describe('PipelineService', () => {
       expect(agentCalls).toHaveLength(2)
       expect(agentCalls[1][3]).toEqual(rejectionContext)
     })
+
+    it('should mark all tasks done after successful retry with onTaskDone', async () => {
+      vi.mocked(mockScriptDomain.run)
+        .mockResolvedValueOnce({ exitCode: 1, stdout: 'error', stderr: '' })
+        .mockResolvedValueOnce({ exitCode: 0, stdout: 'ok', stderr: '' })
+      vi.mocked(mockPipelineDomain.resolveScriptRejection)
+        .mockReturnValueOnce(stubRejectionResult(0))
+        .mockReturnValue(undefined)
+
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'fix code', name: 'fixer' },
+          { type: 'script', command: 'check', rejected: { to: 'fixer', max_retries: 2 } }
+        ]
+      }
+      const onTaskDone = vi.fn((_taskPath: number[], taskIndex: number) => {
+        pipeline.tasks[taskIndex].done = true
+      })
+
+      await collectEvents(pipeline, { onTaskDone })
+
+      expect(pipeline.tasks[0].done).toBe(true)
+      expect(pipeline.tasks[1].done).toBe(true)
+    })
+
+    it('should not affect done flags when script has no rejection config', async () => {
+      vi.mocked(mockScriptDomain.run).mockResolvedValue({
+        exitCode: 1,
+        stdout: 'fail',
+        stderr: ''
+      })
+      vi.mocked(mockPipelineDomain.resolveScriptRejection).mockReturnValue(undefined)
+
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'work', name: 'worker' },
+          { type: 'script', command: 'check' }
+        ]
+      }
+      const onTaskDone = vi.fn((_taskPath: number[], taskIndex: number) => {
+        pipeline.tasks[taskIndex].done = true
+      })
+
+      await collectEvents(pipeline, { onTaskDone })
+
+      expect(pipeline.tasks[0].done).toBe(true)
+      expect(pipeline.tasks[1].done).toBe(true)
+    })
   })
 
   describe('outerRejection parameter', () => {
