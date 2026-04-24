@@ -1,0 +1,123 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "relocate-agent",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-agent.md\nknowledge_dir: knowledge/agent\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-architectures",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-architectures.md\nknowledge_dir: knowledge/architectures\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-cli-commands",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-cli-commands.md\nknowledge_dir: knowledge/cli-commands\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-git",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-git.md\nknowledge_dir: knowledge/git\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-ink",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-ink.md\nknowledge_dir: knowledge/ink\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-javascript",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-javascript.md\nknowledge_dir: knowledge/javascript\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-mcp-tools",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-mcp-tools.md\nknowledge_dir: knowledge/mcp-tools\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-meta-skill-creator",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-meta-skill-creator.md\nknowledge_dir: knowledge/meta-skill-creator\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-pipeline",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-pipeline.md\nknowledge_dir: knowledge/pipeline\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-procedure",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-procedure.md\nknowledge_dir: knowledge/procedure\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-react",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-react.md\nknowledge_dir: knowledge/react\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-security",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-security.md\nknowledge_dir: knowledge/security\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-shell",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-shell.md\nknowledge_dir: knowledge/shell\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-testing",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-testing.md\nknowledge_dir: knowledge/testing\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-utils",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-utils.md\nknowledge_dir: knowledge/utils\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-validation",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-validation.md\nknowledge_dir: knowledge/validation\n\nRead the Relocation Suggestions section of source_report. If there are no suggestions, stop — nothing to do.\n\nFor each suggested relocation: move the file with `mv <source> <target>`. Create the target directory first with `mkdir -p` if it does not exist.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "relocate-commit",
+      "model": "claude-sonnet-4-6",
+      "task": "Run `git status` to see what was moved. Stage all changes in knowledge/ with `git add knowledge/` and commit with a conventional commit message (e.g. `refactor(knowledge): relocate misplaced entries per audit`). If there is nothing to commit, stop.",
+      "allowed_tools": ["Bash"]
+    }
+  ]
+}
