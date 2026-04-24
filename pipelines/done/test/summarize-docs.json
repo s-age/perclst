@@ -1,0 +1,24 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "summarize-readme",
+      "task": "README.md を読んで、その内容を1行で説明してください。",
+      "model": "haiku",
+      "allowed_tools": [
+        "Read"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "summarize-usage",
+      "task": "docs/USAGE.md を読んで、その内容を1行で説明してください。",
+      "model": "haiku",
+      "allowed_tools": [
+        "Read"
+      ],
+      "done": true
+    }
+  ]
+}

@@ -89,8 +89,12 @@ export class ClaudeCodeInfra {
     child.on('error', (err) => {
       spawnError = new APIError(`Failed to spawn claude: ${err.message}`)
     })
+    const STDERR_TAIL_MAX = 16 * 1024
     child.stderr.on('data', (chunk: Buffer) => {
       stderr += chunk.toString()
+      if (stderr.length > STDERR_TAIL_MAX * 2) {
+        stderr = stderr.slice(-STDERR_TAIL_MAX)
+      }
     })
 
     const onAbort = (): void => {

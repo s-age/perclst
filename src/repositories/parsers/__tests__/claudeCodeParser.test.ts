@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { parseStreamEvents } from '../claudeCodeParser'
+import {
+  parseStreamEvents,
+  createParseState,
+  processLine,
+  finalizeParseState
+} from '../claudeCodeParser'
 
 function lines(...events: object[]): string[] {
   return events.map((e) => JSON.stringify(e))
@@ -157,5 +162,54 @@ describe('parseStreamEvents', () => {
     expect(output.tool_history).toEqual([])
     expect(output.usage).toEqual({ input_tokens: 0, output_tokens: 0 })
     expect(output.message_count).toBe(1)
+  })
+})
+
+describe('history cap', () => {
+  it('caps thoughts at MAX_HISTORY_ENTRIES keeping newest', () => {
+    const state = createParseState()
+    for (let i = 0; i < 210; i++) {
+      processLine(
+        state,
+        JSON.stringify(assistantEvent([{ type: 'thinking', thinking: `thought-${i}` }]))
+      )
+    }
+    const output = finalizeParseState(state, 0)
+    expect(output.thoughts).toHaveLength(200)
+    expect(output.thoughts[0].thinking).toBe('thought-10')
+    expect(output.thoughts[199].thinking).toBe('thought-209')
+  })
+
+  it('caps toolMap at MAX_HISTORY_ENTRIES keeping newest', () => {
+    const state = createParseState()
+    for (let i = 0; i < 210; i++) {
+      processLine(
+        state,
+        JSON.stringify(
+          assistantEvent([{ type: 'tool_use', id: `t-${i}`, name: 'Bash', input: { i } }])
+        )
+      )
+    }
+    const output = finalizeParseState(state, 0)
+    expect(output.tool_history).toHaveLength(200)
+    expect(output.tool_history[0].id).toBe('t-10')
+    expect(output.tool_history[199].id).toBe('t-209')
+  })
+
+  it('preserves message_count regardless of cap', () => {
+    const state = createParseState()
+    for (let i = 0; i < 210; i++) {
+      processLine(
+        state,
+        JSON.stringify(
+          assistantEvent([{ type: 'tool_use', id: `t-${i}`, name: 'Read', input: {} }])
+        )
+      )
+      processLine(state, JSON.stringify(userToolResultEvent(`t-${i}`, `result-${i}`)))
+    }
+    processLine(state, JSON.stringify(resultEvent('done')))
+    const output = finalizeParseState(state, 0)
+    // assistantEventCount=210, userToolResultEventCount=210, baseline=0 → 0+1+210+210=421
+    expect(output.message_count).toBe(421)
   })
 })

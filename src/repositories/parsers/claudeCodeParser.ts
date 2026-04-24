@@ -43,7 +43,14 @@ export type ParseState = {
   userToolResultEventCount: number
 }
 
+const MAX_HISTORY_ENTRIES = 200
+
 const PERMISSION_TOOL_NAME = `mcp__${MCP_SERVER_NAME}__ask_permission`
+
+function evictOldest(map: Map<string, ToolUseRecord>): void {
+  const firstKey = map.keys().next().value
+  if (firstKey !== undefined) map.delete(firstKey)
+}
 
 function processAssistantEvent(event: StreamEvent, state: ParseState): void {
   if (!event.message) return
@@ -59,11 +66,13 @@ function processAssistantEvent(event: StreamEvent, state: ParseState): void {
   for (const block of event.message.content) {
     if (block.type === 'thinking') {
       state.thoughts.push({ type: 'thinking', thinking: block.thinking })
+      if (state.thoughts.length > MAX_HISTORY_ENTRIES) state.thoughts.shift()
     } else if (block.type === 'tool_use') {
       if (block.name === PERMISSION_TOOL_NAME) {
         state.permissionToolIds.add(block.id)
       } else {
         state.toolMap.set(block.id, { id: block.id, name: block.name, input: block.input })
+        if (state.toolMap.size > MAX_HISTORY_ENTRIES) evictOldest(state.toolMap)
         hasCountableContent = true
       }
     } else {
