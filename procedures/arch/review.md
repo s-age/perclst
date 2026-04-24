@@ -47,6 +47,6 @@ flowchart TD
     ReportClean --> WriteOut
     BuildReport --> WriteOut{ng_output_path\nprovided?}
     WriteOut -- No --> Done([Print report to stdout and done])
-    WriteOut -- Yes --> WriteFile["mkdir -p $(dirname ng_output_path)\nWrite full violation report to ng_output_path\n(this file is the input for the refactor-arch procedure)"]
+    WriteOut -- Yes --> WriteFile["mkdir -p $(dirname ng_output_path)\nWrite full violation report to ng_output_path\n(this file is the input for the arch/refactor procedure)"]
     WriteFile --> Done2([Done])
 ```

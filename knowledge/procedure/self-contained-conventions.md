@@ -8,7 +8,7 @@ When a procedure delegates execution steps to agents, those agents only have acc
 
 ## What happened / What is true
 
-Agents running under `procedures/implement-unit-test.md` would stop and ask about test style (file placement, import style, assertion granularity) instead of writing tests. The `WriteTests` node referenced high-level guidance (framework, complexity order, coverage targets) but omitted concrete conventions already documented in `.claude/skills/unit-test-implementor/SKILL.md`. Without the skill loaded, agents had no authoritative source and stalled.
+Agents running under `procedures/test-unit/implement.md` would stop and ask about test style (file placement, import style, assertion granularity) instead of writing tests. The `WriteTests` node referenced high-level guidance (framework, complexity order, coverage targets) but omitted concrete conventions already documented in `.claude/skills/unit-test-implementor/SKILL.md`. Without the skill loaded, agents had no authoritative source and stalled.
 
 The fix was to embed the critical conventions directly into the `WriteTests` node:
 

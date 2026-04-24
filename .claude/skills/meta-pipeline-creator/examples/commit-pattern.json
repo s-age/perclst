@@ -12,7 +12,7 @@
           "type": "agent",
           "name": "unit-test-foo-service-implementer",
           "task": "target_file_path: src/services/fooService.ts",
-          "procedure": "implement-unit-test",
+          "procedure": "test-unit/implement",
           "model": "haiku",
           "allowed_tools": [
             "Read", "Write", "Edit", "Bash",
@@ -27,7 +27,7 @@
           "type": "agent",
           "name": "unit-test-foo-service-reviewer",
           "task": "target_file_path: src/services/fooService.ts\nng_output_path: .claude/tmp/unit-test-foo-service-reviewer",
-          "procedure": "review-unit-test",
+          "procedure": "test-unit/review",
           "model": "haiku",
           "allowed_tools": [
             "Read", "Bash",

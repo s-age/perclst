@@ -24,7 +24,7 @@ not consistently interpret `null` as "file does not exist" and fell back to heur
   file exists, otherwise the canonical path `{dir}/__tests__/{stem}.test{ext}` (via
   `canonicalTestFilePath()` in `testFileDiscovery.ts`).
 
-**Procedure enforcement:** `procedures/implement-unit-test.md` was rewritten with explicit STEP 1–4
+**Procedure enforcement:** `procedures/test-unit/implement.md` was rewritten with explicit STEP 1–4
 labels and ⛔ prohibitions inside the Write step.
 
 ## Do

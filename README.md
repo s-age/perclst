@@ -82,7 +82,7 @@ Agent encounters something worth remembering
 
 **Capture** — when an agent hits a gotcha, makes a non-obvious design decision, or learns how something actually behaves (vs. how it was assumed to work), it drops a `.md` file in `knowledge/draft/`. No structure required — freeform notes are fine.
 
-**Curate** — `perclst curate` runs the `meta-curate-knowledge` procedure, which reads all draft entries, structures them, and files them into `knowledge/`. Only this procedure writes to `knowledge/` directly; all agents write to `knowledge/draft/` only.
+**Curate** — `perclst curate` runs the `meta-librarian/curate` procedure, which reads all draft entries, structures them, and files them into `knowledge/`. Only this procedure writes to `knowledge/` directly; all agents write to `knowledge/draft/` only.
 
 **Search** — the `knowledge_search` MCP tool lets agents query the knowledge base by keyword before starting a task. This surfaces past problems, decisions, and gotchas that aren't visible in the code itself.
 

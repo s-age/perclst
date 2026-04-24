@@ -172,7 +172,7 @@ describe('PipelineDomain - execution', () => {
         type: 'agent',
         task: 'do something',
         name: 'task-with-proc',
-        procedure: 'meta-curate-knowledge'
+        procedure: 'meta-librarian/curate'
       }
       const session: Session = { id: 'session-id' } as Session
       const agentResponse: AgentResponse = { message_count: 1 } as AgentResponse
@@ -192,7 +192,7 @@ describe('PipelineDomain - execution', () => {
 
       expect(sessionDomain.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          procedure: 'meta-curate-knowledge'
+          procedure: 'meta-librarian/curate'
         })
       )
     })

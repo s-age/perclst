@@ -1,6 +1,9 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { surveyCommand } from '../survey'
 import { stderr } from '@src/utils/output'
+import { PROCEDURES_DIR } from './helper'
 
 // Mock only the startCommand module
 vi.mock('../start', () => ({
@@ -32,7 +35,7 @@ describe('surveyCommand', () => {
       expect(startCommand).toHaveBeenCalledWith(
         'Refresh all codebase catalogs in .claude/skills/code-base-survey/ to reflect the current state of src/.',
         {
-          procedure: 'code-base-survey-refresh',
+          procedure: 'code-base-survey/refresh',
           labels: ['survey'],
           model: 'sonnet',
           allowedTools: [
@@ -54,6 +57,13 @@ describe('surveyCommand', () => {
 
       expect(startCommand).toHaveBeenCalledOnce()
       expect(stderrPrintSpy).not.toHaveBeenCalled()
+    })
+
+    it('references a procedure file that exists', async () => {
+      await surveyCommand(undefined, { refresh: true, outputOnly: true })
+
+      const procedure = vi.mocked(startCommand).mock.calls[0][1].procedure
+      expect(existsSync(join(PROCEDURES_DIR, `${procedure}.md`))).toBe(true)
     })
 
     it('passes outputOnly flag to startCommand in refresh procedure', async () => {
@@ -113,7 +123,7 @@ describe('surveyCommand', () => {
 
       expect(startCommand).toHaveBeenCalledOnce()
       expect(startCommand).toHaveBeenCalledWith('find authentication bugs', {
-        procedure: 'code-base-survey',
+        procedure: 'code-base-survey/survey',
         labels: ['survey'],
         model: 'sonnet',
         allowedTools: [
@@ -150,6 +160,13 @@ describe('surveyCommand', () => {
       )
     })
 
+    it('references a procedure file that exists', async () => {
+      await surveyCommand('query', { refresh: false, outputOnly: false })
+
+      const procedure = vi.mocked(startCommand).mock.calls[0][1].procedure
+      expect(existsSync(join(PROCEDURES_DIR, `${procedure}.md`))).toBe(true)
+    })
+
     it('does not call stderr when query is provided', async () => {
       await surveyCommand('valid query', { refresh: false })
 
@@ -164,7 +181,7 @@ describe('surveyCommand', () => {
       expect(startCommand).toHaveBeenCalledWith(
         'my query',
         expect.objectContaining({
-          procedure: 'code-base-survey'
+          procedure: 'code-base-survey/survey'
         })
       )
     })

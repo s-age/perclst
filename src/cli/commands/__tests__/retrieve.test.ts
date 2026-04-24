@@ -1,5 +1,8 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { retrieveCommand } from '../retrieve'
+import { PROCEDURES_DIR } from './helper'
 
 vi.mock('../start', () => ({
   startCommand: vi.fn()
@@ -18,7 +21,7 @@ describe('retrieveCommand', () => {
     expect(startCommand).toHaveBeenCalledWith(
       'Search the knowledge base for the following keywords and return a structured summary of findings: session',
       {
-        procedure: 'meta-retrieve-knowledge',
+        procedure: 'meta-knowledge-concierge/retrieve',
         labels: ['retrieve'],
         outputOnly: true
       }
@@ -32,7 +35,7 @@ describe('retrieveCommand', () => {
     expect(startCommand).toHaveBeenCalledWith(
       'Search the knowledge base for the following keywords and return a structured summary of findings: fork, session, resume',
       {
-        procedure: 'meta-retrieve-knowledge',
+        procedure: 'meta-knowledge-concierge/retrieve',
         labels: ['retrieve'],
         outputOnly: true
       }
@@ -45,7 +48,7 @@ describe('retrieveCommand', () => {
     expect(startCommand).toHaveBeenCalledWith(
       'Search the knowledge base for the following keywords and return a structured summary of findings: ',
       {
-        procedure: 'meta-retrieve-knowledge',
+        procedure: 'meta-knowledge-concierge/retrieve',
         labels: ['retrieve'],
         outputOnly: true
       }
@@ -58,7 +61,7 @@ describe('retrieveCommand', () => {
     expect(startCommand).toHaveBeenCalledWith(
       'Search the knowledge base for the following keywords and return a structured summary of findings: --flag, test-case, node.js',
       {
-        procedure: 'meta-retrieve-knowledge',
+        procedure: 'meta-knowledge-concierge/retrieve',
         labels: ['retrieve'],
         outputOnly: true
       }
@@ -72,11 +75,18 @@ describe('retrieveCommand', () => {
     expect(callArgs[1].outputOnly).toBe(true)
   })
 
-  it('passes procedure as meta-retrieve-knowledge', async () => {
+  it('passes procedure as meta-knowledge-concierge/retrieve', async () => {
     await retrieveCommand(['test'])
 
     const callArgs = vi.mocked(startCommand).mock.calls[0]
-    expect(callArgs[1].procedure).toBe('meta-retrieve-knowledge')
+    expect(callArgs[1].procedure).toBe('meta-knowledge-concierge/retrieve')
+  })
+
+  it('references a procedure file that exists', async () => {
+    await retrieveCommand(['test'])
+
+    const procedure = vi.mocked(startCommand).mock.calls[0][1].procedure
+    expect(existsSync(join(PROCEDURES_DIR, `${procedure}.md`))).toBe(true)
   })
 
   it('passes labels array with retrieve label', async () => {
