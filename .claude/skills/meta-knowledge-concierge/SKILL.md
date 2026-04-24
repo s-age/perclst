@@ -2,8 +2,7 @@
 name: meta-knowledge-concierge
 description: Search the knowledge base before designing or implementing. Use when starting any non-trivial design or implementation task directly (not via sub-agent).
 paths:
-  - 'src/**/*.ts'
-disable-model-invocation: true
+  - 'knowledge/**'
 ---
 
 Before starting any non-trivial design or implementation task, search the knowledge base for prior decisions, gotchas, and patterns.
@@ -38,3 +37,11 @@ Incorporate findings before proposing a design — surface any recorded gotchas,
 ## When no results are found
 
 Report explicitly: "No relevant knowledge found for: <keyword>". Do not infer or fabricate.
+
+## Capturing knowledge
+
+Never write directly to `knowledge/` subdirectories. All new knowledge must go to `knowledge/draft/` first.
+
+- Write a freeform `.md` file to `knowledge/draft/` with whatever detail you have
+- The `meta-librarian` skill will promote and structure it later
+- Direct writes to `knowledge/` (outside of `draft/`) are forbidden

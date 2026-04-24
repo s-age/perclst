@@ -1,0 +1,123 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "remove-duplicates-agent",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-agent.md\nknowledge_dir: knowledge/agent\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-architectures",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-architectures.md\nknowledge_dir: knowledge/architectures\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-cli-commands",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-cli-commands.md\nknowledge_dir: knowledge/cli-commands\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-git",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-git.md\nknowledge_dir: knowledge/git\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-ink",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-ink.md\nknowledge_dir: knowledge/ink\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-javascript",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-javascript.md\nknowledge_dir: knowledge/javascript\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-mcp-tools",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-mcp-tools.md\nknowledge_dir: knowledge/mcp-tools\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-meta-skill-creator",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-meta-skill-creator.md\nknowledge_dir: knowledge/meta-skill-creator\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-pipeline",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-pipeline.md\nknowledge_dir: knowledge/pipeline\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-procedure",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-procedure.md\nknowledge_dir: knowledge/procedure\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-react",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-react.md\nknowledge_dir: knowledge/react\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-security",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-security.md\nknowledge_dir: knowledge/security\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-shell",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-shell.md\nknowledge_dir: knowledge/shell\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-testing",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-testing.md\nknowledge_dir: knowledge/testing\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-utils",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-utils.md\nknowledge_dir: knowledge/utils\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-validation",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-validation.md\nknowledge_dir: knowledge/validation\n\nRead the Duplicate Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each duplicate pair: read both files and confirm the overlap is significant. Delete the less comprehensive file with `rm`. Always retain the more complete and specific entry. Never delete both files of a pair.",
+      "allowed_tools": ["Read", "Bash", "mcp__perclst__knowledge_search"]
+    },
+    {
+      "type": "agent",
+      "name": "remove-duplicates-commit",
+      "model": "claude-sonnet-4-6",
+      "task": "Run `git status` to see what was deleted. Stage all changes in knowledge/ with `git add knowledge/` and commit with a conventional commit message (e.g. `chore(knowledge): remove duplicate entries per audit`). If there is nothing to commit, stop.",
+      "allowed_tools": ["Bash"]
+    }
+  ]
+}

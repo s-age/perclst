@@ -88,3 +88,7 @@ if (opts.outputOnly) { /* only hides one thing */ }
 - Never skip `parseXxx()` — always validate raw `options.*` before passing to services
 - Never call `setupContainer()` inside command handlers — it belongs only in `index.ts`
 - Never instantiate services directly — use `container.resolve<T>(TOKENS.Xxx)`
+
+## References
+
+- [`references/split-component.md`](./references/split-component.md) — how to split a large `src/cli/components/` file into a `parts/` subdirectory while keeping all import paths stable

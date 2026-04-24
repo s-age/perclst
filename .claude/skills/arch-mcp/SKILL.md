@@ -160,3 +160,7 @@ Replace `ts_test_strategist` with the tool name being tested, and pass any addit
 - Never instantiate `TypeScriptProject` directly in a tool file — always resolve via `container.resolve<TypeScriptProject>(TOKENS.TypeScriptProject)`
 - Never use Node.js built-ins (`fs`, `child_process`, etc.) in `tools/` files — those files must stay I/O-free; I/O belongs in `infrastructures/` and is accessed via services
 - Never add a second `setupContainer()` call — it is called exactly once at the top of `server.ts`
+
+## References
+
+- [`references/ink-mcp-ipc.md`](./references/ink-mcp-ipc.md) — file-based IPC protocol between an Ink TUI and the MCP server for permission prompts (use when the MCP server runs alongside a TUI that owns stdin)

@@ -1,0 +1,213 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "mkdir -p ~/docs",
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-agent",
+      "task": "target_dir: knowledge/agent\noutput_file: ~/docs/knowledge-review-agent.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (architectures, cli-commands, mcp-tools, pipeline, procedure, testing, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-architectures",
+      "task": "target_dir: knowledge/architectures\noutput_file: ~/docs/knowledge-review-architectures.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (agent, cli-commands, pipeline, procedure, testing, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-cli-commands",
+      "task": "target_dir: knowledge/cli-commands\noutput_file: ~/docs/knowledge-review-cli-commands.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (agent, architectures, testing, validation, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-git",
+      "task": "target_dir: knowledge/git\noutput_file: ~/docs/knowledge-review-git.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-ink",
+      "task": "target_dir: knowledge/ink\noutput_file: ~/docs/knowledge-review-ink.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (react, javascript, architectures, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-javascript",
+      "task": "target_dir: knowledge/javascript\noutput_file: ~/docs/knowledge-review-javascript.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (testing, mcp-tools, utils, validation, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-mcp-tools",
+      "task": "target_dir: knowledge/mcp-tools\noutput_file: ~/docs/knowledge-review-mcp-tools.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (agent, architectures, testing, javascript, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-meta-skill-creator",
+      "task": "target_dir: knowledge/meta-skill-creator\noutput_file: ~/docs/knowledge-review-meta-skill-creator.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (procedure, architectures, pipeline, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-pipeline",
+      "task": "target_dir: knowledge/pipeline\noutput_file: ~/docs/knowledge-review-pipeline.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (architectures, procedure, testing, agent, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-procedure",
+      "task": "target_dir: knowledge/procedure\noutput_file: ~/docs/knowledge-review-procedure.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (meta-skill-creator, pipeline, architectures, agent, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-react",
+      "task": "target_dir: knowledge/react\noutput_file: ~/docs/knowledge-review-react.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (ink, javascript, testing, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-security",
+      "task": "target_dir: knowledge/security\noutput_file: ~/docs/knowledge-review-security.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (agent, shell, architectures, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-shell",
+      "task": "target_dir: knowledge/shell\noutput_file: ~/docs/knowledge-review-shell.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (javascript, security, agent, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-testing",
+      "task": "target_dir: knowledge/testing\noutput_file: ~/docs/knowledge-review-testing.md\n\nList and read every .md file in target_dir. This directory is large (50+ files). For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (javascript, mcp-tools, architectures, validation, etc.) fit better, or would splitting into subdirectories (vitest/, patterns/, coverage/) help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks, especially for vitest-* files.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "max_turns": 50,
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-utils",
+      "task": "target_dir: knowledge/utils\noutput_file: ~/docs/knowledge-review-utils.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (javascript, architectures, cli-commands, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-validation",
+      "task": "target_dir: knowledge/validation\noutput_file: ~/docs/knowledge-review-validation.md\n\nList and read every .md file in target_dir. For each file analyze:\n1. better_dir: Does another existing knowledge subdirectory (testing, javascript, architectures, etc.) fit better, or would a new subdirectory help?\n2. duplicates: Significant overlap with other files here or elsewhere — use knowledge_search for cross-directory checks.\n3. skill_candidate: Does this describe a repeatable multi-step workflow better as .claude/skills/<name>/SKILL.md?\n\nWrite a Markdown report to output_file with sections: Relocation Suggestions, Duplicate Candidates, Skill Candidates, No-Action (brief list). Do NOT modify, move, or delete any files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "knowledge-review-consolidate",
+      "task": "Read all files matching ~/docs/knowledge-review-*.md (excluding knowledge-review-summary.md). Write a consolidated summary to ~/docs/knowledge-review-summary.md that highlights:\n1. Top relocation suggestions (patterns across multiple directories)\n2. Confirmed cross-directory duplicates\n3. Top skill candidates (highest-value, most actionable)\n4. Structural observations (directories that are too large, too small, or poorly scoped)\n\nDo NOT modify, move, or delete any knowledge files or report files.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "done": true
+    }
+  ]
+}

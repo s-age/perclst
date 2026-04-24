@@ -1,0 +1,56 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/unit-test-foo-service-reviewer"
+    },
+    {
+      "type": "pipeline",
+      "name": "unit-test-foo-service",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "unit-test-foo-service-implementer",
+          "task": "target_file_path: src/services/fooService.ts",
+          "procedure": "implement-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Write", "Edit", "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "unit-test-foo-service-reviewer",
+          "task": "target_file_path: src/services/fooService.ts\nng_output_path: .claude/tmp/unit-test-foo-service-reviewer",
+          "procedure": "review-unit-test",
+          "model": "haiku",
+          "allowed_tools": [
+            "Read", "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": { "to": "unit-test-foo-service-implementer", "max_retries": 3 }
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": { "to": "unit-test-foo-service-implementer", "max_retries": 3 }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "unit-test-foo-service-implementer",
+      "task": "Tests written and passing. Commit the new test file with an appropriate conventional commit message (e.g. test(layer): ...).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

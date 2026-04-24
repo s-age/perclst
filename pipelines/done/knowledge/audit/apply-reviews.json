@@ -1,0 +1,225 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "apply-review-agent",
+      "task": "review_file: ~/docs/review/knowledge-review-agent.md\nsource_report: ~/docs/knowledge-review-agent.md\nknowledge_dir: knowledge/agent\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-architectures",
+      "task": "review_file: ~/docs/review/knowledge-review-architectures.md\nsource_report: ~/docs/knowledge-review-architectures.md\nknowledge_dir: knowledge/architectures\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-cli-commands",
+      "task": "review_file: ~/docs/review/knowledge-review-cli-commands.md\nsource_report: ~/docs/knowledge-review-cli-commands.md\nknowledge_dir: knowledge/cli-commands\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-git",
+      "task": "review_file: ~/docs/review/knowledge-review-git.md\nsource_report: ~/docs/knowledge-review-git.md\nknowledge_dir: knowledge/git\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-ink",
+      "task": "review_file: ~/docs/review/knowledge-review-ink.md\nsource_report: ~/docs/knowledge-review-ink.md\nknowledge_dir: knowledge/ink\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-javascript",
+      "task": "review_file: ~/docs/review/knowledge-review-javascript.md\nsource_report: ~/docs/knowledge-review-javascript.md\nknowledge_dir: knowledge/javascript\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-mcp-tools",
+      "task": "review_file: ~/docs/review/knowledge-review-mcp-tools.md\nsource_report: ~/docs/knowledge-review-mcp-tools.md\nknowledge_dir: knowledge/mcp-tools\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-meta-skill-creator",
+      "task": "review_file: ~/docs/review/knowledge-review-meta-skill-creator.md\nsource_report: ~/docs/knowledge-review-meta-skill-creator.md\nknowledge_dir: knowledge/meta-skill-creator\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-pipeline",
+      "task": "review_file: ~/docs/review/knowledge-review-pipeline.md\nsource_report: ~/docs/knowledge-review-pipeline.md\nknowledge_dir: knowledge/pipeline\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-procedure",
+      "task": "review_file: ~/docs/review/knowledge-review-procedure.md\nsource_report: ~/docs/knowledge-review-procedure.md\nknowledge_dir: knowledge/procedure\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-react",
+      "task": "review_file: ~/docs/review/knowledge-review-react.md\nsource_report: ~/docs/knowledge-review-react.md\nknowledge_dir: knowledge/react\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-security",
+      "task": "review_file: ~/docs/review/knowledge-review-security.md\nsource_report: ~/docs/knowledge-review-security.md\nknowledge_dir: knowledge/security\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-shell",
+      "task": "review_file: ~/docs/review/knowledge-review-shell.md\nsource_report: ~/docs/knowledge-review-shell.md\nknowledge_dir: knowledge/shell\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-testing",
+      "task": "review_file: ~/docs/review/knowledge-review-testing.md\nsource_report: ~/docs/knowledge-review-testing.md\nknowledge_dir: knowledge/testing\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "max_turns": 50,
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-utils",
+      "task": "review_file: ~/docs/review/knowledge-review-utils.md\nsource_report: ~/docs/knowledge-review-utils.md\nknowledge_dir: knowledge/utils\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-validation",
+      "task": "review_file: ~/docs/review/knowledge-review-validation.md\nsource_report: ~/docs/knowledge-review-validation.md\nknowledge_dir: knowledge/validation\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report. For each issue raised in review_file, verify it by reading the relevant files in knowledge_dir. Judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "apply-review-summary",
+      "task": "review_file: ~/docs/review/knowledge-review-summary.md\nsource_report: ~/docs/knowledge-review-summary.md\n\nIf review_file does not exist, stop immediately — nothing to do.\n\nRead review_file and source_report, and also read all ~/docs/knowledge-review-*.md per-directory reports (excluding summary) to verify cross-directory claims. For each issue raised in review_file, judge whether each criticism is legitimate.\n\nFor each issue that is legitimate, apply the correction directly to source_report. Silently skip any issue that does not hold up to verification.",
+      "model": "claude-opus-4-6",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "done": true
+    }
+  ]
+}
