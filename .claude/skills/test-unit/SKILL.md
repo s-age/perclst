@@ -1,6 +1,6 @@
 ---
 name: test-unit
-description: Patterns and conventions for writing *.test.ts files in this project. Load when creating or editing unit test files. Covers file placement, mock style, vitest imports, and case structure. Does NOT run ts_test_strategist — use procedures/test-unit.md for full agent-driven workflow.
+description: Patterns and conventions for writing *.test.ts files in this project. Load when creating or editing unit test files. Covers file placement, mock style, vitest imports, and case structure. Does NOT run ts_test_strategist — use procedures/test-unit/implement.md for full agent-driven workflow.
 paths:
   - src/**/*.test.ts
 ---

@@ -4,7 +4,7 @@
 
 ## Context
 
-When the librarian agent starts (invoked as the `meta-curate-knowledge` procedure via `claude -p`),
+When the librarian agent starts (invoked as the `meta-librarian/curate` procedure via `claude -p`),
 it may try to call `Skill("meta-librarian")` to load its instructions. This always fails.
 Understanding how the skill actually arrives prevents wasted attempts at the start of every run.
 
@@ -32,4 +32,4 @@ Understanding how the skill actually arrives prevents wasted attempts at the sta
 
 ---
 
-**Keywords:** meta-librarian, skill injection, PreToolUse hook, headless, claude -p, Skill tool, meta-curate-knowledge, additionalContext
+**Keywords:** meta-librarian, skill injection, PreToolUse hook, headless, claude -p, Skill tool, meta-librarian/curate, additionalContext

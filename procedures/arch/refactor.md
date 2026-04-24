@@ -23,7 +23,7 @@ flowchart TD
     Start([Start]) --> InputCheck{violations_path\nor target_path\nprovided?}
     InputCheck -- Neither --> Abort([Abort: ask for violations_path or target_path])
     InputCheck -- violations_path --> ReadViolations["Read violations file\nParse each entry: file_path, layer, check, recommendation"]
-    InputCheck -- target_path only --> ReviewFirst["Run review-arch procedure on target_path\nWrite results to /tmp/arch-violations.txt\nRead violations from that file"]
+    InputCheck -- target_path only --> ReviewFirst["Run arch/review procedure on target_path\nWrite results to /tmp/arch-violations.txt\nRead violations from that file"]
 
     ReadViolations --> GroupViolations["Group violations by capability\nExample: all ts-morph violations → 'TypeScript analysis' capability\nOne capability = one refactor unit"]
     ReviewFirst --> GroupViolations

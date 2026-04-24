@@ -4,7 +4,7 @@
 
 ## Context
 
-Applies to the `code-inspector` procedure and `code-inspect` skill when classifying
+Applies to the `code-inspect/inspect` procedure and `code-inspect` skill when classifying
 findings from a diff review. Sets the precedent for how to calibrate severity on any
 new inspection category added in the future.
 

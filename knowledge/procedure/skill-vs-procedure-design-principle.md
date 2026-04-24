@@ -24,7 +24,7 @@ flowcharts) while operational detail lives in skills.
 
 **Concrete example — `inspect` subcommand:**
 
-- `procedures/code-inspector.md` — What: read diff → review → check sensitive data → report
+- `procedures/code-inspect/inspect.md` — What: read diff → review → check sensitive data → report
 - `.claude/skills/code-inspect/SKILL.md` — How: severity labels, detection patterns,
   report format
 

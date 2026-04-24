@@ -1,6 +1,9 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { curateCommand } from '../curate'
 import { cwdPath } from '@src/utils/path'
+import { PROCEDURES_DIR } from './helper'
 
 // Mock the dependencies
 vi.mock('@src/core/di/container')
@@ -46,7 +49,7 @@ describe('curateCommand', () => {
     expect(vi.mocked(startCommand)).toHaveBeenCalledWith(
       `Promote all entries in ${knowledgeDir}/draft/ into structured ${knowledgeDir}/ files.`,
       {
-        procedure: 'meta-curate-knowledge',
+        procedure: 'meta-librarian/curate',
         labels: ['curate'],
         allowedTools: ['Skill', 'Write', 'Read', 'Bash', 'Glob'],
         outputOnly: true
@@ -85,6 +88,14 @@ describe('curateCommand', () => {
 
     // Assert
     expect(vi.mocked(startCommand)).not.toHaveBeenCalled()
+  })
+
+  it('references a procedure file that exists', async () => {
+    mockKnowledgeService.hasDraftEntries.mockReturnValue(true)
+    await curateCommand()
+
+    const procedure = vi.mocked(startCommand).mock.calls[0][1].procedure
+    expect(existsSync(join(PROCEDURES_DIR, `${procedure}.md`))).toBe(true)
   })
 
   it('should resolve KnowledgeSearchService from container', async () => {

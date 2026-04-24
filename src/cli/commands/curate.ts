@@ -17,7 +17,7 @@ export async function curateCommand(): Promise<void> {
   await startCommand(
     `Promote all entries in ${knowledgeDir}/draft/ into structured ${knowledgeDir}/ files.`,
     {
-      procedure: 'meta-curate-knowledge',
+      procedure: 'meta-librarian/curate',
       labels: ['curate'],
       allowedTools: ['Skill', 'Write', 'Read', 'Bash', 'Glob'],
       outputOnly: true

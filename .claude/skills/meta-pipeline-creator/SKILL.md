@@ -11,7 +11,7 @@ Write all pipeline content in **English**, regardless of the project's primary l
 
 1. Read `src/types/pipeline.ts` — authoritative schema for all task fields.
 2. Read an existing pipeline in `pipelines/` — use as structural reference.
-3. If tasks will use a procedure, read `procedures/<name>.md` to confirm required inputs and which tools it calls.
+3. If tasks will use a procedure, read `procedures/<skill>/<name>.md` to confirm required inputs and which tools it calls.
 
 ## Naming files
 

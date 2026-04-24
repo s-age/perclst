@@ -325,7 +325,7 @@ If `CRITICAL` findings are present (API key, personal data leak, etc.), the repo
 
 *Agent command — spawns Claude.*
 
-Promote all `knowledge/draft/` entries into structured `knowledge/` files. Shorthand for running the `meta-curate-knowledge` procedure with the required tool permissions.
+Promote all `knowledge/draft/` entries into structured `knowledge/` files. Shorthand for running the `meta-librarian/curate` procedure with the required tool permissions.
 
 ```bash
 perclst curate
@@ -337,7 +337,7 @@ Equivalent to:
 
 ```bash
 perclst start "Promote all entries in knowledge/draft/ into structured knowledge/ files." \
-  --procedure meta-curate-knowledge \
+  --procedure meta-librarian/curate \
   --allowed-tools Write Read Bash Glob \
   --output-only
 ```
@@ -372,7 +372,7 @@ The agent returns a structured report with two sections:
 
 *Agent command — spawns Claude.*
 
-Search the project knowledge base for one or more keywords and return a structured summary of findings. Shorthand for running the `meta-retrieve-knowledge` procedure with `--output-only`.
+Search the project knowledge base for one or more keywords and return a structured summary of findings. Shorthand for running the `meta-knowledge-concierge/retrieve` procedure with `--output-only`.
 
 Sessions created by this command are automatically labeled `retrieve`.
 
@@ -387,7 +387,7 @@ Equivalent to:
 
 ```bash
 perclst start "Search the knowledge base for the following keywords and return a structured summary of findings: keyword1, keyword2" \
-  --procedure meta-retrieve-knowledge \
+  --procedure meta-knowledge-concierge/retrieve \
   --output-only
 ```
 
@@ -538,7 +538,7 @@ When `npm run test:unit` fails, the pipeline loops back to `unit-test-domains-ch
           "type": "agent",
           "name": "implement-unit-test-analyze-service",
           "task": "target_file_path: src/services/analyzeService.ts",
-          "procedure": "implement-unit-test",
+          "procedure": "test-unit/implement",
           "model": "haiku",
           "allowed_tools": ["Read", "Write", "Edit", "Bash", "mcp__perclst__ts_test_strategist", "mcp__perclst__ts_checker"]
         },
@@ -546,7 +546,7 @@ When `npm run test:unit` fails, the pipeline loops back to `unit-test-domains-ch
           "type": "agent",
           "name": "review-unit-test-analyze-service",
           "task": "target_file_path: src/services/analyzeService.ts\nng_output_path: .claude/tmp/review-unit-test-analyze-service",
-          "procedure": "review-unit-test",
+          "procedure": "test-unit/review",
           "model": "haiku",
           "allowed_tools": ["Read", "Bash", "mcp__perclst__ts_test_strategist"],
           "rejected": {

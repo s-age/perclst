@@ -26,9 +26,9 @@ Known cases where tools were missing (fixed 2026-04-22):
 
 | Command | Procedure | Missing tools |
 |---|---|---|
-| `inspect` | `code-inspector` | `Skill`, `mcp__perclst__knowledge_search` |
-| `survey` | `code-base-survey` | `Skill`, `Write` |
-| `survey --refresh` | `code-base-survey-refresh` | `Skill` |
+| `inspect` | `code-inspect/inspect` | `Skill`, `mcp__perclst__knowledge_search` |
+| `survey` | `code-base-survey/survey` | `Skill`, `Write` |
+| `survey --refresh` | `code-base-survey/refresh` | `Skill` |
 
 ## Do
 
