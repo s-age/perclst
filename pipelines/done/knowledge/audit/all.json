@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "knowledge__audit__relocate.json",
+      "name": "audit-relocate",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "knowledge__audit__create-skills.json",
+      "name": "audit-create-skills",
+      "done": true
+    },
+    {
+      "type": "child",
+      "path": "knowledge__audit__remove-duplicates.json",
+      "name": "audit-remove-duplicates",
+      "done": true
+    }
+  ]
+}
