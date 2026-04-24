@@ -27,7 +27,7 @@ export async function inspectCommand(
     await startCommand(
       `Inspect the following git diff and produce a code inspection report:${additionalPrompt}\n\n${diff}`,
       {
-        procedure: 'code-inspector',
+        procedure: 'code-inspect/code-inspector',
         labels: ['inspect'],
         model: 'sonnet',
         allowedTools: ['Skill', 'mcp__perclst__knowledge_search'],

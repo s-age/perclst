@@ -60,7 +60,7 @@ describe('inspectCommand', () => {
     expect(vi.mocked(startCommand)).toHaveBeenCalledWith(
       `Inspect the following git diff and produce a code inspection report:\n\n${testDiff}`,
       {
-        procedure: 'code-inspector',
+        procedure: 'code-inspect/code-inspector',
         labels: ['inspect'],
         model: 'sonnet',
         allowedTools: ['Skill', 'mcp__perclst__knowledge_search'],
