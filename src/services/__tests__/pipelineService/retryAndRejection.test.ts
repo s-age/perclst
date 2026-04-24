@@ -269,6 +269,42 @@ describe('PipelineService', () => {
       expect(retryEvent).toBeDefined()
       expect(retryEvent?.retryCount).toBe(1)
     })
+
+    it('should clear done flag on retry target so it re-runs with rejection context', async () => {
+      const rejectionContext: RejectedContext = {
+        retry_count: 1,
+        task: { type: 'agent', task: 'target' } as AgentPipelineTask,
+        feedback: 'script failed'
+      }
+      vi.mocked(mockScriptDomain.run).mockImplementation(async () => ({
+        exitCode: 1,
+        stdout: 'out',
+        stderr: 'err'
+      }))
+      vi.mocked(mockPipelineDomain.resolveScriptRejection)
+        .mockReturnValueOnce({
+          targetIndex: 0,
+          newCount: 1,
+          context: rejectionContext
+        })
+        .mockReturnValue(undefined)
+
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'target', name: 'target' },
+          { type: 'script', command: 'check', rejected: { to: 'target', max_retries: 2 } }
+        ]
+      }
+      const onTaskDone = vi.fn((_taskPath: number[], taskIndex: number) => {
+        pipeline.tasks[taskIndex].done = true
+      })
+
+      const events = await collectEvents(pipeline, { onTaskDone })
+
+      const agentCalls = vi.mocked(mockPipelineDomain.runAgentTask).mock.calls
+      expect(agentCalls).toHaveLength(2)
+      expect(agentCalls[1][3]).toEqual(rejectionContext)
+    })
   })
 
   describe('outerRejection parameter', () => {
