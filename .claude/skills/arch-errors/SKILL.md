@@ -19,6 +19,9 @@ Defines typed error classes that are thrown across all layers. Each file exports
 | `validationError.ts` | `ValidationError` | User-supplied input fails validation rules |
 | `apiError.ts` | `APIError` | Claude CLI process exits with a non-zero status or HTTP error; carries an optional `statusCode` |
 | `rateLimitError.ts` | `RateLimitError` | Claude usage limit is reached; carries an optional `resetInfo` string |
+| `pipelineMaxRetriesError.ts` | `PipelineMaxRetriesError` | Max retries exceeded for a pipeline task; carries `taskIndex` and `maxRetries` |
+| `rawExitError.ts` | `RawExitError` | `claude` process exits unexpectedly; carries `code` (exit code) and `stderr` |
+| `pipelineAbortedError.ts` | `PipelineAbortedError` | User aborts a pipeline run; no-argument constructor |
 
 ## Import Rules
 
@@ -28,46 +31,45 @@ Defines typed error classes that are thrown across all layers. Each file exports
 
 ## Patterns
 
-**Minimal constructor — single contextual param injected into `super()`**
+**Standard constructor — param injected into `super()`, `this.name` required**
 
 ```ts
-// Good — one param, message built inline, this.name set to class name
 export class SessionNotFoundError extends Error {
   constructor(sessionId: string) {
     super(`Session not found: ${sessionId}`)
-    this.name = 'SessionNotFoundError'
-  }
-}
-
-// Bad — omitting this.name (name stays 'Error', making catch-site inspection useless)
-export class SessionNotFoundError extends Error {
-  constructor(sessionId: string) {
-    super(`Session not found: ${sessionId}`)
-    // NG: missing this.name = 'SessionNotFoundError'
+    this.name = 'SessionNotFoundError'  // required — omitting leaves name as 'Error'
   }
 }
 ```
 
-**Public readonly field for machine-readable context**
-
-Use a `public readonly` constructor field only when callers need to branch on the value (not just for display).
+**No-argument constructor** — use when the error type itself is the full signal:
 
 ```ts
-// Good — statusCode is used by callers to decide retry logic
-export class APIError extends Error {
+export class PipelineAbortedError extends Error {
+  constructor() {
+    super('Pipeline aborted by user')
+    this.name = 'PipelineAbortedError'
+  }
+}
+```
+
+**Public readonly fields** — add only when callers need to branch on the value (not just for display). Multiple fields are allowed:
+
+```ts
+export class RawExitError extends Error {
   constructor(
-    message: string,
-    public statusCode?: number
+    public readonly code: number | null,
+    public readonly stderr: string
   ) {
-    super(message)
-    this.name = 'APIError'
+    super(`claude exited with code ${code}`)
+    this.name = 'RawExitError'
   }
 }
 
-// Bad — embedding the value only in the message string, forcing callers to parse it
+// Bad — embedding the value only in the message string forces callers to parse it
 export class APIError extends Error {
   constructor(message: string, statusCode?: number) {
-    super(`${message} (status: ${statusCode})`)  // NG: statusCode is unreadable programmatically
+    super(`${message} (status: ${statusCode})`)  // NG: statusCode unreadable programmatically
     this.name = 'APIError'
   }
 }
@@ -77,11 +79,7 @@ export class APIError extends Error {
 
 ```ts
 // Good — file: sessionNotFoundError.ts  class: SessionNotFoundError
-export class SessionNotFoundError extends Error { ... }
-
-// Bad — kebab-case file name or missing "Error" suffix
-// session-not-found.ts         ← NG: kebab-case
-// export class SessionNotFound  ← NG: no Error suffix
+// Bad  — session-not-found.ts (kebab-case) or class SessionNotFound (no Error suffix)
 ```
 
 ## Prohibitions
