@@ -1,0 +1,123 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "create-skills-agent",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-agent.md\nknowledge_dir: knowledge/agent\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-architectures",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-architectures.md\nknowledge_dir: knowledge/architectures\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-cli-commands",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-cli-commands.md\nknowledge_dir: knowledge/cli-commands\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-git",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-git.md\nknowledge_dir: knowledge/git\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-ink",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-ink.md\nknowledge_dir: knowledge/ink\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-javascript",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-javascript.md\nknowledge_dir: knowledge/javascript\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-mcp-tools",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-mcp-tools.md\nknowledge_dir: knowledge/mcp-tools\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-meta-skill-creator",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-meta-skill-creator.md\nknowledge_dir: knowledge/meta-skill-creator\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-pipeline",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-pipeline.md\nknowledge_dir: knowledge/pipeline\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-procedure",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-procedure.md\nknowledge_dir: knowledge/procedure\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-react",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-react.md\nknowledge_dir: knowledge/react\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-security",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-security.md\nknowledge_dir: knowledge/security\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-shell",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-shell.md\nknowledge_dir: knowledge/shell\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-testing",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-testing.md\nknowledge_dir: knowledge/testing\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-utils",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-utils.md\nknowledge_dir: knowledge/utils\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-validation",
+      "model": "claude-sonnet-4-6",
+      "task": "source_report: ~/docs/knowledge-review-validation.md\nknowledge_dir: knowledge/validation\n\nRead the Skill Candidates section of source_report. If there are no candidates, stop — nothing to do.\n\nFor each candidate:\n1. Read the source knowledge file.\n2. Read .claude/skills/meta-pipeline-creator/SKILL.md as a format reference.\n3. Create .claude/skills/<name>/SKILL.md with correct frontmatter (name, description, paths, disable-model-invocation: true) and workflow instructions derived from the knowledge content. The content must be actionable steps, not passive documentation.",
+      "allowed_tools": ["Read", "Write", "Bash"]
+    },
+    {
+      "type": "agent",
+      "name": "create-skills-commit",
+      "model": "claude-sonnet-4-6",
+      "task": "Run `git status` to see what skill files were created. Stage all changes in .claude/skills/ with `git add .claude/skills/` and commit with a conventional commit message (e.g. `feat(skills): extract skill definitions from knowledge audit`). If there is nothing to commit, stop.",
+      "allowed_tools": ["Bash"]
+    }
+  ]
+}
