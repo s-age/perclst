@@ -30,6 +30,14 @@ src/infrastructures/__tests__/claudeCode/
 - `vi.hoisted` + `vi.mock` are repeated per file; vitest isolates them automatically
 - The subdirectory name matches the source file stem (`claudeCode/` for `claudeCode.ts`)
 
+**Split strategies** — pick the axis that matches the module's shape:
+
+- **By cyclomatic complexity** (multi-function modules): give each function with complexity ≥ 9 and ≥ 6 test cases its own file; group lower-complexity functions in a shared `{source}.test.ts`. Name per-function files `{source}.{functionName}.test.ts`.
+- **By functional area** (domain classes with 10+ methods): group methods by what they do — rejection, execution, limits — not alphabetically or one-method-per-file. Each area gets one file.
+- **By role** (domains with helpers + class): `helpers.test.ts` for pure functions, `domain.test.ts` for the class and its methods.
+
+Within any file, order test cases: happy path → variations → complex branches → error paths.
+
 ## Imports
 
 Always import from vitest explicitly — no globals:
