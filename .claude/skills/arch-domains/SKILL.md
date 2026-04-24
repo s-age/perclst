@@ -123,3 +123,7 @@ export class AnalyzeDomain {
 - Never define a port type (`IXxx`) in a domain implementation file — domain ports belong in `src/domains/ports/`, repository ports in `src/repositories/ports/`
 - Never import a concrete repository class — inject the interface or call exported functions; never `new XxxRepository()` inside a domain
 - Never call `services` — domains sit below services in the dependency chain
+
+## References
+
+- [`references/session-field-migration.md`](./references/session-field-migration.md) — lazy `normalize()` pattern for renaming a persisted session JSON field without a migration script

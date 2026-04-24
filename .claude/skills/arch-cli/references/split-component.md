@@ -1,11 +1,3 @@
----
-name: split-component
-description: Split a large CLI component into a parts/ subdirectory while keeping all existing import paths intact. Use when a component in src/cli/components/ grows too large or when asked to "split component".
-paths:
-  - 'src/cli/components/**'
-disable-model-invocation: true
----
-
 When splitting a component, follow these steps in order. Do not rename or update imports elsewhere — the re-export barrel keeps them stable.
 
 1. **Confirm the target**: The component must be at `src/cli/components/<ComponentName>.tsx`. If it is not, stop and clarify before proceeding.

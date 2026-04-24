@@ -1,12 +1,3 @@
----
-name: session-field-migration
-description: Apply lazy normalize() for renamed session JSON fields. Use when renaming a persisted field in the session schema without writing a migration script.
-paths:
-  - 'src/lib/session/**'
-  - 'src/domains/**'
-disable-model-invocation: true
----
-
 When a field on a persisted session JSON is renamed, use lazy normalization in `SessionDomain` instead of a migration script. On-disk files stay unchanged; the new field is backfilled at read time on every load.
 
 ## Steps

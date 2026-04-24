@@ -1,11 +1,3 @@
----
-name: ink-mcp-ipc
-description: Wire file-based IPC between an Ink TUI and an MCP server for permission prompts. Use when adding or debugging permission-prompt flow in a TUI that wraps a claude subprocess with an MCP server.
-paths:
-  - 'src/mcp/**'
-disable-model-invocation: true
----
-
 When an Ink TUI wraps a `claude` subprocess that spawns an MCP server, permission prompts cannot go to the terminal directly — Ink owns stdin in raw mode and overwrites anything that bypasses its render cycle. Use the file-based IPC protocol below.
 
 ## Protocol overview
