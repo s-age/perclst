@@ -15,13 +15,7 @@
           "task": "skill_path: .claude/skills/arch/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -30,11 +24,7 @@
           "task": "skill_path: .claude/skills/arch/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-implementer",
             "max_retries": 3
@@ -58,10 +48,7 @@
       "name": "improve-skill-arch-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -74,13 +61,7 @@
           "task": "skill_path: .claude/skills/arch-cli/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-cli",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -89,11 +70,7 @@
           "task": "skill_path: .claude/skills/arch-cli/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-cli",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-cli-implementer",
             "max_retries": 3
@@ -117,10 +94,7 @@
       "name": "improve-skill-arch-cli-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-cli skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -133,13 +107,7 @@
           "task": "skill_path: .claude/skills/arch-domains/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-domains",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -148,11 +116,7 @@
           "task": "skill_path: .claude/skills/arch-domains/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-domains",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-domains-implementer",
             "max_retries": 3
@@ -176,10 +140,7 @@
       "name": "improve-skill-arch-domains-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-domains skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -192,13 +153,7 @@
           "task": "skill_path: .claude/skills/arch-errors/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-errors",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -207,11 +162,7 @@
           "task": "skill_path: .claude/skills/arch-errors/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-errors",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-errors-implementer",
             "max_retries": 3
@@ -235,10 +186,7 @@
       "name": "improve-skill-arch-errors-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-errors skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -251,13 +199,7 @@
           "task": "skill_path: .claude/skills/arch-infrastructures/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-infrastructures",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -266,11 +208,7 @@
           "task": "skill_path: .claude/skills/arch-infrastructures/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-infrastructures",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-infrastructures-implementer",
             "max_retries": 3
@@ -294,10 +232,7 @@
       "name": "improve-skill-arch-infrastructures-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-infrastructures skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -310,13 +245,7 @@
           "task": "skill_path: .claude/skills/arch-mcp/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-mcp",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -325,11 +254,7 @@
           "task": "skill_path: .claude/skills/arch-mcp/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-mcp",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-mcp-implementer",
             "max_retries": 3
@@ -353,10 +278,7 @@
       "name": "improve-skill-arch-mcp-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-mcp skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -369,13 +291,7 @@
           "task": "skill_path: .claude/skills/arch-repositories/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-repositories",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -384,11 +300,7 @@
           "task": "skill_path: .claude/skills/arch-repositories/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-repositories",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-repositories-implementer",
             "max_retries": 3
@@ -412,10 +324,7 @@
       "name": "improve-skill-arch-repositories-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-repositories skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -428,13 +337,7 @@
           "task": "skill_path: .claude/skills/arch-services/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-services",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -443,11 +346,7 @@
           "task": "skill_path: .claude/skills/arch-services/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-services",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-services-implementer",
             "max_retries": 3
@@ -471,10 +370,7 @@
       "name": "improve-skill-arch-services-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-services skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -487,13 +383,7 @@
           "task": "skill_path: .claude/skills/arch-types/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-types",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -502,11 +392,7 @@
           "task": "skill_path: .claude/skills/arch-types/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-types",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-types-implementer",
             "max_retries": 3
@@ -530,10 +416,7 @@
       "name": "improve-skill-arch-types-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-types skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -546,13 +429,7 @@
           "task": "skill_path: .claude/skills/arch-utils/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-utils",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -561,11 +438,7 @@
           "task": "skill_path: .claude/skills/arch-utils/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-utils",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-utils-implementer",
             "max_retries": 3
@@ -589,10 +462,7 @@
       "name": "improve-skill-arch-utils-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-utils skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     },
     {
@@ -605,13 +475,7 @@
           "task": "skill_path: .claude/skills/arch-validators/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-validators",
           "procedure": "improve-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Write",
-            "Edit",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Write", "Edit", "Bash", "Glob"],
           "done": true
         },
         {
@@ -620,11 +484,7 @@
           "task": "skill_path: .claude/skills/arch-validators/SKILL.md\nng_output_path: .claude/tmp/review-skill-arch-validators",
           "procedure": "review-arch-skill",
           "model": "sonnet",
-          "allowed_tools": [
-            "Read",
-            "Bash",
-            "Glob"
-          ],
+          "allowed_tools": ["Read", "Bash", "Glob"],
           "rejected": {
             "to": "improve-skill-arch-validators-implementer",
             "max_retries": 3
@@ -648,10 +508,7 @@
       "name": "improve-skill-arch-validators-implementer",
       "task": "SKILL.md improvements reviewed and validated. Commit the changes with an appropriate conventional commit message (e.g. docs(skills): improve arch-validators skill).",
       "model": "haiku",
-      "allowed_tools": [
-        "Read",
-        "Bash"
-      ],
+      "allowed_tools": ["Read", "Bash"],
       "done": true
     }
   ]
