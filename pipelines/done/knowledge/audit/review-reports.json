@@ -1,0 +1,213 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "mkdir -p ~/docs/review",
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-agent",
+      "task": "source_report: ~/docs/knowledge-review-agent.md\nknowledge_dir: knowledge/agent\nreview_output: ~/docs/review/knowledge-review-agent.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-architectures",
+      "task": "source_report: ~/docs/knowledge-review-architectures.md\nknowledge_dir: knowledge/architectures\nreview_output: ~/docs/review/knowledge-review-architectures.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-cli-commands",
+      "task": "source_report: ~/docs/knowledge-review-cli-commands.md\nknowledge_dir: knowledge/cli-commands\nreview_output: ~/docs/review/knowledge-review-cli-commands.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-git",
+      "task": "source_report: ~/docs/knowledge-review-git.md\nknowledge_dir: knowledge/git\nreview_output: ~/docs/review/knowledge-review-git.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-ink",
+      "task": "source_report: ~/docs/knowledge-review-ink.md\nknowledge_dir: knowledge/ink\nreview_output: ~/docs/review/knowledge-review-ink.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-javascript",
+      "task": "source_report: ~/docs/knowledge-review-javascript.md\nknowledge_dir: knowledge/javascript\nreview_output: ~/docs/review/knowledge-review-javascript.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-mcp-tools",
+      "task": "source_report: ~/docs/knowledge-review-mcp-tools.md\nknowledge_dir: knowledge/mcp-tools\nreview_output: ~/docs/review/knowledge-review-mcp-tools.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-meta-skill-creator",
+      "task": "source_report: ~/docs/knowledge-review-meta-skill-creator.md\nknowledge_dir: knowledge/meta-skill-creator\nreview_output: ~/docs/review/knowledge-review-meta-skill-creator.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-pipeline",
+      "task": "source_report: ~/docs/knowledge-review-pipeline.md\nknowledge_dir: knowledge/pipeline\nreview_output: ~/docs/review/knowledge-review-pipeline.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-procedure",
+      "task": "source_report: ~/docs/knowledge-review-procedure.md\nknowledge_dir: knowledge/procedure\nreview_output: ~/docs/review/knowledge-review-procedure.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-react",
+      "task": "source_report: ~/docs/knowledge-review-react.md\nknowledge_dir: knowledge/react\nreview_output: ~/docs/review/knowledge-review-react.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-security",
+      "task": "source_report: ~/docs/knowledge-review-security.md\nknowledge_dir: knowledge/security\nreview_output: ~/docs/review/knowledge-review-security.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-shell",
+      "task": "source_report: ~/docs/knowledge-review-shell.md\nknowledge_dir: knowledge/shell\nreview_output: ~/docs/review/knowledge-review-shell.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-testing",
+      "task": "source_report: ~/docs/knowledge-review-testing.md\nknowledge_dir: knowledge/testing\nreview_output: ~/docs/review/knowledge-review-testing.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nThis directory is large — focus verification effort on findings that appear most impactful or surprising. If any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "max_turns": 50,
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-utils",
+      "task": "source_report: ~/docs/knowledge-review-utils.md\nknowledge_dir: knowledge/utils\nreview_output: ~/docs/review/knowledge-review-utils.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-validation",
+      "task": "source_report: ~/docs/knowledge-review-validation.md\nknowledge_dir: knowledge/validation\nreview_output: ~/docs/review/knowledge-review-validation.md\n\nRead source_report. For each finding, verify by reading the actual files in knowledge_dir:\n1. Relocation suggestions: Is the suggested target directory genuinely more appropriate? Read both the file and representative files in the suggested target to confirm.\n2. Duplicate candidates: Read both files being compared. Is the overlap real and significant enough to warrant action?\n3. Skill candidates: Does the described workflow actually match the Skill format (.claude/skills/<name>/SKILL.md)?\n\nIf any findings are inaccurate, overstated, or lack sufficient justification, write review_output listing only those issues with brief reasoning. If all findings are sound, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "mcp__perclst__knowledge_search"
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-report-summary",
+      "task": "source_report: ~/docs/knowledge-review-summary.md\nreview_output: ~/docs/review/knowledge-review-summary.md\n\nRead source_report and all per-directory reports in ~/docs/knowledge-review-*.md (excluding summary). Verify:\n1. Are the top relocation suggestions consistent with what the per-directory reports actually found?\n2. Are the confirmed cross-directory duplicates genuinely supported by both reports involved?\n3. Are the top skill candidates actually the highest-value ones across all directories?\n4. Are there important patterns in the per-directory reports that the summary missed?\n\nIf any of the above reveal inaccuracies, omissions, or misrepresentations, write review_output listing only those issues. If the summary accurately reflects the per-directory reports, do NOT create review_output.",
+      "allowed_tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "done": true
+    }
+  ]
+}
