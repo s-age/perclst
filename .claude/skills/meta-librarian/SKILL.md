@@ -1,6 +1,6 @@
 ---
 name: meta-librarian
-description: Promote knowledge/draft/ entries into structured knowledge/ files. Use when asked to organize, file, or promote draft knowledge, or when knowledge/draft/ has new entries.
+description: Promote knowledge/draft/ entries into structured knowledge/ files. Use when asked to organize or promote draft knowledge, or when draft/ has entries.
 paths:
   - 'knowledge/**'
 ---
@@ -26,10 +26,8 @@ Every piece of knowledge falls into one of three types. Lead each file with the 
 
 ## File placement
 
-Map knowledge to the existing subdirectory that best fits, or create a new one.
+Run `ls knowledge/` to see current subdirectories. Map knowledge to the best-fit directory, or create a new one.
 Prefer narrowing over broadening — put it closer to the specific component than the generic category.
-
-Current directories: `agent/`, `architectures/`, `cli-commands/`, `config/`, `mcp-tools/`, `meta-skill-creator/`, `procedure/`, `services/`, `utils/`
 
 ## File format
 
@@ -38,12 +36,9 @@ Use `template.md` as the base for every promoted file.
 Rules:
 - `Keywords` line is **required** on every file — use terms a future reader would search for
 - No process notes, no meta-commentary, no "this was written because…" — knowledge only
-- Target **30–80 lines** per file; split if longer
-- If one draft entry contains multiple distinct topics, write one file per topic
-
-## Splitting long files
-
-When a file would exceed ~80 lines, split at a natural boundary. If two or more files share a theme, group them in a subdirectory.
+- Target **30–80 lines** per file; split at a natural boundary if longer
+- If one draft entry covers multiple distinct topics, write one file per topic
+- If split files share a theme, group them in a subdirectory
 
 ## After processing
 
