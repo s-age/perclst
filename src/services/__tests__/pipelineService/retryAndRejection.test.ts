@@ -1,12 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import type {
-  Pipeline,
-  AgentPipelineTask,
-  RejectedContext,
-  ScriptPipelineTask
-} from '@src/types/pipeline'
+import type { Pipeline, AgentPipelineTask, RejectedContext } from '@src/types/pipeline'
 import type { IPipelineDomain, AgentTaskResult } from '@src/domains/ports/pipeline'
-import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
+import type { IScriptDomain } from '@src/domains/ports/script'
 import type { AgentResponse } from '@src/types/agent'
 import { PipelineService, type PipelineTaskResult } from '../../pipelineService'
 
@@ -47,7 +42,7 @@ describe('PipelineService', () => {
     resolveScriptRejection: vi.fn()
   }
   const mockScriptDomain: IScriptDomain = {
-    run: vi.fn<[string, string], Promise<ScriptResult>>()
+    run: vi.fn()
   }
 
   beforeEach(() => {
@@ -251,7 +246,7 @@ describe('PipelineService', () => {
           newCount: 1,
           context: {
             retry_count: 1,
-            task: { type: 'script', command: '' } as ScriptPipelineTask,
+            task: { type: 'agent', task: '' } as AgentPipelineTask,
             feedback: ''
           }
         })
@@ -299,7 +294,7 @@ describe('PipelineService', () => {
         pipeline.tasks[taskIndex].done = true
       })
 
-      const events = await collectEvents(pipeline, { onTaskDone })
+      await collectEvents(pipeline, { onTaskDone })
 
       const agentCalls = vi.mocked(mockPipelineDomain.runAgentTask).mock.calls
       expect(agentCalls).toHaveLength(2)
