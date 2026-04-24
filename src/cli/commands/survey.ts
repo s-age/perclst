@@ -28,7 +28,7 @@ export async function surveyCommand(
     await startCommand(
       'Refresh all codebase catalogs in .claude/skills/code-base-survey/ to reflect the current state of src/.',
       {
-        procedure: 'code-base-survey-refresh',
+        procedure: 'code-base-survey/refresh',
         labels: ['survey'],
         model: 'sonnet',
         allowedTools: REFRESH_TOOLS,
@@ -44,7 +44,7 @@ export async function surveyCommand(
   }
 
   await startCommand(query, {
-    procedure: 'code-base-survey',
+    procedure: 'code-base-survey/survey',
     labels: ['survey'],
     model: 'sonnet',
     allowedTools: SURVEY_TOOLS,

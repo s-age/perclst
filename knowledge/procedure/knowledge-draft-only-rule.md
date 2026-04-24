@@ -4,22 +4,22 @@
 
 ## Context
 
-Applies to any agent or conversation that captures knowledge during a task. Perclst enforces a curation boundary: structured files under `knowledge/` subdirectories are managed exclusively by the `meta-curate-knowledge` procedure.
+Applies to any agent or conversation that captures knowledge during a task. Perclst enforces a curation boundary: structured files under `knowledge/` subdirectories are managed exclusively by the `meta-librarian/curate` procedure.
 
 ## What happened / What is true
 
-- `CLAUDE.md` explicitly states: only the `meta-curate-knowledge` procedure may write directly to `knowledge/` (outside of `draft/`).
+- `CLAUDE.md` explicitly states: only the `meta-librarian/curate` procedure may write directly to `knowledge/` (outside of `draft/`).
 - All agents and conversations must write freeform notes to `knowledge/draft/` only.
 - Promotion from draft to structured knowledge is done by running:
   ```bash
-  perclst start "Promote all draft knowledge" --procedure meta-librarian/meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only
+  perclst start "Promote all draft knowledge" --procedure meta-librarian/curate --allowed-tools Write Read Bash Glob --output-only
   ```
 - Writing directly to `knowledge/<subdir>/` bypasses curation and violates the project rule.
 
 ## Do
 
 - Drop freeform `.md` notes in `knowledge/draft/` immediately after any task
-- Let the `meta-curate-knowledge` procedure handle structuring and subdirectory placement
+- Let the `meta-librarian/curate` procedure handle structuring and subdirectory placement
 
 ## Don't
 
@@ -29,4 +29,4 @@ Applies to any agent or conversation that captures knowledge during a task. Perc
 
 ---
 
-**Keywords:** knowledge, draft, curation, meta-curate-knowledge, procedure, write rule, knowledge/draft
+**Keywords:** knowledge, draft, curation, meta-librarian/curate, procedure, write rule, knowledge/draft

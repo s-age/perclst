@@ -20,7 +20,7 @@ The plan directory is consumed by two downstream agents — write for machine re
 ```
 plans/<slug>/
   brief.md      Goal + design decisions
-  layers.md     Routing manifest for create-planning-pipeline
+  layers.md     Routing manifest for meta-pipeline-creator/create
   <layer>.md    One file per touched layer — I/F definitions first
 ```
 

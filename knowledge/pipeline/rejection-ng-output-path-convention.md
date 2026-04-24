@@ -6,19 +6,19 @@
 
 `PipelineService` determines whether an agent step was rejected by checking for
 the presence of a file at `.claude/tmp/{task.name}`. Review-style agents (e.g.
-`review-arch`, `review-unit-test`) signal failure by writing violations to a
+`arch/review`, `test-unit/review`) signal failure by writing violations to a
 path called `ng_output_path`. If these two paths diverge, rejection is never
 detected and the pipeline silently continues.
 
 ## What happened / What is true
 
-- `review-arch` writes violations to the path specified by `ng_output_path`.
+- `arch/review` writes violations to the path specified by `ng_output_path`.
 - `PipelineService.handleAgentRejection` checks for the file at
   `.claude/tmp/{task.name}`.
 - When both values are the same string the check succeeds; when they differ
   the file is written somewhere `PipelineService` never looks, so rejection
   is ignored.
-- `review-unit-test` follows the same rule and works correctly.
+- `test-unit/review` follows the same rule and works correctly.
 
 ## Do
 
@@ -35,4 +35,4 @@ detected and the pipeline silently continues.
 
 ---
 
-**Keywords:** PipelineService, rejection, ng_output_path, task.name, review-arch, review-unit-test, convention, handleAgentRejection
+**Keywords:** PipelineService, rejection, ng_output_path, task.name, arch/review, test-unit/review, convention, handleAgentRejection

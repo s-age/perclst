@@ -114,13 +114,13 @@ perclst resume <session-id> "quick follow-up" --model haiku
 
 Use `--procedure <name>` to set agent behavior:
 
-- **meta-curate-knowledge**: Promotes `knowledge/draft/` entries into structured `knowledge/` files
-- **meta-plan**: Produces a plan directory (`plans/<slug>/`) with interface definitions per layer, consumed downstream by `code-base-survey` and `meta-pipeline-creator`
+- **meta-librarian/curate**: Promotes `knowledge/draft/` entries into structured `knowledge/` files
+- **meta-plan/plan**: Produces a plan directory (`plans/<slug>/`) with interface definitions per layer, consumed downstream by `code-base-survey` and `meta-pipeline-creator`
 
-> **Note**: Some procedures require file write access. The `meta-curate-knowledge` procedure needs
+> **Note**: Some procedures require file write access. The `meta-librarian/curate` procedure needs
 > `--allowed-tools Write Read Bash Glob` or it will stall on permission prompts:
 > ```bash
-> perclst start "Promote all draft knowledge" --procedure meta-librarian/meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only
+> perclst start "Promote all draft knowledge" --procedure meta-librarian/curate --allowed-tools Write Read Bash Glob --output-only
 > ```
 
 ## Development
@@ -183,11 +183,11 @@ When you encounter any of the following, write a note to `knowledge/draft/` imme
 - **Decision**: a design choice made for a non-obvious reason (constraints, trade-offs)
 - **Gotcha**: a subtle rule or edge case that would surprise a future reader
 
-Drop a freeform `.md` file in `knowledge/draft/` with whatever detail you have. The `meta-curate-knowledge` procedure will structure and file it properly later.
+Drop a freeform `.md` file in `knowledge/draft/` with whatever detail you have. The `meta-librarian/curate` procedure will structure and file it properly later.
 
-> **Rule**: Only the `meta-curate-knowledge` procedure may write directly to `knowledge/` (outside of `draft/`). All other agents and conversations must write to `knowledge/draft/` only.
+> **Rule**: Only the `meta-librarian/curate` procedure may write directly to `knowledge/` (outside of `draft/`). All other agents and conversations must write to `knowledge/draft/` only.
 
-> Run `perclst start "Curate all draft knowledge" --procedure meta-librarian/meta-curate-knowledge --allowed-tools Write Read Bash Glob --output-only` to promote drafts.
+> Run `perclst start "Curate all draft knowledge" --procedure meta-librarian/curate --allowed-tools Write Read Bash Glob --output-only` to promote drafts.
 
 ## MCP Tools
 

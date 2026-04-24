@@ -9,14 +9,14 @@ of each procedure discoverable and supports namespace-scoped agent families.
 
 ## What happened / What is true
 
-**Format:** `[namespace-]<verb>-<subject>.md`
+**Format:** `<verb>.md` inside `procedures/<skill>/`
 
-- Must start with a verb that describes what the agent does (e.g. `curate`, `review`, `implement`).
-- Use a hyphen-separated namespace prefix for scoped agents (`meta-`, `analyze-`, `review-`).
-- Omit the prefix for general-purpose procedures.
+- The skill directory provides the domain context, so the filename is the verb alone.
+- Must be a verb that describes what the agent does (e.g. `curate`, `review`, `implement`, `inspect`).
+- Referenced as `<skill>/<verb>` (e.g. `--procedure meta-librarian/curate`).
 - Lowercase, hyphens only — no underscores, no camelCase.
 
-**Examples:** `meta-curate-knowledge.md`, `review-code.md`, `implement-feature.md`
+**Examples:** `meta-librarian/curate.md`, `arch/review.md`, `test-unit/implement.md`
 
 ### Verb vocabulary: `curate` vs `promote`
 

@@ -1,5 +1,8 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { inspectCommand } from '../inspect'
+import { PROCEDURES_DIR } from './helper'
 import { parseInspectSession } from '@src/validators/cli/inspectSession'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
@@ -60,13 +63,25 @@ describe('inspectCommand', () => {
     expect(vi.mocked(startCommand)).toHaveBeenCalledWith(
       `Inspect the following git diff and produce a code inspection report:\n\n${testDiff}`,
       {
-        procedure: 'code-inspect/code-inspector',
+        procedure: 'code-inspect/inspect',
         labels: ['inspect'],
         model: 'sonnet',
         allowedTools: ['Skill', 'mcp__perclst__knowledge_search'],
         outputOnly: true
       }
     )
+  })
+
+  it('references a procedure file that exists', async () => {
+    const parsedInput = { old: 'a', new: 'b' }
+    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
+    vi.mocked(container).resolve.mockReturnValue({ getDiff: vi.fn().mockReturnValue('diff') })
+    vi.mocked(startCommand).mockResolvedValue(undefined)
+
+    await inspectCommand('a', 'b')
+
+    const procedure = vi.mocked(startCommand).mock.calls[0][1].procedure
+    expect(existsSync(join(PROCEDURES_DIR, `${procedure}.md`))).toBe(true)
   })
 
   it('should print message to stdout when no diff is found', async () => {

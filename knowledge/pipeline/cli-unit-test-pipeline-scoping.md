@@ -28,7 +28,7 @@ Two scoping decisions were made for the CLI unit-test pipelines:
 
 ## Don't
 
-- Expect the `implement-unit-test` procedure to handle React hooks or `.tsx` files directly
+- Expect the `test-unit/implement` procedure to handle React hooks or `.tsx` files directly
 - Create unit-test pipelines for React components without React Testing Library setup
 - Assume the default test runner configuration works for TSX files
 

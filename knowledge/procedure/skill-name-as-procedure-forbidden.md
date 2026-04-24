@@ -22,7 +22,7 @@ which is misleading and breaks discoverability.
 
 | Verdict | Example |
 |---------|---------|
-| ✅ Good | `curate-knowledge.md`, `create-planning-pipeline.md` |
+| ✅ Good | `meta-librarian/curate.md`, `meta-pipeline-creator/create.md` |
 | ❌ Bad | `meta-librarian.md` (skill name), `meta-pipeline-creator.md` (skill name) |
 
 ## Do

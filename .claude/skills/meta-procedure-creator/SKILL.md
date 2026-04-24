@@ -89,20 +89,20 @@ A procedure orchestrates one or more skills — its name must describe what it a
 
 | Good | Bad | Why bad |
 |:---|:---|:---|
-| `create-planning-pipeline` | `meta-pipeline-creator` | skill name, not purpose |
-| `curate-knowledge` | `meta-librarian` | skill name, not purpose |
-| `review-arch` | `arch-reviewer` | adjective before noun — role, not task |
+| `create` | `create-planning-pipeline` | verb alone suffices; skill dir provides context |
+| `curate` | `curate-knowledge` | subject (`knowledge`) is redundant with skill dir |
+| `review` | `arch-reviewer` | adjective before noun — role, not task |
 
-Use a **verb phrase**: `create-*`, `review-*`, `generate-*`, `promote-*`.
+Use a single **verb**: `create`, `review`, `implement`, `curate`, `inspect`.
 
 ## Placement
 
-File lives at `procedures/<skill>/` where `<skill>` is the **subject** — the skill that acts as the agent's primary role — not the domain being operated on.
+File lives at `procedures/<skill>/<verb>.md` where `<skill>` is the **subject** — the skill that acts as the agent's primary role — not the domain being operated on.
 
 | Procedure | Skill dir | Reason |
 |:---|:---|:---|
-| `improve-arch-skill` | `meta-skill-creator/` | subject is skill improvement; arch is the target |
-| `meta-curate-knowledge` | `meta-librarian/` | subject is the librarian; knowledge is the target |
-| `review-arch` | `arch/` | subject is arch review; arch is both actor and domain |
+| `improve` | `meta-skill-creator/` | subject is skill improvement; arch is the target |
+| `curate` | `meta-librarian/` | subject is the librarian; knowledge is the target |
+| `review` | `arch/` | subject is arch review; arch is both actor and domain |
 
 When in doubt: ask "which skill describes what this agent *is*?" — not "what does it operate on?"

@@ -4,8 +4,8 @@
 
 ## Context
 
-`ProcedureRepository` resolves procedure files by name (e.g. `meta-librarian/meta-curate-knowledge` →
-`procedures/meta-librarian/meta-curate-knowledge.md`). Projects that use perclst outside its own repo need
+`ProcedureRepository` resolves procedure files by name (e.g. `meta-librarian/curate` →
+`procedures/meta-librarian/curate.md`). Projects that use perclst outside its own repo need
 to define custom procedures without modifying the package. This applies whenever `perclst
 start --procedure <name>` is called.
 
