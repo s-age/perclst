@@ -1,44 +1,54 @@
-# Pure Functions on Domain Types Belong in domains/, Not utils/
+# Where Pure Functions Belong: utils/ vs domains/
 
 **Type:** Discovery
 
 ## Context
 
-When writing pure functions (no I/O, no side effects), there is a temptation to place them in `utils/` because they feel "generic." This rule clarifies when that placement violates the layer import rules.
+When writing pure functions (no I/O, no side effects), there is a temptation to place them in `utils/` because they feel "generic." The deciding factor is not purity — it is whether the function depends on injected runtime dependencies and whether it needs direct unit testing.
 
 ## What happened / What is true
 
-`flattenTurns` and `applyRowFilter` were placed in `src/utils/turns.ts` because they are pure functions. However, both operate on `ClaudeCodeTurn` (a domain type from `@src/types/analysis`), which forced `utils/` to import from `@src/types/` — a layer it must never import from.
+The rule breaks into two cases:
 
-The fix was to move them to `src/domains/turns.ts`.
+**Case 1 — function operates on domain types, no injected deps, needs direct unit testing**  
+Move to `utils/`. `utils/` may freely import from `@src/types/*` — `src/types` is a leaf node with no upstream imports, so `utils → types` creates no cycle. This was confirmed when `calcComplexity` and six related helpers were moved from `src/domains/testStrategy.ts` to `src/utils/testStrategyHelpers.ts` to allow direct testing without leaking implementation details into the domain's public surface.
 
-The deciding factor for `utils/` vs `domains/` is **not** "is it pure?" but **"does it know about domain types?"**:
+**Case 2 — function operates on domain types AND requires injected dependencies (e.g. a `repo` argument)**  
+Keep in `domains/`. Domain classes are the right home for logic that cannot be cleanly separated from its runtime context.
 
-- **`utils/`** — generic, domain-agnostic helpers (date formatting, UUID generation, logging). Zero `@src/` imports allowed.
-- **`domains/`** — business logic and transformations over domain types. May import from `@src/types/`.
+**Still forbidden in utils/**: importing from `domains/`, `services/`, `repositories/`, `infrastructures/`, or `cli/`.
 
-A pure function that takes `ClaudeCodeTurn[]` and returns `TurnRow[]` is domain logic — it just happens to have no side effects.
+The original heuristic — "does it know about domain types → domains/" — was too broad. A pure function that takes `ClauseCodeTurn[]` is domain-typed but can still live in `utils/` if it has no injected deps and testability benefits from the move.
 
-The resulting call pattern exposes domain functions to callers via a service method:
+Decision tree:
+
+```
+Has injected deps (repo, service, etc.)?
+  Yes → domains/
+  No → Does direct unit testing benefit from isolation?
+         Yes → utils/ (importing @src/types is fine)
+         No  → either is acceptable; prefer domains/ for domain-type-aware transforms
+```
+
+Callers reach domain logic through a service method regardless of which layer owns it:
 
 ```
 cli/show.ts → analyzeService.formatTurns(turns, filter)
-                └→ domains/turns.ts (flattenTurns, applyRowFilter)
+               └→ domains/turns.ts  OR  utils/turnsHelpers.ts
 ```
-
-This lets `web/` or `mcp/` reuse the same domain logic through their own service calls without duplicating transformations.
 
 ## Do
 
-- Place functions that take or return domain types (`@src/types/`) in `domains/`, even if they are pure
-- Keep `utils/` free of all `@src/` imports
-- Expose domain functions to CLI/MCP/web callers through a service method
+- Import from `@src/types/*` freely within `utils/` files
+- Move pure helpers with no injected deps to `utils/` when direct testing is needed
+- Keep functions that require injected dependencies inside the domain class
 
 ## Don't
 
-- Place domain-type-aware functions in `utils/` just because they have no side effects
-- Import from `@src/types/` or any other `@src/` path inside `utils/`
+- Import from `domains/`, `services/`, `repositories/`, `infrastructures/`, or `cli/` inside `utils/`
+- Export implementation-detail helpers from domain files just to test them
+- Assume "pure function" automatically means `utils/` — check for injected deps first
 
 ---
 
-**Keywords:** utils, domains, pure function, layer rules, import rules, ClaudeCodeTurn, flattenTurns, domain logic, architecture
+**Keywords:** utils, domains, pure function, layer rules, import rules, types, testability, flattenTurns, calcComplexity, domain logic, architecture, SKILL.md
