@@ -5,8 +5,8 @@ import type { IAgentDomain } from '@src/domains/ports/agent'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import type { IRejectionFeedbackRepository } from '@src/repositories/ports/rejectionFeedback'
 import type { ScriptResult } from '@src/domains/ports/script'
-import { PipelineDomain } from '@src/domains/pipeline'
-import { PipelineService, type PipelineTaskResult } from '../../pipelineService'
+import { PipelineDomain } from '../../pipeline'
+import { PipelineService, type PipelineTaskResult } from '@src/services/pipelineService'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 
 vi.mock('@src/utils/output', () => ({ debug: { print: vi.fn() } }))
@@ -54,10 +54,7 @@ function createStubRejectionFeedbackRepo(cwd = '/test'): IRejectionFeedbackRepos
 function createStubScriptDomain(results: ScriptResult[]) {
   let callIndex = 0
   return {
-    domain: {
-      run: async () => results[callIndex++] ?? { exitCode: 0, stdout: '', stderr: '' }
-    },
-    getCallCount: () => callIndex
+    run: async () => results[callIndex++] ?? { exitCode: 0, stdout: '', stderr: '' }
   }
 }
 
@@ -81,12 +78,12 @@ function buildService(scriptResults: ScriptResult[]) {
   const agentDomain = createStubAgentDomain()
   const sessionDomain = createStubSessionDomain()
   const rejectionRepo = createStubRejectionFeedbackRepo()
-  const scriptStub = createStubScriptDomain(scriptResults)
+  const scriptDomain = createStubScriptDomain(scriptResults)
 
   const pipelineDomain = new PipelineDomain(agentDomain, sessionDomain, rejectionRepo)
-  const service = new PipelineService(pipelineDomain, scriptStub.domain)
+  const service = new PipelineService(pipelineDomain, scriptDomain)
 
-  return { service, agentDomain, scriptCallCount: scriptStub.getCallCount }
+  return { service, agentDomain }
 }
 
 describe('PipelineService retry flow (stub integration)', () => {
