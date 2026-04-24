@@ -75,7 +75,11 @@ export class PipelineService {
         continue
       }
       const jumpTo = yield* this.processTask(task, { i, taskPath }, options, context)
-      if (jumpTo === undefined) options.onTaskDone?.(taskPath, i)
+      if (jumpTo === undefined) {
+        options.onTaskDone?.(taskPath, i)
+      } else {
+        pipeline.tasks[jumpTo].done = false
+      }
       i = jumpTo ?? i + 1
     }
   }

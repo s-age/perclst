@@ -182,7 +182,7 @@ describe('PipelineDomain - utils', () => {
     it('returns index of first agent task', () => {
       const pipeline: Pipeline = {
         tasks: [
-          { type: 'script', name: 'script1', command: 'echo' },
+          { type: 'script', command: 'echo' },
           { type: 'agent', name: 'agent1', task: 'work' },
           { type: 'agent', name: 'agent2', task: 'more work' }
         ]
@@ -196,8 +196,8 @@ describe('PipelineDomain - utils', () => {
     it('returns undefined when no agent task found', () => {
       const pipeline: Pipeline = {
         tasks: [
-          { type: 'script', name: 'script1', command: 'echo' },
-          { type: 'script', name: 'script2', command: 'cat' }
+          { type: 'script', command: 'echo' },
+          { type: 'script', command: 'cat' }
         ]
       }
 
@@ -210,7 +210,7 @@ describe('PipelineDomain - utils', () => {
       const pipeline: Pipeline = {
         tasks: [
           { type: 'agent', name: 'agent1', task: 'work' },
-          { type: 'script', name: 'script1', command: 'echo' }
+          { type: 'script', command: 'echo' }
         ]
       }
 

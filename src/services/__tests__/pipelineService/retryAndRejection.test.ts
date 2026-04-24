@@ -1,12 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import type {
-  Pipeline,
-  AgentPipelineTask,
-  RejectedContext,
-  ScriptPipelineTask
-} from '@src/types/pipeline'
+import type { Pipeline, AgentPipelineTask, RejectedContext } from '@src/types/pipeline'
 import type { IPipelineDomain, AgentTaskResult } from '@src/domains/ports/pipeline'
-import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
+import type { IScriptDomain } from '@src/domains/ports/script'
 import type { AgentResponse } from '@src/types/agent'
 import { PipelineService, type PipelineTaskResult } from '../../pipelineService'
 
@@ -47,7 +42,7 @@ describe('PipelineService', () => {
     resolveScriptRejection: vi.fn()
   }
   const mockScriptDomain: IScriptDomain = {
-    run: vi.fn<[string, string], Promise<ScriptResult>>()
+    run: vi.fn()
   }
 
   beforeEach(() => {
@@ -251,7 +246,7 @@ describe('PipelineService', () => {
           newCount: 1,
           context: {
             retry_count: 1,
-            task: { type: 'script', command: '' } as ScriptPipelineTask,
+            task: { type: 'agent', task: '' } as AgentPipelineTask,
             feedback: ''
           }
         })
@@ -268,6 +263,90 @@ describe('PipelineService', () => {
       const retryEvent = events.find((e) => e.kind === 'retry')
       expect(retryEvent).toBeDefined()
       expect(retryEvent?.retryCount).toBe(1)
+    })
+
+    it('should clear done flag on retry target so it re-runs with rejection context', async () => {
+      const rejectionContext: RejectedContext = {
+        retry_count: 1,
+        task: { type: 'agent', task: 'target' } as AgentPipelineTask,
+        feedback: 'script failed'
+      }
+      vi.mocked(mockScriptDomain.run).mockImplementation(async () => ({
+        exitCode: 1,
+        stdout: 'out',
+        stderr: 'err'
+      }))
+      vi.mocked(mockPipelineDomain.resolveScriptRejection)
+        .mockReturnValueOnce({
+          targetIndex: 0,
+          newCount: 1,
+          context: rejectionContext
+        })
+        .mockReturnValue(undefined)
+
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'target', name: 'target' },
+          { type: 'script', command: 'check', rejected: { to: 'target', max_retries: 2 } }
+        ]
+      }
+      const onTaskDone = vi.fn((_taskPath: number[], taskIndex: number) => {
+        pipeline.tasks[taskIndex].done = true
+      })
+
+      await collectEvents(pipeline, { onTaskDone })
+
+      const agentCalls = vi.mocked(mockPipelineDomain.runAgentTask).mock.calls
+      expect(agentCalls).toHaveLength(2)
+      expect(agentCalls[1][3]).toEqual(rejectionContext)
+    })
+
+    it('should mark all tasks done after successful retry with onTaskDone', async () => {
+      vi.mocked(mockScriptDomain.run)
+        .mockResolvedValueOnce({ exitCode: 1, stdout: 'error', stderr: '' })
+        .mockResolvedValueOnce({ exitCode: 0, stdout: 'ok', stderr: '' })
+      vi.mocked(mockPipelineDomain.resolveScriptRejection)
+        .mockReturnValueOnce(stubRejectionResult(0))
+        .mockReturnValue(undefined)
+
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'fix code', name: 'fixer' },
+          { type: 'script', command: 'check', rejected: { to: 'fixer', max_retries: 2 } }
+        ]
+      }
+      const onTaskDone = vi.fn((_taskPath: number[], taskIndex: number) => {
+        pipeline.tasks[taskIndex].done = true
+      })
+
+      await collectEvents(pipeline, { onTaskDone })
+
+      expect(pipeline.tasks[0].done).toBe(true)
+      expect(pipeline.tasks[1].done).toBe(true)
+    })
+
+    it('should not affect done flags when script has no rejection config', async () => {
+      vi.mocked(mockScriptDomain.run).mockResolvedValue({
+        exitCode: 1,
+        stdout: 'fail',
+        stderr: ''
+      })
+      vi.mocked(mockPipelineDomain.resolveScriptRejection).mockReturnValue(undefined)
+
+      const pipeline: Pipeline = {
+        tasks: [
+          { type: 'agent', task: 'work', name: 'worker' },
+          { type: 'script', command: 'check' }
+        ]
+      }
+      const onTaskDone = vi.fn((_taskPath: number[], taskIndex: number) => {
+        pipeline.tasks[taskIndex].done = true
+      })
+
+      await collectEvents(pipeline, { onTaskDone })
+
+      expect(pipeline.tasks[0].done).toBe(true)
+      expect(pipeline.tasks[1].done).toBe(true)
     })
   })
 

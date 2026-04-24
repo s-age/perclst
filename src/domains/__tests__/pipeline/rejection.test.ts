@@ -152,7 +152,6 @@ describe('PipelineDomain - rejection handling', () => {
       }
       const task: ScriptPipelineTask = {
         type: 'script',
-        name: 'script1',
         command: 'echo'
       }
       const result: ScriptResult = {
@@ -175,7 +174,6 @@ describe('PipelineDomain - rejection handling', () => {
       }
       const task: ScriptPipelineTask = {
         type: 'script',
-        name: 'script1',
         command: 'false'
       }
       const result: ScriptResult = {
@@ -198,7 +196,6 @@ describe('PipelineDomain - rejection handling', () => {
       }
       const task: ScriptPipelineTask = {
         type: 'script',
-        name: 'script1',
         command: 'failing-cmd',
         rejected: { to: 'retry_target', max_retries: 2 }
       }
@@ -226,7 +223,6 @@ describe('PipelineDomain - rejection handling', () => {
       }
       const task: ScriptPipelineTask = {
         type: 'script',
-        name: 'script1',
         command: 'cmd',
         rejected: { to: 'target', max_retries: 1 }
       }
@@ -236,7 +232,10 @@ describe('PipelineDomain - rejection handling', () => {
         stderr: 'stderr content'
       }
 
-      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, 0, 0)
+      const rejection = pipelineDomain.resolveScriptRejection(pipeline, task, result, {
+        taskIndex: 0,
+        currentCount: 0
+      })
 
       expect(rejection?.context.feedback).toBe('stdout content\nstderr content')
     })
@@ -247,7 +246,6 @@ describe('PipelineDomain - rejection handling', () => {
       }
       const task: ScriptPipelineTask = {
         type: 'script',
-        name: 'script1',
         command: 'cmd',
         rejected: { to: 'target', max_retries: 1 }
       }
@@ -271,7 +269,6 @@ describe('PipelineDomain - rejection handling', () => {
       }
       const task: ScriptPipelineTask = {
         type: 'script',
-        name: 'script1',
         command: 'cmd',
         rejected: { to: 'target', max_retries: 3 }
       }
