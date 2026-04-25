@@ -3,7 +3,8 @@
     {
       "type": "child",
       "path": "arch-react-hooks__refactor__use-abort.json",
-      "name": "arch-react-hooks-refactor-use-abort"
+      "name": "arch-react-hooks-refactor-use-abort",
+      "done": true
     },
     {
       "type": "child",
