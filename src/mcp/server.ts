@@ -49,14 +49,20 @@ server.tool(
 
 server.tool(
   'ts_analyze',
-  'Analyze TypeScript code structure (symbols, imports, exports)',
+  'Returns all symbols (functions, variables, types), imports, and exports of a TypeScript file. ' +
+    'When: first step before writing tests, editing, or reviewing any file in src/ — before reading line by line. ' +
+    'Why: gives a complete surface map without reading the full source. ' +
+    'How: use the symbol list to identify what to test or where to make changes; feed key symbols into ts_get_types for exact signatures.',
   tsAnalyzeParams,
   ({ file_path }) => executeTsAnalyze({ file_path })
 )
 
 server.tool(
   'ts_get_references',
-  'Find all references to a TypeScript symbol',
+  'Finds all call sites of a named TypeScript symbol across the codebase. ' +
+    'When: before refactoring or renaming any symbol. ' +
+    'Why: reveals blast radius — how many callers exist and where they are. ' +
+    'How: review every call site before making changes so you know what else needs to be updated.',
   tsGetReferencesParams,
   ({ file_path, symbol_name, include_test, recursive }) =>
     executeTsGetReferences({ file_path, symbol_name, include_test, recursive })
@@ -64,15 +70,20 @@ server.tool(
 
 server.tool(
   'ts_get_types',
-  'Get type definitions for a TypeScript symbol',
+  'Returns parameter types and return type for a named TypeScript symbol. ' +
+    'When: when you need the exact signature of a function before calling or testing it. ' +
+    'Why: avoids guessing types or reading the full source manually. ' +
+    'How: use the returned signature to write correct function calls or test stubs.',
   tsGetTypesParams,
   ({ file_path, symbol_name }) => executeTsGetTypes({ file_path, symbol_name })
 )
 
 server.tool(
   'ts_test_strategist',
-  'Formulate a unit test strategy for a TypeScript file — identifies untested functions, ' +
-    'calculates cyclomatic complexity, and suggests mocks for dependencies.',
+  'Identifies untested functions, calculates cyclomatic complexity, and suggests mocks for a TypeScript file. ' +
+    'When: starting point for any unit test task. ' +
+    'Why: tells you what to test, how many cases to write, and what to mock — without reading source first. ' +
+    'How: follow with ts_analyze to read the target file, write the tests, then verify with ts_checker.',
   tsTestStrategistParams,
   ({ target_file_path, test_file_path }) =>
     executeTsTestStrategist({ target_file_path, test_file_path })
@@ -80,18 +91,23 @@ server.tool(
 
 server.tool(
   'knowledge_search',
-  'Search the perclst knowledge base by keyword. ' +
-    'Matches against the **Keywords:** field declared in each knowledge file. ' +
+  'Searches the perclst knowledge base by keyword. ' +
+    'Matches against the Keywords field in each knowledge file. ' +
     'Space-separated terms are ANDed; use OR between groups for OR logic. ' +
-    'Examples: "fork session", "zod OR validation", "fork OR resume session"',
+    'Examples: "fork session", "zod OR validation", "fork OR resume session". ' +
+    'When: before starting any non-trivial task. ' +
+    'Why: a past problem, gotcha, or design decision may already be documented — avoids rediscovering known issues. ' +
+    'How: search with relevant keywords; read matching entries before proceeding.',
   knowledgeSearchParams,
   ({ query, include_draft }) => executeKnowledgeSearch({ query, include_draft })
 )
 
 server.tool(
   'ts_checker',
-  'Run lint (lint:fix), build, and unit tests in one shot and report errors/warnings for each. ' +
-    'Use this after making TypeScript changes to verify correctness before completing a task.',
+  'Runs lint (lint:fix), build, and unit tests in one shot and reports errors/warnings for each phase. ' +
+    'When: after every TypeScript change before reporting a task complete. ' +
+    'Why: catches lint errors, type errors, and test failures in one call. ' +
+    'How: if ok is false, inspect the errors/warnings fields and fix before completing.',
   tsCheckerParams,
   ({ project_root, lint_command, build_command, test_command }) =>
     executeTsChecker({ project_root, lint_command, build_command, test_command })
