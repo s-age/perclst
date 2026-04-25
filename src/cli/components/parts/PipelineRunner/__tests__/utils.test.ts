@@ -17,7 +17,7 @@ describe('PipelineRunner/utils', () => {
   describe('initTasks', () => {
     it('maps agent task with done=false to pending status', () => {
       const pipeline: Pipeline = {
-        tasks: [{ type: 'agent', name: 'Test Agent', done: false }]
+        tasks: [{ type: 'agent', name: 'Test Agent', task: 'test-task', done: false }]
       }
       const result = initTasks(pipeline)
       expect(result).toHaveLength(1)
@@ -32,7 +32,7 @@ describe('PipelineRunner/utils', () => {
 
     it('maps agent task with done=true to done status', () => {
       const pipeline: Pipeline = {
-        tasks: [{ type: 'agent', name: 'Test Agent', done: true }]
+        tasks: [{ type: 'agent', name: 'Test Agent', task: 'test-task', done: true }]
       }
       const result = initTasks(pipeline)
       expect(result[0]).toMatchObject({
@@ -59,7 +59,7 @@ describe('PipelineRunner/utils', () => {
           {
             type: 'pipeline',
             name: 'Parent',
-            tasks: [{ type: 'agent', name: 'Child', done: false }],
+            tasks: [{ type: 'agent', name: 'Child', task: 'child-task', done: false }],
             done: false
           }
         ]

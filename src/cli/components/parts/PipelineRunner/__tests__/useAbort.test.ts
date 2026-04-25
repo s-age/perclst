@@ -1,4 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import type { Mock } from 'vitest'
 import { useInput } from 'ink'
 import { isAbortKey, useAbort } from '../useAbort'
 
@@ -33,11 +34,11 @@ describe('isAbortKey', () => {
 // ─── useAbort ────────────────────────────────────────────────────────────────
 
 describe('useAbort', () => {
-  let onAbort: ReturnType<typeof vi.fn>
+  let onAbort: Mock<() => void>
 
   beforeEach(() => {
     vi.clearAllMocks()
-    onAbort = vi.fn()
+    onAbort = vi.fn<() => void>()
   })
 
   it('registers a useInput handler with isActive: true', () => {

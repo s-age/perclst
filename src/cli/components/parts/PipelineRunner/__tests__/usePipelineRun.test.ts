@@ -264,8 +264,8 @@ describe('runPipeline', () => {
   let setAllLines: ReturnType<typeof vi.fn>
   let setDone: ReturnType<typeof vi.fn>
   let setError: ReturnType<typeof vi.fn>
-  let onDone: ReturnType<typeof vi.fn>
-  let onError: ReturnType<typeof vi.fn>
+  let onDone: Mock<() => void>
+  let onError: Mock<(err: Error) => void>
   let mockRun: ReturnType<typeof vi.fn>
 
   const pipeline = { tasks: [] }
@@ -277,8 +277,8 @@ describe('runPipeline', () => {
     setAllLines = vi.fn()
     setDone = vi.fn()
     setError = vi.fn()
-    onDone = vi.fn()
-    onError = vi.fn()
+    onDone = vi.fn<() => void>()
+    onError = vi.fn<(err: Error) => void>()
     mockRun = vi.fn()
   })
 

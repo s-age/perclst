@@ -214,6 +214,7 @@ describe('printResponse', (): void => {
         ...baseResponse,
         tool_history: [
           {
+            id: 'tool-use-1',
             name: 'WebFetch',
             input: { url: 'https://example.com' },
             result: 'HTML content'
@@ -232,6 +233,7 @@ describe('printResponse', (): void => {
         ...baseResponse,
         tool_history: [
           {
+            id: 'tool-use-2',
             name: 'Bash',
             input: { command: 'ls' },
             result: 'file1.txt\nfile2.txt'
@@ -250,6 +252,7 @@ describe('printResponse', (): void => {
         ...baseResponse,
         tool_history: [
           {
+            id: 'tool-use-3',
             name: 'Monitor',
             input: { command: 'watch', timeout_ms: 5000 }
           }
@@ -267,6 +270,7 @@ describe('printResponse', (): void => {
         ...baseResponse,
         tool_history: [
           {
+            id: 'tool-use-4',
             name: 'WebFetch',
             input: { url: 'test' },
             result: 'Success'
@@ -285,6 +289,7 @@ describe('printResponse', (): void => {
         ...baseResponse,
         tool_history: [
           {
+            id: 'tool-use-5',
             name: 'WebFetch',
             input: { url: 'test' }
           }
@@ -303,6 +308,7 @@ describe('printResponse', (): void => {
         ...baseResponse,
         tool_history: [
           {
+            id: 'tool-use-6',
             name: 'Bash',
             input: { command: 'ls' },
             result: 'output'
@@ -321,6 +327,7 @@ describe('printResponse', (): void => {
         ...baseResponse,
         tool_history: [
           {
+            id: 'tool-use-7',
             name: 'Read',
             input: { file_path: '/tmp/test' },
             result: 'content'
@@ -510,9 +517,10 @@ describe('printResponse', (): void => {
     it('skips usage section when response has no usage', (): void => {
       const response: AgentResponse = {
         content: 'Response',
-        model: 'claude-sonnet-4-6'
+        model: 'claude-sonnet-4-6',
+        usage: { input_tokens: 0, output_tokens: 0 }
       }
-      const opts: DisplayOptions = {}
+      const opts: DisplayOptions = { silentUsage: true }
 
       printResponse(response, opts)
 
@@ -557,6 +565,7 @@ describe('printResponse', (): void => {
         thoughts: [{ type: 'thinking', thinking: 'Thought' }],
         tool_history: [
           {
+            id: 'tool-use-8',
             name: 'WebFetch',
             input: { url: 'test' },
             result: 'result'
@@ -578,7 +587,9 @@ describe('printResponse', (): void => {
       const response: AgentResponse = {
         ...baseResponse,
         thoughts: [{ type: 'thinking', thinking: 'Thought' }],
-        tool_history: [{ name: 'Bash', input: { command: 'ls' }, result: 'output' }],
+        tool_history: [
+          { id: 'tool-use-9', name: 'Bash', input: { command: 'ls' }, result: 'output' }
+        ],
         message_count: 5
       }
       const opts: DisplayOptions = { outputOnly: true }
