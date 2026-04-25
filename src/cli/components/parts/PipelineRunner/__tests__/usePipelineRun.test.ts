@@ -1,4 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import type { Mock } from 'vitest'
 import { useState, useEffect } from 'react'
 import type { PipelineTaskResult } from '@src/services/pipelineService.js'
 import type { TaskState } from '../types.js'
@@ -135,13 +136,13 @@ describe('upsertAtPath', () => {
 // ─── applyResult ─────────────────────────────────────────────────────────────
 
 describe('applyResult', () => {
-  let setTasks: ReturnType<typeof vi.fn>
-  let setAllLines: ReturnType<typeof vi.fn>
+  let setTasks: Mock<(fn: (prev: TaskState[]) => TaskState[]) => void>
+  let setAllLines: Mock<(fn: (prev: string[]) => string[]) => void>
 
   beforeEach(() => {
     vi.clearAllMocks()
-    setTasks = vi.fn()
-    setAllLines = vi.fn()
+    setTasks = vi.fn<(fn: (prev: TaskState[]) => TaskState[]) => void>()
+    setAllLines = vi.fn<(fn: (prev: string[]) => string[]) => void>()
   })
 
   describe('task_start (non-child taskType)', () => {
