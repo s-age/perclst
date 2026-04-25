@@ -26,7 +26,7 @@ A repository method must never bypass infrastructure by calling `fetch`, `execSy
 flowchart TD
     Start([Start]) --> Check{target_path\nprovided?}
     Check -- Yes --> Discover["Discover files\nGlob target_path/**/*.ts\nExclude: **/__tests__/**, **/*.test.ts, **/*.spec.ts, **/node_modules/**"]
-    Check -- No --> GetPending["Call git_pending_changes\nParse diff — extract changed .ts file paths\n(match lines: diff --git a/PATH b/PATH)\nExclude **/__tests__/**, **/*.test.ts, **/*.spec.ts, **/node_modules/**"]
+    Check -- No --> GetPending["Call git_pending_changes with extensions=[ts,tsx]\nParse diff — extract changed .ts/.tsx file paths\n(match lines: diff --git a/PATH b/PATH)\nExclude **/__tests__/**, **/*.test.ts, **/*.spec.ts, **/node_modules/**"]
 
     Discover --> HasFiles{Files found?}
     GetPending --> HasFiles

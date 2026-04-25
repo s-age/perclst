@@ -40,12 +40,16 @@ export class GitRepository implements IGitRepository {
     }
   }
 
-  getPendingDiff(repoPath?: string): string | null {
+  getPendingDiff(repoPath?: string, extensions?: string[]): string | null {
     try {
       const cwd = repoPath ?? findProjectRoot()
-      const staged = execGitSync('diff --cached', cwd)
-      const unstaged = execGitSync('diff', cwd)
-      const untrackedOutput = execGitSync('ls-files --others --exclude-standard', cwd)
+      const pathspecs = extensions?.length ? ['--', ...extensions.map((ext) => `*.${ext}`)] : []
+      const staged = spawnGitSync(['diff', '--cached', ...pathspecs], cwd)
+      const unstaged = spawnGitSync(['diff', ...pathspecs], cwd)
+      const untrackedOutput = spawnGitSync(
+        ['ls-files', '--others', '--exclude-standard', ...pathspecs],
+        cwd
+      )
       const untrackedFiles = untrackedOutput.split('\n').filter(Boolean)
       const untrackedDiffs = untrackedFiles
         .map((file) => spawnGitSync(['diff', '--no-index', '/dev/null', file], cwd))

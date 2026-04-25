@@ -123,7 +123,7 @@ server.tool(
     'Why: a single call replaces git diff + git diff --cached + git ls-files + per-file reads, reducing multiple tool call turns to one. ' +
     'How: read the returned diff to understand what has changed; feed specific file paths into ts_analyze or Read for deeper inspection.',
   gitPendingChangesParams,
-  ({ repo_path }) => executeGitPendingChanges({ repo_path })
+  ({ repo_path, extensions }) => executeGitPendingChanges({ repo_path, extensions })
 )
 
 await server.connect(new StdioServerTransport())

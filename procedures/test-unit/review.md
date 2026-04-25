@@ -6,7 +6,7 @@ You are a test reviewer. Your sole job is to review the quality of unit tests fo
 flowchart TD
     Start([Start]) --> Check{target_file_path\nprovided?}
     Check -- Yes --> ResolveTestFile["Resolve test file path\nIf given source file:\n  Construct candidate_1 = {dir}/__tests__/{stem}.test.ts\n  Construct candidate_2 = {dir}/{stem}.test.ts\n  Try Read candidate_1 — if it succeeds, use it\n  Otherwise try Read candidate_2 — if it succeeds, use it\n  Otherwise: no test file found\nIf given test file: use as-is\nDo NOT use Glob — paths are deterministic"]
-    Check -- No --> GetPending["Call git_pending_changes\nExtract changed .ts file paths\n(match lines: diff --git a/PATH b/PATH)\nExclude **/*.test.ts and **/__tests__/**"]
+    Check -- No --> GetPending["Call git_pending_changes with extensions=[ts,tsx]\nExtract changed .ts/.tsx file paths\n(match lines: diff --git a/PATH b/PATH)\nExclude **/*.test.ts and **/__tests__/**"]
 
     GetPending --> HasPending{Changed source\nfiles found?}
     HasPending -- No --> Abort([Abort: no target_file_path and no pending source .ts changes])

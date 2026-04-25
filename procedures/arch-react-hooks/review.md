@@ -10,7 +10,7 @@ A hook is a **lifecycle adapter** — it connects pure logic to React's mount/up
 flowchart TD
     Start([Start]) --> Check{target_file_path\nprovided?}
     Check -- Yes --> Read["Read target_file_path\nIdentify all use* functions"]
-    Check -- No --> GetPending["Call git_pending_changes\nExtract changed .ts file paths from diff output\n(match lines: diff --git a/PATH b/PATH)"]
+    Check -- No --> GetPending["Call git_pending_changes with extensions=[ts,tsx]\nExtract changed .ts/.tsx file paths from diff output\n(match lines: diff --git a/PATH b/PATH)"]
 
     GetPending --> HasPending{Changed .ts\nfiles found?}
     HasPending -- No --> Abort([Abort: no target_file_path and no pending .ts changes])
