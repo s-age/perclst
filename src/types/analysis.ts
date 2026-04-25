@@ -33,10 +33,9 @@ export type AnalysisSummary = {
   turns: ClaudeCodeTurn[]
   turnsBreakdown: {
     userInstructions: number
-    thinking: number
+    apiCalls: number
     toolCalls: number
     toolResults: number
-    assistantResponse: number
     total: number
   }
   toolUses: Array<{ name: string; input: Record<string, unknown>; isError: boolean }>
@@ -63,7 +62,7 @@ export type ClaudeSessionData = {
 export type SessionSummaryRow = {
   name: string
   id: string
-  turns: number
+  apiCalls: number
   toolCalls: number
   tokens: {
     totalInput: number

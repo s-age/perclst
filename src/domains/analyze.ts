@@ -17,21 +17,18 @@ export function buildSummaryStats(turns: ClaudeCodeTurn[]): {
   toolUses: AnalysisSummary['toolUses']
 } {
   let userInstructions = 0
-  let thinking = 0
+  let apiCalls = 0
   let toolCalls = 0
-  let assistantResponse = 0
   const allToolUses: AnalysisSummary['toolUses'] = []
 
   for (const turn of turns) {
     if (turn.userMessage !== undefined) userInstructions++
+    if (turn.toolCalls.length > 0 || turn.assistantText !== undefined) apiCalls++
     if (turn.toolCalls.length > 0) {
-      thinking++
       toolCalls += turn.toolCalls.length
       for (const tc of turn.toolCalls) {
         allToolUses.push({ name: tc.name, input: tc.input, isError: tc.isError })
       }
-    } else if (turn.assistantText !== undefined) {
-      assistantResponse++
     }
   }
 
@@ -39,11 +36,10 @@ export function buildSummaryStats(turns: ClaudeCodeTurn[]): {
   return {
     turnsBreakdown: {
       userInstructions,
-      thinking,
+      apiCalls,
       toolCalls,
       toolResults,
-      assistantResponse,
-      total: userInstructions + thinking + toolCalls + toolResults + assistantResponse
+      total: userInstructions + apiCalls + toolCalls + toolResults
     },
     toolUses: allToolUses
   }
@@ -89,7 +85,7 @@ export class AnalyzeDomain implements IAnalyzeDomain {
         rows.push({
           name: session.name ?? session.id,
           id: session.id,
-          turns: turnsBreakdown.total,
+          apiCalls: turnsBreakdown.apiCalls,
           toolCalls: turnsBreakdown.toolCalls,
           tokens: data.tokens
         })
