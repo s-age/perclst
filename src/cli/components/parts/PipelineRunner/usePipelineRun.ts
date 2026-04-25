@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService.js'
 import type { Pipeline } from '@src/types/pipeline.js'
 import type { AgentStreamEvent } from '@src/types/agent.js'
-import { initTasks, formatStreamLines, MAX_ALL_LINES } from './utils.js'
+import { initTasks, formatStreamLines, appendCappedLines, MAX_ALL_LINES } from './utils.js'
 import type { TaskState } from './types.js'
 
 type Props = {
@@ -165,10 +165,7 @@ export function usePipelineRun({
   useEffect(() => {
     const onStreamEvent = (event: AgentStreamEvent): void => {
       const lines = formatStreamLines(event, panelWidth)
-      setAllLines((prev) => {
-        const next = [...prev, ...lines]
-        return next.length > MAX_ALL_LINES ? next.slice(-MAX_ALL_LINES) : next
-      })
+      setAllLines((prev) => appendCappedLines(prev, lines, MAX_ALL_LINES))
     }
     const runOptions: PipelineRunOptions = { ...options, onStreamEvent, signal }
     void runPipeline(
