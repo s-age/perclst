@@ -1,0 +1,37 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "name": "review-useScrollBuffer",
+      "task": "Review the new file src/cli/components/parts/PipelineRunner/useScrollBuffer.ts.\n\nContext: This hook was added to implement Ctrl+O scroll toggle for the TUI output panel. It snapshots allLines into frozenLines on entering scroll mode, supports arrow key / PageUp/Down navigation, and disables input when a permission request is pending.\n\nSteps:\n1. Read src/cli/components/parts/PipelineRunner/useScrollBuffer.ts\n2. Read src/cli/components/parts/PipelineRunner/types.ts for PermissionRequest type\n\nReview for:\n- Scroll offset clamping correctness (upArrow min/max, downArrow min/max)\n- Edge cases: empty buffer, scrollOffset > frozenLines.length\n- React hook rules (useInput isActive pattern)\n- TypeScript type safety\n- Any missing behaviors (e.g. what happens when allLines grows beyond frozenLines while in scroll mode)\n\nOutput a concise review with specific line references where applicable, and a verdict: LGTM / needs revision.",
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "max_turns": 5,
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-index",
+      "task": "Review the changes to src/cli/components/parts/PipelineRunner/index.tsx.\n\nContext: The dead `const [scrollOffset] = useState(0)` scroll stub was replaced with a delegation to the new useScrollBuffer hook.\n\nSteps:\n1. Run `git diff HEAD -- src/cli/components/parts/PipelineRunner/index.tsx` to see the diff\n2. Read the full file src/cli/components/parts/PipelineRunner/index.tsx\n\nReview for:\n- React rules of hooks: hook call order (useScrollBuffer is called after usePermission — permRequest dependency is correct)\n- The removed useState import — is it still needed elsewhere in the file?\n- Props passed to OutputPanel are complete and correct\n- No regressions to the existing spinnerFrame / usePipelineRun / usePermission logic\n\nOutput a concise review with specific line references where applicable, and a verdict: LGTM / needs revision.",
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "max_turns": 5,
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "review-OutputPanel",
+      "task": "Review the changes to src/cli/components/parts/PipelineRunner/OutputPanel.tsx.\n\nContext: A scrollMode boolean prop was added; when true, a yellow '[SCROLL ↑↓ ^O to exit]' indicator is shown in the panel header.\n\nSteps:\n1. Run `git diff HEAD -- src/cli/components/parts/PipelineRunner/OutputPanel.tsx` to see the diff\n2. Read the full file src/cli/components/parts/PipelineRunner/OutputPanel.tsx\n\nReview for:\n- Unicode characters (↑↓) in terminal output — any portability concerns?\n- Header text length: does `[SCROLL ↑↓ ^O to exit]` fit alongside `— task N` in typical terminal widths?\n- The `scrollMode` prop is a pure display flag — any risk of it becoming a god-prop over time?\n- Component stays presentational (no logic); single responsibility maintained?\n\nOutput a concise review with specific line references where applicable, and a verdict: LGTM / needs revision.",
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "max_turns": 5,
+      "done": true
+    }
+  ]
+}

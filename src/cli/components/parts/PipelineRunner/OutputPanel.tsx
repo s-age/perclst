@@ -8,6 +8,7 @@ type Props = {
   done: boolean
   error: string | null
   hasLines: boolean
+  scrollMode: boolean
 }
 
 export function OutputPanel({
@@ -16,7 +17,8 @@ export function OutputPanel({
   runningIndex,
   done,
   error,
-  hasLines
+  hasLines,
+  scrollMode
 }: Props): JSX.Element {
   return (
     <Box
@@ -28,8 +30,13 @@ export function OutputPanel({
       borderRight={false}
       paddingLeft={1}
     >
-      <Text bold>
+      <Text bold wrap="truncate">
         Output
+        {scrollMode ? (
+          <Text color="yellow"> [SCROLL ↑↓ ^O to exit]</Text>
+        ) : (
+          <Text color="gray"> (^O: scroll)</Text>
+        )}
         {runningIndex >= 0 && <Text color="gray"> — task {runningIndex + 1}</Text>}
       </Text>
       <Text> </Text>

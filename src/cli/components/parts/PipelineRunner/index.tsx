@@ -5,6 +5,7 @@ import { OutputPanel } from './OutputPanel.js'
 import { PermissionPanel } from './PermissionPanel.js'
 import { usePipelineRun } from './usePipelineRun.js'
 import { usePermission } from './usePermission.js'
+import { useScrollBuffer } from './useScrollBuffer.js'
 import { SPINNER_INTERVAL_MS, PERM_PANEL_ROWS, STREAM_HEADER_ROWS } from './utils.js'
 import type { PipelineRunnerProps } from './types.js'
 
@@ -39,10 +40,11 @@ export function PipelineRunner({
 
   const runningIndex = tasks.findIndex((t) => t.status === 'running' || t.status === 'retrying')
   const streamCapacity = Math.max(1, mainRows - STREAM_HEADER_ROWS)
-  const [scrollOffset] = useState(0)
-  const viewEnd = scrollOffset > 0 ? allLines.length - scrollOffset : allLines.length
-  const lineOffset = Math.max(0, viewEnd - streamCapacity)
-  const visibleLines = allLines.slice(lineOffset, viewEnd)
+  const { scrollMode, visibleLines, lineOffset } = useScrollBuffer({
+    allLines,
+    streamCapacity,
+    permRequest
+  })
 
   return (
     <Box flexDirection="column" height={termRows}>
@@ -55,6 +57,7 @@ export function PipelineRunner({
           done={done}
           error={error}
           hasLines={allLines.length > 0}
+          scrollMode={scrollMode}
         />
       </Box>
       <PermissionPanel permRequest={permRequest} />
