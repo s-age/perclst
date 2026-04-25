@@ -1,0 +1,73 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-feature-abort-cli-commands"
+    },
+    {
+      "type": "agent",
+      "name": "review-feature-abort-cli-commands-initial-reviewer",
+      "task": "target_path: src/cli/commands\nng_output_path: .claude/tmp/review-feature-abort-cli-commands",
+      "procedure": "arch/review",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-feature-abort-cli-commands-fix-loop",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "review-feature-abort-cli-commands-implementer",
+          "task": "target_path: src/cli/commands\nng_output_path: .claude/tmp/review-feature-abort-cli-commands\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "arch/refactor",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-feature-abort-cli-commands-loop-reviewer",
+          "task": "target_path: src/cli/commands\nng_output_path: .claude/tmp/review-feature-abort-cli-commands\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "arch/review",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": { "to": "review-feature-abort-cli-commands-implementer", "max_retries": 3 }
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": { "to": "review-feature-abort-cli-commands-implementer", "max_retries": 3 }
+        },
+        {
+          "type": "agent",
+          "name": "review-feature-abort-cli-commands-implementer",
+          "task": "Review and fixes complete. Build and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(cli): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    }
+  ]
+}

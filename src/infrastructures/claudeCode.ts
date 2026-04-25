@@ -1,4 +1,4 @@
-import { spawn } from 'child_process'
+import { spawn, spawnSync } from 'child_process'
 import type { ChildProcess } from 'child_process'
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
 import { homedir, tmpdir } from 'os'
@@ -128,6 +128,10 @@ export class ClaudeCodeInfra {
       }
     })
     return { closePromise, errors }
+  }
+
+  spawnInteractive(args: string[]): void {
+    spawnSync('claude', args, { stdio: 'inherit' })
   }
 
   writeStderr(data: string): void {

@@ -10,6 +10,7 @@ type Props = {
   options: PipelineRunOptions
   pipelineService: PipelineService
   panelWidth: number
+  signal: AbortSignal
   onDone: () => void
   onError: (err: Error) => void
 }
@@ -152,6 +153,7 @@ export function usePipelineRun({
   options,
   pipelineService,
   panelWidth,
+  signal,
   onDone,
   onError
 }: Props): { tasks: TaskState[]; allLines: string[]; done: boolean; error: string | null } {
@@ -168,7 +170,7 @@ export function usePipelineRun({
         return next.length > MAX_ALL_LINES ? next.slice(-MAX_ALL_LINES) : next
       })
     }
-    const runOptions: PipelineRunOptions = { ...options, onStreamEvent }
+    const runOptions: PipelineRunOptions = { ...options, onStreamEvent, signal }
     void runPipeline(
       { pipelineService, pipeline, runOptions },
       { setters: { setTasks, setAllLines, setDone, setError }, callbacks: { onDone, onError } }

@@ -28,6 +28,10 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
     throw new APIError(`claude exited with code ${code}`)
   }
 
+  spawnInteractive(args: string[]): void {
+    this.infra.spawnInteractive(args)
+  }
+
   async dispatch(
     action: ClaudeAction,
     onStreamEvent?: (event: AgentStreamEvent) => void,

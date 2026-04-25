@@ -4,102 +4,104 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { retrieveCommand } from '../retrieve'
 import { PROCEDURES_DIR } from './helper'
 
-vi.mock('../start', () => ({
-  startCommand: vi.fn()
-}))
+vi.mock('@src/core/di/container')
+vi.mock('@src/utils/output')
+vi.mock('@src/cli/display')
 
-import { startCommand } from '../start'
+import { container } from '@src/core/di/container'
+import { TOKENS } from '@src/core/di/identifiers'
+import { stderr } from '@src/utils/output'
 
 describe('retrieveCommand', () => {
+  const mockAgentService = { start: vi.fn() }
+  const mockConfig = { display: {} }
+
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(container.resolve).mockImplementation((token) => {
+      if (token === TOKENS.AgentService) return mockAgentService
+      if (token === TOKENS.Config) return mockConfig
+      throw new Error(`Unexpected token: ${String(token)}`)
+    })
+    mockAgentService.start.mockResolvedValue({
+      sessionId: 'session-1',
+      response: { content: 'ok' }
+    })
   })
 
-  it('calls startCommand with single keyword', async () => {
+  it('calls agentService.start with single keyword in task', async () => {
     await retrieveCommand(['session'])
 
-    expect(startCommand).toHaveBeenCalledWith(
+    expect(mockAgentService.start).toHaveBeenCalledWith(
       'Search the knowledge base for the following keywords and return a structured summary of findings: session',
-      {
+      expect.objectContaining({
         procedure: 'meta-knowledge-concierge/retrieve',
-        labels: ['retrieve'],
-        outputOnly: true
-      }
+        labels: ['retrieve']
+      }),
+      expect.any(Object)
     )
-    expect(startCommand).toHaveBeenCalledTimes(1)
   })
 
-  it('calls startCommand with multiple keywords joined by commas', async () => {
+  it('calls agentService.start with multiple keywords joined by commas', async () => {
     await retrieveCommand(['fork', 'session', 'resume'])
 
-    expect(startCommand).toHaveBeenCalledWith(
+    expect(mockAgentService.start).toHaveBeenCalledWith(
       'Search the knowledge base for the following keywords and return a structured summary of findings: fork, session, resume',
-      {
-        procedure: 'meta-knowledge-concierge/retrieve',
-        labels: ['retrieve'],
-        outputOnly: true
-      }
+      expect.any(Object),
+      expect.any(Object)
     )
   })
 
-  it('calls startCommand with empty keywords array', async () => {
+  it('calls agentService.start with empty keywords array', async () => {
     await retrieveCommand([])
 
-    expect(startCommand).toHaveBeenCalledWith(
+    expect(mockAgentService.start).toHaveBeenCalledWith(
       'Search the knowledge base for the following keywords and return a structured summary of findings: ',
-      {
-        procedure: 'meta-knowledge-concierge/retrieve',
-        labels: ['retrieve'],
-        outputOnly: true
-      }
+      expect.any(Object),
+      expect.any(Object)
     )
   })
 
-  it('calls startCommand with keywords containing special characters', async () => {
+  it('calls agentService.start with keywords containing special characters', async () => {
     await retrieveCommand(['--flag', 'test-case', 'node.js'])
 
-    expect(startCommand).toHaveBeenCalledWith(
+    expect(mockAgentService.start).toHaveBeenCalledWith(
       'Search the knowledge base for the following keywords and return a structured summary of findings: --flag, test-case, node.js',
-      {
-        procedure: 'meta-knowledge-concierge/retrieve',
-        labels: ['retrieve'],
-        outputOnly: true
-      }
+      expect.any(Object),
+      expect.any(Object)
     )
   })
 
-  it('passes outputOnly as true in options', async () => {
+  it('uses procedure meta-knowledge-concierge/retrieve', async () => {
     await retrieveCommand(['test'])
 
-    const callArgs = vi.mocked(startCommand).mock.calls[0]
-    expect(callArgs[1].outputOnly).toBe(true)
-  })
-
-  it('passes procedure as meta-knowledge-concierge/retrieve', async () => {
-    await retrieveCommand(['test'])
-
-    const callArgs = vi.mocked(startCommand).mock.calls[0]
-    expect(callArgs[1].procedure).toBe('meta-knowledge-concierge/retrieve')
+    const createParams = mockAgentService.start.mock.calls[0][1]
+    expect(createParams.procedure).toBe('meta-knowledge-concierge/retrieve')
   })
 
   it('references a procedure file that exists', async () => {
     await retrieveCommand(['test'])
 
-    const procedure = vi.mocked(startCommand).mock.calls[0][1].procedure
+    const procedure = mockAgentService.start.mock.calls[0][1].procedure
     expect(existsSync(join(PROCEDURES_DIR, `${procedure}.md`))).toBe(true)
   })
 
-  it('passes labels array with retrieve label', async () => {
+  it('uses labels array with retrieve label', async () => {
     await retrieveCommand(['test'])
 
-    const callArgs = vi.mocked(startCommand).mock.calls[0]
-    expect(callArgs[1].labels).toEqual(['retrieve'])
+    const createParams = mockAgentService.start.mock.calls[0][1]
+    expect(createParams.labels).toEqual(['retrieve'])
   })
 
-  it('propagates errors from startCommand', async () => {
-    const error = new Error('startCommand failed')
-    vi.mocked(startCommand).mockRejectedValueOnce(error)
+  it('prints error and exits when agentService.start throws', async () => {
+    const error = new Error('Agent failed')
+    mockAgentService.start.mockRejectedValueOnce(error)
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
 
-    await expect(retrieveCommand(['test'])).rejects.toThrow('startCommand failed')
+    await retrieveCommand(['test'])
+
+    expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to retrieve knowledge', error)
+    expect(exitSpy).toHaveBeenCalledWith(1)
+    exitSpy.mockRestore()
   })
 })

@@ -9,7 +9,6 @@ export type PipelineRunOptions = {
   onStreamEvent?: (event: AgentStreamEvent) => void
   onTaskDone?: (taskPath: number[], taskIndex: number) => void
   onChildPipelineDone?: (absolutePath: string) => void
-  loadChildPipeline?: (absolutePath: string) => Pipeline
   pipelineDir?: string
   signal?: AbortSignal
 }

@@ -40,6 +40,8 @@ export const TOKENS = {
   KnowledgeSearchDomain: Symbol.for('KnowledgeSearchDomain'),
   TsAnalysisDomain: Symbol.for('TsAnalysisDomain'),
   PermissionPipeDomain: Symbol.for('PermissionPipeDomain'),
+  PipelineTaskDomain: Symbol.for('PipelineTaskDomain'),
+  PipelineLoaderDomain: Symbol.for('PipelineLoaderDomain'),
   // Services
   KnowledgeSearchService: Symbol.for('KnowledgeSearchService'),
   PermissionPipeService: Symbol.for('PermissionPipeService')

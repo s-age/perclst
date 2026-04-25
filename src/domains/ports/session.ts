@@ -21,7 +21,13 @@ export type ISessionDomain = {
   sweep(filter: SweepFilter, dryRun: boolean): Promise<Session[]>
 }
 
+export type ImportSessionOptions = {
+  name?: string
+  labels?: string[]
+}
+
 export type IImportDomain = {
   resolveWorkingDir(claudeSessionId: string): string
   validateSession(claudeSessionId: string, workingDir: string): void
+  buildSession(claudeSessionId: string, workingDir: string, options: ImportSessionOptions): Session
 }

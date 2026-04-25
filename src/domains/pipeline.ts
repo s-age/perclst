@@ -85,7 +85,12 @@ export class PipelineDomain implements IPipelineDomain {
     config: { execOpts: ExecuteOptions; limits: { maxTurns: number; maxContextTokens: number } }
   ): Promise<AgentResponse> {
     let response = await this.agentDomain.run(session, instruction, isResume, config.execOpts)
-    if (this.isLimitExceeded(response, config.limits.maxTurns, config.limits.maxContextTokens)) {
+    if (
+      this.agentDomain.isLimitExceeded(response, {
+        maxTurns: config.limits.maxTurns,
+        maxContextTokens: config.limits.maxContextTokens
+      })
+    ) {
       response = await this.agentDomain.run(
         session,
         GRACEFUL_TERMINATION_PROMPT,
@@ -172,28 +177,6 @@ export class PipelineDomain implements IPipelineDomain {
       response,
       action: 'resumed'
     }
-  }
-
-  private getContextTokens(response: AgentResponse): number {
-    const u = response.last_assistant_usage
-    if (!u) return 0
-    return u.input_tokens + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0)
-  }
-
-  private isLimitExceeded(
-    response: AgentResponse,
-    maxTurns: number,
-    maxContextTokens: number
-  ): boolean {
-    if (maxTurns > 0 && (response.message_count ?? 0) >= maxTurns) {
-      debug.print(`Turn limit reached: ${response.message_count} >= ${maxTurns}`)
-      return true
-    }
-    if (maxContextTokens > 0 && this.getContextTokens(response) >= maxContextTokens) {
-      debug.print(`Context token limit reached`)
-      return true
-    }
-    return false
   }
 
   findOuterRejectionTarget(pipeline: Pipeline): number | undefined {

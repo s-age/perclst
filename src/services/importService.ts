@@ -1,8 +1,6 @@
 import type { Session } from '@src/types/session'
 import type { ISessionDomain, IImportDomain } from '@src/domains/ports/session'
-import { generateId } from '@src/utils/uuid'
 import { debug } from '@src/utils/output'
-import { toISO } from '@src/utils/date'
 
 export type ImportOptions = {
   name?: string
@@ -23,19 +21,10 @@ export class ImportService {
       this.importDomain.validateSession(claudeSessionId, workingDir)
     }
 
-    const now = toISO()
-    const session: Session = {
-      id: generateId(),
-      ...(options.name !== undefined ? { name: options.name } : {}),
-      created_at: now,
-      updated_at: now,
-      claude_session_id: claudeSessionId,
-      working_dir: workingDir,
-      metadata: {
-        labels: options.labels ?? [],
-        status: 'completed'
-      }
-    }
+    const session = this.importDomain.buildSession(claudeSessionId, workingDir, {
+      name: options.name,
+      labels: options.labels
+    })
 
     await this.sessionDomain.save(session)
     debug.print('Session imported', { session_id: session.id, claude_session_id: claudeSessionId })

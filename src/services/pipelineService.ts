@@ -11,6 +11,8 @@ import type {
 import type { AgentResponse } from '@src/types/agent'
 import type { IPipelineDomain } from '@src/domains/ports/pipeline'
 import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
+import type { IPipelineTaskDomain } from '@src/domains/ports/pipelineTask'
+import type { IPipelineLoaderDomain } from '@src/domains/ports/pipelineLoader'
 import { debug } from '@src/utils/output'
 import { PipelineAbortedError } from '@src/errors/pipelineAbortedError'
 
@@ -48,8 +50,14 @@ export type PipelineTaskResult =
 export class PipelineService {
   constructor(
     private pipelineDomain: IPipelineDomain,
-    private scriptDomain: IScriptDomain
+    private scriptDomain: IScriptDomain,
+    private pipelineTaskDomain: IPipelineTaskDomain,
+    private loaderDomain: IPipelineLoaderDomain
   ) {}
+
+  private loadChildPipeline(absolutePath: string): Pipeline {
+    return this.loaderDomain.load(absolutePath)
+  }
 
   async *run(
     pipeline: Pipeline,
@@ -76,6 +84,7 @@ export class PipelineService {
       }
       const jumpTo = yield* this.processTask(task, { i, taskPath }, options, context)
       if (jumpTo === undefined) {
+        this.pipelineTaskDomain.markTaskDone(pipeline, taskPath, i)
         options.onTaskDone?.(taskPath, i)
       } else {
         pipeline.tasks[jumpTo].done = false
@@ -144,13 +153,10 @@ export class PipelineService {
     options: PipelineRunOptions,
     rejection: RejectedContext | undefined
   ): AsyncGenerator<PipelineTaskResult> {
-    if (!options.loadChildPipeline) {
-      throw new Error('loadChildPipeline is required for child pipeline tasks')
-    }
     const baseDir = options.pipelineDir ?? process.cwd()
     const absolutePath = resolve(baseDir, task.path)
     const childDir = dirname(absolutePath)
-    const childPipeline = options.loadChildPipeline(absolutePath)
+    const childPipeline = this.loadChildPipeline(absolutePath)
     const childOptions = { ...options, pipelineDir: childDir }
     yield* this.run(childPipeline, childOptions, rejection, [
       ...taskLocation.taskPath,

@@ -1,0 +1,73 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/review-feature-abort-domains"
+    },
+    {
+      "type": "agent",
+      "name": "review-feature-abort-domains-initial-reviewer",
+      "task": "target_path: src/domains\nng_output_path: .claude/tmp/review-feature-abort-domains",
+      "procedure": "arch/review",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types",
+        "mcp__perclst__ts_checker"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "review-feature-abort-domains-fix-loop",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "review-feature-abort-domains-implementer",
+          "task": "target_path: src/domains\nng_output_path: .claude/tmp/review-feature-abort-domains\n\nIf ng_output_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "arch/refactor",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "review-feature-abort-domains-loop-reviewer",
+          "task": "target_path: src/domains\nng_output_path: .claude/tmp/review-feature-abort-domains\n\nIf ng_output_path does not exist, there were no issues found in the initial review — exit immediately.",
+          "procedure": "arch/review",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types",
+            "mcp__perclst__ts_checker"
+          ],
+          "rejected": { "to": "review-feature-abort-domains-implementer", "max_retries": 3 }
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": { "to": "review-feature-abort-domains-implementer", "max_retries": 3 }
+        },
+        {
+          "type": "agent",
+          "name": "review-feature-abort-domains-implementer",
+          "task": "Review and fixes complete. Build and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(domains): ...).",
+          "model": "haiku",
+          "allowed_tools": ["Read", "Bash"]
+        }
+      ]
+    }
+  ]
+}

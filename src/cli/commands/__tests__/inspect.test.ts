@@ -8,206 +8,158 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { stdout, stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
-import { startCommand } from '../start'
+import { printResponse } from '@src/cli/display'
 
-// Mock all dependencies
 vi.mock('@src/validators/cli/inspectSession')
 vi.mock('@src/core/di/container')
 vi.mock('@src/utils/output')
-vi.mock('../start')
+vi.mock('@src/cli/display')
 
-// Mock process.exit to prevent actual exit
 const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
   throw new Error('process.exit called')
 })
 
 describe('inspectCommand', () => {
+  const mockGetDiff = vi.fn()
+  const mockAgentService = { start: vi.fn() }
+  const mockConfig = { display: {} }
+
   beforeEach(() => {
     vi.clearAllMocks()
     processExitSpy.mockClear()
+    vi.mocked(container.resolve).mockImplementation((token) => {
+      if (token === TOKENS.PipelineFileService) return { getDiff: mockGetDiff }
+      if (token === TOKENS.AgentService) return mockAgentService
+      if (token === TOKENS.Config) return mockConfig
+      throw new Error(`Unexpected token: ${String(token)}`)
+    })
+    mockAgentService.start.mockResolvedValue({
+      sessionId: 'session-1',
+      response: { content: 'ok' }
+    })
   })
 
   it('should call parseInspectSession with oldRef and newRef', async () => {
-    // Arrange
     const oldRef = 'abc123'
     const newRef = 'def456'
-    const parsedInput = { old: oldRef, new: newRef }
+    vi.mocked(parseInspectSession).mockReturnValue({ old: oldRef, new: newRef })
+    mockGetDiff.mockReturnValue(null)
 
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    const mockGetDiff = vi.fn().mockReturnValue(null)
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: mockGetDiff })
-
-    // Act
     await inspectCommand(oldRef, newRef)
 
-    // Assert
     expect(vi.mocked(parseInspectSession)).toHaveBeenCalledWith({ old: oldRef, new: newRef })
   })
 
-  it('should call startCommand with formatted diff when differences exist', async () => {
-    // Arrange
+  it('should call agentService.start with formatted diff when differences exist', async () => {
     const oldRef = 'abc123'
     const newRef = 'def456'
-    const parsedInput = { old: oldRef, new: newRef }
     const testDiff = 'diff --git a/file.ts b/file.ts\n+added line'
+    vi.mocked(parseInspectSession).mockReturnValue({ old: oldRef, new: newRef })
+    mockGetDiff.mockReturnValue(testDiff)
 
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    const mockGetDiff = vi.fn().mockReturnValue(testDiff)
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: mockGetDiff })
-    vi.mocked(startCommand).mockResolvedValue(undefined)
-
-    // Act
     await inspectCommand(oldRef, newRef)
 
-    // Assert
-    expect(vi.mocked(startCommand)).toHaveBeenCalledWith(
+    expect(mockAgentService.start).toHaveBeenCalledWith(
       `Inspect the following git diff and produce a code inspection report:\n\n${testDiff}`,
-      {
-        procedure: 'code-inspect/inspect',
-        labels: ['inspect'],
-        model: 'sonnet',
-        allowedTools: ['Skill', 'mcp__perclst__knowledge_search'],
-        outputOnly: true
-      }
+      expect.objectContaining({ procedure: 'code-inspect/inspect', labels: ['inspect'] }),
+      expect.objectContaining({ allowedTools: ['Skill', 'mcp__perclst__knowledge_search'] })
     )
   })
 
   it('references a procedure file that exists', async () => {
-    const parsedInput = { old: 'a', new: 'b' }
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: vi.fn().mockReturnValue('diff') })
-    vi.mocked(startCommand).mockResolvedValue(undefined)
+    vi.mocked(parseInspectSession).mockReturnValue({ old: 'a', new: 'b' })
+    mockGetDiff.mockReturnValue('diff content')
 
     await inspectCommand('a', 'b')
 
-    const procedure = vi.mocked(startCommand).mock.calls[0][1].procedure
+    const procedure = mockAgentService.start.mock.calls[0][1].procedure
     expect(existsSync(join(PROCEDURES_DIR, `${procedure}.md`))).toBe(true)
   })
 
   it('should print message to stdout when no diff is found', async () => {
-    // Arrange
-    const oldRef = 'abc123'
-    const newRef = 'abc123'
-    const parsedInput = { old: oldRef, new: newRef }
+    vi.mocked(parseInspectSession).mockReturnValue({ old: 'abc123', new: 'abc123' })
+    mockGetDiff.mockReturnValue(null)
 
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    const mockGetDiff = vi.fn().mockReturnValue(null)
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: mockGetDiff })
+    await inspectCommand('abc123', 'abc123')
 
-    // Act
-    await inspectCommand(oldRef, newRef)
-
-    // Assert
     expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
       'No differences found between the specified refs.'
     )
   })
 
-  it('should not call startCommand when getDiff returns null', async () => {
-    // Arrange
-    const oldRef = 'abc123'
-    const newRef = 'def456'
-    const parsedInput = { old: oldRef, new: newRef }
+  it('should not call agentService.start when getDiff returns null', async () => {
+    vi.mocked(parseInspectSession).mockReturnValue({ old: 'abc123', new: 'def456' })
+    mockGetDiff.mockReturnValue(null)
 
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    const mockGetDiff = vi.fn().mockReturnValue(null)
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: mockGetDiff })
+    await inspectCommand('abc123', 'def456')
 
-    // Act
-    await inspectCommand(oldRef, newRef)
-
-    // Assert
-    expect(vi.mocked(startCommand)).not.toHaveBeenCalled()
+    expect(mockAgentService.start).not.toHaveBeenCalled()
   })
 
   it('should print validation error and exit when parseInspectSession throws ValidationError', async () => {
-    // Arrange
-    const oldRef = 'invalid'
-    const newRef = 'invalid'
     const validationError = new ValidationError('Invalid ref format')
-
     vi.mocked(parseInspectSession).mockImplementation(() => {
       throw validationError
     })
 
-    // Act & Assert
-    await expect(inspectCommand(oldRef, newRef)).rejects.toThrow('process.exit called')
+    await expect(inspectCommand('invalid', 'invalid')).rejects.toThrow('process.exit called')
 
     expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: Invalid ref format')
     expect(processExitSpy).toHaveBeenCalledWith(1)
   })
 
   it('should print generic error message and exit when getDiff throws non-ValidationError', async () => {
-    // Arrange
-    const oldRef = 'abc123'
-    const newRef = 'def456'
-    const parsedInput = { old: oldRef, new: newRef }
     const genericError = new Error('Service unavailable')
-
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    const mockGetDiff = vi.fn().mockImplementation(() => {
+    vi.mocked(parseInspectSession).mockReturnValue({ old: 'abc123', new: 'def456' })
+    mockGetDiff.mockImplementation(() => {
       throw genericError
     })
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: mockGetDiff })
 
-    // Act & Assert
-    await expect(inspectCommand(oldRef, newRef)).rejects.toThrow('process.exit called')
+    await expect(inspectCommand('abc123', 'def456')).rejects.toThrow('process.exit called')
 
     expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to run inspect', genericError)
     expect(processExitSpy).toHaveBeenCalledWith(1)
   })
 
-  it('should handle error thrown by startCommand and print to stderr', async () => {
-    // Arrange
-    const oldRef = 'abc123'
-    const newRef = 'def456'
-    const parsedInput = { old: oldRef, new: newRef }
+  it('should handle error from agentService.start and print to stderr', async () => {
     const testDiff = 'diff content'
-    const startError = new Error('Agent failed to start')
+    const agentError = new Error('Agent failed to start')
+    vi.mocked(parseInspectSession).mockReturnValue({ old: 'abc123', new: 'def456' })
+    mockGetDiff.mockReturnValue(testDiff)
+    mockAgentService.start.mockRejectedValue(agentError)
 
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    const mockGetDiff = vi.fn().mockReturnValue(testDiff)
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: mockGetDiff })
-    vi.mocked(startCommand).mockRejectedValue(startError)
+    await expect(inspectCommand('abc123', 'def456')).rejects.toThrow('process.exit called')
 
-    // Act & Assert
-    await expect(inspectCommand(oldRef, newRef)).rejects.toThrow('process.exit called')
-
-    expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to run inspect', startError)
+    expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to run inspect', agentError)
     expect(processExitSpy).toHaveBeenCalledWith(1)
   })
 
   it('should resolve PipelineFileService from container using TOKENS.PipelineFileService', async () => {
-    // Arrange
-    const oldRef = 'abc123'
-    const newRef = 'def456'
-    const parsedInput = { old: oldRef, new: newRef }
+    vi.mocked(parseInspectSession).mockReturnValue({ old: 'abc123', new: 'def456' })
+    mockGetDiff.mockReturnValue(null)
 
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    const mockGetDiff = vi.fn().mockReturnValue(null)
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: mockGetDiff })
+    await inspectCommand('abc123', 'def456')
 
-    // Act
-    await inspectCommand(oldRef, newRef)
-
-    // Assert
-    expect(vi.mocked(container).resolve).toHaveBeenCalledWith(TOKENS.PipelineFileService)
+    expect(vi.mocked(container.resolve)).toHaveBeenCalledWith(TOKENS.PipelineFileService)
   })
 
   it('should call getDiff with old and new refs from parsed input', async () => {
-    // Arrange
     const oldRef = 'abc123'
     const newRef = 'def456'
-    const parsedInput = { old: oldRef, new: newRef }
+    vi.mocked(parseInspectSession).mockReturnValue({ old: oldRef, new: newRef })
+    mockGetDiff.mockReturnValue(null)
 
-    vi.mocked(parseInspectSession).mockReturnValue(parsedInput)
-    const mockGetDiff = vi.fn().mockReturnValue(null)
-    vi.mocked(container).resolve.mockReturnValue({ getDiff: mockGetDiff })
-
-    // Act
     await inspectCommand(oldRef, newRef)
 
-    // Assert
     expect(mockGetDiff).toHaveBeenCalledWith(oldRef, newRef)
+  })
+
+  it('should call printResponse when a diff is found', async () => {
+    vi.mocked(parseInspectSession).mockReturnValue({ old: 'abc123', new: 'def456' })
+    mockGetDiff.mockReturnValue('some diff')
+
+    await inspectCommand('abc123', 'def456')
+
+    expect(vi.mocked(printResponse)).toHaveBeenCalled()
   })
 })

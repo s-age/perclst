@@ -2,6 +2,8 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { Pipeline } from '@src/types/pipeline'
 import type { IPipelineDomain, AgentTaskResult } from '@src/domains/ports/pipeline'
 import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
+import type { IPipelineTaskDomain } from '@src/domains/ports/pipelineTask'
+import type { IPipelineLoaderDomain } from '@src/domains/ports/pipelineLoader'
 import type { AgentResponse } from '@src/types/agent'
 import { PipelineService, type PipelineTaskResult } from '../../pipelineService'
 
@@ -18,6 +20,8 @@ const stubAgentResult = (overrides: Partial<AgentTaskResult> = {}): AgentTaskRes
   ...overrides
 })
 
+const rawChildPipeline = { tasks: [{ type: 'agent', task: 'child work' }] } as unknown as Pipeline
+
 describe('PipelineService', () => {
   let service: PipelineService
   const mockPipelineDomain: IPipelineDomain = {
@@ -30,9 +34,9 @@ describe('PipelineService', () => {
     findOuterRejectionTarget: vi.fn(),
     resolveScriptRejection: vi.fn()
   }
-  const mockScriptDomain: IScriptDomain = {
-    run: vi.fn<[string, string], Promise<ScriptResult>>()
-  }
+  const mockScriptDomain: IScriptDomain = { run: vi.fn<[string, string], Promise<ScriptResult>>() }
+  const mockPipelineTaskDomain: IPipelineTaskDomain = { markTaskDone: vi.fn() }
+  const mockLoaderDomain: IPipelineLoaderDomain = { load: vi.fn() }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -40,21 +44,28 @@ describe('PipelineService', () => {
     vi.mocked(mockPipelineDomain.runAgentTask).mockImplementation(async (_task, taskLocation) =>
       stubAgentResult({ taskIndex: taskLocation.index, taskPath: taskLocation.taskPath })
     )
-    service = new PipelineService(mockPipelineDomain, mockScriptDomain)
+    service = new PipelineService(
+      mockPipelineDomain,
+      mockScriptDomain,
+      mockPipelineTaskDomain,
+      mockLoaderDomain
+    )
   })
 
   describe('child pipeline tasks', () => {
-    it('should throw when loadChildPipeline is not provided', async () => {
+    it('should throw when loader domain fails to load child pipeline', async () => {
+      vi.mocked(mockLoaderDomain.load).mockImplementation(() => {
+        throw new Error('File not found')
+      })
       const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'sub.json' }] }
       await expect(async () => {
         const events: PipelineTaskResult[] = []
         for await (const e of service.run(pipeline)) events.push(e)
-      }).rejects.toThrow('loadChildPipeline is required')
+      }).rejects.toThrow('File not found')
     })
 
     it('should delegate to child pipeline and emit pipeline_end', async () => {
-      const childPipeline: Pipeline = { tasks: [{ type: 'agent', task: 'child work' }] }
-      const loadChildPipeline = vi.fn().mockReturnValue(childPipeline)
+      vi.mocked(mockLoaderDomain.load).mockReturnValue(rawChildPipeline)
       vi.mocked(mockPipelineDomain.runAgentTask).mockResolvedValue(stubAgentResult())
 
       const pipeline: Pipeline = {
@@ -62,15 +73,11 @@ describe('PipelineService', () => {
       }
       const events = await (async (): Promise<PipelineTaskResult[]> => {
         const result: PipelineTaskResult[] = []
-        for await (const e of service.run(pipeline, {
-          loadChildPipeline,
-          pipelineDir: '/absolute'
-        }))
-          result.push(e)
+        for await (const e of service.run(pipeline, { pipelineDir: '/absolute' })) result.push(e)
         return result
       })()
 
-      expect(loadChildPipeline).toHaveBeenCalledWith('/absolute/sub.json')
+      expect(mockLoaderDomain.load).toHaveBeenCalledWith('/absolute/sub.json')
       expect(events.find((e) => e.kind === 'pipeline_end')).toEqual({
         kind: 'pipeline_end',
         taskPath: [],
@@ -82,30 +89,26 @@ describe('PipelineService', () => {
     })
 
     it('should resolve relative path against pipelineDir', async () => {
-      const childPipeline: Pipeline = { tasks: [{ type: 'agent', task: 'work' }] }
-      const loadChildPipeline = vi.fn().mockReturnValue(childPipeline)
+      vi.mocked(mockLoaderDomain.load).mockReturnValue(rawChildPipeline)
       vi.mocked(mockPipelineDomain.runAgentTask).mockResolvedValue(stubAgentResult())
 
       const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'sub/child.json' }] }
       const events: PipelineTaskResult[] = []
-      for await (const e of service.run(pipeline, { loadChildPipeline, pipelineDir: '/base/dir' }))
-        events.push(e)
+      for await (const e of service.run(pipeline, { pipelineDir: '/base/dir' })) events.push(e)
 
-      expect(loadChildPipeline).toHaveBeenCalledWith('/base/dir/sub/child.json')
+      expect(mockLoaderDomain.load).toHaveBeenCalledWith('/base/dir/sub/child.json')
     })
   })
 
   describe('child pipeline callbacks', () => {
     it('should call onChildPipelineDone after child pipeline completes', async () => {
-      const childPipeline: Pipeline = { tasks: [{ type: 'agent', task: 'child work' }] }
-      const loadChildPipeline = vi.fn().mockReturnValue(childPipeline)
+      vi.mocked(mockLoaderDomain.load).mockReturnValue(rawChildPipeline)
       const onChildPipelineDone = vi.fn()
       vi.mocked(mockPipelineDomain.runAgentTask).mockResolvedValue(stubAgentResult())
 
       const pipeline: Pipeline = { tasks: [{ type: 'child', path: '/absolute/sub.json' }] }
       const events: PipelineTaskResult[] = []
       for await (const e of service.run(pipeline, {
-        loadChildPipeline,
         pipelineDir: '/absolute',
         onChildPipelineDone
       }))
@@ -115,14 +118,13 @@ describe('PipelineService', () => {
     })
 
     it('should use process.cwd() as base when pipelineDir is not specified', async () => {
-      const childPipeline: Pipeline = { tasks: [] }
-      const loadChildPipeline = vi.fn().mockReturnValue(childPipeline)
+      vi.mocked(mockLoaderDomain.load).mockReturnValue(rawChildPipeline)
 
       const pipeline: Pipeline = { tasks: [{ type: 'child', path: '/absolute/sub.json' }] }
       const events: PipelineTaskResult[] = []
-      for await (const e of service.run(pipeline, { loadChildPipeline })) events.push(e)
+      for await (const e of service.run(pipeline)) events.push(e)
 
-      expect(loadChildPipeline).toHaveBeenCalledWith('/absolute/sub.json')
+      expect(mockLoaderDomain.load).toHaveBeenCalledWith('/absolute/sub.json')
     })
   })
 })

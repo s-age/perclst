@@ -12,4 +12,5 @@ export type IClaudeCodeRepository = {
     onStreamEvent?: (event: AgentStreamEvent) => void,
     signal?: AbortSignal
   ): Promise<RawOutput>
+  spawnInteractive(args: string[]): void
 }
