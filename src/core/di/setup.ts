@@ -40,6 +40,8 @@ import { PipelineFileService } from '@src/services/pipelineFileService'
 import { PermissionPipeRepository } from '@src/repositories/permissionPipeRepository'
 import { PermissionPipeDomain } from '@src/domains/permissionPipe'
 import { PermissionPipeService } from '@src/services/permissionPipeService'
+import { GitPendingChangesDomain } from '@src/domains/gitPendingChanges'
+import { GitPendingChangesService } from '@src/services/gitPendingChangesService'
 import { DEFAULT_MODEL } from '@src/constants/config'
 import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
@@ -72,6 +74,7 @@ type Domains = {
   testStrategyDomain: TestStrategyDomain
   knowledgeSearchDomain: KnowledgeSearchDomain
   tsAnalysisDomain: TsAnalysisDomain
+  gitPendingChangesDomain: GitPendingChangesDomain
 }
 
 function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
@@ -123,7 +126,8 @@ function buildDomains(model: string, repos: Repos): Domains {
     checkerDomain: new CheckerDomain(checkerRepo),
     testStrategyDomain: new TestStrategyDomain(testStrategyRepo),
     knowledgeSearchDomain: new KnowledgeSearchDomain(knowledgeSearchRepo),
-    tsAnalysisDomain: new TsAnalysisDomain(tsAnalysisRepo)
+    tsAnalysisDomain: new TsAnalysisDomain(tsAnalysisRepo),
+    gitPendingChangesDomain: new GitPendingChangesDomain(gitRepo)
   }
 }
 
@@ -174,7 +178,8 @@ function registerServices(config: ReturnType<typeof loadConfig>, domains: Domain
     checkerDomain,
     testStrategyDomain,
     knowledgeSearchDomain,
-    tsAnalysisDomain
+    tsAnalysisDomain,
+    gitPendingChangesDomain
   } = domains
   container.register(TOKENS.AbortService, new AbortService())
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
@@ -198,6 +203,10 @@ function registerServices(config: ReturnType<typeof loadConfig>, domains: Domain
   container.register(TOKENS.PermissionPipeRepository, permPipeRepo)
   container.register(TOKENS.PermissionPipeDomain, permPipeDomain)
   container.register(TOKENS.PermissionPipeService, new PermissionPipeService(permPipeDomain))
+  container.register(
+    TOKENS.GitPendingChangesService,
+    new GitPendingChangesService(gitPendingChangesDomain)
+  )
 }
 
 export function setupContainer(): void {

@@ -1,5 +1,6 @@
 import type { IGitRepository } from '@src/repositories/ports/git'
-import { execGitSync } from '@src/infrastructures/git'
+import { execGitSync, spawnGitSync } from '@src/infrastructures/git'
+import { findProjectRoot } from '@src/infrastructures/projectRoot'
 
 export class GitRepository implements IGitRepository {
   getDiffStat(): string | null {
@@ -34,6 +35,23 @@ export class GitRepository implements IGitRepository {
     try {
       const diff = execGitSync(`diff ${from} ${to}`)
       return diff || null
+    } catch {
+      return null
+    }
+  }
+
+  getPendingDiff(repoPath?: string): string | null {
+    try {
+      const cwd = repoPath ?? findProjectRoot()
+      const staged = execGitSync('diff --cached', cwd)
+      const unstaged = execGitSync('diff', cwd)
+      const untrackedOutput = execGitSync('ls-files --others --exclude-standard', cwd)
+      const untrackedFiles = untrackedOutput.split('\n').filter(Boolean)
+      const untrackedDiffs = untrackedFiles
+        .map((file) => spawnGitSync(['diff', '--no-index', '/dev/null', file], cwd))
+        .filter(Boolean)
+      const combined = [staged, unstaged, ...untrackedDiffs].filter(Boolean).join('\n')
+      return combined || null
     } catch {
       return null
     }

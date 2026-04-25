@@ -44,5 +44,6 @@ export const TOKENS = {
   PipelineLoaderDomain: Symbol.for('PipelineLoaderDomain'),
   // Services
   KnowledgeSearchService: Symbol.for('KnowledgeSearchService'),
-  PermissionPipeService: Symbol.for('PermissionPipeService')
+  PermissionPipeService: Symbol.for('PermissionPipeService'),
+  GitPendingChangesService: Symbol.for('GitPendingChangesService')
 } as const

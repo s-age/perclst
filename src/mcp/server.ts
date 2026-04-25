@@ -22,6 +22,7 @@ import { tsGetTypesParams } from '@src/validators/mcp/tsGetTypes'
 import { tsTestStrategistParams } from '@src/validators/mcp/tsTestStrategist'
 import { knowledgeSearchParams } from '@src/validators/mcp/knowledgeSearch'
 import { tsCheckerParams } from '@src/validators/mcp/tsChecker'
+import { gitPendingChangesParams } from '@src/validators/mcp/gitPendingChanges'
 import { executeTsAnalyze } from './tools/tsAnalyze'
 import { executeTsGetReferences } from './tools/tsGetReferences'
 import { executeTsGetTypes } from './tools/tsGetTypes'
@@ -29,6 +30,7 @@ import { executeTsChecker } from './tools/tsChecker'
 import { executeTsTestStrategist } from './tools/tsTestStrategist'
 import { executeKnowledgeSearch } from './tools/knowledgeSearch'
 import { executeAskPermission } from './tools/askPermission'
+import { executeGitPendingChanges } from './tools/gitPendingChanges'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -112,6 +114,16 @@ server.tool(
   tsCheckerParams,
   ({ project_root, lint_command, build_command, test_command }) =>
     executeTsChecker({ project_root, lint_command, build_command, test_command })
+)
+
+server.tool(
+  'git_pending_changes',
+  'Returns a unified diff of all uncommitted changes — staged, unstaged, and new untracked files. ' +
+    'When: at the start of any review, audit, or pre-commit inspection task. ' +
+    'Why: a single call replaces git diff + git diff --cached + git ls-files + per-file reads, reducing multiple tool call turns to one. ' +
+    'How: read the returned diff to understand what has changed; feed specific file paths into ts_analyze or Read for deeper inspection.',
+  gitPendingChangesParams,
+  ({ repo_path }) => executeGitPendingChanges({ repo_path })
 )
 
 await server.connect(new StdioServerTransport())
