@@ -11,6 +11,11 @@ const createMockStringInstance = (): MockZodString => ({
   max: vi.fn().mockReturnThis()
 })
 
+// Zod v4 tightened its internal types; cast via unknown to bypass strict schema type checks in mocks
+const mockString = (instance: MockZodString): void => {
+  vi.mocked(z.string).mockReturnValue(instance as unknown as ReturnType<typeof z.string>)
+}
+
 // Mock the zod module
 vi.mock('zod', () => ({
   z: {
@@ -28,7 +33,7 @@ describe('stringRule', () => {
 
   it('should create a base string schema with no options', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule()
 
@@ -38,7 +43,7 @@ describe('stringRule', () => {
 
   it('should apply min(1) when required option is true', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ required: true })
 
@@ -47,7 +52,7 @@ describe('stringRule', () => {
 
   it('should not apply min(1) when required option is false', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ required: false })
 
@@ -57,7 +62,7 @@ describe('stringRule', () => {
 
   it('should apply min constraint when min option is provided', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ min: 5 })
 
@@ -66,7 +71,7 @@ describe('stringRule', () => {
 
   it('should not apply min constraint when min is undefined', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ min: undefined })
 
@@ -75,7 +80,7 @@ describe('stringRule', () => {
 
   it('should apply max constraint when max option is provided', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ max: 100 })
 
@@ -84,7 +89,7 @@ describe('stringRule', () => {
 
   it('should not apply max constraint when max is undefined', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ max: undefined })
 
@@ -93,7 +98,7 @@ describe('stringRule', () => {
 
   it('should apply both required and custom min when required=true and min provided', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ required: true, min: 3 })
 
@@ -105,7 +110,7 @@ describe('stringRule', () => {
 
   it('should apply required, min, and max constraints together', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ required: true, min: 2, max: 50 })
 
@@ -117,7 +122,7 @@ describe('stringRule', () => {
 
   it('should apply only min and max without required', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ min: 1, max: 100 })
 
@@ -128,7 +133,7 @@ describe('stringRule', () => {
 
   it('should return the chained schema object', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     const result = stringRule({ min: 5, max: 20 })
 
@@ -137,7 +142,7 @@ describe('stringRule', () => {
 
   it('should handle min value of 0', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ min: 0 })
 
@@ -146,7 +151,7 @@ describe('stringRule', () => {
 
   it('should handle max value of 0', () => {
     const mockStringInstance = createMockStringInstance()
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ max: 0 })
 
@@ -165,7 +170,7 @@ describe('stringRule', () => {
         return mockStringInstance
       })
     }
-    vi.mocked(z.string).mockReturnValue(mockStringInstance)
+    mockString(mockStringInstance)
 
     stringRule({ required: true, min: 5, max: 20 })
 

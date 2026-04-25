@@ -2,23 +2,12 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 // Mock the zod module
 vi.mock('zod', () => {
-  const mockMin = vi.fn(function () {
-    return this
-  })
-  const mockMax = vi.fn(function () {
-    return this
-  })
-  const mockInt = vi.fn(function () {
-    return {
-      min: mockMin,
-      max: mockMax
-    }
-  })
-  const mockNumber = vi.fn(function () {
-    return {
-      int: mockInt
-    }
-  })
+  const intResult = { min: vi.fn(), max: vi.fn() }
+  intResult.min.mockReturnValue(intResult)
+  intResult.max.mockReturnValue(intResult)
+
+  const mockInt = vi.fn(() => intResult)
+  const mockNumber = vi.fn(() => ({ int: mockInt }))
 
   return {
     z: {
