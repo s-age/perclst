@@ -59,10 +59,9 @@ function printJsonOutput(session: Session, summary: AnalysisSummary, printDetail
         status: session.metadata.status,
         turns_breakdown: {
           user_instructions: summary.turnsBreakdown.userInstructions,
-          thinking: summary.turnsBreakdown.thinking,
+          api_calls: summary.turnsBreakdown.apiCalls,
           tool_calls: summary.turnsBreakdown.toolCalls,
           tool_results: summary.turnsBreakdown.toolResults,
-          assistant_response: summary.turnsBreakdown.assistantResponse,
           total: summary.turnsBreakdown.total
         },
         tool_uses: summary.toolUses.map((t) => ({
@@ -95,11 +94,10 @@ function printTextSummary(session: Session, summary: AnalysisSummary): void {
   const turnsTable = new Table({ style: { head: [], border: [] } })
   turnsTable.push(
     ['User Instructions', bd.userInstructions],
-    ['Thinking', bd.thinking],
+    ['API Calls', bd.apiCalls],
     ['Tool Calls', bd.toolCalls],
     ['Tool Results', bd.toolResults],
-    ['Assistant Response', bd.assistantResponse],
-    ['Turns (total)', bd.total]
+    ['Messages (total)', bd.total]
   )
   stdout.print(`\n  Turns breakdown:`)
   stdout.print(turnsTable.toString())

@@ -41,9 +41,10 @@ const mockAnalyzeResult: AnalyzeResult = {
     ],
     turnsBreakdown: {
       userInstructions: 1,
-      toolUse: 1,
-      assistantResponse: 1,
-      total: 3
+      apiCalls: 1,
+      toolCalls: 1,
+      toolResults: 1,
+      total: 4
     },
     toolUses: [
       {

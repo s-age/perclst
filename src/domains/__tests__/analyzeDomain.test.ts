@@ -78,10 +78,9 @@ describe('AnalyzeDomain', () => {
         turns: [],
         turnsBreakdown: {
           userInstructions: 0,
-          thinking: 0,
+          apiCalls: 0,
           toolCalls: 0,
           toolResults: 0,
-          assistantResponse: 0,
           total: 0
         },
         toolUses: [],

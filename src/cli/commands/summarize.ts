@@ -31,13 +31,13 @@ export async function summarizeCommand(options: RawSummarizeOptions): Promise<vo
     const table = new Table({
       head: [
         'Name',
-        'Turns',
+        'API Calls',
         'Tool Calls',
-        'Context Window',
         'Tokens In',
-        'Tokens Out',
         'Cache Read',
-        'Cache Creation'
+        'Cache Creation',
+        'Tokens Out',
+        'Context Window'
       ],
       style: { head: [], border: [] }
     })
@@ -45,13 +45,13 @@ export async function summarizeCommand(options: RawSummarizeOptions): Promise<vo
     for (const row of rows) {
       table.push([
         row.name,
-        row.turns,
+        row.apiCalls,
         row.toolCalls,
-        formatKilo(row.tokens.contextWindow),
-        row.tokens.totalInput.toLocaleString(),
-        row.tokens.totalOutput.toLocaleString(),
-        row.tokens.totalCacheRead.toLocaleString(),
-        row.tokens.totalCacheCreation.toLocaleString()
+        formatKilo(row.tokens.totalInput),
+        formatKilo(row.tokens.totalCacheRead),
+        formatKilo(row.tokens.totalCacheCreation),
+        formatKilo(row.tokens.totalOutput),
+        formatKilo(row.tokens.contextWindow)
       ])
     }
 

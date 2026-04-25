@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildSummaryStats } from '../analyze'
 
 describe('buildSummaryStats', () => {
-  it('should count user instructions, thinking steps, tool calls/results, and final response', () => {
+  it('should count user instructions, API calls, tool calls/results', () => {
     const turns = [
       { userMessage: 'Instruction', toolCalls: [] },
       {
@@ -17,14 +17,13 @@ describe('buildSummaryStats', () => {
     const result = buildSummaryStats(turns)
 
     expect(result.turnsBreakdown.userInstructions).toBe(1)
-    expect(result.turnsBreakdown.thinking).toBe(1)
+    expect(result.turnsBreakdown.apiCalls).toBe(2)
     expect(result.turnsBreakdown.toolCalls).toBe(2)
     expect(result.turnsBreakdown.toolResults).toBe(2)
-    expect(result.turnsBreakdown.assistantResponse).toBe(1)
-    expect(result.turnsBreakdown.total).toBe(1 + 1 + 2 + 2 + 1) // 7
+    expect(result.turnsBreakdown.total).toBe(1 + 2 + 2 + 2) // 7
   })
 
-  it('should count multiple thinking steps (parallel calls count as one thinking step)', () => {
+  it('should count parallel tool calls as one API call', () => {
     const turns = [
       { toolCalls: [{ name: 'A', input: {}, result: null, isError: false }] },
       {
@@ -38,11 +37,10 @@ describe('buildSummaryStats', () => {
 
     const result = buildSummaryStats(turns)
 
-    expect(result.turnsBreakdown.thinking).toBe(2)
+    expect(result.turnsBreakdown.apiCalls).toBe(3)
     expect(result.turnsBreakdown.toolCalls).toBe(3)
     expect(result.turnsBreakdown.toolResults).toBe(3)
-    expect(result.turnsBreakdown.assistantResponse).toBe(1)
-    expect(result.turnsBreakdown.total).toBe(2 + 3 + 3 + 1) // 9
+    expect(result.turnsBreakdown.total).toBe(3 + 3 + 3) // 9
   })
 
   it('should collect all tool uses with metadata', () => {
@@ -70,13 +68,12 @@ describe('buildSummaryStats', () => {
     })
   })
 
-  it('should not count tool-calling turns as assistant response', () => {
+  it('should count tool-calling turns as API calls', () => {
     const turns = [{ toolCalls: [{ name: 'Tool1', input: {}, result: null, isError: false }] }]
 
     const result = buildSummaryStats(turns)
 
-    expect(result.turnsBreakdown.thinking).toBe(1)
-    expect(result.turnsBreakdown.assistantResponse).toBe(0)
+    expect(result.turnsBreakdown.apiCalls).toBe(1)
   })
 
   it('should handle empty turns array', () => {
@@ -86,10 +83,9 @@ describe('buildSummaryStats', () => {
 
     expect(result.turnsBreakdown).toEqual({
       userInstructions: 0,
-      thinking: 0,
+      apiCalls: 0,
       toolCalls: 0,
       toolResults: 0,
-      assistantResponse: 0,
       total: 0
     })
     expect(result.toolUses).toEqual([])
