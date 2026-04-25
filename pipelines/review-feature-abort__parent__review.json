@@ -27,12 +27,14 @@
     {
       "type": "child",
       "path": "review-feature-abort__services__review.json",
-      "name": "review-feature-abort-services"
+      "name": "review-feature-abort-services",
+      "done": true
     },
     {
       "type": "child",
       "path": "review-feature-abort__cli-commands__review.json",
-      "name": "review-feature-abort-cli-commands"
+      "name": "review-feature-abort-cli-commands",
+      "done": true
     },
     {
       "type": "child",
