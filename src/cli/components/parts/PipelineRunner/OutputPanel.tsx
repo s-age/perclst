@@ -32,7 +32,11 @@ export function OutputPanel({
     >
       <Text bold wrap="truncate">
         Output
-        {scrollMode && <Text color="yellow"> [SCROLL ↑↓ ^O to exit]</Text>}
+        {scrollMode ? (
+          <Text color="yellow"> [SCROLL ↑↓ ^O to exit]</Text>
+        ) : (
+          <Text color="gray"> (^O: scroll)</Text>
+        )}
         {runningIndex >= 0 && <Text color="gray"> — task {runningIndex + 1}</Text>}
       </Text>
       <Text> </Text>
