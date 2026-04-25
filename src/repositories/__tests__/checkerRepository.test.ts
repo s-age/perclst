@@ -71,6 +71,29 @@ describe('CheckerRepository', () => {
     })
   })
 
+  describe('runTypecheck', () => {
+    it('uses the default typecheck command when none is provided', async () => {
+      await repo.runTypecheck('/cwd')
+      expect(mockRunCommand).toHaveBeenCalledWith('npm run typecheck', '/cwd')
+    })
+
+    it('uses the provided command when one is given', async () => {
+      await repo.runTypecheck('/cwd', 'tsc --noEmit')
+      expect(mockRunCommand).toHaveBeenCalledWith('tsc --noEmit', '/cwd')
+    })
+
+    it('passes the cwd argument to runCommand', async () => {
+      await repo.runTypecheck('/my/project')
+      expect(mockRunCommand).toHaveBeenCalledWith(expect.any(String), '/my/project')
+    })
+
+    it('returns the exitCode from the parsed result', async () => {
+      mockRunCommand.mockResolvedValue({ stdout: '', stderr: '', exitCode: 2 })
+      const result = await repo.runTypecheck('/cwd')
+      expect(result.exitCode).toBe(2)
+    })
+  })
+
   describe('runTest', () => {
     it('uses the default test command when none is provided', async () => {
       await repo.runTest('/cwd')

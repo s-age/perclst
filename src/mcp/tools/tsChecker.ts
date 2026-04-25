@@ -13,7 +13,7 @@ export const ts_checker: {
 } = {
   name: 'ts_checker',
   description:
-    'Run lint (lint:fix), build, and unit tests in one shot and report errors/warnings for each. ' +
+    'Run lint (lint:fix), build, typecheck (tsc --noEmit), and unit tests in one shot and report errors/warnings for each. ' +
     'Use this after making TypeScript changes to verify correctness before completing a task.',
   inputSchema: {
     type: 'object',
@@ -30,6 +30,10 @@ export const ts_checker: {
         type: 'string',
         description: 'Build command. Defaults to "npm run build".'
       },
+      typecheck_command: {
+        type: 'string',
+        description: 'Typecheck command. Defaults to "npm run typecheck".'
+      },
       test_command: {
         type: 'string',
         description: 'Test command. Defaults to "npm run test:unit".'
@@ -43,6 +47,7 @@ export async function executeTsChecker(args: {
   project_root?: string
   lint_command?: string
   build_command?: string
+  typecheck_command?: string
   test_command?: string
 }): Promise<{ content: { type: 'text'; text: string }[] }> {
   const service = container.resolve<CheckerService>(TOKENS.CheckerService)
@@ -50,6 +55,7 @@ export async function executeTsChecker(args: {
     projectRoot: args.project_root,
     lintCommand: args.lint_command,
     buildCommand: args.build_command,
+    typecheckCommand: args.typecheck_command,
     testCommand: args.test_command
   })
   return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] }

@@ -5,6 +5,7 @@ import { findProjectRoot } from '@src/infrastructures/projectRoot'
 
 const DEFAULT_LINT_COMMAND = 'npm run lint:fix'
 const DEFAULT_BUILD_COMMAND = 'npm run build'
+const DEFAULT_TYPECHECK_COMMAND = 'npm run typecheck'
 const DEFAULT_TEST_COMMAND = 'npm run test:unit'
 
 // ESLint/tsc output lines that contain these substrings are noise, not real errors
@@ -44,6 +45,11 @@ export class CheckerRepository implements ICheckerRepository {
   }
 
   async runBuild(cwd: string, command = DEFAULT_BUILD_COMMAND): Promise<CommandResult> {
+    const { stdout, stderr, exitCode } = await runCommand(command, cwd)
+    return parseOutput(stdout, stderr, exitCode)
+  }
+
+  async runTypecheck(cwd: string, command = DEFAULT_TYPECHECK_COMMAND): Promise<CommandResult> {
     const { stdout, stderr, exitCode } = await runCommand(command, cwd)
     return parseOutput(stdout, stderr, exitCode)
   }

@@ -14,6 +14,7 @@ export type CheckerOptions = {
   projectRoot?: string
   lintCommand?: string
   buildCommand?: string
+  typecheckCommand?: string
   testCommand?: string
 }
 
@@ -21,5 +22,6 @@ export type CheckerResult = {
   ok: boolean
   lint: CommandResult
   build: CommandResult
+  typecheck: CommandResult
   test: CommandResult
 }

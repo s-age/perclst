@@ -7,12 +7,14 @@ export class CheckerDomain implements ICheckerDomain {
 
   async check(options: CheckerOptions): Promise<CheckerResult> {
     const cwd = options.projectRoot ?? this.checkerRepo.findProjectRoot()
-    const [lint, build, test] = await Promise.all([
+    const [lint, build, typecheck, test] = await Promise.all([
       this.checkerRepo.runLint(cwd, options.lintCommand),
       this.checkerRepo.runBuild(cwd, options.buildCommand),
+      this.checkerRepo.runTypecheck(cwd, options.typecheckCommand),
       this.checkerRepo.runTest(cwd, options.testCommand)
     ])
-    const ok = lint.exitCode === 0 && build.exitCode === 0 && test.exitCode === 0
-    return { ok, lint, build, test }
+    const ok =
+      lint.exitCode === 0 && build.exitCode === 0 && typecheck.exitCode === 0 && test.exitCode === 0
+    return { ok, lint, build, typecheck, test }
   }
 }
