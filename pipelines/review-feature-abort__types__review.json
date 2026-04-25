@@ -62,7 +62,7 @@
         },
         {
           "type": "agent",
-          "name": "review-feature-abort-types-committer",
+          "name": "review-feature-abort-types-implementer",
           "task": "Review and fixes complete. Build and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(types): ...).",
           "model": "haiku",
           "allowed_tools": ["Read", "Bash"]
