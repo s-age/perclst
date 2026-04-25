@@ -1,3 +1,4 @@
+import { Node } from 'ts-morph'
 import type { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import {
   extractSymbols,
@@ -31,7 +32,7 @@ export class TsAnalysisRepository implements ITsAnalysisRepository {
   ): ReferenceInfo[] {
     const sf = this.infra.getSourceFile(filePath)
     const symbol = resolveSymbol(sf, symbolName)
-    if (!symbol) return []
+    if (!symbol || !Node.isReferenceFindable(symbol)) return []
     return extractReferences(symbol.findReferences(), options)
   }
 
