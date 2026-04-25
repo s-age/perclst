@@ -41,8 +41,8 @@ flowchart TD
     CheckDI --> CheckPorts["--- CHECK 4: Port type placement ---\n\nPort types (IXxxDomain, IXxxRepository) must live in the consuming layer's ports/ subdirectory:\n  IXxxRepository → src/repositories/ports/\n  IXxxDomain     → src/domains/ports/\n\n  VIOLATION if: a port type is defined outside its required ports/ directory\n  VIOLATION if: a concrete class implements a port imported from the wrong layer\n\nUse ts_get_types(ClassName) to verify the implements clause before Reading the file."]
 
     CheckPorts --> Tally{Any violations\nfound?}
-    Tally -- No --> ReportClean["Report: architecture is clean\nList all files checked and confirm no violations"]
-    Tally -- Yes --> BuildReport["Build violation report\n\nFor each violation:\n  file_path (+ line number from ts_analyze where possible)\n  layer: the file's layer\n  check: forbidden_import | responsibility | di_consistency | port_placement\n  description: what rule is broken\n  recommendation: which layer/file the offending code belongs in"]
+    Tally -- No --> ReportClean["Write the clean variant of the report\nFormat: procedures/arch/template.md"]
+    Tally -- Yes --> BuildReport["Write the violation report\nFormat: procedures/arch/template.md\nInclude one section per violation with file_path+line, layer, check, description, recommendation"]
 
     ReportClean --> WriteOut
     BuildReport --> WriteOut{ng_output_path\nprovided?}
