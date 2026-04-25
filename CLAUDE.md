@@ -36,6 +36,8 @@ npm run build && perclst start "test"
 npm link   # global install after build
 ```
 
+> **After any `src/` change**: verify with `ts_checker` (MCP tool) — do **not** run `eslint`, `tsc`, or test commands directly in the shell. Direct shell invocations consume context history without benefit; `ts_checker` runs lint + build + tests in one call.
+
 ## Procedures
 
 Use `--procedure <name>` to set agent behavior:

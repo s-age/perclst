@@ -7,6 +7,7 @@ import type { AnalyzeService } from '@src/services/analyzeService'
 import { stdout, stderr } from '@src/utils/output'
 import { toLocaleString } from '@src/utils/date'
 import { parseShowSession } from '@src/validators/cli/showSession'
+import type { TurnRow } from '@src/types/display'
 
 type RawShowOptions = {
   format?: string
@@ -19,6 +20,23 @@ type RawShowOptions = {
 function truncate(text: string, max: number): string {
   const single = ansis.strip(text).replace(/\n/g, ' ')
   return single.length > max ? single.slice(0, max - 1) + '…' : single
+}
+
+function printTurnsTable(rows: TurnRow[], length?: number): void {
+  const tableOpts: ConstructorParameters<typeof Table>[0] = {
+    head: ['N', 'role', 'content'],
+    style: { head: [], border: [] }
+  }
+  if (length !== undefined) tableOpts.colWidths = [5, 13, length + 4]
+  const table = new Table(tableOpts)
+  for (const row of rows) {
+    const content =
+      length !== undefined
+        ? truncate(row.content, length)
+        : ansis.strip(row.content).replace(/\n/g, '\\n')
+    table.push([String(row.n), row.role, content])
+  }
+  stdout.print(table.toString())
 }
 
 export async function showCommand(sessionId: string, options: RawShowOptions): Promise<void> {
@@ -60,20 +78,7 @@ export async function showCommand(sessionId: string, options: RawShowOptions): P
     }
 
     stdout.print('')
-    const tableOpts: ConstructorParameters<typeof Table>[0] = {
-      head: ['N', 'role', 'content'],
-      style: { head: [], border: [] }
-    }
-    if (input.length !== undefined) tableOpts.colWidths = [5, 13, input.length + 4]
-    const table = new Table(tableOpts)
-    for (const row of rows) {
-      const content =
-        input.length !== undefined
-          ? truncate(row.content, input.length)
-          : ansis.strip(row.content).replace(/\n/g, '\\n')
-      table.push([String(row.n), row.role, content])
-    }
-    stdout.print(table.toString())
+    printTurnsTable(rows, input.length)
   } catch (error) {
     stderr.print('Failed to show session', error as Error)
     process.exit(1)
