@@ -1,8 +1,9 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { useState, useEffect } from 'react'
+import { vi, describe, it, expect, beforeEach, afterEach, type Mock } from 'vitest'
+import { useState, useEffect, type Dispatch } from 'react'
 import { useInput } from 'ink'
 import { usePermission } from '../usePermission.js'
 import type { PermissionRequest } from '@src/types/permissionPipe.js'
+import type { PermissionPipeService } from '@src/services/permissionPipeService.js'
 
 vi.mock('react', () => ({
   useState: vi.fn(),
@@ -15,22 +16,27 @@ vi.mock('ink', () => ({
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-type UseStateResult = [PermissionRequest | null, (v: PermissionRequest | null) => void]
+type UseStateResult = [PermissionRequest | null, Dispatch<unknown>]
 
-const setPermRequest = vi.fn<[PermissionRequest | null], void>()
+const setPermRequest = vi.fn<(v: PermissionRequest | null) => void>()
 
 const makeRequest = (input: Record<string, unknown> = { cmd: 'ls' }): PermissionRequest => ({
   tool_name: 'Bash',
   input
 })
 
-type MockFn = ReturnType<typeof vi.fn>
-type MockService = { pollRequest: MockFn; respond: MockFn }
+type MockService = {
+  pollRequest: Mock<() => PermissionRequest | null>
+  respond: Mock<() => void>
+  askPermission: Mock<() => Promise<unknown>>
+}
 
-const makeService = (): MockService => ({
-  pollRequest: vi.fn<[], PermissionRequest | null>(),
-  respond: vi.fn()
-})
+const makeService = (): MockService & PermissionPipeService =>
+  ({
+    pollRequest: vi.fn<() => PermissionRequest | null>(),
+    respond: vi.fn<() => void>(),
+    askPermission: vi.fn<() => Promise<unknown>>()
+  }) as unknown as MockService & PermissionPipeService
 
 // ── usePermission ─────────────────────────────────────────────────────────────
 
@@ -194,7 +200,10 @@ describe('usePermission', () => {
 
 // ── buildPermissionResponse (via useInput) ────────────────────────────────────
 
-type SetupResult = { service: MockService; trigger: (input: string) => void }
+type SetupResult = {
+  service: MockService & PermissionPipeService
+  trigger: (input: string) => void
+}
 
 describe('buildPermissionResponse', () => {
   const setupWithRequest = (req: PermissionRequest): SetupResult => {

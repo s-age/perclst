@@ -6,7 +6,9 @@ import type { PermissionRequest } from '@src/types/permissionPipe.js'
 function buildPermissionResponse(
   input: string,
   permRequest: PermissionRequest
-): { behavior: 'allow'; updatedInput: string } | { behavior: 'deny'; message: string } {
+):
+  | { behavior: 'allow'; updatedInput: Record<string, unknown> }
+  | { behavior: 'deny'; message: string } {
   const allow = input.toLowerCase() === 'y'
   return allow
     ? { behavior: 'allow', updatedInput: permRequest.input }
