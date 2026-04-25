@@ -55,6 +55,13 @@
       ]
     },
     {
+      "type": "agent",
+      "name": "arch-react-hooks-implementer",
+      "task": "Refactor is clean and build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(hooks): extract pure functions from useExample).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    },
+    {
       "type": "pipeline",
       "name": "arch-react-hooks-unit-test",
       "tasks": [
@@ -101,8 +108,8 @@
     },
     {
       "type": "agent",
-      "name": "arch-react-hooks-implementer",
-      "task": "Refactor and tests complete. Commit all changes with appropriate conventional commit messages (e.g. refactor(hooks): extract pure functions, test(hooks): add unit tests for extracted functions).",
+      "name": "arch-react-hooks-test-implementer",
+      "task": "Tests are written and passing. Commit the new test files with an appropriate conventional commit message (e.g. test(hooks): add unit tests for extracted pure functions).",
       "model": "haiku",
       "allowed_tools": ["Read", "Bash"]
     }
