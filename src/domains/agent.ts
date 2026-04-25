@@ -91,6 +91,31 @@ export class AgentDomain implements IAgentDomain {
     return false
   }
 
+  buildChatArgs(session: Session): string[] {
+    if (session.rewind_source_claude_session_id) {
+      return [
+        '--resume',
+        session.rewind_source_claude_session_id,
+        '--fork-session',
+        '--session-id',
+        session.claude_session_id,
+        ...(session.rewind_to_message_id
+          ? ['--resume-session-at', session.rewind_to_message_id]
+          : [])
+      ]
+    }
+    return ['--resume', session.claude_session_id]
+  }
+
+  chat(session: Session): void {
+    const args = this.buildChatArgs(session)
+    this.claudeCodeRepo.spawnInteractive(args)
+    if (session.rewind_source_claude_session_id) {
+      session.rewind_source_claude_session_id = undefined
+      session.rewind_to_message_id = undefined
+    }
+  }
+
   async resume(
     session: Session,
     instruction: string,

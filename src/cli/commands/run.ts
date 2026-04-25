@@ -1,6 +1,5 @@
 import { tmpdir } from 'os'
 import { resolve, join, dirname } from 'path'
-import * as readline from 'readline'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { PipelineService } from '@src/services/pipelineService'
@@ -12,6 +11,7 @@ import { RateLimitError } from '@src/errors/rateLimitError'
 import { APIError } from '@src/errors/apiError'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 import { stdout, stderr } from '@src/utils/output'
+import { confirm } from '@src/utils/prompt'
 import { printResponse, printStreamEvent } from '@src/cli/display'
 import { parseRunOptions, parsePipeline } from '@src/validators/cli/runPipeline'
 import type { RunPipelineInput } from '@src/validators/cli/runPipeline'
@@ -77,16 +77,6 @@ function printTaskResult(
       { sessionId: result.sessionId }
     )
   }
-}
-
-function confirm(question: string): Promise<boolean> {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stderr })
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close()
-      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes')
-    })
-  })
 }
 
 async function checkUncommittedChanges(pipelineFileService: PipelineFileService): Promise<void> {

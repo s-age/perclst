@@ -58,6 +58,12 @@ export class AgentService {
     return { sessionId: session.id, response }
   }
 
+  async chat(sessionId: string): Promise<void> {
+    const session = await this.sessionDomain.get(sessionId)
+    this.agentDomain.chat(session)
+    await this.sessionDomain.save(session)
+  }
+
   async resume(
     sessionId: string,
     instruction: string,
