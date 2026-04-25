@@ -18,6 +18,7 @@ Write all pipeline content in **English**, regardless of the project's primary l
 Place new pipelines in `pipelines/` root. **Never** create files inside `pipelines/done/`.
 
 Filename format: `<namespace>__<namespace>__<name>.json`
+
 - `__` separates namespace segments; `-` separates words within a segment
 - All lowercase; no underscores within segments, no camelCase
 
@@ -31,9 +32,14 @@ Filename format: `<namespace>__<namespace>__<name>.json`
 
 Omit `name` only for stateless or one-shot tasks.
 
+**Reviewer continuity**: when a pipeline has an initial reviewer followed by a loop reviewer, both agents MUST share the same `name`. The loop run resumes the initial session — the reviewer already knows what violations it found and skips re-scanning from scratch. `procedure` is ignored on resume; the flowchart remains in conversation history. Write the loop reviewer's `task` as a re-review instruction, not a repeat of the initial inputs. Do NOT split into `initial-reviewer` / `loop-reviewer` — that forces a cold-start and wastes tokens re-acquiring context.
+
+See `examples/arch-refactoring__foo.json` for a complete working example.
+
 ## `allowed_tools`
 
 Start minimal, then add:
+
 1. Standard tools: `Read`, `Write`, `Edit`, `Bash`
 2. MCP tools the procedure calls — full name `mcp__<server>__<tool>` (e.g. `mcp__perclst__ts_test_strategist`). Missing MCP tools stall the run on a permission prompt.
 
@@ -48,6 +54,7 @@ Start minimal, then add:
 Use `type: "pipeline"` to group sequences under a named unit. `name` is required (doubles as `rejected.to` target).
 
 Use a nested pipeline when:
+
 - An outer `script` rejection needs to re-run a multi-agent sequence, not just one agent.
 - Multiple independent targets each need isolated failure handling.
 
@@ -56,11 +63,13 @@ Multiple targets → sibling `pipeline` tasks at the top level.
 ## `ng_output_path` (review rejection)
 
 When a review agent should reject the implement agent:
+
 - Pass `ng_output_path: .claude/tmp/<review-agent-name>` in the review agent's `task`.
 - Set `rejected` on the review agent pointing to the implement agent.
 - The review agent writes rejection feedback to that file; perclst loops back with it as feedback.
 
 **Stale file cleanup**: Add a `script` task as the **first** item in the outer `tasks` array to delete the file before the pipeline runs:
+
 ```json
 { "type": "script", "command": "rm -f .claude/tmp/<ng-output-path-name>" }
 ```
@@ -68,6 +77,7 @@ When a review agent should reject the implement agent:
 ## Script gates and rejection loops
 
 Add a `script` task after each agent (or nested pipeline) that produces testable output:
+
 - `command`: `npm run test:unit` (not `npm run test`)
 - `rejected.to`: the agent or pipeline name to fix the failure
 - `rejected.max_retries`: 2–3 is usually sufficient
