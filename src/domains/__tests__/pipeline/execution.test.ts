@@ -17,7 +17,8 @@ describe('PipelineDomain - execution', () => {
     vi.clearAllMocks()
 
     agentDomain = {
-      run: vi.fn()
+      run: vi.fn(),
+      isLimitExceeded: vi.fn().mockReturnValue(false)
     } as unknown as IAgentDomain
 
     sessionDomain = {
@@ -36,14 +37,12 @@ describe('PipelineDomain - execution', () => {
   })
 
   describe('runWithLimit', () => {
-    it('runs agent once when limit not exceeded', async () => {
+    it('returns agent response directly when limit is not exceeded', async () => {
       const session: Session = { id: 'session1', name: 'test' } as Session
-      const agentResponse: AgentResponse = {
-        message_count: 2,
-        last_assistant_usage: undefined
-      } as AgentResponse
+      const agentResponse: AgentResponse = { message_count: 2 } as AgentResponse
 
       vi.mocked(agentDomain.run).mockResolvedValue(agentResponse)
+      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(false)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
       const result = await pipelineDomain.runWithLimit(session, 'instruction', false, {
@@ -55,20 +54,15 @@ describe('PipelineDomain - execution', () => {
       expect(agentDomain.run).toHaveBeenCalledTimes(1)
     })
 
-    it('runs graceful termination when turn limit exceeded', async () => {
+    it('sends graceful termination prompt when agentDomain signals limit exceeded', async () => {
       const session: Session = { id: 'session1' } as Session
-      const firstResponse: AgentResponse = {
-        message_count: 10,
-        last_assistant_usage: undefined
-      } as AgentResponse
-      const termResponse: AgentResponse = {
-        message_count: 11,
-        last_assistant_usage: undefined
-      } as AgentResponse
+      const firstResponse: AgentResponse = { message_count: 10 } as AgentResponse
+      const termResponse: AgentResponse = { message_count: 11 } as AgentResponse
 
       vi.mocked(agentDomain.run)
         .mockResolvedValueOnce(firstResponse)
         .mockResolvedValueOnce(termResponse)
+      vi.mocked(agentDomain.isLimitExceeded).mockReturnValueOnce(true)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
       await pipelineDomain.runWithLimit(session, 'instruction', false, {
@@ -81,25 +75,15 @@ describe('PipelineDomain - execution', () => {
       expect(secondCall[1]).toContain('reached the operation limit')
     })
 
-    it('runs graceful termination when context token limit exceeded', async () => {
+    it('sends graceful termination prompt when agentDomain signals context token limit exceeded', async () => {
       const session: Session = { id: 'session1' } as Session
-      const firstResponse: AgentResponse = {
-        message_count: 2,
-        last_assistant_usage: {
-          input_tokens: 5000,
-          output_tokens: 100,
-          cache_read_input_tokens: 0,
-          cache_creation_input_tokens: 0
-        }
-      } as AgentResponse
-      const termResponse: AgentResponse = {
-        message_count: 3,
-        last_assistant_usage: undefined
-      } as AgentResponse
+      const firstResponse: AgentResponse = { message_count: 2 } as AgentResponse
+      const termResponse: AgentResponse = { message_count: 3 } as AgentResponse
 
       vi.mocked(agentDomain.run)
         .mockResolvedValueOnce(firstResponse)
         .mockResolvedValueOnce(termResponse)
+      vi.mocked(agentDomain.isLimitExceeded).mockReturnValueOnce(true)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
       await pipelineDomain.runWithLimit(session, 'instruction', false, {
