@@ -15,6 +15,11 @@ const mockCheckerResult: CheckerResult = {
     warnings: [],
     exitCode: 0
   },
+  typecheck: {
+    errors: [],
+    warnings: [],
+    exitCode: 0
+  },
   test: {
     errors: [],
     warnings: [],
@@ -40,6 +45,7 @@ describe('CheckerService', () => {
         projectRoot: '/test/project',
         lintCommand: 'npm run lint',
         buildCommand: 'npm run build',
+        typecheckCommand: 'npm run typecheck',
         testCommand: 'npm run test'
       }
 
@@ -82,6 +88,11 @@ describe('CheckerService', () => {
           warnings: [],
           exitCode: 1
         },
+        typecheck: {
+          errors: ['Type error'],
+          warnings: [],
+          exitCode: 1
+        },
         test: {
           errors: ['Test failed'],
           warnings: ['Test warning'],
@@ -107,6 +118,11 @@ describe('CheckerService', () => {
         build: {
           errors: [],
           warnings: ['Build warning'],
+          exitCode: 0
+        },
+        typecheck: {
+          errors: [],
+          warnings: [],
           exitCode: 0
         },
         test: {

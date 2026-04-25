@@ -73,6 +73,14 @@ vi.mock('@src/lib/something', () => ({ doThing: vi.fn() }))
 
 **No mocks needed**: pure functions with no injected deps — test directly.
 
+**Typed `vi.fn()`**: pass the full function type as a single type argument (two-argument form `vi.fn<TArgs, TReturn>()` was removed in Vitest v2):
+
+```ts
+// correct (v2+)
+const setFoo = vi.fn<(v: Foo | null) => void>()
+const poll   = vi.fn<() => Foo | null>()
+```
+
 ## Class under test
 
 Instantiate in `beforeEach`, never at module scope:

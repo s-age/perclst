@@ -18,6 +18,7 @@ function makeMockRepo(
     findProjectRoot: () => string
     runLint: ICheckerRepository['runLint']
     runBuild: ICheckerRepository['runBuild']
+    runTypecheck: ICheckerRepository['runTypecheck']
     runTest: ICheckerRepository['runTest']
   }>
 ): ICheckerRepository {
@@ -25,6 +26,7 @@ function makeMockRepo(
     findProjectRoot: vi.fn(() => '/auto/root'),
     runLint: vi.fn(() => Promise.resolve(passingResult())),
     runBuild: vi.fn(() => Promise.resolve(passingResult())),
+    runTypecheck: vi.fn(() => Promise.resolve(passingResult())),
     runTest: vi.fn(() => Promise.resolve(passingResult())),
     ...partials
   }
@@ -46,9 +48,11 @@ describe('CheckerDomain.check', () => {
   it('returns ok=true and all results when all commands pass', async () => {
     const lintRes = passingResult({ warnings: ['w'] })
     const buildRes = passingResult()
+    const typecheckRes = passingResult()
     const testRes = passingResult()
     repo.runLint = vi.fn(() => Promise.resolve(lintRes))
     repo.runBuild = vi.fn(() => Promise.resolve(buildRes))
+    repo.runTypecheck = vi.fn(() => Promise.resolve(typecheckRes))
     repo.runTest = vi.fn(() => Promise.resolve(testRes))
 
     const result = await domain.check({ projectRoot: '/my/root' })
@@ -56,6 +60,7 @@ describe('CheckerDomain.check', () => {
     expect(result.ok).toBe(true)
     expect(result.lint).toBe(lintRes)
     expect(result.build).toBe(buildRes)
+    expect(result.typecheck).toBe(typecheckRes)
     expect(result.test).toBe(testRes)
   })
 
@@ -66,6 +71,7 @@ describe('CheckerDomain.check', () => {
 
     expect(repo.runLint).toHaveBeenCalledWith('/explicit/root', 'lint-cmd')
     expect(repo.runBuild).toHaveBeenCalledWith('/explicit/root', undefined)
+    expect(repo.runTypecheck).toHaveBeenCalledWith('/explicit/root', undefined)
     expect(repo.runTest).toHaveBeenCalledWith('/explicit/root', undefined)
     expect(repo.findProjectRoot).not.toHaveBeenCalled()
   })
@@ -76,6 +82,7 @@ describe('CheckerDomain.check', () => {
     expect(repo.findProjectRoot).toHaveBeenCalledOnce()
     expect(repo.runLint).toHaveBeenCalledWith('/auto/root', undefined)
     expect(repo.runBuild).toHaveBeenCalledWith('/auto/root', undefined)
+    expect(repo.runTypecheck).toHaveBeenCalledWith('/auto/root', undefined)
     expect(repo.runTest).toHaveBeenCalledWith('/auto/root', undefined)
   })
 
@@ -97,6 +104,15 @@ describe('CheckerDomain.check', () => {
 
     expect(result.ok).toBe(false)
     expect(result.build.exitCode).toBe(1)
+  })
+
+  it('returns ok=false when typecheck fails', async () => {
+    repo.runTypecheck = vi.fn(() => Promise.resolve(failingResult()))
+
+    const result = await domain.check({ projectRoot: '/root' })
+
+    expect(result.ok).toBe(false)
+    expect(result.typecheck.exitCode).toBe(1)
   })
 
   it('returns ok=false when test fails', async () => {
@@ -124,11 +140,13 @@ describe('CheckerDomain.check', () => {
       projectRoot: '/root',
       lintCommand: 'my-lint',
       buildCommand: 'my-build',
+      typecheckCommand: 'my-typecheck',
       testCommand: 'my-test'
     })
 
     expect(repo.runLint).toHaveBeenCalledWith('/root', 'my-lint')
     expect(repo.runBuild).toHaveBeenCalledWith('/root', 'my-build')
+    expect(repo.runTypecheck).toHaveBeenCalledWith('/root', 'my-typecheck')
     expect(repo.runTest).toHaveBeenCalledWith('/root', 'my-test')
   })
 })
