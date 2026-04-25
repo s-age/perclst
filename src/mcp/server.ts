@@ -106,7 +106,8 @@ server.tool(
   'ts_checker',
   'Runs lint (lint:fix), build, and unit tests in one shot and reports errors/warnings for each phase. ' +
     'When: after every TypeScript change before reporting a task complete. ' +
-    'Why: catches lint errors, type errors, and test failures in one call. ' +
+    'Do NOT run eslint, tsc, npm run build, or vitest directly in the shell — use this tool instead. ' +
+    'Why: catches lint errors, type errors, and test failures in one call without consuming shell history. ' +
     'How: if ok is false, inspect the errors/warnings fields and fix before completing.',
   tsCheckerParams,
   ({ project_root, lint_command, build_command, test_command }) =>

@@ -119,6 +119,40 @@ async function checkUncommittedChanges(pipelineFileService: PipelineFileService)
   }
 }
 
+function loadPipelineOrExit(
+  pipelineFileService: PipelineFileService,
+  absolutePath: string
+): Pipeline {
+  let raw: unknown
+  try {
+    raw = pipelineFileService.loadRawPipeline(absolutePath)
+  } catch {
+    stderr.print(`Failed to read pipeline file: ${absolutePath}`)
+    process.exit(1)
+  }
+  return parsePipeline(raw)
+}
+
+function handleRunCommandError(error: unknown, abortService: AbortService): never {
+  if (abortService.signal.aborted) {
+    stdout.print('Aborted.')
+    process.exit(130)
+  }
+  if (error instanceof ValidationError) {
+    stderr.print(`Invalid arguments: ${error.message}`)
+  } else if (error instanceof PipelineMaxRetriesError) {
+    stderr.print(error.message)
+  } else if (error instanceof RateLimitError) {
+    const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
+    stderr.print(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
+  } else if (error instanceof APIError) {
+    stderr.print(`Pipeline failed: ${error.message}`)
+  } else {
+    stderr.print('Pipeline failed', error as Error)
+  }
+  process.exit(1)
+}
+
 function printGitDiffSummary(
   pipelineFileService: PipelineFileService,
   fromHash: string,
@@ -141,14 +175,7 @@ async function executeTUIPipeline(
   process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
-  let raw: unknown
-  try {
-    raw = pipelineFileService.loadRawPipeline(absolutePath)
-  } catch {
-    stderr.print(`Failed to read pipeline file: ${absolutePath}`)
-    process.exit(1)
-  }
-  const pipeline = parsePipeline(raw)
+  const pipeline = loadPipelineOrExit(pipelineFileService, absolutePath)
   const { render } = await import('ink')
   const React = (await import('react')).default
   const { PipelineRunner } = await import('@src/cli/components/PipelineRunner.js')
@@ -284,22 +311,6 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions): 
     }
     pipelineFileService.cleanTmpDir()
   } catch (error) {
-    if (abortService.signal.aborted) {
-      stdout.print('Aborted.')
-      process.exit(130)
-    }
-    if (error instanceof ValidationError) {
-      stderr.print(`Invalid arguments: ${error.message}`)
-    } else if (error instanceof PipelineMaxRetriesError) {
-      stderr.print(error.message)
-    } else if (error instanceof RateLimitError) {
-      const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
-      stderr.print(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
-    } else if (error instanceof APIError) {
-      stderr.print(`Pipeline failed: ${error.message}`)
-    } else {
-      stderr.print('Pipeline failed', error as Error)
-    }
-    process.exit(1)
+    handleRunCommandError(error, abortService)
   }
 }

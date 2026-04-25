@@ -43,7 +43,7 @@ export default tseslint.config(
       'max-lines': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
 
       // Max function length: 50 lines
-      'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }]
+      'max-lines-per-function': ['error', { max: 50, skipBlankLines: true, skipComments: true }]
     }
   },
   {
@@ -51,7 +51,7 @@ export default tseslint.config(
     plugins: { 'react-hooks': reactHooksPlugin },
     rules: {
       'react-hooks/exhaustive-deps': 'error',
-      'max-lines-per-function': ['warn', { max: 75, skipBlankLines: true, skipComments: true }]
+      'max-lines-per-function': ['error', { max: 75, skipBlankLines: true, skipComments: true }]
     }
   },
   {

@@ -1,4 +1,5 @@
 import { spawn } from 'child_process'
+import type { ChildProcess } from 'child_process'
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
 import { homedir, tmpdir } from 'os'
 import { join, resolve, dirname } from 'path'
@@ -81,21 +82,7 @@ export class ClaudeCodeInfra {
       cwd: workingDir,
       stdio: ['pipe', 'pipe', 'pipe']
     })
-    let stderr = ''
-    let spawnError: Error | null = null
-    const closePromise = new Promise<number | null>((res) => {
-      child.on('close', (code) => res(code))
-    })
-    child.on('error', (err) => {
-      spawnError = new APIError(`Failed to spawn claude: ${err.message}`)
-    })
-    const STDERR_TAIL_MAX = 16 * 1024
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString()
-      if (stderr.length > STDERR_TAIL_MAX * 2) {
-        stderr = stderr.slice(-STDERR_TAIL_MAX)
-      }
-    })
+    const { closePromise, errors } = this.attachChildHandlers(child)
 
     const onAbort = (): void => {
       if (!child.killed) child.kill('SIGTERM')
@@ -117,9 +104,30 @@ export class ClaudeCodeInfra {
     }
 
     if (signal?.aborted) return
-    if (spawnError) throw spawnError
+    if (errors.spawnError) throw errors.spawnError
     const exitCode = await closePromise
-    if (exitCode !== 0) throw new RawExitError(exitCode, stderr)
+    if (exitCode !== 0) throw new RawExitError(exitCode, errors.stderr)
+  }
+
+  private attachChildHandlers(child: ChildProcess): {
+    closePromise: Promise<number | null>
+    errors: { stderr: string; spawnError: Error | null }
+  } {
+    const errors = { stderr: '', spawnError: null as Error | null }
+    const closePromise = new Promise<number | null>((res) => {
+      child.on('close', (code) => res(code))
+    })
+    child.on('error', (err) => {
+      errors.spawnError = new APIError(`Failed to spawn claude: ${err.message}`)
+    })
+    const STDERR_TAIL_MAX = 16 * 1024
+    child.stderr!.on('data', (chunk: Buffer) => {
+      errors.stderr += chunk.toString()
+      if (errors.stderr.length > STDERR_TAIL_MAX * 2) {
+        errors.stderr = errors.stderr.slice(-STDERR_TAIL_MAX)
+      }
+    })
+    return { closePromise, errors }
   }
 
   writeStderr(data: string): void {
