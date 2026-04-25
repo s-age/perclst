@@ -56,7 +56,8 @@ const mockAnalyzeResult: AnalyzeResult = {
       totalInput: 100,
       totalOutput: 150,
       totalCacheRead: 0,
-      totalCacheCreation: 0
+      totalCacheCreation: 0,
+      contextWindow: 100
     }
   }
 }

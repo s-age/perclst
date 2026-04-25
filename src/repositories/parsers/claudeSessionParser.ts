@@ -166,10 +166,10 @@ function mergeAssistantGroup(
         acc.text !== undefined ? acc.text + result.turn.assistantText : result.turn.assistantText
     acc.toolCalls.push(...result.turn.toolCalls)
     if (result.turn.usage) acc.usage = result.turn.usage
-    acc.tokens.totalInput += result.tokenDeltas.totalInput
-    acc.tokens.totalOutput += result.tokenDeltas.totalOutput
-    acc.tokens.totalCacheRead += result.tokenDeltas.totalCacheRead
-    acc.tokens.totalCacheCreation += result.tokenDeltas.totalCacheCreation
+    // Claude Code writes the same API-call usage to every content-block entry in the group
+    // (thinking, text, tool_use all share identical usage fields). Overwrite rather than
+    // accumulate so the usage is counted exactly once per API call.
+    acc.tokens = result.tokenDeltas
   }
 
   if (acc.text === undefined && acc.toolCalls.length === 0) return null
@@ -190,13 +190,14 @@ function mergeAssistantGroup(
 export function buildTurns(
   entries: RawEntry[],
   toolResultMap: Map<string, { text: string | null; isError: boolean }>
-): { turns: ClaudeCodeTurn[]; tokens: TokenTotals } {
+): { turns: ClaudeCodeTurn[]; tokens: TokenTotals; contextWindow: number } {
   const turns: ClaudeCodeTurn[] = []
   let totalInput = 0
   let totalOutput = 0
   let totalCacheRead = 0
   let totalCacheCreation = 0
   let pending: RawAssistantEntry[] = []
+  let lastGroupTokens: TokenTotals | null = null
 
   const flush = (): void => {
     if (pending.length === 0) return
@@ -207,6 +208,7 @@ export function buildTurns(
       totalOutput += merged.tokens.totalOutput
       totalCacheRead += merged.tokens.totalCacheRead
       totalCacheCreation += merged.tokens.totalCacheCreation
+      lastGroupTokens = merged.tokens
     }
     pending = []
   }
@@ -229,7 +231,13 @@ export function buildTurns(
   }
   flush()
 
-  return { turns, tokens: { totalInput, totalOutput, totalCacheRead, totalCacheCreation } }
+  const lgt = lastGroupTokens as TokenTotals | null
+  const contextWindow = lgt ? lgt.totalInput + lgt.totalCacheRead + lgt.totalCacheCreation : 0
+  return {
+    turns,
+    tokens: { totalInput, totalOutput, totalCacheRead, totalCacheCreation },
+    contextWindow
+  }
 }
 
 export function filterEntriesUpTo(entries: RawEntry[], messageId: string): RawEntry[] {

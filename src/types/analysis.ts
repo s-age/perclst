@@ -49,6 +49,8 @@ export type AnalysisSummary = {
     totalCacheRead: number
     /** Sum of cache_creation_input_tokens across all API calls */
     totalCacheCreation: number
+    /** input + cache_read + cache_creation from the last API call — actual context window consumed */
+    contextWindow: number
   }
 }
 
@@ -68,5 +70,6 @@ export type SessionSummaryRow = {
     totalOutput: number
     totalCacheRead: number
     totalCacheCreation: number
+    contextWindow: number
   }
 }

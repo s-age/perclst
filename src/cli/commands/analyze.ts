@@ -69,6 +69,7 @@ function printJsonOutput(session: Session, summary: AnalysisSummary, printDetail
           is_error: t.isError
         })),
         tokens: {
+          context_window: summary.tokens.contextWindow,
           input_total: summary.tokens.totalInput,
           output_total: summary.tokens.totalOutput,
           cache_read_total: summary.tokens.totalCacheRead,
@@ -79,6 +80,10 @@ function printJsonOutput(session: Session, summary: AnalysisSummary, printDetail
       2
     )
   )
+}
+
+function formatKilo(n: number): string {
+  return `${(Math.floor(n / 100) / 10).toFixed(1)}k`
 }
 
 function printTextSummary(session: Session, summary: AnalysisSummary): void {
@@ -117,6 +122,7 @@ function printTextSummary(session: Session, summary: AnalysisSummary): void {
   }
 
   const tokenRows: [string, string][] = [
+    ['Context window', formatKilo(tokens.contextWindow)],
     ['Input', tokens.totalInput.toLocaleString()],
     ['Output', tokens.totalOutput.toLocaleString()]
   ]
