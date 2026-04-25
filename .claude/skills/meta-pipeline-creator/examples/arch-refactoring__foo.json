@@ -1,0 +1,70 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/arch-refactoring-foo"
+    },
+    {
+      "type": "agent",
+      "name": "arch-refactoring-foo-reviewer",
+      "task": "target_path: src/foo\nng_output_path: .claude/tmp/arch-refactoring-foo",
+      "procedure": "arch/review",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze",
+        "mcp__perclst__ts_get_references",
+        "mcp__perclst__ts_get_types"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "arch-refactoring-foo-fix-loop",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "arch-refactoring-foo-implementer",
+          "task": "violations_path: .claude/tmp/arch-refactoring-foo\n\nIf violations_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "arch/refactor",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "arch-refactoring-foo-reviewer",
+          "task": "Re-review src/foo for remaining violations.\nng_output_path: .claude/tmp/arch-refactoring-foo\nIf the architecture is now clean, exit without writing to ng_output_path.",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": { "to": "arch-refactoring-foo-implementer", "max_retries": 3 }
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": { "to": "arch-refactoring-foo-implementer", "max_retries": 3 }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "arch-refactoring-foo-implementer",
+      "task": "Architecture is clean and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(layer): ...).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}
