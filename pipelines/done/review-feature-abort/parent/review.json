@@ -39,7 +39,8 @@
     {
       "type": "child",
       "path": "review-feature-abort__cli-pipeline-runner__review.json",
-      "name": "review-feature-abort-cli-pipeline-runner"
+      "name": "review-feature-abort-cli-pipeline-runner",
+      "done": true
     }
   ]
 }
