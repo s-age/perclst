@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useInput } from 'ink'
 import type { PermissionRequest } from './types.js'
+import { computeScrollView, computeNextScrollOffset, type ScrollDirection } from './scrollBuffer.js'
 
 type UseScrollBufferOptions = {
   allLines: string[]
@@ -37,21 +38,31 @@ export function useScrollBuffer({
         return
       }
       if (!scrollMode) return
-      const maxOffset = Math.max(0, frozenLines.length - streamCapacity)
-      if (key.upArrow) setScrollOffset((prev) => Math.min(prev + 1, maxOffset))
-      else if (key.downArrow) setScrollOffset((prev) => Math.max(0, prev - 1))
-      else if (key.pageUp)
-        setScrollOffset((prev) => Math.min(prev + Math.floor(streamCapacity / 2), maxOffset))
-      else if (key.pageDown)
-        setScrollOffset((prev) => Math.max(0, prev - Math.floor(streamCapacity / 2)))
+      const direction: ScrollDirection | null = key.upArrow
+        ? 'up'
+        : key.downArrow
+          ? 'down'
+          : key.pageUp
+            ? 'pageUp'
+            : key.pageDown
+              ? 'pageDown'
+              : null
+      if (direction) {
+        setScrollOffset((prev) =>
+          computeNextScrollOffset(direction, prev, frozenLines.length, streamCapacity)
+        )
+      }
     },
     { isActive: !permRequest }
   )
 
-  const displayLines = scrollMode ? frozenLines : allLines
-  const viewEnd = Math.max(0, displayLines.length - scrollOffset)
-  const lineOffset = Math.max(0, viewEnd - streamCapacity)
-  const visibleLines = displayLines.slice(lineOffset, viewEnd)
+  const { visibleLines, lineOffset } = computeScrollView({
+    allLines,
+    frozenLines,
+    scrollMode,
+    scrollOffset,
+    streamCapacity
+  })
 
   return { scrollMode, visibleLines, lineOffset }
 }
