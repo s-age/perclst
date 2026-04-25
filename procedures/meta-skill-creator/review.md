@@ -23,8 +23,16 @@ If issues are found, write structured feedback to `ng_output_path` so the implem
 
 ```mermaid
 flowchart TD
-    Start([Start]) --> ReadSkill["Read skill_path SKILL.md"]
+    Start([Start]) --> Check{skill_path\nprovided?}
+    Check -- Yes --> ReadSkill["Read skill_path SKILL.md"]
+    Check -- No --> GetPending["Call git_pending_changes\nExtract changed SKILL.md paths from diff output\n(match lines: diff --git a/PATH b/PATH)\nFilter to paths matching */SKILL.md"]
+
+    GetPending --> HasPending{Changed SKILL.md\nfiles found?}
+    HasPending -- No --> Abort([Abort: no skill_path and no pending SKILL.md changes])
+    HasPending -- Yes --> ReadSkillPending["Read each changed SKILL.md\n(process in sequence — combine findings across files)"]
+
     ReadSkill --> ReadGuidelines["Read .claude/skills/meta-skill-creator/SKILL.md"]
+    ReadSkillPending --> ReadGuidelines
     ReadGuidelines --> DiscoverSource["Extract paths glob from frontmatter\nBash: find matched source files (sample up to ~10 key files)\nRead each — check accuracy and completeness against checklist"]
     DiscoverSource --> RunValidate["Run: bash .claude/skills/meta-skill-creator/scripts/validate.sh <skill_path>"]
     RunValidate --> ApplyChecklist["Apply checklist items 1–7\nNote every failed item with the exact problematic text"]

@@ -9,10 +9,15 @@ A hook is a **lifecycle adapter** — it connects pure logic to React's mount/up
 ```mermaid
 flowchart TD
     Start([Start]) --> Check{target_file_path\nprovided?}
-    Check -- No --> Abort([Abort: ask for target_file_path])
     Check -- Yes --> Read["Read target_file_path\nIdentify all use* functions"]
+    Check -- No --> GetPending["Call git_pending_changes\nExtract changed .ts file paths from diff output\n(match lines: diff --git a/PATH b/PATH)"]
+
+    GetPending --> HasPending{Changed .ts\nfiles found?}
+    HasPending -- No --> Abort([Abort: no target_file_path and no pending .ts changes])
+    HasPending -- Yes --> ReadPending["Read each changed file\nIdentify all use* functions\n(process in sequence — combine violations across files)"]
 
     Read --> HasHooks{use* functions\nfound?}
+    ReadPending --> HasHooks
     HasHooks -- No --> CleanReport(["Report: no hooks to review — exit"])
     HasHooks -- Yes --> Check1
 

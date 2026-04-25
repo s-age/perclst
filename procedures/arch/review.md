@@ -25,11 +25,12 @@ A repository method must never bypass infrastructure by calling `fetch`, `execSy
 ```mermaid
 flowchart TD
     Start([Start]) --> Check{target_path\nprovided?}
-    Check -- No --> Abort([Abort: ask for target_path])
     Check -- Yes --> Discover["Discover files\nGlob target_path/**/*.ts\nExclude: **/__tests__/**, **/*.test.ts, **/*.spec.ts, **/node_modules/**"]
+    Check -- No --> GetPending["Call git_pending_changes\nParse diff — extract changed .ts file paths\n(match lines: diff --git a/PATH b/PATH)\nExclude **/__tests__/**, **/*.test.ts, **/*.spec.ts, **/node_modules/**"]
 
     Discover --> HasFiles{Files found?}
-    HasFiles -- No --> AbortEmpty([Abort: no TypeScript files found])
+    GetPending --> HasFiles
+    HasFiles -- No --> AbortEmpty([Abort: no TypeScript files found and no pending .ts changes])
     HasFiles -- Yes --> Analyze["Analyze each file with ts_analyze — run all calls in parallel\nCollect imports[] and symbols[]"]
 
     Analyze --> CheckImports["--- CHECK 1: Forbidden imports ---\n\nDetermine each file's layer by path prefix:\n  src/cli/             → cli\n  src/mcp/             → mcp\n  src/services/        → services\n  src/domains/         → domains (but NOT domains/ports/)\n  src/repositories/    → repositories (but NOT repositories/ports/)\n  src/infrastructures/ → infrastructures\n  src/validators/      → validators\n  src/utils/           → utils\n  src/types/           → types\n  src/core/di/setup.ts → di-setup (exempt — wires everything)\n\nForbidden imports:\n  cli          → @src/domains/*, @src/repositories/*, @src/infrastructures/*\n  mcp          → @src/cli/*, @src/domains/*, @src/repositories/*, @src/infrastructures/*\n  services     → @src/cli/*, @src/repositories/*, @src/infrastructures/*,\n                 @src/domains/* (only @src/domains/ports/ is allowed)\n  domains      → @src/cli/*, @src/mcp/*, @src/services/*, @src/infrastructures/*,\n                 @src/repositories/* (only @src/repositories/ports/ is allowed)\n  repositories → @src/cli/*, @src/mcp/*, @src/services/*, @src/domains/*\n  infrastructures → @src/cli/*, @src/mcp/*, @src/services/*,\n                    @src/domains/*, @src/repositories/*\n  validators   → @src/services/*, @src/domains/*, @src/repositories/*, @src/infrastructures/*\n  utils        → any @src/* layer except @src/types/*\n  types        → any @src/* layer"]
