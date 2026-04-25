@@ -409,6 +409,8 @@ perclst run pipeline.json --batch   # disable TUI (plain text output)
 
 By default, `run` opens an interactive TUI: the left pane tracks task progress, the right pane streams each task's output, and permission requests appear in the bottom pane. The TUI is automatically disabled when `--batch` is specified or when stdout is not a TTY (e.g. CI, piped output).
 
+**Output panel scroll** — while the TUI is running, press `Ctrl+O` to freeze the output and enter scroll mode. In scroll mode, use `↑` / `↓` to scroll one line, `PageUp` / `PageDown` to scroll half a screen. Press `Ctrl+O` again to exit scroll mode and resume live streaming. New output continues to accumulate in the background while scrolling; exiting scroll mode jumps back to the latest line. Scroll mode is suspended while a permission request is pending.
+
 Two task types are supported: `agent` and `script`.
 
 **Agent task** — runs a Claude agent session:
