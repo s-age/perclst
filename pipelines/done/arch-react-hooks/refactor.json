@@ -21,7 +21,8 @@
     {
       "type": "child",
       "path": "arch-react-hooks__refactor__use-scroll-buffer.json",
-      "name": "arch-react-hooks-refactor-use-scroll-buffer"
+      "name": "arch-react-hooks-refactor-use-scroll-buffer",
+      "done": true
     }
   ]
 }
