@@ -3,12 +3,14 @@
     {
       "type": "child",
       "path": "review-feature-abort__types__review.json",
-      "name": "review-feature-abort-types"
+      "name": "review-feature-abort-types",
+      "done": true
     },
     {
       "type": "child",
       "path": "review-feature-abort__validators__review.json",
-      "name": "review-feature-abort-validators"
+      "name": "review-feature-abort-validators",
+      "done": true
     },
     {
       "type": "child",
