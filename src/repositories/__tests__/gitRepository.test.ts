@@ -1,12 +1,20 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { GitRepository } from '@src/repositories/gitRepository'
-import { execGitSync } from '@src/infrastructures/git'
+import { execGitSync, spawnGitSync } from '@src/infrastructures/git'
+import { findProjectRoot } from '@src/infrastructures/projectRoot'
 
 vi.mock('@src/infrastructures/git', () => ({
-  execGitSync: vi.fn()
+  execGitSync: vi.fn(),
+  spawnGitSync: vi.fn()
+}))
+
+vi.mock('@src/infrastructures/projectRoot', () => ({
+  findProjectRoot: vi.fn(() => '/repo')
 }))
 
 const mockExecGitSync = vi.mocked(execGitSync)
+const mockSpawnGitSync = vi.mocked(spawnGitSync)
+const mockFindProjectRoot = vi.mocked(findProjectRoot)
 
 describe('GitRepository', () => {
   let repo: GitRepository
@@ -171,6 +179,56 @@ describe('GitRepository', () => {
         throw new Error('nothing to commit')
       })
       expect(() => repo.commit('empty commit')).toThrow('nothing to commit')
+    })
+  })
+
+  // ─── getPendingDiff ───────────────────────────────────────────────────────
+
+  describe('getPendingDiff', () => {
+    it('returns combined staged, unstaged, and untracked diffs', () => {
+      mockSpawnGitSync
+        .mockReturnValueOnce('staged diff')
+        .mockReturnValueOnce('unstaged diff')
+        .mockReturnValueOnce('new-file.ts')
+        .mockReturnValueOnce('untracked diff')
+      expect(repo.getPendingDiff()).toBe('staged diff\nunstaged diff\nuntracked diff')
+    })
+
+    it('calls git diff --cached and git diff without pathspecs when no extensions given', () => {
+      mockSpawnGitSync.mockReturnValue('')
+      repo.getPendingDiff()
+      expect(mockSpawnGitSync).toHaveBeenCalledWith(['diff', '--cached'], '/repo')
+      expect(mockSpawnGitSync).toHaveBeenCalledWith(['diff'], '/repo')
+      expect(mockSpawnGitSync).toHaveBeenCalledWith(
+        ['ls-files', '--others', '--exclude-standard'],
+        '/repo'
+      )
+    })
+
+    it('appends pathspec args when extensions are provided', () => {
+      mockSpawnGitSync.mockReturnValue('')
+      repo.getPendingDiff(undefined, ['ts', 'tsx'])
+      expect(mockSpawnGitSync).toHaveBeenCalledWith(
+        ['diff', '--cached', '--', '*.ts', '*.tsx'],
+        '/repo'
+      )
+      expect(mockSpawnGitSync).toHaveBeenCalledWith(['diff', '--', '*.ts', '*.tsx'], '/repo')
+      expect(mockSpawnGitSync).toHaveBeenCalledWith(
+        ['ls-files', '--others', '--exclude-standard', '--', '*.ts', '*.tsx'],
+        '/repo'
+      )
+    })
+
+    it('returns null when all diffs are empty', () => {
+      mockSpawnGitSync.mockReturnValue('')
+      expect(repo.getPendingDiff()).toBeNull()
+    })
+
+    it('returns null when findProjectRoot throws', () => {
+      mockFindProjectRoot.mockImplementationOnce(() => {
+        throw new Error('not a git repo')
+      })
+      expect(repo.getPendingDiff()).toBeNull()
     })
   })
 })
