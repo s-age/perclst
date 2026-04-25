@@ -51,7 +51,8 @@ function createMockAnalysisSummary(overrides?: Partial<AnalysisSummary>): Analys
       totalInput: 1000,
       totalOutput: 500,
       totalCacheRead: 0,
-      totalCacheCreation: 0
+      totalCacheCreation: 0,
+      contextWindow: 1000
     },
     turns: [],
     ...overrides
@@ -326,7 +327,8 @@ describe('analyzeCommand - happy path', () => {
         totalInput: 1000,
         totalOutput: 500,
         totalCacheRead: 200,
-        totalCacheCreation: 0
+        totalCacheCreation: 0,
+        contextWindow: 1200
       }
     })
 
@@ -351,7 +353,8 @@ describe('analyzeCommand - happy path', () => {
         totalInput: 1000,
         totalOutput: 500,
         totalCacheRead: 0,
-        totalCacheCreation: 150
+        totalCacheCreation: 150,
+        contextWindow: 1150
       }
     })
 

@@ -310,7 +310,7 @@ describe('readClaudeSession', () => {
     mockReadText.mockReturnValue('raw content')
     mockParseRawEntries.mockReturnValue([])
     mockBuildToolResultMap.mockReturnValue(new Map() as ToolResultMap)
-    mockBuildTurns.mockReturnValue({ turns: [], tokens: emptyTokens })
+    mockBuildTurns.mockReturnValue({ turns: [], tokens: emptyTokens, contextWindow: 0 })
   })
 
   it('throws when the session JSONL file does not exist', () => {
@@ -347,11 +347,18 @@ describe('readClaudeSession', () => {
       totalCacheRead: 0,
       totalCacheCreation: 0
     }
-    mockBuildTurns.mockReturnValue({ turns: expectedTurns, tokens: expectedTokens })
+    mockBuildTurns.mockReturnValue({
+      turns: expectedTurns,
+      tokens: expectedTokens,
+      contextWindow: 0
+    })
 
     const result = readClaudeSession('session-1', '/work/dir')
 
-    expect(result).toEqual({ turns: expectedTurns, tokens: expectedTokens })
+    expect(result).toEqual({
+      turns: expectedTurns,
+      tokens: { ...expectedTokens, contextWindow: 0 }
+    })
   })
 })
 
@@ -411,11 +418,11 @@ describe('ClaudeSessionRepository', () => {
       mockReadText.mockReturnValue('raw')
       mockParseRawEntries.mockReturnValue([])
       mockBuildToolResultMap.mockReturnValue(new Map() as ToolResultMap)
-      mockBuildTurns.mockReturnValue({ turns: [], tokens: emptyTokens })
+      mockBuildTurns.mockReturnValue({ turns: [], tokens: emptyTokens, contextWindow: 0 })
 
       const result = repo.readSession('session-1', '/work/dir')
 
-      expect(result).toEqual({ turns: [], tokens: emptyTokens })
+      expect(result).toEqual({ turns: [], tokens: { ...emptyTokens, contextWindow: 0 } })
     })
   })
 

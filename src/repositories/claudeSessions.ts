@@ -217,7 +217,7 @@ export function readClaudeSession(
     entries = filterEntriesUpTo(entries, upToMessageId)
   }
   const toolResultMap = buildToolResultMap(entries)
-  const { turns, tokens } = buildTurns(entries, toolResultMap)
+  const { turns, tokens, contextWindow } = buildTurns(entries, toolResultMap)
 
-  return { turns, tokens }
+  return { turns, tokens: { ...tokens, contextWindow } }
 }

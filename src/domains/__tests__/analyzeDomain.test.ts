@@ -42,7 +42,13 @@ const makeSession = (overrides: Partial<Session> = {}): Session => ({
 
 const makeSessionData = (): ClaudeSessionData => ({
   turns: [],
-  tokens: { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0 }
+  tokens: {
+    totalInput: 0,
+    totalOutput: 0,
+    totalCacheRead: 0,
+    totalCacheCreation: 0,
+    contextWindow: 0
+  }
 })
 
 describe('AnalyzeDomain', () => {
@@ -79,7 +85,13 @@ describe('AnalyzeDomain', () => {
           total: 0
         },
         toolUses: [],
-        tokens: { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0 }
+        tokens: {
+          totalInput: 0,
+          totalOutput: 0,
+          totalCacheRead: 0,
+          totalCacheCreation: 0,
+          contextWindow: 0
+        }
       }
       expect(result).toEqual({ session, summary: expectedSummary })
     })

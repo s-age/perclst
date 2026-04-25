@@ -7,6 +7,7 @@ import { stdout, stderr } from '@src/utils/output'
 import type { Session } from '@src/types/session'
 import type { AnalysisSummary } from '@src/types/analysis'
 import { parseAnalyzeSession } from '@src/validators/cli/analyzeSession'
+import { formatKilo } from '@src/utils/token'
 
 type RawAnalyzeOptions = {
   format?: string
@@ -69,6 +70,7 @@ function printJsonOutput(session: Session, summary: AnalysisSummary, printDetail
           is_error: t.isError
         })),
         tokens: {
+          context_window: summary.tokens.contextWindow,
           input_total: summary.tokens.totalInput,
           output_total: summary.tokens.totalOutput,
           cache_read_total: summary.tokens.totalCacheRead,
@@ -117,6 +119,7 @@ function printTextSummary(session: Session, summary: AnalysisSummary): void {
   }
 
   const tokenRows: [string, string][] = [
+    ['Context window', formatKilo(tokens.contextWindow)],
     ['Input', tokens.totalInput.toLocaleString()],
     ['Output', tokens.totalOutput.toLocaleString()]
   ]

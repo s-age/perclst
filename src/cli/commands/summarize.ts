@@ -4,6 +4,7 @@ import { TOKENS } from '@src/core/di/identifiers'
 import type { AnalyzeService } from '@src/services/analyzeService'
 import { stdout, stderr } from '@src/utils/output'
 import { parseSummarizeSessions } from '@src/validators/cli/summarizeSessions'
+import { formatKilo } from '@src/utils/token'
 
 type RawSummarizeOptions = {
   label?: string
@@ -32,6 +33,7 @@ export async function summarizeCommand(options: RawSummarizeOptions): Promise<vo
         'Name',
         'Turns',
         'Tool Calls',
+        'Context Window',
         'Tokens In',
         'Tokens Out',
         'Cache Read',
@@ -45,6 +47,7 @@ export async function summarizeCommand(options: RawSummarizeOptions): Promise<vo
         row.name,
         row.turns,
         row.toolCalls,
+        formatKilo(row.tokens.contextWindow),
         row.tokens.totalInput.toLocaleString(),
         row.tokens.totalOutput.toLocaleString(),
         row.tokens.totalCacheRead.toLocaleString(),

@@ -118,36 +118,41 @@ describe('buildTurns', () => {
     expect(result.turns[0].thinkingBlocks).toEqual(['thought'])
   })
 
-  it('should accumulate token counts across consecutive assistant entries into one turn', () => {
+  it('should count tokens once per API call even when multiple entries share the same usage', () => {
+    // Claude Code emits one JSONL entry per content block (text, tool_use, thinking) but
+    // writes the identical usage object to every entry in the same API-call group.
+    // Tokens must be counted once per group, not once per entry.
+    const sharedUsage = { input_tokens: 100, output_tokens: 50 }
     const entries: RawEntry[] = [
       {
         type: 'assistant',
         uuid: 'msg-1',
         message: {
-          content: [{ type: 'text', text: 'Response 1' }],
-          usage: { input_tokens: 100, output_tokens: 50 }
+          content: [{ type: 'text', text: 'Response' }],
+          usage: sharedUsage
         }
       } as RawAssistantEntry,
       {
         type: 'assistant',
         uuid: 'msg-2',
         message: {
-          content: [{ type: 'text', text: 'Response 2' }],
-          usage: { input_tokens: 80, output_tokens: 40 }
+          content: [{ type: 'tool_use', id: 't1', name: 'Bash', input: { command: 'ls' } }],
+          usage: sharedUsage
         }
       } as RawAssistantEntry
     ]
-    const toolResultMap = new Map()
+    const toolResultMap = new Map([['t1', { text: 'ok', isError: false }]])
 
     const result = buildTurns(entries, toolResultMap)
 
     expect(result.turns).toHaveLength(1)
     expect(result.tokens).toEqual({
-      totalInput: 180,
-      totalOutput: 90,
+      totalInput: 100,
+      totalOutput: 50,
       totalCacheRead: 0,
       totalCacheCreation: 0
     })
+    expect(result.contextWindow).toBe(100)
   })
 
   it('should start a new assistant turn after each user entry', () => {
@@ -226,5 +231,6 @@ describe('buildTurns', () => {
       totalCacheRead: 0,
       totalCacheCreation: 0
     })
+    expect(result.contextWindow).toBe(0)
   })
 })
