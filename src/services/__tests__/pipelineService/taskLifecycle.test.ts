@@ -35,7 +35,7 @@ describe('PipelineService', () => {
   }
   const mockScriptDomain: IScriptDomain = { run: vi.fn<[string, string], Promise<ScriptResult>>() }
   const mockPipelineTaskDomain: IPipelineTaskDomain = { markTaskDone: vi.fn() }
-  const mockLoaderDomain: IPipelineLoaderDomain = { loadRaw: vi.fn() }
+  const mockLoaderDomain: IPipelineLoaderDomain = { load: vi.fn() }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -181,7 +181,7 @@ describe('PipelineService', () => {
     })
 
     it('should throw when child pipeline loader fails', async () => {
-      vi.mocked(mockLoaderDomain.loadRaw).mockImplementation(() => {
+      vi.mocked(mockLoaderDomain.load).mockImplementation(() => {
         throw new Error('Failed to load child pipeline')
       })
       const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'sub.json' }] }

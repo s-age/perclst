@@ -15,12 +15,14 @@
     {
       "type": "child",
       "path": "review-feature-abort__core-di__review.json",
-      "name": "review-feature-abort-core-di"
+      "name": "review-feature-abort-core-di",
+      "done": true
     },
     {
       "type": "child",
       "path": "review-feature-abort__domains__review.json",
-      "name": "review-feature-abort-domains"
+      "name": "review-feature-abort-domains",
+      "done": true
     },
     {
       "type": "child",

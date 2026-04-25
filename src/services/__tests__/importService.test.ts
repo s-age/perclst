@@ -1,15 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { Session } from '@src/types/session'
 import type { ISessionDomain, IImportDomain } from '@src/domains/ports/session'
-import { ImportService, type ImportOptions } from '../importService'
-
-// Mock dependencies
-vi.mock('@src/utils/uuid', () => ({
-  generateId: vi.fn()
-}))
-
-vi.mock('@src/utils/date', () => ({
-  toISO: vi.fn()
-}))
+import { ImportService } from '../importService'
 
 vi.mock('@src/utils/output', () => ({
   debug: { print: vi.fn() },
@@ -17,19 +9,29 @@ vi.mock('@src/utils/output', () => ({
   stderr: { print: vi.fn() }
 }))
 
-import { generateId } from '@src/utils/uuid'
-import { toISO } from '@src/utils/date'
 import { debug } from '@src/utils/output'
+
+const stubSession = (overrides: Partial<Session> = {}): Session => ({
+  id: 'test-session-id-123',
+  created_at: '2024-01-15T10:30:00Z',
+  updated_at: '2024-01-15T10:30:00Z',
+  claude_session_id: 'claude-session-abc',
+  working_dir: '/default/working/dir',
+  metadata: { labels: [], status: 'completed' },
+  ...overrides
+})
 
 describe('ImportService', () => {
   let importService: ImportService
   let mockSessionDomain: ISessionDomain
   let mockImportDomain: IImportDomain
+  let mockBuiltSession: Session
 
   beforeEach(() => {
     vi.clearAllMocks()
 
-    // Mock domain implementations
+    mockBuiltSession = stubSession()
+
     mockSessionDomain = {
       save: vi.fn().mockResolvedValue(undefined),
       get: vi.fn(),
@@ -40,223 +42,110 @@ describe('ImportService', () => {
 
     mockImportDomain = {
       resolveWorkingDir: vi.fn().mockReturnValue('/default/working/dir'),
-      validateSession: vi.fn()
+      validateSession: vi.fn(),
+      buildSession: vi.fn().mockReturnValue(mockBuiltSession)
     } as unknown as IImportDomain
 
     importService = new ImportService(mockSessionDomain, mockImportDomain)
-
-    // Mock utility functions with predictable values
-    vi.mocked(generateId).mockReturnValue('test-session-id-123')
-    vi.mocked(toISO).mockReturnValue('2024-01-15T10:30:00Z')
   })
 
   describe('import', () => {
-    it('should import session with resolved working directory when cwd not provided', async () => {
-      const claudeSessionId = 'claude-session-abc'
-      const options: ImportOptions = {}
+    it('should resolve working dir from domain when cwd is not provided', async () => {
+      await importService.import('claude-session-abc')
 
-      const result = await importService.import(claudeSessionId, options)
-
-      expect(mockImportDomain.resolveWorkingDir).toHaveBeenCalledWith(claudeSessionId)
+      expect(mockImportDomain.resolveWorkingDir).toHaveBeenCalledWith('claude-session-abc')
       expect(mockImportDomain.validateSession).not.toHaveBeenCalled()
-      expect(result.id).toBe('test-session-id-123')
-      expect(result.claude_session_id).toBe(claudeSessionId)
-      expect(result.working_dir).toBe('/default/working/dir')
-      expect(result.created_at).toBe('2024-01-15T10:30:00Z')
-      expect(result.updated_at).toBe('2024-01-15T10:30:00Z')
-      expect(result.metadata.status).toBe('completed')
-      expect(result.metadata.labels).toEqual([])
     })
 
-    it('should validate session and use provided cwd', async () => {
-      const claudeSessionId = 'claude-session-xyz'
-      const customCwd = '/custom/path'
-      const options: ImportOptions = { cwd: customCwd }
-
-      const result = await importService.import(claudeSessionId, options)
+    it('should use provided cwd and validate session when cwd is given', async () => {
+      await importService.import('claude-session-abc', { cwd: '/custom/path' })
 
       expect(mockImportDomain.resolveWorkingDir).not.toHaveBeenCalled()
-      expect(mockImportDomain.validateSession).toHaveBeenCalledWith(claudeSessionId, customCwd)
-      expect(result.working_dir).toBe(customCwd)
-    })
-
-    it('should include name in session when provided', async () => {
-      const claudeSessionId = 'claude-session-def'
-      const sessionName = 'My Important Session'
-      const options: ImportOptions = { name: sessionName }
-
-      const result = await importService.import(claudeSessionId, options)
-
-      expect(result.name).toBe(sessionName)
-    })
-
-    it('should not include name property when not provided', async () => {
-      const claudeSessionId = 'claude-session-ghi'
-      const options: ImportOptions = {}
-
-      const result = await importService.import(claudeSessionId, options)
-
-      expect(result).not.toHaveProperty('name')
-    })
-
-    it('should save session via domain', async () => {
-      const claudeSessionId = 'claude-session-jkl'
-
-      await importService.import(claudeSessionId)
-
-      expect(mockSessionDomain.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'test-session-id-123',
-          claude_session_id: claudeSessionId,
-          created_at: '2024-01-15T10:30:00Z',
-          updated_at: '2024-01-15T10:30:00Z',
-          metadata: {
-            labels: [],
-            status: 'completed'
-          }
-        })
+      expect(mockImportDomain.validateSession).toHaveBeenCalledWith(
+        'claude-session-abc',
+        '/custom/path'
       )
     })
 
-    it('should log session import with session and claude session ids', async () => {
-      const claudeSessionId = 'claude-session-mno'
+    it('should delegate entity construction to importDomain.buildSession', async () => {
+      await importService.import('claude-session-abc')
 
-      await importService.import(claudeSessionId)
+      expect(mockImportDomain.buildSession).toHaveBeenCalledWith(
+        'claude-session-abc',
+        '/default/working/dir',
+        { name: undefined, labels: undefined }
+      )
+    })
+
+    it('should pass name and labels options to buildSession', async () => {
+      await importService.import('claude-session-abc', {
+        name: 'My Session',
+        labels: ['tag-a', 'tag-b']
+      })
+
+      expect(mockImportDomain.buildSession).toHaveBeenCalledWith(
+        'claude-session-abc',
+        '/default/working/dir',
+        { name: 'My Session', labels: ['tag-a', 'tag-b'] }
+      )
+    })
+
+    it('should save the session returned by buildSession', async () => {
+      await importService.import('claude-session-abc')
+
+      expect(mockSessionDomain.save).toHaveBeenCalledWith(mockBuiltSession)
+    })
+
+    it('should return the session returned by buildSession', async () => {
+      const result = await importService.import('claude-session-abc')
+
+      expect(result).toBe(mockBuiltSession)
+    })
+
+    it('should log session import with session ids', async () => {
+      mockBuiltSession = stubSession({ id: 'built-id', claude_session_id: 'claude-session-abc' })
+      vi.mocked(mockImportDomain.buildSession).mockReturnValue(mockBuiltSession)
+
+      await importService.import('claude-session-abc')
 
       expect(debug.print).toHaveBeenCalledWith(
         'Session imported',
         expect.objectContaining({
-          session_id: 'test-session-id-123',
-          claude_session_id: claudeSessionId
+          session_id: 'built-id',
+          claude_session_id: 'claude-session-abc'
         })
       )
     })
 
-    it('should handle both name and cwd options together', async () => {
-      const claudeSessionId = 'claude-session-pqr'
-      const customCwd = '/custom/working/dir'
-      const sessionName = 'Custom Session'
-      const options: ImportOptions = { cwd: customCwd, name: sessionName }
-
-      const result = await importService.import(claudeSessionId, options)
-
-      expect(mockImportDomain.validateSession).toHaveBeenCalledWith(claudeSessionId, customCwd)
-      expect(result.working_dir).toBe(customCwd)
-      expect(result.name).toBe(sessionName)
-      expect(result.id).toBe('test-session-id-123')
-      expect(result.claude_session_id).toBe(claudeSessionId)
-    })
-
-    it('should return created session object with all required fields', async () => {
-      const claudeSessionId = 'claude-session-stu'
-      const options: ImportOptions = { name: 'Test Session' }
-
-      const result = await importService.import(claudeSessionId, options)
-
-      expect(result).toMatchObject({
-        id: expect.any(String),
-        name: 'Test Session',
-        created_at: expect.any(String),
-        updated_at: expect.any(String),
-        claude_session_id: claudeSessionId,
-        working_dir: expect.any(String),
-        metadata: {
-          labels: expect.any(Array),
-          status: expect.any(String)
-        }
-      })
-    })
-
-    it('should use same timestamp for both created_at and updated_at', async () => {
-      const claudeSessionId = 'claude-session-vwx'
-
-      const result = await importService.import(claudeSessionId)
-
-      expect(result.created_at).toBe(result.updated_at)
-      expect(result.created_at).toBe('2024-01-15T10:30:00Z')
-    })
-
-    it('should generate unique session id via generateId utility', async () => {
-      const claudeSessionId = 'claude-session-yz1'
-
-      await importService.import(claudeSessionId)
-
-      expect(generateId).toHaveBeenCalled()
-    })
-
-    it('should handle empty string name option', async () => {
-      const claudeSessionId = 'claude-session-yz2'
-      const options: ImportOptions = { name: '' }
-
-      const result = await importService.import(claudeSessionId, options)
-
-      // Empty string is defined, so name property should be included
-      expect(result.name).toBe('')
-    })
-
-    it('should call toISO exactly once to get current timestamp', async () => {
-      const claudeSessionId = 'claude-session-yz3'
-
-      await importService.import(claudeSessionId)
-
-      expect(toISO).toHaveBeenCalledTimes(1)
-      expect(toISO).toHaveBeenCalledWith()
-    })
-
-    it('should set metadata labels to empty array', async () => {
-      const claudeSessionId = 'claude-session-yz4'
-
-      const result = await importService.import(claudeSessionId)
-
-      expect(result.metadata.labels).toEqual([])
-    })
-
-    it('should set metadata status to completed', async () => {
-      const claudeSessionId = 'claude-session-yz5'
-
-      const result = await importService.import(claudeSessionId)
-
-      expect(result.metadata.status).toBe('completed')
-    })
-
-    it('should propagate error when validateSession throws', async () => {
-      const claudeSessionId = 'claude-session-error'
-      const customCwd = '/custom/path'
-      const error = new Error('Validation failed')
-
-      vi.mocked(mockImportDomain.validateSession).mockImplementationOnce(() => {
-        throw error
-      })
-
-      await expect(importService.import(claudeSessionId, { cwd: customCwd })).rejects.toThrow(
-        'Validation failed'
-      )
-    })
-
-    it('should propagate error when save throws', async () => {
-      const claudeSessionId = 'claude-session-error2'
-      const error = new Error('Save failed')
-
-      vi.mocked(mockSessionDomain.save).mockRejectedValueOnce(error)
-
-      await expect(importService.import(claudeSessionId)).rejects.toThrow('Save failed')
-    })
-
-    it('should validate session before saving', async () => {
-      const claudeSessionId = 'claude-session-order'
-      const customCwd = '/custom/path'
+    it('should validate before building session when cwd is provided', async () => {
       const callOrder: string[] = []
-
       vi.mocked(mockImportDomain.validateSession).mockImplementationOnce(() => {
         callOrder.push('validate')
       })
-      vi.mocked(mockSessionDomain.save).mockImplementationOnce(async () => {
-        callOrder.push('save')
+      vi.mocked(mockImportDomain.buildSession).mockImplementationOnce(() => {
+        callOrder.push('build')
+        return mockBuiltSession
       })
 
-      await importService.import(claudeSessionId, { cwd: customCwd })
+      await importService.import('claude-session-abc', { cwd: '/custom/path' })
 
-      expect(callOrder).toEqual(['validate', 'save'])
+      expect(callOrder).toEqual(['validate', 'build'])
+    })
+
+    it('should propagate error when validateSession throws', async () => {
+      vi.mocked(mockImportDomain.validateSession).mockImplementationOnce(() => {
+        throw new Error('Validation failed')
+      })
+
+      await expect(
+        importService.import('claude-session-abc', { cwd: '/custom/path' })
+      ).rejects.toThrow('Validation failed')
+    })
+
+    it('should propagate error when save throws', async () => {
+      vi.mocked(mockSessionDomain.save).mockRejectedValueOnce(new Error('Save failed'))
+
+      await expect(importService.import('claude-session-abc')).rejects.toThrow('Save failed')
     })
   })
 })

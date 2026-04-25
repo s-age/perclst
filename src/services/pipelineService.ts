@@ -13,7 +13,6 @@ import type { IPipelineDomain } from '@src/domains/ports/pipeline'
 import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
 import type { IPipelineTaskDomain } from '@src/domains/ports/pipelineTask'
 import type { IPipelineLoaderDomain } from '@src/domains/ports/pipelineLoader'
-import { parsePipeline } from '@src/validators/cli/runPipeline'
 import { debug } from '@src/utils/output'
 import { PipelineAbortedError } from '@src/errors/pipelineAbortedError'
 
@@ -57,7 +56,7 @@ export class PipelineService {
   ) {}
 
   private loadChildPipeline(absolutePath: string): Pipeline {
-    return parsePipeline(this.loaderDomain.loadRaw(absolutePath))
+    return this.loaderDomain.load(absolutePath)
   }
 
   async *run(

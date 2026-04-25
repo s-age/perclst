@@ -1,3 +1,5 @@
+import type { Pipeline } from '@src/types/pipeline'
+
 export type IPipelineLoaderDomain = {
-  loadRaw(absolutePath: string): unknown
+  load(absolutePath: string): Pipeline
 }

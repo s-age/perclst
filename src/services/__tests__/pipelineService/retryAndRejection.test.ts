@@ -45,7 +45,7 @@ describe('PipelineService', () => {
   }
   const mockScriptDomain: IScriptDomain = { run: vi.fn() }
   const mockPipelineTaskDomain: IPipelineTaskDomain = { markTaskDone: vi.fn() }
-  const mockLoaderDomain: IPipelineLoaderDomain = { loadRaw: vi.fn() }
+  const mockLoaderDomain: IPipelineLoaderDomain = { load: vi.fn() }
 
   beforeEach(() => {
     vi.clearAllMocks()

@@ -1,5 +1,8 @@
-import type { IImportDomain } from '@src/domains/ports/session'
+import type { IImportDomain, ImportSessionOptions } from '@src/domains/ports/session'
+import type { Session } from '@src/types/session'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
+import { generateId } from '@src/utils/uuid'
+import { toISO } from '@src/utils/date'
 
 export class ImportDomain implements IImportDomain {
   constructor(private claudeSessionRepo: IClaudeSessionRepository) {}
@@ -25,5 +28,25 @@ export class ImportDomain implements IImportDomain {
 
   validateSession(claudeSessionId: string, workingDir: string): void {
     this.claudeSessionRepo.validateSessionAtDir(claudeSessionId, workingDir)
+  }
+
+  buildSession(
+    claudeSessionId: string,
+    workingDir: string,
+    options: ImportSessionOptions
+  ): Session {
+    const now = toISO()
+    return {
+      id: generateId(),
+      ...(options.name !== undefined ? { name: options.name } : {}),
+      created_at: now,
+      updated_at: now,
+      claude_session_id: claudeSessionId,
+      working_dir: workingDir,
+      metadata: {
+        labels: options.labels ?? [],
+        status: 'completed'
+      }
+    }
   }
 }
