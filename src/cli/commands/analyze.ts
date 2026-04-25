@@ -7,6 +7,7 @@ import { stdout, stderr } from '@src/utils/output'
 import type { Session } from '@src/types/session'
 import type { AnalysisSummary } from '@src/types/analysis'
 import { parseAnalyzeSession } from '@src/validators/cli/analyzeSession'
+import { formatKilo } from '@src/utils/token'
 
 type RawAnalyzeOptions = {
   format?: string
@@ -80,10 +81,6 @@ function printJsonOutput(session: Session, summary: AnalysisSummary, printDetail
       2
     )
   )
-}
-
-function formatKilo(n: number): string {
-  return `${(Math.floor(n / 100) / 10).toFixed(1)}k`
 }
 
 function printTextSummary(session: Session, summary: AnalysisSummary): void {

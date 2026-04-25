@@ -4,10 +4,7 @@ import { TOKENS } from '@src/core/di/identifiers'
 import type { AnalyzeService } from '@src/services/analyzeService'
 import { stdout, stderr } from '@src/utils/output'
 import { parseSummarizeSessions } from '@src/validators/cli/summarizeSessions'
-
-function formatKilo(n: number): string {
-  return `${(Math.floor(n / 100) / 10).toFixed(1)}k`
-}
+import { formatKilo } from '@src/utils/token'
 
 type RawSummarizeOptions = {
   label?: string
