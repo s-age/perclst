@@ -3,6 +3,16 @@ import { useInput } from 'ink'
 import type { PermissionPipeService } from '@src/services/permissionPipeService.js'
 import type { PermissionRequest } from '@src/types/permissionPipe.js'
 
+function buildPermissionResponse(
+  input: string,
+  permRequest: PermissionRequest
+): { behavior: 'allow'; updatedInput: string } | { behavior: 'deny'; message: string } {
+  const allow = input.toLowerCase() === 'y'
+  return allow
+    ? { behavior: 'allow', updatedInput: permRequest.input }
+    : { behavior: 'deny', message: 'User denied permission' }
+}
+
 export function usePermission(service: PermissionPipeService | null): {
   permRequest: PermissionRequest | null
 } {
@@ -19,12 +29,7 @@ export function usePermission(service: PermissionPipeService | null): {
 
   useInput((input): void => {
     if (!permRequest || !service) return
-    const allow = input.toLowerCase() === 'y'
-    service.respond(
-      allow
-        ? { behavior: 'allow', updatedInput: permRequest.input }
-        : { behavior: 'deny', message: 'User denied permission' }
-    )
+    service.respond(buildPermissionResponse(input, permRequest))
     setPermRequest(null)
   })
 

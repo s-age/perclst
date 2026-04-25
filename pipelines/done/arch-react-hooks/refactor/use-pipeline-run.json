@@ -1,0 +1,117 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/arch-react-hooks-use-pipeline-run-reviewer .claude/tmp/arch-react-hooks-use-pipeline-run-test-reviewer"
+    },
+    {
+      "type": "agent",
+      "name": "arch-react-hooks-use-pipeline-run-reviewer",
+      "task": "target_file_path: src/cli/components/parts/PipelineRunner/usePipelineRun.ts\nng_output_path: .claude/tmp/arch-react-hooks-use-pipeline-run-reviewer",
+      "procedure": "arch-react-hooks/review",
+      "model": "sonnet",
+      "allowed_tools": [
+        "Read",
+        "Bash",
+        "mcp__perclst__ts_analyze"
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "arch-react-hooks-use-pipeline-run-fix-loop",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "arch-react-hooks-use-pipeline-run-implementer",
+          "task": "violations_path: .claude/tmp/arch-react-hooks-use-pipeline-run-reviewer\n\nIf violations_path does not exist, there are no issues to fix — exit immediately.",
+          "procedure": "arch-react-hooks/refactor",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_checker"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "arch-react-hooks-use-pipeline-run-reviewer",
+          "task": "Re-review src/cli/components/parts/PipelineRunner/usePipelineRun.ts for remaining arch-react-hooks violations.\nng_output_path: .claude/tmp/arch-react-hooks-use-pipeline-run-reviewer\nIf all hooks are now clean lifecycle adapters with pure logic extracted, exit without writing to ng_output_path.",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze"
+          ],
+          "rejected": { "to": "arch-react-hooks-use-pipeline-run-implementer", "max_retries": 3 }
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": { "to": "arch-react-hooks-use-pipeline-run-implementer", "max_retries": 3 }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "arch-react-hooks-use-pipeline-run-implementer",
+      "task": "Refactor is clean and build passes. Commit the changes with an appropriate conventional commit message (e.g. refactor(hooks): extract pure functions from usePipelineRun).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    },
+    {
+      "type": "pipeline",
+      "name": "arch-react-hooks-use-pipeline-run-unit-test",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "arch-react-hooks-use-pipeline-run-test-implementer",
+          "task": "target_file_path: src/cli/components/parts/PipelineRunner/usePipelineRun.ts\n\nWrite unit tests for all pure functions extracted during refactoring. Also check for a co-located *.utils.ts and run ts_test_strategist on each file that contains pure functions.",
+          "procedure": "test-unit/implement",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ]
+        },
+        {
+          "type": "agent",
+          "name": "arch-react-hooks-use-pipeline-run-test-reviewer",
+          "task": "target_file_path: src/cli/components/parts/PipelineRunner/usePipelineRun.ts\nng_output_path: .claude/tmp/arch-react-hooks-use-pipeline-run-test-reviewer",
+          "procedure": "test-unit/review",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_test_strategist",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": { "to": "arch-react-hooks-use-pipeline-run-test-implementer", "max_retries": 3 }
+        },
+        {
+          "type": "script",
+          "command": "npm run build && npm run test:unit",
+          "rejected": { "to": "arch-react-hooks-use-pipeline-run-test-implementer", "max_retries": 3 }
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "arch-react-hooks-use-pipeline-run-test-implementer",
+      "task": "Tests are written and passing. Commit the new test files with an appropriate conventional commit message (e.g. test(hooks): add unit tests for extracted pure functions in usePipelineRun).",
+      "model": "haiku",
+      "allowed_tools": ["Read", "Bash"]
+    }
+  ]
+}

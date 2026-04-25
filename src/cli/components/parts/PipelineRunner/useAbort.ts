@@ -5,10 +5,14 @@ type UseAbortOptions = {
   isActive: boolean
 }
 
+export function isAbortKey(input: string, key: { ctrl: boolean }): boolean {
+  return key.ctrl && input === 'q'
+}
+
 export function useAbort({ onAbort, isActive }: UseAbortOptions): void {
   useInput(
     (input, key) => {
-      if (key.ctrl && input === 'q') onAbort()
+      if (isAbortKey(input, key)) onAbort()
     },
     { isActive }
   )

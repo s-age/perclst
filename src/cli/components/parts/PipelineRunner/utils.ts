@@ -41,6 +41,11 @@ export function formatStreamLines(event: AgentStreamEvent, lineWidth: number): s
   return [header, ...splitToLines(result, lineWidth - 4, '    ').slice(0, 3)]
 }
 
+export function appendCappedLines(prev: string[], lines: string[], max: number): string[] {
+  const next = [...prev, ...lines]
+  return next.length > max ? next.slice(-max) : next
+}
+
 export function formatInputSummary(input: Record<string, unknown>): string {
   const primary = input.command ?? input.file_path ?? input.path ?? input.url ?? input.pattern
   if (primary !== undefined) return String(primary)

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService.js'
 import type { Pipeline } from '@src/types/pipeline.js'
 import type { AgentStreamEvent } from '@src/types/agent.js'
-import { initTasks, formatStreamLines, MAX_ALL_LINES } from './utils.js'
+import { initTasks, formatStreamLines, appendCappedLines, MAX_ALL_LINES } from './utils.js'
 import type { TaskState } from './types.js'
 
 type Props = {
@@ -22,7 +22,8 @@ type Setters = {
   setError: (v: string | null) => void
 }
 
-function taskSep(
+/** @internal exported for testing only */
+export function taskSep(
   taskPath: number[],
   index: number,
   name: string | undefined,
@@ -33,7 +34,8 @@ function taskSep(
   return name ? `─── ${num}. ${name} [${type}] ───` : `─── task ${num} [${type}] ───`
 }
 
-function updateAtPath(
+/** @internal exported for testing only */
+export function updateAtPath(
   tasks: TaskState[],
   path: number[],
   index: number,
@@ -50,7 +52,8 @@ function updateAtPath(
 
 type UpsertFns = { updater: (t: TaskState) => TaskState; creator: () => TaskState }
 
-function upsertAtPath(
+/** @internal exported for testing only */
+export function upsertAtPath(
   tasks: TaskState[],
   path: number[],
   index: number,
@@ -73,7 +76,8 @@ function upsertAtPath(
 type PipelineResult =
   Awaited<ReturnType<PipelineService['run']>> extends AsyncGenerator<infer T> ? T : never
 
-function applyResult(
+/** @internal exported for testing only */
+export function applyResult(
   result: PipelineResult,
   { setTasks, setAllLines }: Pick<Setters, 'setTasks' | 'setAllLines'>
 ): void {
@@ -127,7 +131,8 @@ type RunPipelineHandlers = {
   callbacks: { onDone: () => void; onError: (err: Error) => void }
 }
 
-async function runPipeline(
+/** @internal exported for testing only */
+export async function runPipeline(
   config: RunPipelineConfig,
   handlers: RunPipelineHandlers
 ): Promise<void> {
@@ -165,10 +170,7 @@ export function usePipelineRun({
   useEffect(() => {
     const onStreamEvent = (event: AgentStreamEvent): void => {
       const lines = formatStreamLines(event, panelWidth)
-      setAllLines((prev) => {
-        const next = [...prev, ...lines]
-        return next.length > MAX_ALL_LINES ? next.slice(-MAX_ALL_LINES) : next
-      })
+      setAllLines((prev) => appendCappedLines(prev, lines, MAX_ALL_LINES))
     }
     const runOptions: PipelineRunOptions = { ...options, onStreamEvent, signal }
     void runPipeline(

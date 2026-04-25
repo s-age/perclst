@@ -5,6 +5,7 @@ import {
   initTasks,
   splitToLines,
   formatStreamLines,
+  appendCappedLines,
   formatInputSummary,
   SPINNER_INTERVAL_MS,
   PERM_PANEL_ROWS,
@@ -150,6 +151,16 @@ describe('PipelineRunner/utils', () => {
       }
       const result = formatStreamLines(event, 80)
       expect(result).toEqual(['  ← Read'])
+    })
+  })
+
+  describe('appendCappedLines', () => {
+    it('returns all lines when combined count is within cap', () => {
+      expect(appendCappedLines(['a', 'b'], ['c'], 5)).toEqual(['a', 'b', 'c'])
+    })
+
+    it('slices to the last max entries when combined count exceeds cap', () => {
+      expect(appendCappedLines(['a', 'b', 'c'], ['d', 'e'], 3)).toEqual(['c', 'd', 'e'])
     })
   })
 
