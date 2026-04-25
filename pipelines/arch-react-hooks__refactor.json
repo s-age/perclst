@@ -2,8 +2,23 @@
   "tasks": [
     {
       "type": "child",
-      "path": "arch-react-hooks__use-example__refactor.json",
-      "name": "arch-react-hooks-use-example"
+      "path": "arch-react-hooks__refactor__use-abort.json",
+      "name": "arch-react-hooks-refactor-use-abort"
+    },
+    {
+      "type": "child",
+      "path": "arch-react-hooks__refactor__use-permission.json",
+      "name": "arch-react-hooks-refactor-use-permission"
+    },
+    {
+      "type": "child",
+      "path": "arch-react-hooks__refactor__use-pipeline-run.json",
+      "name": "arch-react-hooks-refactor-use-pipeline-run"
+    },
+    {
+      "type": "child",
+      "path": "arch-react-hooks__refactor__use-scroll-buffer.json",
+      "name": "arch-react-hooks-refactor-use-scroll-buffer"
     }
   ]
 }
