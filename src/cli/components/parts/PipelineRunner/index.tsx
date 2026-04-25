@@ -6,6 +6,7 @@ import { PermissionPanel } from './PermissionPanel.js'
 import { usePipelineRun } from './usePipelineRun.js'
 import { usePermission } from './usePermission.js'
 import { useScrollBuffer } from './useScrollBuffer.js'
+import { useAbort } from './useAbort.js'
 import { SPINNER_INTERVAL_MS, PERM_PANEL_ROWS, STREAM_HEADER_ROWS } from './utils.js'
 import type { PipelineRunnerProps } from './types.js'
 
@@ -46,9 +47,9 @@ export function PipelineRunner({
   const { scrollMode, visibleLines, lineOffset } = useScrollBuffer({
     allLines,
     streamCapacity,
-    permRequest,
-    onAbort
+    permRequest
   })
+  useAbort({ onAbort, isActive: !permRequest })
 
   return (
     <Box flexDirection="column" height={termRows}>
