@@ -34,6 +34,8 @@ import { PipelineFileRepository } from '@src/repositories/fileMoveRepository'
 import { GitRepository } from '@src/repositories/gitRepository'
 import { RejectionFeedbackRepository } from '@src/repositories/rejectionFeedback'
 import { PipelineFileDomain } from '@src/domains/pipelineFile'
+import { PipelineTaskDomain } from '@src/domains/pipelineTask'
+import { PipelineLoaderDomain } from '@src/domains/pipelineLoader'
 import { PipelineFileService } from '@src/services/pipelineFileService'
 import { PermissionPipeRepository } from '@src/repositories/permissionPipeRepository'
 import { PermissionPipeDomain } from '@src/domains/permissionPipe'
@@ -58,6 +60,8 @@ type Repos = {
 
 type Domains = {
   pipelineFileDomain: PipelineFileDomain
+  pipelineTaskDomain: PipelineTaskDomain
+  pipelineLoaderDomain: PipelineLoaderDomain
   scriptDomain: ScriptDomain
   sessionDomain: SessionDomain
   agentDomain: AgentDomain
@@ -108,6 +112,8 @@ function buildDomains(model: string, repos: Repos): Domains {
   const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
   return {
     pipelineFileDomain: new PipelineFileDomain(fileMoveRepo, gitRepo),
+    pipelineTaskDomain: new PipelineTaskDomain(),
+    pipelineLoaderDomain: new PipelineLoaderDomain(fileMoveRepo),
     scriptDomain: new ScriptDomain(shellRepo),
     sessionDomain,
     agentDomain,
@@ -141,6 +147,8 @@ function registerReposAndDomains(
   container.register(TOKENS.RejectionFeedbackRepository, repos.rejectionFeedbackRepo)
   container.register(TOKENS.ScriptDomain, domains.scriptDomain)
   container.register(TOKENS.PipelineFileDomain, domains.pipelineFileDomain)
+  container.register(TOKENS.PipelineTaskDomain, domains.pipelineTaskDomain)
+  container.register(TOKENS.PipelineLoaderDomain, domains.pipelineLoaderDomain)
   container.register(TOKENS.SessionDomain, domains.sessionDomain)
   container.register(TOKENS.AgentDomain, domains.agentDomain)
   container.register(TOKENS.PipelineDomain, domains.pipelineDomain)
@@ -155,6 +163,8 @@ function registerReposAndDomains(
 function registerServices(config: ReturnType<typeof loadConfig>, domains: Domains): void {
   const {
     pipelineFileDomain,
+    pipelineTaskDomain,
+    pipelineLoaderDomain,
     sessionDomain,
     agentDomain,
     pipelineDomain,
@@ -169,7 +179,10 @@ function registerServices(config: ReturnType<typeof loadConfig>, domains: Domain
   container.register(TOKENS.AbortService, new AbortService())
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain, config))
-  container.register(TOKENS.PipelineService, new PipelineService(pipelineDomain, scriptDomain))
+  container.register(
+    TOKENS.PipelineService,
+    new PipelineService(pipelineDomain, scriptDomain, pipelineTaskDomain, pipelineLoaderDomain)
+  )
   container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
   container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))
   container.register(TOKENS.CheckerService, new CheckerService(checkerDomain))

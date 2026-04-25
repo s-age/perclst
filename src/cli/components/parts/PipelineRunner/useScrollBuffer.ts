@@ -6,6 +6,7 @@ type UseScrollBufferOptions = {
   allLines: string[]
   streamCapacity: number
   permRequest: PermissionRequest | null
+  onAbort: () => void
 }
 
 type UseScrollBufferResult = {
@@ -17,7 +18,8 @@ type UseScrollBufferResult = {
 export function useScrollBuffer({
   allLines,
   streamCapacity,
-  permRequest
+  permRequest,
+  onAbort
 }: UseScrollBufferOptions): UseScrollBufferResult {
   const [scrollMode, setScrollMode] = useState(false)
   const [scrollOffset, setScrollOffset] = useState(0)
@@ -25,6 +27,10 @@ export function useScrollBuffer({
 
   useInput(
     (input, key) => {
+      if (key.ctrl && input === 'q') {
+        onAbort()
+        return
+      }
       if (key.ctrl && input === 'o') {
         if (!scrollMode) {
           setFrozenLines([...allLines])

@@ -21,6 +21,8 @@ export type PipelineRunnerProps = {
   pipelineService: PipelineService
   permissionPipeService: PermissionPipeService | null
   config: Config
+  signal: AbortSignal
+  onAbort: () => void
   onDone: () => void
   onError: (err: Error) => void
 }

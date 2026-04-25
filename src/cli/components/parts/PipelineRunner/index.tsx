@@ -14,6 +14,8 @@ export function PipelineRunner({
   options,
   pipelineService,
   permissionPipeService,
+  signal,
+  onAbort,
   onDone,
   onError
 }: PipelineRunnerProps): JSX.Element {
@@ -33,6 +35,7 @@ export function PipelineRunner({
     options,
     pipelineService,
     panelWidth,
+    signal,
     onDone,
     onError
   })
@@ -43,7 +46,8 @@ export function PipelineRunner({
   const { scrollMode, visibleLines, lineOffset } = useScrollBuffer({
     allLines,
     streamCapacity,
-    permRequest
+    permRequest,
+    onAbort
   })
 
   return (

@@ -79,25 +79,6 @@ function printTaskResult(
   }
 }
 
-function markTaskDone(pipeline: Pipeline, taskPath: number[], taskIndex: number): void {
-  let tasks = pipeline.tasks
-  for (const step of taskPath) {
-    const parent = tasks[step]
-    if (parent.type !== 'pipeline') return
-    tasks = parent.tasks
-  }
-  if (tasks[taskIndex]) tasks[taskIndex].done = true
-}
-
-function makeChildLoader(
-  pipelineFileService: PipelineFileService
-): (absolutePath: string) => Pipeline {
-  return (absolutePath: string): Pipeline => {
-    const raw = pipelineFileService.loadRawPipeline(absolutePath)
-    return parsePipeline(raw)
-  }
-}
-
 function confirm(question: string): Promise<boolean> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stderr })
   return new Promise((resolve) => {
@@ -170,25 +151,24 @@ function printGitDiffSummary(
 async function executeTUIPipeline(
   input: RunPipelineInput,
   pipelineFileService: PipelineFileService,
-  onChildPipelineDone: (absolutePath: string) => void
+  onChildPipelineDone: (absolutePath: string) => void,
+  abortService: AbortService
 ): Promise<void> {
   process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   const pipeline = loadPipelineOrExit(pipelineFileService, absolutePath)
-  const { render } = await import('ink')
-  const React = (await import('react')).default
-  const { PipelineRunner } = await import('@src/cli/components/PipelineRunner.js')
+  const [{ render }, { default: React }, { PipelineRunner }] = await Promise.all([
+    import('ink'),
+    import('react'),
+    import('@src/cli/components/PipelineRunner.js')
+  ])
   const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)
   const permissionPipeService = container.resolve<PermissionPipeService>(
     TOKENS.PermissionPipeService
   )
   const config = container.resolve<Config>(TOKENS.Config)
-  const onTaskDone = (taskPath: number[], taskIndex: number): void => {
-    markTaskDone(pipeline, taskPath, taskIndex)
-    pipelineFileService.savePipeline(absolutePath, pipeline)
-  }
-  const loadChildPipeline = makeChildLoader(pipelineFileService)
+  const onTaskDone = (): void => pipelineFileService.savePipeline(absolutePath, pipeline)
   const pipelineDir = dirname(absolutePath)
   await new Promise<void>((resolve, reject) => {
     const app = render(
@@ -197,13 +177,14 @@ async function executeTUIPipeline(
         options: {
           model: input.model,
           onTaskDone,
-          loadChildPipeline,
           pipelineDir,
           onChildPipelineDone
         },
         pipelineService,
         permissionPipeService,
         config,
+        signal: abortService.signal,
+        onAbort: () => abortService.abort(),
         onDone: () => {
           app.unmount()
           resolve()
@@ -241,11 +222,7 @@ async function executePipeline(
   const onStreamEvent = streaming
     ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
     : undefined
-  const onTaskDone = (taskPath: number[], taskIndex: number): void => {
-    markTaskDone(pipeline, taskPath, taskIndex)
-    pipelineFileService.savePipeline(absolutePath, pipeline)
-  }
-  const loadChildPipeline = makeChildLoader(pipelineFileService)
+  const onTaskDone = (): void => pipelineFileService.savePipeline(absolutePath, pipeline)
   const pipelineDir = dirname(absolutePath)
 
   stdout.print(`Running pipeline: ${pipeline.tasks.length} task(s)`)
@@ -255,7 +232,6 @@ async function executePipeline(
     model: input.model,
     onStreamEvent,
     onTaskDone,
-    loadChildPipeline,
     pipelineDir,
     onChildPipelineDone,
     signal
@@ -286,7 +262,7 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions): 
     }
 
     if (process.stdout.isTTY && !input.batch) {
-      await executeTUIPipeline(input, pipelineFileService, onChildPipelineDone)
+      await executeTUIPipeline(input, pipelineFileService, onChildPipelineDone, abortService)
     } else {
       await executePipeline(input, pipelineFileService, onChildPipelineDone, abortService.signal)
     }

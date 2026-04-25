@@ -2,6 +2,8 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { Pipeline, AgentPipelineTask } from '@src/types/pipeline'
 import type { IPipelineDomain, AgentTaskResult } from '@src/domains/ports/pipeline'
 import type { IScriptDomain, ScriptResult } from '@src/domains/ports/script'
+import type { IPipelineTaskDomain } from '@src/domains/ports/pipelineTask'
+import type { IPipelineLoaderDomain } from '@src/domains/ports/pipelineLoader'
 import type { AgentResponse } from '@src/types/agent'
 import { PipelineService, type PipelineTaskResult } from '../../pipelineService'
 import { PipelineAbortedError } from '@src/errors/pipelineAbortedError'
@@ -31,9 +33,9 @@ describe('PipelineService', () => {
     findOuterRejectionTarget: vi.fn(),
     resolveScriptRejection: vi.fn()
   }
-  const mockScriptDomain: IScriptDomain = {
-    run: vi.fn<[string, string], Promise<ScriptResult>>()
-  }
+  const mockScriptDomain: IScriptDomain = { run: vi.fn<[string, string], Promise<ScriptResult>>() }
+  const mockPipelineTaskDomain: IPipelineTaskDomain = { markTaskDone: vi.fn() }
+  const mockLoaderDomain: IPipelineLoaderDomain = { loadRaw: vi.fn() }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -41,7 +43,12 @@ describe('PipelineService', () => {
     vi.mocked(mockPipelineDomain.runAgentTask).mockImplementation(async (_task, taskLocation) =>
       stubAgentResult({ taskIndex: taskLocation.index, taskPath: taskLocation.taskPath })
     )
-    service = new PipelineService(mockPipelineDomain, mockScriptDomain)
+    service = new PipelineService(
+      mockPipelineDomain,
+      mockScriptDomain,
+      mockPipelineTaskDomain,
+      mockLoaderDomain
+    )
   })
 
   function collectEvents(
@@ -174,13 +181,13 @@ describe('PipelineService', () => {
     })
 
     it('should throw when child pipeline loader fails', async () => {
-      const loadChildPipeline = vi.fn().mockImplementation(() => {
+      vi.mocked(mockLoaderDomain.loadRaw).mockImplementation(() => {
         throw new Error('Failed to load child pipeline')
       })
       const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'sub.json' }] }
       await expect(async () => {
         const events: PipelineTaskResult[] = []
-        for await (const e of service.run(pipeline, { loadChildPipeline })) events.push(e)
+        for await (const e of service.run(pipeline)) events.push(e)
       }).rejects.toThrow('Failed to load child pipeline')
     })
   })
