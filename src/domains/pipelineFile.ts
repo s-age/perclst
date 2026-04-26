@@ -56,10 +56,12 @@ export class PipelineFileDomain implements IPipelineFileDomain {
       } catch {
         // file may not exist yet
       }
-      try {
-        this.gitRepo.stageUpdated('.claude/tmp/')
-      } catch {
-        // no tracked tmp files to stage
+      if (this.gitRepo.hasTrackedFiles('.claude/tmp/')) {
+        try {
+          this.gitRepo.stageUpdated('.claude/tmp/')
+        } catch {
+          // staging failed
+        }
       }
       this.gitRepo.commit(`chore: mv ${filename}`)
     } catch {

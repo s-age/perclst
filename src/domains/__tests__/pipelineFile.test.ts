@@ -35,6 +35,7 @@ describe('PipelineFileDomain', () => {
       getHead: vi.fn(),
       getDiffSummary: vi.fn(),
       getDiff: vi.fn(),
+      hasTrackedFiles: vi.fn().mockReturnValue(true),
       stageUpdated: vi.fn(),
       stageNew: vi.fn(),
       commit: vi.fn()
@@ -317,6 +318,20 @@ describe('PipelineFileDomain', () => {
       expect(() => domain.commitMove('/home/user/task1.json', 'done/task1.json')).not.toThrow()
 
       // But should still commit
+      expect(gitRepo.commit).toHaveBeenCalled()
+    })
+
+    it('should skip staging tmp dir when hasTrackedFiles returns false', () => {
+      vi.mocked(resolve).mockReturnValue('/home/user/task1.json')
+      vi.mocked(dirname).mockReturnValue('/home/user')
+      vi.mocked(basename).mockReturnValue('task1.json')
+      vi.mocked(join).mockReturnValue('/home/user/done/task1.json')
+      vi.mocked(gitRepo.hasTrackedFiles).mockReturnValue(false)
+
+      domain.commitMove('/home/user/task1.json', 'done/task1.json')
+
+      expect(gitRepo.hasTrackedFiles).toHaveBeenCalledWith('.claude/tmp/')
+      expect(gitRepo.stageUpdated).not.toHaveBeenCalledWith('.claude/tmp/')
       expect(gitRepo.commit).toHaveBeenCalled()
     })
 

@@ -4,6 +4,7 @@ export type IGitRepository = {
   getDiffSummary(from: string, to: string): string | null
   getDiff(from: string, to: string): string | null
   getPendingDiff(repoPath?: string, extensions?: string[]): string | null
+  hasTrackedFiles(path: string): boolean
   stageUpdated(path: string): void
   stageNew(path: string): void
   commit(message: string): void

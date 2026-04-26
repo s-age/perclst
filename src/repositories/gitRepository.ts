@@ -61,6 +61,10 @@ export class GitRepository implements IGitRepository {
     }
   }
 
+  hasTrackedFiles(path: string): boolean {
+    return spawnGitSync(['ls-files', path]).length > 0
+  }
+
   stageUpdated(path: string): void {
     execGitSync(`add -u "${path}"`)
   }
