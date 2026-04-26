@@ -2,7 +2,7 @@
 // Installs perclst hooks into ~/.claude/settings.json
 // Run once after `npm link`: npm run setup
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync, symlinkSync, unlinkSync } from 'fs'
 import { join, resolve, dirname } from 'path'
 import { homedir } from 'os'
 import { fileURLToPath } from 'url'
@@ -35,8 +35,10 @@ stdout.print('')
 // --- Copy skill-inject.mjs to ~/.perclst/ ---
 const hookSrc = join(repoDir, 'hooks', 'skill-inject.mjs')
 const hookDest = join(homedir(), '.perclst', 'skill-inject.mjs')
+if (!existsSync(hookSrc)) throw new Error(`hook source not found: ${hookSrc}`)
 mkdirSync(dirname(hookDest), { recursive: true })
-copyFileSync(hookSrc, hookDest)
+if (existsSync(hookDest)) unlinkSync(hookDest)
+symlinkSync(hookSrc, hookDest)
 
 // --- Load template, replacing $CLAUDE_PROJECT_DIR ref with absolute hook path ---
 const templateRaw = readFileSync(templatePath, 'utf-8').replaceAll(
@@ -130,7 +132,7 @@ if (destExists) {
 // --- Write ---
 mkdirSync(dirname(destPath), { recursive: true })
 writeFileSync(destPath, after + '\n')
-stdout.print(`copied:  ${hookDest}`)
+stdout.print(`linked:  ${hookDest} -> ${hookSrc}`)
 stdout.print(`updated: ${destPath}`)
 stdout.print(`  hook -> ${hookDest}`)
 if (destExists) {
