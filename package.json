@@ -12,6 +12,8 @@
     "procedures/**/*"
   ],
   "scripts": {
+    "postinstall": "tsx scripts/sync-config.ts",
+    "prebuild": "tsx scripts/sync-config.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
