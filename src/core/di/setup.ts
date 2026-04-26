@@ -6,10 +6,12 @@ import { setupDomains, type Domains } from './setupDomains'
 import { setupServices, type Services } from './setupServices'
 import { loadConfig, resolveSessionsDir, resolveKnowledgeDir } from '@src/repositories/config'
 import { DEFAULT_MODEL } from '@src/constants/config'
+import type { Config } from '@src/types/config'
 
 export type { Infras, Repos, Domains, Services }
 
 export type ContainerOverrides = {
+  config?: Config
   infras?: Partial<Infras>
   repos?: Partial<Repos>
   domains?: Partial<Domains>
@@ -17,7 +19,7 @@ export type ContainerOverrides = {
 }
 
 export function setupContainer(overrides?: ContainerOverrides): void {
-  const config = loadConfig()
+  const config = overrides?.config ?? loadConfig()
   const sessionsDir = resolveSessionsDir(config)
   const knowledgeDir = resolveKnowledgeDir()
   const model = config.model ?? DEFAULT_MODEL
