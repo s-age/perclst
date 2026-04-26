@@ -54,7 +54,12 @@ export async function startCommand(task: string, options: RawStartOptions): Prom
 
     if (input.name && !input.outputOnly) {
       const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-      await confirmIfDuplicateName(input.name, (n) => sessionService.findByName(n))
+      await confirmIfDuplicateName(
+        input.name,
+        (n) => sessionService.findByName(n),
+        undefined,
+        !!process.stdin.isTTY
+      )
     }
     const streaming = !input.outputOnly && input.format !== 'json'
     const onStreamEvent = streaming
