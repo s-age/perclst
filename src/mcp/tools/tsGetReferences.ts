@@ -48,10 +48,16 @@ export async function executeTsGetReferences(args: {
 }): Promise<{ content: { type: 'text'; text: string }[] }> {
   const service = container.resolve<TsAnalysisService>(TOKENS.TsAnalysisService)
 
-  const references = service.getReferences(args.file_path, args.symbol_name, {
-    includeTest: args.include_test,
-    recursive: args.recursive
-  })
+  const references =
+    args.recursive === false
+      ? service.getReferences(args.file_path, args.symbol_name, {
+          recursive: false,
+          includeTest: args.include_test
+        })
+      : service.getReferences(args.file_path, args.symbol_name, {
+          recursive: args.recursive,
+          includeTest: args.include_test
+        })
 
   return {
     content: [

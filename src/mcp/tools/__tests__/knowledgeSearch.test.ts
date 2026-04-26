@@ -19,7 +19,7 @@ describe('executeKnowledgeSearch', () => {
   })
 
   it('resolves KnowledgeSearchService from container with TOKENS.KnowledgeSearchService', async () => {
-    vi.mocked(mockService.search).mockReturnValue({
+    vi.mocked(mockService.search!).mockReturnValue({
       query: 'test',
       results: [],
       total: 0
@@ -31,7 +31,7 @@ describe('executeKnowledgeSearch', () => {
   })
 
   it('calls service.search with query and include_draft=false when include_draft is not provided', async () => {
-    vi.mocked(mockService.search).mockReturnValue({
+    vi.mocked(mockService.search!).mockReturnValue({
       query: 'test query',
       results: [],
       total: 0
@@ -46,7 +46,7 @@ describe('executeKnowledgeSearch', () => {
   })
 
   it('calls service.search with include_draft=true when explicitly provided', async () => {
-    vi.mocked(mockService.search).mockReturnValue({
+    vi.mocked(mockService.search!).mockReturnValue({
       query: 'test query',
       results: [],
       total: 0
@@ -61,7 +61,7 @@ describe('executeKnowledgeSearch', () => {
   })
 
   it('calls service.search with include_draft=false when explicitly set to false', async () => {
-    vi.mocked(mockService.search).mockReturnValue({
+    vi.mocked(mockService.search!).mockReturnValue({
       query: 'test query',
       results: [],
       total: 0
@@ -88,7 +88,7 @@ describe('executeKnowledgeSearch', () => {
       ],
       total: 1
     }
-    vi.mocked(mockService.search).mockReturnValue(searchResult)
+    vi.mocked(mockService.search!).mockReturnValue(searchResult)
 
     const result = await executeKnowledgeSearch({ query: 'test' })
 
@@ -103,7 +103,7 @@ describe('executeKnowledgeSearch', () => {
   })
 
   it('returns empty results when no matches found', async () => {
-    vi.mocked(mockService.search).mockReturnValue({
+    vi.mocked(mockService.search!).mockReturnValue({
       query: 'nonexistent',
       results: [],
       total: 0
@@ -138,7 +138,7 @@ describe('executeKnowledgeSearch', () => {
       ],
       total: 2
     }
-    vi.mocked(mockService.search).mockReturnValue(searchResult)
+    vi.mocked(mockService.search!).mockReturnValue(searchResult)
 
     const result = await executeKnowledgeSearch({ query: 'architecture' })
 
@@ -148,7 +148,7 @@ describe('executeKnowledgeSearch', () => {
 
   it('throws error when service.search throws', async () => {
     const error = new Error('Search service failed')
-    vi.mocked(mockService.search).mockImplementation(() => {
+    vi.mocked(mockService.search!).mockImplementation(() => {
       throw error
     })
 
@@ -167,7 +167,7 @@ describe('executeKnowledgeSearch', () => {
   })
 
   it('returns content with text type constant', async () => {
-    vi.mocked(mockService.search).mockReturnValue({
+    vi.mocked(mockService.search!).mockReturnValue({
       query: 'test',
       results: [],
       total: 0
@@ -181,7 +181,7 @@ describe('executeKnowledgeSearch', () => {
 
   it('handles query with special characters', async () => {
     const query = 'test & special "quotes" characters'
-    vi.mocked(mockService.search).mockReturnValue({
+    vi.mocked(mockService.search!).mockReturnValue({
       query,
       results: [],
       total: 0
