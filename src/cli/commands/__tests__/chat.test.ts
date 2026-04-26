@@ -4,16 +4,19 @@ import { chatCommand } from '../chat'
 vi.mock('@src/core/di/container')
 vi.mock('@src/validators/cli/chatSession')
 vi.mock('@src/utils/output')
+vi.mock('@src/cli/prompt')
 
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { parseChatSession } from '@src/validators/cli/chatSession'
 import { ValidationError } from '@src/errors/validationError'
 import { stderr } from '@src/utils/output'
+import { handleWorkingDirMismatch } from '@src/cli/prompt'
 
 describe('chatCommand', () => {
   const mockSessionService = {
-    resolveId: vi.fn()
+    resolveId: vi.fn(),
+    get: vi.fn()
   }
   const mockAgentService = {
     chat: vi.fn()
@@ -27,8 +30,10 @@ describe('chatCommand', () => {
       throw new Error(`Unexpected token: ${String(token)}`)
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-id')
+    mockSessionService.get.mockResolvedValue({ working_dir: process.cwd() })
     mockAgentService.chat.mockResolvedValue(undefined)
     vi.mocked(parseChatSession).mockReturnValue({ sessionId: 'test-session' })
+    vi.mocked(handleWorkingDirMismatch).mockResolvedValue(undefined)
   })
 
   it('resolves the session ID and delegates to agentService.chat', async () => {
