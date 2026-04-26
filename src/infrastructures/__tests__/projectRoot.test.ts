@@ -16,6 +16,7 @@ vi.mock('url', () => ({
 }))
 
 import { existsSync } from 'fs'
+import type { PathLike } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -36,7 +37,7 @@ describe('findProjectRoot', () => {
     })
     vi.mocked(join).mockImplementation((dir: string) => `${dir}/package.json`)
     vi.mocked(existsSync).mockImplementation(
-      (p: string) => p === '/home/user/project/src/infrastructures/package.json'
+      (p: PathLike) => p === '/home/user/project/src/infrastructures/package.json'
     )
 
     const result = findProjectRoot()
@@ -54,7 +55,7 @@ describe('findProjectRoot', () => {
     })
     vi.mocked(join).mockImplementation((dir: string) => `${dir}/package.json`)
     vi.mocked(existsSync).mockImplementation(
-      (p: string) => p === '/home/user/project/src/package.json'
+      (p: PathLike) => p === '/home/user/project/src/package.json'
     )
 
     const result = findProjectRoot()
@@ -69,7 +70,9 @@ describe('findProjectRoot', () => {
       return '/' + parts.slice(0, -1).join('/')
     })
     vi.mocked(join).mockImplementation((dir: string) => `${dir}/package.json`)
-    vi.mocked(existsSync).mockImplementation((p: string) => p === '/home/user/project/package.json')
+    vi.mocked(existsSync).mockImplementation(
+      (p: PathLike) => p === '/home/user/project/package.json'
+    )
 
     const result = findProjectRoot()
 

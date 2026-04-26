@@ -136,7 +136,7 @@ describe('fs module', () => {
         'file2.json',
         'file3.txt',
         'file4.json'
-      ] as unknown as string[])
+      ] as unknown as ReturnType<typeof fsSync.readdirSync>)
 
       const result = listFiles('/path/to/dir', '.json')
 
@@ -159,7 +159,7 @@ describe('fs module', () => {
       vi.mocked(fsSync.readdirSync).mockReturnValue([
         'file1.txt',
         'file2.txt'
-      ] as unknown as string[])
+      ] as unknown as ReturnType<typeof fsSync.readdirSync>)
 
       const result = listFiles('/path/to/dir', '.json')
 
@@ -168,7 +168,9 @@ describe('fs module', () => {
 
     it('should return all files when directory is empty', () => {
       vi.mocked(fsSync.existsSync).mockReturnValue(true)
-      vi.mocked(fsSync.readdirSync).mockReturnValue([] as unknown as string[])
+      vi.mocked(fsSync.readdirSync).mockReturnValue(
+        [] as unknown as ReturnType<typeof fsSync.readdirSync>
+      )
 
       const result = listFiles('/path/to/dir', '.json')
 
