@@ -15,6 +15,7 @@ import { TsAnalysisService } from '@src/services/tsAnalysisService'
 import { PipelineFileService } from '@src/services/pipelineFileService'
 import { PermissionPipeService } from '@src/services/permissionPipeService'
 import { GitPendingChangesService } from '@src/services/gitPendingChangesService'
+import { PlanFileService } from '@src/services/planFileService'
 import type { Config } from '@src/types/config'
 
 export type Services = {
@@ -31,6 +32,7 @@ export type Services = {
   pipelineFileService: PipelineFileService
   permissionPipeService: PermissionPipeService
   gitPendingChangesService: GitPendingChangesService
+  planFileService: PlanFileService
 }
 
 export function setupServices(
@@ -70,7 +72,8 @@ export function setupServices(
       overrides?.permissionPipeService ?? new PermissionPipeService(domains.permissionPipeDomain),
     gitPendingChangesService:
       overrides?.gitPendingChangesService ??
-      new GitPendingChangesService(domains.gitPendingChangesDomain)
+      new GitPendingChangesService(domains.gitPendingChangesDomain),
+    planFileService: overrides?.planFileService ?? new PlanFileService(domains.planFileDomain)
   }
 
   registerAll(services)
@@ -91,4 +94,5 @@ function registerAll(s: Services): void {
   container.register(TOKENS.PipelineFileService, s.pipelineFileService)
   container.register(TOKENS.PermissionPipeService, s.permissionPipeService)
   container.register(TOKENS.GitPendingChangesService, s.gitPendingChangesService)
+  container.register(TOKENS.PlanFileService, s.planFileService)
 }

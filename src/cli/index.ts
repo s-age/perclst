@@ -17,6 +17,7 @@ import { rewindCommand } from './commands/rewind'
 import { runCommand } from './commands/run'
 import { curateCommand } from './commands/curate'
 import { inspectCommand } from './commands/inspect'
+import { forgeCommand } from './commands/forge'
 import { chatCommand } from './commands/chat'
 import { retrieveCommand } from './commands/retrieve'
 import { surveyCommand } from './commands/survey'
@@ -246,6 +247,14 @@ program
   .argument('<new>', 'Head git ref (newer commit or branch)')
   .option('-p, --prompt <prompt>', 'Additional instruction appended to the inspection prompt')
   .action(inspectCommand)
+
+// Forge command
+program
+  .command('forge')
+  .description('Generate an implementation pipeline from a plan file')
+  .argument('<plan-file-path>', 'Path to the plan file (.md)')
+  .option('-p, --prompt <prompt>', 'Additional instruction appended to the generation prompt')
+  .action(forgeCommand)
 
 // Run command
 program
