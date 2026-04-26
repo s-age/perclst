@@ -1,5 +1,4 @@
 import * as readline from 'readline'
-import { stderr } from '@src/utils/output'
 import { UserCancelledError } from '@src/errors/userCancelledError'
 
 export function confirm(question: string): Promise<boolean> {
@@ -13,13 +12,14 @@ export function confirm(question: string): Promise<boolean> {
 }
 
 async function askWorkingDirSwitch(sessionDir: string, currentDir: string): Promise<boolean> {
-  stderr.print(`Session working directory: ${sessionDir}`)
-  stderr.print(`Current directory:         ${currentDir}`)
-
   const rl = readline.createInterface({ input: process.stdin, output: process.stderr })
+  const question = [
+    `Session working directory: ${sessionDir}`,
+    `Current directory:         ${currentDir}`,
+    '\nSwitch to session directory and continue? [Y/n] '
+  ].join('\n')
   return new Promise((resolve) => {
-    process.stderr.write('\nSwitch to session directory and continue? [Y/n] ')
-    rl.question('', (answer) => {
+    rl.question(question, (answer) => {
       rl.close()
       resolve(answer.trim().toLowerCase() !== 'n')
     })
