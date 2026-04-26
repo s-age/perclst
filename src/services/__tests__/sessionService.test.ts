@@ -57,7 +57,7 @@ describe('SessionService', () => {
   })
 
   it('delegates create to domain', async () => {
-    const params = { procedure: 'p1', labels: ['t1'] }
+    const params = { procedure: 'p1', labels: ['t1'], working_dir: '/tmp' }
     const result = await service.create(params)
     expect(domain.create).toHaveBeenCalledWith(params)
     expect(result).toBe(mockSession)
@@ -136,14 +136,14 @@ describe('SessionService', () => {
   })
 
   it('delegates sweep to domain with dryRun false', async () => {
-    const filter = { createdBefore: '2024-01-01T00:00:00.000Z' }
+    const filter = { to: '2024-01-01T00:00:00.000Z' }
     const result = await service.sweep(filter, false)
     expect(domain.sweep).toHaveBeenCalledWith(filter, false)
     expect(result).toEqual([mockSession])
   })
 
   it('delegates sweep to domain with dryRun true', async () => {
-    const filter = { createdBefore: '2024-01-01T00:00:00.000Z' }
+    const filter = { to: '2024-01-01T00:00:00.000Z' }
     const result = await service.sweep(filter, true)
     expect(domain.sweep).toHaveBeenCalledWith(filter, true)
     expect(result).toEqual([mockSession])

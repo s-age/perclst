@@ -42,13 +42,20 @@ describe('AgentService', () => {
       updateStatus: vi.fn().mockResolvedValue({
         ...mockSession,
         metadata: { ...mockSession.metadata, status: 'active' }
-      })
+      }),
+      setLabels: vi.fn(),
+      addLabels: vi.fn(),
+      resolveId: vi.fn(),
+      createRewind: vi.fn(),
+      sweep: vi.fn()
     }
     agentDomain = {
       run: vi.fn().mockResolvedValue(mockResponse),
       resume: vi.fn().mockResolvedValue(mockResponse),
       isLimitExceeded: vi.fn().mockReturnValue(false),
-      fork: vi.fn()
+      fork: vi.fn(),
+      buildChatArgs: vi.fn(),
+      chat: vi.fn()
     }
     service = new AgentService(sessionDomain, agentDomain)
   })
