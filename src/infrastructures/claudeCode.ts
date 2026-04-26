@@ -20,11 +20,9 @@ export class ClaudeCodeInfra {
     return join(homedir(), '.claude', 'projects', encoded, `${sessionId}.jsonl`)
   }
 
-  countJsonlLines(path: string): number {
-    if (!existsSync(path)) return 0
+  readJsonlContent(path: string): string {
+    if (!existsSync(path)) return ''
     return readFileSync(path, 'utf-8')
-      .split('\n')
-      .filter((l) => l.trim()).length
   }
 
   buildArgs(action: ClaudeAction): string[] {

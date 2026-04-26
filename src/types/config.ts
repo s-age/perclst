@@ -7,7 +7,7 @@ export type DisplayConfig = {
 
 export type AgentLimitsConfig = {
   /** Maximum message count before graceful termination. -1 = disabled. */
-  max_turns?: number
+  max_messages?: number
   /** Maximum context window tokens before graceful termination. -1 = disabled. */
   max_context_tokens?: number
 }

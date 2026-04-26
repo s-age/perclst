@@ -7,7 +7,7 @@ const { mockInfra, MockClaudeCodeInfra } = vi.hoisted(() => {
   const infra = {
     buildArgs: vi.fn(),
     resolveJsonlPath: vi.fn(),
-    countJsonlLines: vi.fn(),
+    readJsonlContent: vi.fn(),
     runClaude: vi.fn(),
     writeStderr: vi.fn()
   }
@@ -30,6 +30,10 @@ vi.mock('@src/repositories/parsers/claudeCodeParser', () => ({
   processLine: vi.fn(),
   finalizeParseState: vi.fn(),
   emitStreamEvents: vi.fn()
+}))
+
+vi.mock('@src/repositories/parsers/claudeSessionParser', () => ({
+  computeMessagesTotalFromContent: vi.fn().mockReturnValue(0)
 }))
 
 import { ClaudeCodeRepository } from '../agentRepository'
@@ -101,7 +105,7 @@ describe('ClaudeCodeRepository', () => {
     vi.clearAllMocks()
     mockInfra.buildArgs.mockReturnValue(['-p', '--output-format', 'stream-json'])
     mockInfra.resolveJsonlPath.mockReturnValue('/path/to/session.jsonl')
-    mockInfra.countJsonlLines.mockReturnValue(0)
+    mockInfra.readJsonlContent.mockReturnValue('')
     mockInfra.runClaude.mockReturnValue(yieldLines())
     vi.mocked(createParseState).mockReturnValue(
       mockParseState as ReturnType<typeof createParseState>
@@ -118,12 +122,12 @@ describe('ClaudeCodeRepository', () => {
     it('returns the RawOutput produced by finalizeParseState', async () => {
       const result = await repo.dispatch(startAction)
 
-      expect(result).toBe(stubRawOutput)
+      expect(result).toMatchObject(stubRawOutput)
     })
 
     it('calls processLine for each yielded line and finalizeParseState with the jsonl baseline', async () => {
       mockInfra.runClaude.mockReturnValue(yieldLines('line1', 'line2'))
-      mockInfra.countJsonlLines.mockReturnValue(5)
+      mockInfra.readJsonlContent.mockReturnValue('a\nb\nc\nd\ne')
 
       await repo.dispatch(startAction)
 

@@ -17,7 +17,7 @@ type RawResumeOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
-  maxTurns?: string
+  maxMessages?: string
   maxContextTokens?: string
   silentThoughts?: boolean
   silentToolResponse?: boolean
@@ -68,7 +68,7 @@ export async function resumeCommand(
       allowedTools: input.allowedTools,
       disallowedTools: input.disallowedTools,
       model: input.model,
-      maxTurns: input.maxTurns,
+      maxMessages: input.maxMessages,
       maxContextTokens: input.maxContextTokens,
       onStreamEvent
     })

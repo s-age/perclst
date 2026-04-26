@@ -6,11 +6,6 @@ import type { ISessionDomain } from '@src/domains/ports/session'
 
 export type { AgentRunOptions }
 
-const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Please:
-1. Summarize what was completed successfully
-2. List tasks that could not be completed and the reasons why
-Then provide your final response.`
-
 export type StartResult = {
   sessionId: string
   response: AgentResponse
@@ -26,7 +21,7 @@ export class AgentService {
   private resolveRunOptions(options: AgentRunOptions): AgentRunOptions {
     return {
       ...options,
-      maxTurns: options.maxTurns ?? this.config.limits?.max_turns ?? -1,
+      maxMessages: options.maxMessages ?? this.config.limits?.max_messages ?? -1,
       maxContextTokens: options.maxContextTokens ?? this.config.limits?.max_context_tokens ?? -1,
       allowedTools: options.allowedTools ?? this.config.allowed_tools,
       disallowedTools: options.disallowedTools ?? this.config.disallowed_tools
@@ -43,15 +38,10 @@ export class AgentService {
     const sessionFilePath = this.sessionDomain.getPath(session.id)
     const executeOptions = { ...resolved, sessionFilePath }
 
-    let response = await this.agentDomain.run(session, task, false, executeOptions)
+    const response = await this.agentDomain.run(session, task, false, executeOptions)
 
     if (this.agentDomain.isLimitExceeded(response, resolved)) {
-      response = await this.agentDomain.run(
-        session,
-        GRACEFUL_TERMINATION_PROMPT,
-        true,
-        executeOptions
-      )
+      resolved.onLimitExceeded?.()
     }
 
     await this.sessionDomain.updateStatus(session.id, 'active')
@@ -74,16 +64,11 @@ export class AgentService {
     const sessionFilePath = this.sessionDomain.getPath(session.id)
     const executeOptions = { ...resolved, sessionFilePath }
 
-    let response = await this.agentDomain.resume(session, instruction, executeOptions)
+    const response = await this.agentDomain.resume(session, instruction, executeOptions)
     await this.sessionDomain.save(session)
 
     if (this.agentDomain.isLimitExceeded(response, resolved)) {
-      response = await this.agentDomain.run(
-        session,
-        GRACEFUL_TERMINATION_PROMPT,
-        true,
-        executeOptions
-      )
+      resolved.onLimitExceeded?.()
     }
 
     await this.sessionDomain.updateStatus(session.id, 'active')

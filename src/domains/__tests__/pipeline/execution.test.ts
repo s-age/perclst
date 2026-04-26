@@ -53,7 +53,7 @@ describe('PipelineDomain - execution', () => {
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000
       }
 
@@ -80,7 +80,7 @@ describe('PipelineDomain - execution', () => {
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000
       }
 
@@ -109,7 +109,7 @@ describe('PipelineDomain - execution', () => {
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000
       }
 
@@ -137,7 +137,7 @@ describe('PipelineDomain - execution', () => {
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000
       }
 
@@ -171,7 +171,7 @@ describe('PipelineDomain - execution', () => {
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000
       }
 
@@ -182,64 +182,62 @@ describe('PipelineDomain - execution', () => {
       expect(runCall[1]).toContain('Previous failure')
     })
 
-    it('sends graceful termination prompt when turn limit is exceeded', async () => {
+    it('calls onLimitExceeded when turn limit is exceeded', async () => {
       const task: AgentPipelineTask = {
         type: 'agent',
         task: 'do something',
         name: 'task1'
       }
       const session: Session = { id: 'session-id' } as Session
-      const firstResponse: AgentResponse = { message_count: 10 } as AgentResponse
-      const termResponse: AgentResponse = { message_count: 11 } as AgentResponse
+      const firstResponse: AgentResponse = { messages_total: 10 } as AgentResponse
+      const onLimitExceeded = vi.fn()
 
       vi.mocked(sessionDomain.findByName).mockResolvedValue(null)
       vi.mocked(sessionDomain.create).mockResolvedValue(session)
       vi.mocked(sessionDomain.getPath).mockReturnValue('/path/to/session')
-      vi.mocked(agentDomain.run)
-        .mockResolvedValueOnce(firstResponse)
-        .mockResolvedValueOnce(termResponse)
+      vi.mocked(agentDomain.run).mockResolvedValueOnce(firstResponse)
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValueOnce(true)
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: 5,
-        maxContextTokens: -1
+        maxMessages: 5,
+        maxContextTokens: -1,
+        onLimitExceeded
       }
 
       await pipelineDomain.runAgentTask(task, { index: 0, taskPath: [0] }, options)
 
-      expect(agentDomain.run).toHaveBeenCalledTimes(2)
-      const secondCall = vi.mocked(agentDomain.run).mock.calls[1]
-      expect(secondCall[1]).toContain('reached the operation limit')
+      expect(agentDomain.run).toHaveBeenCalledTimes(1)
+      expect(onLimitExceeded).toHaveBeenCalledTimes(1)
     })
 
-    it('sends graceful termination prompt when context token limit is exceeded', async () => {
+    it('calls onLimitExceeded when context token limit is exceeded', async () => {
       const task: AgentPipelineTask = {
         type: 'agent',
         task: 'do something',
         name: 'task1'
       }
       const session: Session = { id: 'session-id' } as Session
-      const firstResponse: AgentResponse = { message_count: 2 } as AgentResponse
-      const termResponse: AgentResponse = { message_count: 3 } as AgentResponse
+      const firstResponse: AgentResponse = { messages_total: 2 } as AgentResponse
+      const onLimitExceeded = vi.fn()
 
       vi.mocked(sessionDomain.findByName).mockResolvedValue(null)
       vi.mocked(sessionDomain.create).mockResolvedValue(session)
       vi.mocked(sessionDomain.getPath).mockReturnValue('/path/to/session')
-      vi.mocked(agentDomain.run)
-        .mockResolvedValueOnce(firstResponse)
-        .mockResolvedValueOnce(termResponse)
+      vi.mocked(agentDomain.run).mockResolvedValueOnce(firstResponse)
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValueOnce(true)
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: -1,
-        maxContextTokens: 4000
+        maxMessages: -1,
+        maxContextTokens: 4000,
+        onLimitExceeded
       }
 
       await pipelineDomain.runAgentTask(task, { index: 0, taskPath: [0] }, options)
 
-      expect(agentDomain.run).toHaveBeenCalledTimes(2)
+      expect(agentDomain.run).toHaveBeenCalledTimes(1)
+      expect(onLimitExceeded).toHaveBeenCalledTimes(1)
     })
   })
 })

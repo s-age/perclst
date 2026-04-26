@@ -48,21 +48,6 @@ describe('ClaudeCodeInfra', () => {
     })
   })
 
-  describe('countJsonlLines', () => {
-    it('should return 0 when the file does not exist', () => {
-      mocks.existsSync.mockReturnValue(false)
-
-      expect(infra.countJsonlLines('/sessions/missing.jsonl')).toBe(0)
-    })
-
-    it('should return the count of non-empty lines when the file exists', () => {
-      mocks.existsSync.mockReturnValue(true)
-      mocks.readFileSync.mockReturnValue('line1\nline2\n\nline3\n')
-
-      expect(infra.countJsonlLines('/sessions/sess.jsonl')).toBe(3)
-    })
-  })
-
   describe('writeStderr', () => {
     it('should write the data string to process.stderr', () => {
       const writeSpy = vi.spyOn(process.stderr, 'write').mockReturnValue(true)

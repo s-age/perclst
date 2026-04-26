@@ -110,7 +110,7 @@ describe('parsePipeline', () => {
             labels: ['ci', 'nightly'],
             allowed_tools: ['Bash', 'Read'],
             disallowed_tools: ['Write'],
-            max_turns: 5,
+            max_messages: 5,
             max_context_tokens: 10000
           }
         ]
@@ -124,7 +124,7 @@ describe('parsePipeline', () => {
         labels: ['ci', 'nightly'],
         allowed_tools: ['Bash', 'Read'],
         disallowed_tools: ['Write'],
-        max_turns: 5,
+        max_messages: 5,
         max_context_tokens: 10000
       })
     })

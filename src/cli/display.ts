@@ -118,8 +118,9 @@ function printJsonResponse(response: AgentResponse, extra?: PrintResponseExtra):
       context_window_tokens: contextWindowTokens
     }
   }
-  if (response.message_count !== undefined) {
-    obj.message_count = response.message_count
+  const messageCount = response.messages_total ?? response.message_count
+  if (messageCount !== undefined) {
+    obj.message_count = messageCount
   }
   if (response.tool_history !== undefined) {
     obj.tool_history = response.tool_history
@@ -176,8 +177,9 @@ function printUsageBlock(header: (text: string) => string, response: AgentRespon
   const u = response.usage!
   const cu = response.last_assistant_usage ?? u
   stdout.print(header('Token Usage'))
-  if (response.message_count !== undefined) {
-    stdout.print(`  Messages:         ${response.message_count}`)
+  const messageDisplay = response.messages_total ?? response.message_count
+  if (messageDisplay !== undefined) {
+    stdout.print(`  Messages:         ${messageDisplay}`)
   }
   stdout.print(`  Input:            ${u.input_tokens}`)
   stdout.print(`  Output:           ${u.output_tokens}`)

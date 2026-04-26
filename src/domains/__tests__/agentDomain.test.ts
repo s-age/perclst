@@ -165,17 +165,25 @@ describe('AgentDomain', () => {
     })
 
     it('should return false when no limits are set', () => {
-      expect(domain.isLimitExceeded(makeResponse({ message_count: 99 }), {})).toBe(false)
+      expect(domain.isLimitExceeded(makeResponse({ messages_total: 99 }), {})).toBe(false)
     })
 
-    it('should return false when message_count is below maxTurns', () => {
-      expect(domain.isLimitExceeded(makeResponse({ message_count: 4 }), { maxTurns: 5 })).toBe(
+    it('should return false when messages_total is below maxMessages', () => {
+      expect(domain.isLimitExceeded(makeResponse({ messages_total: 4 }), { maxMessages: 5 })).toBe(
         false
       )
     })
 
-    it('should return true when message_count reaches maxTurns', () => {
-      expect(domain.isLimitExceeded(makeResponse({ message_count: 5 }), { maxTurns: 5 })).toBe(true)
+    it('should return true when messages_total reaches maxMessages', () => {
+      expect(domain.isLimitExceeded(makeResponse({ messages_total: 5 }), { maxMessages: 5 })).toBe(
+        true
+      )
+    })
+
+    it('should fall back to message_count when messages_total is absent', () => {
+      expect(domain.isLimitExceeded(makeResponse({ message_count: 5 }), { maxMessages: 5 })).toBe(
+        true
+      )
     })
 
     it('should return false when context tokens are below maxContextTokens', () => {

@@ -17,7 +17,7 @@ describe('parseResumeSession', () => {
       ...minimal,
       allowedTools: ['WebFetch'],
       model: 'opus',
-      maxTurns: 5,
+      maxMessages: 5,
       maxContextTokens: 20000,
       format: 'json',
       silentThoughts: false,
@@ -27,7 +27,7 @@ describe('parseResumeSession', () => {
     })
     expect(result.allowedTools).toEqual(['WebFetch'])
     expect(result.model).toBe('opus')
-    expect(result.maxTurns).toBe(5)
+    expect(result.maxMessages).toBe(5)
     expect(result.maxContextTokens).toBe(20000)
     expect(result.format).toBe('json')
     expect(result.silentThoughts).toBe(false)

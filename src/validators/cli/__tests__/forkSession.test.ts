@@ -20,7 +20,7 @@ describe('parseForkSession', () => {
       allowedTools: ['Bash', 'Read'],
       disallowedTools: ['Write'],
       model: 'haiku',
-      maxTurns: 5,
+      maxMessages: 5,
       maxContextTokens: 20000,
       format: 'json',
       silentThoughts: true,
@@ -34,7 +34,7 @@ describe('parseForkSession', () => {
     expect(result.allowedTools).toEqual(['Bash', 'Read'])
     expect(result.disallowedTools).toEqual(['Write'])
     expect(result.model).toBe('haiku')
-    expect(result.maxTurns).toBe(5)
+    expect(result.maxMessages).toBe(5)
     expect(result.maxContextTokens).toBe(20000)
     expect(result.format).toBe('json')
     expect(result.silentThoughts).toBe(true)
@@ -73,13 +73,13 @@ describe('parseForkSession', () => {
     ).toThrow(ValidationError)
   })
 
-  it('should pass through integer maxTurns', () => {
-    const result = parseForkSession({ ...minimal, maxTurns: 3 })
-    expect(result.maxTurns).toBe(3)
+  it('should pass through integer maxMessages', () => {
+    const result = parseForkSession({ ...minimal, maxMessages: 3 })
+    expect(result.maxMessages).toBe(3)
   })
 
-  it('should throw ValidationError when maxTurns is a float', () => {
-    expect(() => parseForkSession({ ...minimal, maxTurns: 2.5 })).toThrow(ValidationError)
+  it('should throw ValidationError when maxMessages is a float', () => {
+    expect(() => parseForkSession({ ...minimal, maxMessages: 2.5 })).toThrow(ValidationError)
   })
 
   it('should pass through integer maxContextTokens', () => {

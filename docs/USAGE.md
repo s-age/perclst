@@ -459,7 +459,7 @@ Session lookup uses the most recently updated session with the given name — a 
 | `model` | Model override for this task |
 | `allowed_tools` | Tools to allow without prompting |
 | `disallowed_tools` | Tools to deny |
-| `max_turns` | Turn limit before graceful termination |
+| `max_messages` | Message count limit before graceful termination |
 | `max_context_tokens` | Context token limit before graceful termination |
 
 ---
@@ -638,12 +638,12 @@ Defaults can be set in config (CLI flags override config values for that invocat
 
 ## Graceful Termination
 
-Use `--max-turns` or `--max-context-tokens` to automatically stop an agent run and request a summary when limits are reached. Available on `start`, `resume`, and `fork`.
+Use `--max-messages` or `--max-context-tokens` to automatically stop an agent run and request a summary when limits are reached. Available on `start`, `resume`, and `fork`.
 
 ```bash
-perclst start "long task" --max-turns 20
+perclst start "long task" --max-messages 20
 perclst start "long task" --max-context-tokens 150000
-perclst resume <session-id> "continue" --max-turns 20 --max-context-tokens 150000
+perclst resume <session-id> "continue" --max-messages 20 --max-context-tokens 150000
 ```
 
 When a limit is reached, perclst automatically sends a follow-up prompt asking the agent to summarize what was completed and what remains unfinished.
@@ -653,7 +653,7 @@ Defaults can be set in config (`-1` = disabled):
 ```json
 {
   "limits": {
-    "max_turns": -1,
+    "max_messages": -1,
     "max_context_tokens": -1
   }
 }
@@ -707,7 +707,7 @@ Each `start` / `resume` run prints an output block like this:
   "allowed_tools": [],
   "disallowed_tools": [],
   "limits": {
-    "max_turns": -1,
+    "max_messages": -1,
     "max_context_tokens": -1
   }
 }

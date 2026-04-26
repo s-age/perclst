@@ -14,7 +14,7 @@ const agentTaskSchema = z.object({
   labels: z.array(z.string()).optional(),
   allowed_tools: z.array(z.string()).optional(),
   disallowed_tools: z.array(z.string()).optional(),
-  max_turns: z.number().int().optional(),
+  max_messages: z.number().int().optional(),
   max_context_tokens: z.number().int().optional(),
   rejected: rejectedConfigSchema.optional(),
   done: z.boolean().optional()

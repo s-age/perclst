@@ -11,7 +11,7 @@ treated as interchangeable.
 ## What happened / What is true
 
 - **`GRACEFUL_TERMINATION_PROMPT`**: handles the case where a *child* agent hits
-  `max_turns` or `max_context`. It signals the child to wrap up gracefully before it is
+  `max_messages` or `max_context_tokens`. It signals the child to wrap up gracefully before it is
   cut off by the runtime limit.
 - **hooks `continue: false`**: stops the *parent* agent after an MCP tool call returns.
   This is the mechanism for `invoke_serial_children`-style orchestration, where the parent
@@ -37,4 +37,4 @@ treated as interchangeable.
 
 ---
 
-**Keywords:** GRACEFUL_TERMINATION_PROMPT, hooks continue false, max_turns, max_context, graceful shutdown, invoke_serial_children, MCP tool, orchestrator
+**Keywords:** GRACEFUL_TERMINATION_PROMPT, hooks continue false, max_messages, max_context_tokens, graceful shutdown, invoke_serial_children, MCP tool, orchestrator

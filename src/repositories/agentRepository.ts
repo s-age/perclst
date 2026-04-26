@@ -5,6 +5,7 @@ import {
   finalizeParseState,
   emitStreamEvents
 } from '@src/repositories/parsers/claudeCodeParser'
+import { computeMessagesTotalFromContent } from '@src/repositories/parsers/claudeSessionParser'
 import type { IClaudeCodeRepository } from '@src/repositories/ports/agent'
 import { RawExitError } from '@src/errors/rawExitError'
 import { APIError } from '@src/errors/apiError'
@@ -43,9 +44,10 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
       action.type === 'fork' ? action.originalClaudeSessionId : action.sessionId
     const baselineWorkingDir =
       action.type === 'fork' ? action.originalWorkingDir : action.workingDir
-    const jsonlBaseline = this.infra.countJsonlLines(
-      this.infra.resolveJsonlPath(baselineSessionId, baselineWorkingDir)
-    )
+    const jsonlPath = this.infra.resolveJsonlPath(baselineSessionId, baselineWorkingDir)
+    const jsonlContent = this.infra.readJsonlContent(jsonlPath)
+    const jsonlBaseline = jsonlContent.split('\n').filter((l) => l.trim()).length
+    const baselineMessagesTotal = computeMessagesTotalFromContent(jsonlContent)
 
     const state = createParseState()
     const toolNameMap = new Map<string, string>()
@@ -66,6 +68,9 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
       throw err
     }
 
-    return finalizeParseState(state, jsonlBaseline)
+    const parsed = finalizeParseState(state, jsonlBaseline)
+    const messages_total =
+      baselineMessagesTotal + 1 + state.assistantEventCount + 2 * state.toolCallCount
+    return { ...parsed, messages_total }
   }
 }

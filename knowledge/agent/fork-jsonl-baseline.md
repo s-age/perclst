@@ -46,4 +46,4 @@ const jsonlBaseline = countJsonlLines(
 
 ---
 
-**Keywords:** fork, jsonlBaseline, message_count, isLimitExceeded, max_turns, working_dir, ForkAction
+**Keywords:** fork, jsonlBaseline, message_count, isLimitExceeded, max_messages, working_dir, ForkAction

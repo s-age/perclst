@@ -16,11 +16,6 @@ import type { IRejectionFeedbackRepository } from '@src/repositories/ports/rejec
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 import { debug } from '@src/utils/output'
 
-const GRACEFUL_TERMINATION_PROMPT = `You have reached the operation limit. Please:
-1. Summarize what was completed successfully
-2. List tasks that could not be completed and the reasons why
-Then provide your final response.`
-
 export class PipelineDomain implements IPipelineDomain {
   constructor(
     private agentDomain: IAgentDomain,
@@ -82,21 +77,20 @@ export class PipelineDomain implements IPipelineDomain {
     session: Session,
     instruction: string,
     isResume: boolean,
-    config: { execOpts: ExecuteOptions; limits: { maxTurns: number; maxContextTokens: number } }
+    config: {
+      execOpts: ExecuteOptions
+      limits: { maxMessages: number; maxContextTokens: number }
+      onLimitExceeded?: () => void
+    }
   ): Promise<AgentResponse> {
-    let response = await this.agentDomain.run(session, instruction, isResume, config.execOpts)
+    const response = await this.agentDomain.run(session, instruction, isResume, config.execOpts)
     if (
       this.agentDomain.isLimitExceeded(response, {
-        maxTurns: config.limits.maxTurns,
+        maxMessages: config.limits.maxMessages,
         maxContextTokens: config.limits.maxContextTokens
       })
     ) {
-      response = await this.agentDomain.run(
-        session,
-        GRACEFUL_TERMINATION_PROMPT,
-        true,
-        config.execOpts
-      )
+      config.onLimitExceeded?.()
     }
     return response
   }
@@ -117,7 +111,7 @@ export class PipelineDomain implements IPipelineDomain {
     options: PipelineRunOptions,
     rejected?: RejectedContext
   ): Promise<AgentTaskResult> {
-    const maxTurns = task.max_turns ?? options.maxTurns ?? -1
+    const maxMessages = task.max_messages ?? options.maxMessages ?? -1
     const maxContextTokens = task.max_context_tokens ?? options.maxContextTokens ?? -1
     const execOpts = this.buildExecuteOptions(task, options)
     const instruction = rejected ? this.buildRejectedInstruction(task, rejected) : task.task
@@ -126,7 +120,8 @@ export class PipelineDomain implements IPipelineDomain {
       const resumed = await this.resumeNamedSession(task, taskLocation, {
         instruction,
         execOpts,
-        limits: { maxTurns, maxContextTokens }
+        limits: { maxMessages, maxContextTokens },
+        onLimitExceeded: options.onLimitExceeded
       })
       if (resumed) return resumed
     }
@@ -140,7 +135,8 @@ export class PipelineDomain implements IPipelineDomain {
     const sessionFilePath = this.sessionDomain.getPath(session.id)
     const response = await this.runWithLimit(session, instruction, false, {
       execOpts: { ...execOpts, sessionFilePath },
-      limits: { maxTurns, maxContextTokens }
+      limits: { maxMessages, maxContextTokens },
+      onLimitExceeded: options.onLimitExceeded
     })
     await this.sessionDomain.updateStatus(session.id, 'active')
     return {
@@ -159,7 +155,8 @@ export class PipelineDomain implements IPipelineDomain {
     executionConfig: {
       instruction: string
       execOpts: ExecuteOptions
-      limits: { maxTurns: number; maxContextTokens: number }
+      limits: { maxMessages: number; maxContextTokens: number }
+      onLimitExceeded?: () => void
     }
   ): Promise<AgentTaskResult | null> {
     const existing = await this.sessionDomain.findByName(task.name!)
@@ -167,7 +164,8 @@ export class PipelineDomain implements IPipelineDomain {
     const sessionFilePath = this.sessionDomain.getPath(existing.id)
     const response = await this.runWithLimit(existing, executionConfig.instruction, true, {
       execOpts: { ...executionConfig.execOpts, sessionFilePath },
-      limits: executionConfig.limits
+      limits: executionConfig.limits,
+      onLimitExceeded: executionConfig.onLimitExceeded
     })
     await this.sessionDomain.updateStatus(existing.id, 'active')
     return {

@@ -4,13 +4,14 @@ export type PipelineRunOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
-  maxTurns?: number
+  maxMessages?: number
   maxContextTokens?: number
   onStreamEvent?: (event: AgentStreamEvent) => void
   onTaskDone?: (taskPath: number[], taskIndex: number) => void
   onChildPipelineDone?: (absolutePath: string) => void
   pipelineDir?: string
   signal?: AbortSignal
+  onLimitExceeded?: () => void
 }
 
 export type RejectedContext = {
@@ -28,7 +29,7 @@ export type AgentPipelineTask = {
   labels?: string[]
   allowed_tools?: string[]
   disallowed_tools?: string[]
-  max_turns?: number
+  max_messages?: number
   max_context_tokens?: number
   rejected?: ScriptRejectedConfig
   done?: boolean

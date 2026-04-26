@@ -19,7 +19,7 @@ describe('parseStartSession', () => {
       labels: ['a', 'b'],
       allowedTools: ['Bash', 'Read'],
       model: 'sonnet',
-      maxTurns: 10,
+      maxMessages: 10,
       maxContextTokens: 50000,
       format: 'json',
       silentThoughts: true,
@@ -32,7 +32,7 @@ describe('parseStartSession', () => {
     expect(result.labels).toEqual(['a', 'b'])
     expect(result.allowedTools).toEqual(['Bash', 'Read'])
     expect(result.model).toBe('sonnet')
-    expect(result.maxTurns).toBe(10)
+    expect(result.maxMessages).toBe(10)
     expect(result.maxContextTokens).toBe(50000)
     expect(result.format).toBe('json')
     expect(result.silentThoughts).toBe(true)
@@ -53,12 +53,12 @@ describe('parseStartSession', () => {
     expect(() => parseStartSession({ task: 'x', format: 'xml' })).toThrow(ValidationError)
   })
 
-  it('should pass through integer maxTurns', () => {
-    const result = parseStartSession({ task: 'x', maxTurns: 10 })
-    expect(result.maxTurns).toBe(10)
+  it('should pass through integer maxMessages', () => {
+    const result = parseStartSession({ task: 'x', maxMessages: 10 })
+    expect(result.maxMessages).toBe(10)
   })
 
-  it('should throw ValidationError when maxTurns is a float', () => {
-    expect(() => parseStartSession({ task: 'x', maxTurns: 3.9 })).toThrow(ValidationError)
+  it('should throw ValidationError when maxMessages is a float', () => {
+    expect(() => parseStartSession({ task: 'x', maxMessages: 3.9 })).toThrow(ValidationError)
   })
 })
