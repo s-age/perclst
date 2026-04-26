@@ -1,11 +1,10 @@
-import { Node } from 'ts-morph'
 import type { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import {
   extractSymbols,
   extractImports,
   extractExports,
   extractTypeDefinition,
-  resolveSymbol,
+  findReferenceFindableSymbol,
   extractReferences
 } from '@src/repositories/parsers/tsAnalysisParser'
 import { findContainingSymbol } from '@src/repositories/parsers/tsAstParser'
@@ -31,8 +30,8 @@ export class TsAnalysisRepository implements ITsAnalysisRepository {
     options?: { includeTest?: boolean }
   ): ReferenceInfo[] {
     const sf = this.infra.getSourceFile(filePath)
-    const symbol = resolveSymbol(sf, symbolName)
-    if (!symbol || !Node.isReferenceFindable(symbol)) return []
+    const symbol = findReferenceFindableSymbol(sf, symbolName)
+    if (!symbol) return []
     return extractReferences(symbol.findReferences(), options)
   }
 

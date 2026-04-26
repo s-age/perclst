@@ -1,5 +1,5 @@
-import { SyntaxKind } from 'ts-morph'
-import type { Node, SourceFile, ReferencedSymbol } from 'ts-morph'
+import { Node, SyntaxKind } from 'ts-morph'
+import type { SourceFile, ReferencedSymbol, ReferenceFindableNode } from 'ts-morph'
 import type {
   SymbolInfo,
   ImportInfo,
@@ -11,7 +11,7 @@ import type {
   ReferenceInfo
 } from '@src/types/tsAnalysis'
 
-export function resolveSymbol(sourceFile: SourceFile, symbolName: string): Node | undefined {
+function resolveSymbol(sourceFile: SourceFile, symbolName: string): Node | undefined {
   if (symbolName.includes('.')) {
     const [className, methodName] = symbolName.split('.', 2)
     return sourceFile.getClass(className)?.getMethod(methodName) ?? undefined
@@ -24,6 +24,15 @@ export function resolveSymbol(sourceFile: SourceFile, symbolName: string): Node 
     sourceFile.getTypeAlias(symbolName) ??
     undefined
   )
+}
+
+export function findReferenceFindableSymbol(
+  sourceFile: SourceFile,
+  symbolName: string
+): (Node & ReferenceFindableNode) | undefined {
+  const symbol = resolveSymbol(sourceFile, symbolName)
+  if (!symbol || !Node.isReferenceFindable(symbol)) return undefined
+  return symbol
 }
 
 export function extractReferences(
