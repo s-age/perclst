@@ -60,4 +60,4 @@ const blocks = missing
   .filter((b): b is string => b !== null)
 
 writeFileSync(configPath, configContent.trimEnd() + '\n\n// Synced from config.default.ts\n' + blocks.join('\n') + '\n')
-process.stderr.write(`[sync-config] added ${missing.length} export(s) to config.ts: ${missing.join(', ')}\n`)
+process.stdout.write(`[sync-config] added ${missing.length} export(s) to config.ts: ${missing.join(', ')}\n`)
