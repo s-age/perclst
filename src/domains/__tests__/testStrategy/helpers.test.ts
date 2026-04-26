@@ -18,7 +18,7 @@ describe('calcComplexity', () => {
   it('calculates complexity as 1 + branches + loops + logicalOps + catches', () => {
     const raw: RawFunctionInfo = {
       name: 'testFunc',
-      class_name: null,
+      class_name: undefined,
       lineno: 10,
       branchCount: 2,
       loopCount: 1,
@@ -39,7 +39,7 @@ describe('calcSuggestedTestCaseCount', () => {
   it('returns 1 + branches + 1-for-loop + catches when loops exist', () => {
     const raw: RawFunctionInfo = {
       name: 'testFunc',
-      class_name: null,
+      class_name: undefined,
       lineno: 10,
       branchCount: 2,
       loopCount: 1,
@@ -54,7 +54,7 @@ describe('calcSuggestedTestCaseCount', () => {
   it('returns 1 + branches + 0 + catches when no loops', () => {
     const raw: RawFunctionInfo = {
       name: 'testFunc',
-      class_name: null,
+      class_name: undefined,
       lineno: 10,
       branchCount: 2,
       loopCount: 0,
@@ -136,7 +136,7 @@ describe('buildStrategy', () => {
   it('builds strategy with existing test', () => {
     const raw: RawFunctionInfo = {
       name: 'getUserId',
-      class_name: null,
+      class_name: undefined,
       lineno: 10,
       branchCount: 1,
       loopCount: 0,
@@ -153,7 +153,7 @@ describe('buildStrategy', () => {
   it('marks missing coverage when no existing test', () => {
     const raw: RawFunctionInfo = {
       name: 'myFunction',
-      class_name: null,
+      class_name: undefined,
       lineno: 10,
       branchCount: 1,
       loopCount: 0,
@@ -171,7 +171,7 @@ describe('buildStrategy', () => {
   it('identifies custom hook and uses "hook" label in missing coverage', () => {
     const raw: RawFunctionInfo = {
       name: 'useMyHook',
-      class_name: null,
+      class_name: undefined,
       lineno: 10,
       branchCount: 0,
       loopCount: 0,
@@ -188,7 +188,7 @@ describe('buildStrategy', () => {
   it('identifies component and uses "component" label in missing coverage', () => {
     const raw: RawFunctionInfo = {
       name: 'MyComponent',
-      class_name: null,
+      class_name: undefined,
       lineno: 10,
       branchCount: 0,
       loopCount: 0,
@@ -214,7 +214,7 @@ describe('buildRecommendation', () => {
     const strategies: FunctionStrategy[] = [
       {
         function_name: 'func1',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: 'test_func1',
         complexity: 1,
@@ -233,7 +233,7 @@ describe('buildRecommendation', () => {
     const strategies: FunctionStrategy[] = [
       {
         function_name: 'func1',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: null,
         complexity: 1,
@@ -245,7 +245,7 @@ describe('buildRecommendation', () => {
       },
       {
         function_name: 'func2',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: null,
         complexity: 1,
@@ -264,7 +264,7 @@ describe('buildRecommendation', () => {
     const strategies: FunctionStrategy[] = [
       {
         function_name: 'useMyHook',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: null,
         complexity: 1,
@@ -283,7 +283,7 @@ describe('buildRecommendation', () => {
     const strategies: FunctionStrategy[] = [
       {
         function_name: 'MyComponent',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: null,
         complexity: 1,
@@ -302,7 +302,7 @@ describe('buildRecommendation', () => {
     const strategies: FunctionStrategy[] = [
       {
         function_name: 'complexFunc',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: 'test_complexFunc',
         complexity: 15,
@@ -321,7 +321,7 @@ describe('buildRecommendation', () => {
     const strategies: FunctionStrategy[] = [
       {
         function_name: 'funcWithDeps',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: 'test_funcWithDeps',
         complexity: 1,
@@ -342,7 +342,7 @@ describe('buildRecommendation', () => {
     const strategies: FunctionStrategy[] = [
       {
         function_name: 'func1',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: null,
         complexity: 1,
@@ -354,7 +354,7 @@ describe('buildRecommendation', () => {
       },
       {
         function_name: 'complexFunc',
-        class_name: null,
+        class_name: undefined,
         recommended_framework: 'vitest',
         existing_test_function: 'test_complexFunc',
         complexity: 12,

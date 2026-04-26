@@ -29,8 +29,10 @@ describe('AgentDomain', () => {
         content: 'Mock response',
         thoughts: [],
         tool_history: [],
-        usage: { input_tokens: 10, output_tokens: 10 }
-      })
+        usage: { input_tokens: 10, output_tokens: 10 },
+        message_count: 1
+      }),
+      spawnInteractive: vi.fn()
     }
 
     procedureRepo = {
@@ -105,7 +107,8 @@ describe('AgentDomain', () => {
       content: '',
       thoughts: [],
       tool_history: [],
-      usage: { input_tokens: 0, output_tokens: 0 }
+      usage: { input_tokens: 0, output_tokens: 0 },
+      message_count: 0
     })
 
     await expect(domain.run(session, 'Hello', false)).rejects.toThrow(APIError)
@@ -117,7 +120,8 @@ describe('AgentDomain', () => {
       content: 'Answer',
       thoughts,
       tool_history: [],
-      usage: { input_tokens: 10, output_tokens: 10 }
+      usage: { input_tokens: 10, output_tokens: 10 },
+      message_count: 1
     })
 
     const response = await domain.run(session, 'Hello', false)
@@ -137,7 +141,8 @@ describe('AgentDomain', () => {
       content: 'Done',
       thoughts: [],
       tool_history: toolHistory,
-      usage: { input_tokens: 5, output_tokens: 5 }
+      usage: { input_tokens: 5, output_tokens: 5 },
+      message_count: 1
     })
 
     const response = await domain.run(session, 'Hello', false)
@@ -270,7 +275,8 @@ describe('AgentDomain', () => {
         content: '',
         thoughts: [],
         tool_history: [],
-        usage: { input_tokens: 0, output_tokens: 0 }
+        usage: { input_tokens: 0, output_tokens: 0 },
+        message_count: 0
       })
 
       await expect(domain.fork(originalSession, newSession, 'Fork')).rejects.toThrow(APIError)

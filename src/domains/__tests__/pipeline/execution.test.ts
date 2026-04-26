@@ -45,7 +45,8 @@ describe('PipelineDomain - execution', () => {
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(false)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
-      const result = await pipelineDomain.runWithLimit(session, 'instruction', false, {
+      // eslint-disable-next-line local/no-any
+      const result = await (pipelineDomain as any).runWithLimit(session, 'instruction', false, {
         execOpts,
         limits: { maxTurns: 5, maxContextTokens: 5000 }
       })
@@ -65,7 +66,8 @@ describe('PipelineDomain - execution', () => {
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValueOnce(true)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
-      await pipelineDomain.runWithLimit(session, 'instruction', false, {
+      // eslint-disable-next-line local/no-any
+      await (pipelineDomain as any).runWithLimit(session, 'instruction', false, {
         execOpts,
         limits: { maxTurns: 5, maxContextTokens: -1 }
       })
@@ -86,7 +88,8 @@ describe('PipelineDomain - execution', () => {
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValueOnce(true)
 
       const execOpts = { model: 'claude-opus' } as ExecuteOptions
-      await pipelineDomain.runWithLimit(session, 'instruction', false, {
+      // eslint-disable-next-line local/no-any
+      await (pipelineDomain as any).runWithLimit(session, 'instruction', false, {
         execOpts,
         limits: { maxTurns: -1, maxContextTokens: 4000 }
       })

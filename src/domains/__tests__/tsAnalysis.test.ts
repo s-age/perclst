@@ -22,6 +22,7 @@ describe('TsAnalysisDomain', () => {
     it('should call repo.analyzeFile with file path', () => {
       const filePath = '/path/to/file.ts'
       const mockAnalysis: TypeScriptAnalysis = {
+        file_path: filePath,
         symbols: [],
         imports: [],
         exports: []
@@ -40,7 +41,9 @@ describe('TsAnalysisDomain', () => {
       const filePath = '/path/to/file.ts'
       const symbolName = 'myFunction'
       const options = { includeTest: true }
-      const mockRefs: ReferenceInfo[] = [{ file_path: '/path/to/other.ts', line: 10, column: 5 }]
+      const mockRefs: ReferenceInfo[] = [
+        { file_path: '/path/to/other.ts', line: 10, column: 5, snippet: '' }
+      ]
       mockRepo.getReferences.mockReturnValue(mockRefs)
 
       const result = domain.getReferences(filePath, symbolName, options)
@@ -77,7 +80,8 @@ describe('TsAnalysisDomain', () => {
       const mockRef: ReferenceInfo = {
         file_path: '/path/to/other.ts',
         line: 10,
-        column: 5
+        column: 5,
+        snippet: ''
       }
       mockRepo.getReferences.mockReturnValue([mockRef])
       mockRepo.findContainingSymbol.mockReturnValue(null)
@@ -95,12 +99,14 @@ describe('TsAnalysisDomain', () => {
       const ref1: ReferenceInfo = {
         file_path: '/path/to/caller1.ts',
         line: 10,
-        column: 5
+        column: 5,
+        snippet: ''
       }
       const ref2: ReferenceInfo = {
         file_path: '/path/to/caller2.ts',
         line: 20,
-        column: 8
+        column: 8,
+        snippet: ''
       }
       mockRepo.getReferences.mockReturnValue([ref1, ref2])
       mockRepo.findContainingSymbol.mockReturnValue(null)
@@ -117,7 +123,8 @@ describe('TsAnalysisDomain', () => {
       const ref: ReferenceInfo = {
         file_path: '/path/to/caller.ts',
         line: 10,
-        column: 5
+        column: 5,
+        snippet: ''
       }
       const containing = {
         symbol_name: 'callerFunc',
@@ -145,7 +152,8 @@ describe('TsAnalysisDomain', () => {
       const ref: ReferenceInfo = {
         file_path: '/path/to/caller.ts',
         line: 10,
-        column: 5
+        column: 5,
+        snippet: ''
       }
       const containing = {
         symbol_name: 'myFunction',
@@ -171,12 +179,14 @@ describe('TsAnalysisDomain', () => {
       const ref1: ReferenceInfo = {
         file_path: '/path/to/caller.ts',
         line: 10,
-        column: 5
+        column: 5,
+        snippet: ''
       }
       const ref2: ReferenceInfo = {
         file_path: '/path/to/caller.ts',
         line: 15,
-        column: 8
+        column: 8,
+        snippet: ''
       }
       const containing = {
         symbol_name: 'callerFunc',
@@ -205,7 +215,7 @@ describe('TsAnalysisDomain', () => {
       const symbolName = 'MyType'
       const mockTypeDef: TypeDefinition = {
         name: 'MyType',
-        kind: 'interface',
+        type: 'interface',
         properties: []
       }
       mockRepo.getTypeDefinitions.mockReturnValue(mockTypeDef)

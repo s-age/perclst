@@ -108,8 +108,10 @@ describe('extractKeywords', () => {
 })
 
 describe('KnowledgeSearchDomain', () => {
-  let mockRepo: ReturnType<typeof vi.fn<(include_draft: boolean) => KnowledgeFileEntry[], void>>
-  let mockHasDraftEntries: ReturnType<typeof vi.fn<() => boolean, void>>
+  // eslint-disable-next-line local/no-any
+  let mockRepo: any
+  // eslint-disable-next-line local/no-any
+  let mockHasDraftEntries: any
   let repo: IKnowledgeSearchRepository
   let domain: KnowledgeSearchDomain
 
