@@ -56,4 +56,5 @@ export type RawOutput = {
     cache_creation_input_tokens?: number
   }
   message_count: number
+  messages_total?: number
 }

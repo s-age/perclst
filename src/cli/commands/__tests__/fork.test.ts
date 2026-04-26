@@ -60,7 +60,7 @@ describe('forkCommand', () => {
       allowedTools: ['Bash'],
       disallowedTools: [],
       model: 'claude-sonnet-4-6',
-      maxTurns: 10,
+      maxMessages: 10,
       maxContextTokens: 4000,
       format: 'text' as const
     }
@@ -131,7 +131,7 @@ describe('forkCommand', () => {
       allowedTools: ['Bash'],
       disallowedTools: [],
       model: 'claude-sonnet-4-6',
-      maxTurns: 10,
+      maxMessages: 10,
       maxContextTokens: 4000
     })
 
@@ -247,7 +247,7 @@ describe('forkCommand', () => {
       allowedTools: ['Bash'],
       disallowedTools: [],
       model: 'claude-sonnet-4-6',
-      maxTurns: 10,
+      maxMessages: 10,
       maxContextTokens: 4000
     })
   })
@@ -257,7 +257,7 @@ describe('forkCommand', () => {
       name: 'my-fork',
       allowedTools: ['WebFetch'],
       model: 'claude-opus-4-5',
-      maxTurns: '15'
+      maxMessages: '15'
     }
 
     await forkCommand('original-session-123', 'test prompt', options)
@@ -269,7 +269,7 @@ describe('forkCommand', () => {
         name: 'my-fork',
         allowedTools: ['WebFetch'],
         model: 'claude-opus-4-5',
-        maxTurns: '15'
+        maxMessages: '15'
       })
     )
   })

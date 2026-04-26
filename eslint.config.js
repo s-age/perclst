@@ -43,7 +43,17 @@ export default tseslint.config(
       'max-lines': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
 
       // Max function length: 50 lines
-      'max-lines-per-function': ['error', { max: 50, skipBlankLines: true, skipComments: true }]
+      'max-lines-per-function': ['error', { max: 50, skipBlankLines: true, skipComments: true }],
+
+      // Ban snake_case local variables (properties intentionally stay unconstrained)
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'variable',
+          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          filter: { regex: '^__', match: false }
+        }
+      ]
     }
   },
   {

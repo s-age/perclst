@@ -41,6 +41,7 @@ export type ParseState = {
   lastAssistantUsage: RawOutput['last_assistant_usage'] | undefined
   assistantEventCount: number
   userToolResultEventCount: number
+  toolCallCount: number
 }
 
 const MAX_HISTORY_ENTRIES = 200
@@ -73,6 +74,7 @@ function processAssistantEvent(event: StreamEvent, state: ParseState): void {
       } else {
         state.toolMap.set(block.id, { id: block.id, name: block.name, input: block.input })
         if (state.toolMap.size > MAX_HISTORY_ENTRIES) evictOldest(state.toolMap)
+        state.toolCallCount++
         hasCountableContent = true
       }
     } else {
@@ -160,7 +162,8 @@ export function createParseState(): ParseState {
     usage: { input_tokens: 0, output_tokens: 0 },
     lastAssistantUsage: undefined,
     assistantEventCount: 0,
-    userToolResultEventCount: 0
+    userToolResultEventCount: 0,
+    toolCallCount: 0
   }
 }
 

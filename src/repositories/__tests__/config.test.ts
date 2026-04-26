@@ -19,7 +19,7 @@ vi.mock('@src/constants/config', () => ({
     allowed_tools: [],
     disallowed_tools: [],
     display: { header_color: '#D97757', no_color: false },
-    limits: { max_turns: -1, max_context_tokens: -1 }
+    limits: { max_messages: -1, max_context_tokens: -1 }
   },
   CONFIG_DIR_NAME: '.perclst'
 }))

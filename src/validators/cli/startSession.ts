@@ -13,7 +13,7 @@ const startSchema = schema({
   allowedTools: stringArrayRule().optional(),
   disallowedTools: stringArrayRule().optional(),
   model: stringRule().optional(),
-  maxTurns: intRule().optional(),
+  maxMessages: intRule().optional(),
   maxContextTokens: intRule().optional(),
   format: formatRule(),
   silentThoughts: booleanRule().optional(),

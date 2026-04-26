@@ -116,7 +116,7 @@ describe('PipelineDomain - utils', () => {
       const options: PipelineRunOptions = {
         allowedTools: ['Read'],
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000
       }
 
@@ -133,7 +133,7 @@ describe('PipelineDomain - utils', () => {
       const options: PipelineRunOptions = {
         allowedTools: ['Read', 'Bash'],
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000
       }
 
@@ -150,7 +150,7 @@ describe('PipelineDomain - utils', () => {
       }
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000
       }
 
@@ -167,7 +167,7 @@ describe('PipelineDomain - utils', () => {
       }
       const options: PipelineRunOptions = {
         model: 'claude-opus',
-        maxTurns: 10,
+        maxMessages: 10,
         maxContextTokens: 5000,
         onStreamEvent: callback
       }

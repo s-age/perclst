@@ -240,6 +240,23 @@ export function buildTurns(
   }
 }
 
+// Counts API messages: +1 per user instruction, +1 per assistant turn, +2 per tool call (use + result).
+export function computeMessagesTotal(turns: ClaudeCodeTurn[]): number {
+  let total = 0
+  for (const turn of turns) {
+    if (turn.userMessage !== undefined) total++
+    if (turn.toolCalls.length > 0 || turn.assistantText !== undefined) total++
+    total += turn.toolCalls.length * 2
+  }
+  return total
+}
+
+export function computeMessagesTotalFromContent(content: string): number {
+  if (!content.trim()) return 0
+  const entries = parseRawEntries(content)
+  return computeMessagesTotal(buildTurns(entries, buildToolResultMap(entries)).turns)
+}
+
 export function filterEntriesUpTo(entries: RawEntry[], messageId: string): RawEntry[] {
   const cutoffIdx = entries.findIndex(
     (e) => e.type === 'assistant' && (e as RawAssistantEntry).uuid === messageId

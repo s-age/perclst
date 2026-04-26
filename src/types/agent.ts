@@ -16,6 +16,7 @@ export type AgentResponse = {
     cache_creation_input_tokens?: number
   }
   message_count?: number
+  messages_total?: number
   thoughts?: ThinkingBlock[]
   tool_history?: ToolUseRecord[]
 }
@@ -39,7 +40,8 @@ export type AgentRunOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
-  maxTurns?: number
+  maxMessages?: number
   maxContextTokens?: number
   onStreamEvent?: (event: AgentStreamEvent) => void
+  onLimitExceeded?: () => void
 }

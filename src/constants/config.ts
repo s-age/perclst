@@ -16,7 +16,7 @@ export const DEFAULT_LOGS_DIR = '~/.perclst/logs'
 export const DEFAULT_HEADER_COLOR = '#D97757'
 export const DEFAULT_API_KEY_ENV = 'ANTHROPIC_API_KEY'
 export const CONTEXT_WINDOW_SIZE = 200_000
-export const DEFAULT_MAX_TURNS = -1
+export const DEFAULT_MAX_MESSAGES = -1
 export const DEFAULT_MAX_CONTEXT_TOKENS = -1
 export const DEFAULT_ALLOWED_TOOLS: string[] = []
 export const DEFAULT_DISALLOWED_TOOLS: string[] = []
@@ -33,7 +33,7 @@ export const DEFAULT_CONFIG: Config = {
     no_color: false
   },
   limits: {
-    max_turns: DEFAULT_MAX_TURNS,
+    max_messages: DEFAULT_MAX_MESSAGES,
     max_context_tokens: DEFAULT_MAX_CONTEXT_TOKENS
   }
 }

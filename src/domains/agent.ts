@@ -58,6 +58,7 @@ export class AgentDomain implements IAgentDomain {
       usage: raw.usage,
       last_assistant_usage: raw.last_assistant_usage,
       message_count: raw.message_count,
+      messages_total: raw.messages_total,
       thoughts: raw.thoughts.length > 0 ? raw.thoughts : undefined,
       tool_history: raw.tool_history.length > 0 ? raw.tool_history : undefined
     }
@@ -70,11 +71,11 @@ export class AgentDomain implements IAgentDomain {
   }
 
   isLimitExceeded(response: AgentResponse, options: AgentRunOptions): boolean {
-    const maxTurns = options.maxTurns ?? -1
-    if (maxTurns > 0) {
-      const messageCount = response.message_count ?? 0
-      if (messageCount >= maxTurns) {
-        debug.print(`Turn limit reached: ${messageCount} >= ${maxTurns}`)
+    const maxMessages = options.maxMessages ?? -1
+    if (maxMessages > 0) {
+      const count = response.messages_total ?? response.message_count ?? 0
+      if (count >= maxMessages) {
+        debug.print(`Message limit reached: ${count} >= ${maxMessages}`)
         return true
       }
     }
@@ -172,6 +173,7 @@ export class AgentDomain implements IAgentDomain {
       usage: raw.usage,
       last_assistant_usage: raw.last_assistant_usage,
       message_count: raw.message_count,
+      messages_total: raw.messages_total,
       thoughts: raw.thoughts.length > 0 ? raw.thoughts : undefined,
       tool_history: raw.tool_history.length > 0 ? raw.tool_history : undefined
     }

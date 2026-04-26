@@ -181,7 +181,8 @@ function registerServices(config: ReturnType<typeof loadConfig>, domains: Domain
     tsAnalysisDomain,
     gitPendingChangesDomain
   } = domains
-  container.register(TOKENS.AbortService, new AbortService())
+  const abortService = new AbortService()
+  container.register(TOKENS.AbortService, abortService)
   container.register(TOKENS.SessionService, new SessionService(sessionDomain))
   container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain, config))
   container.register(

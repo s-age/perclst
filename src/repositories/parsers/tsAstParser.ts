@@ -50,9 +50,9 @@ function matchMethodDeclaration(
   if (!methodDecl) return null
   const className = methodDecl.getParent()?.asKind(SyntaxKind.ClassDeclaration)?.getName()
   const methodName = methodDecl.getName()
-  const symbol_name = className ? `${className}.${methodName}` : methodName
+  const symbolName = className ? `${className}.${methodName}` : methodName
   return {
-    symbol_name,
+    symbol_name: symbolName,
     file_path: filePath,
     line: sourceFile.getLineAndColumnAtPos(methodDecl.getStart()).line
   }

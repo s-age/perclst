@@ -57,7 +57,7 @@ describe('AgentService', () => {
       buildChatArgs: vi.fn(),
       chat: vi.fn()
     }
-    service = new AgentService(sessionDomain, agentDomain)
+    service = new AgentService(sessionDomain, agentDomain, {})
   })
 
   describe('resolveRunOptions', () => {
@@ -67,7 +67,7 @@ describe('AgentService', () => {
         { working_dir: '/tmp' },
         {
           model: 'claude-opus-4-6',
-          maxTurns: 5,
+          maxMessages: 5,
           maxContextTokens: 10000,
           allowedTools: ['Bash', 'WebFetch'],
           disallowedTools: ['Write']
@@ -80,7 +80,7 @@ describe('AgentService', () => {
         false,
         expect.objectContaining({
           model: 'claude-opus-4-6',
-          maxTurns: 5,
+          maxMessages: 5,
           maxContextTokens: 10000,
           allowedTools: ['Bash', 'WebFetch'],
           disallowedTools: ['Write'],
@@ -89,7 +89,7 @@ describe('AgentService', () => {
       )
     })
 
-    it('should default maxTurns to -1 when option and config are undefined', async () => {
+    it('should default maxMessages to -1 when option and config are undefined', async () => {
       await service.start('Do a task', { working_dir: '/tmp' }, {})
 
       expect(agentDomain.run).toHaveBeenCalledWith(
@@ -97,15 +97,15 @@ describe('AgentService', () => {
         'Do a task',
         false,
         expect.objectContaining({
-          maxTurns: -1,
+          maxMessages: -1,
           maxContextTokens: -1
         })
       )
     })
 
-    it('should use maxTurns from config when option is undefined', async () => {
+    it('should use maxMessages from config when option is undefined', async () => {
       const config: Config = {
-        limits: { max_turns: 20, max_context_tokens: 50000 }
+        limits: { max_messages: 20, max_context_tokens: 50000 }
       }
       service = new AgentService(sessionDomain, agentDomain, config)
 
@@ -116,7 +116,7 @@ describe('AgentService', () => {
         'Do a task',
         false,
         expect.objectContaining({
-          maxTurns: 20,
+          maxMessages: 20,
           maxContextTokens: 50000
         })
       )
@@ -124,7 +124,7 @@ describe('AgentService', () => {
 
     it('should override config limits with option values', async () => {
       const config: Config = {
-        limits: { max_turns: 20, max_context_tokens: 50000 }
+        limits: { max_messages: 20, max_context_tokens: 50000 }
       }
       service = new AgentService(sessionDomain, agentDomain, config)
 
@@ -132,7 +132,7 @@ describe('AgentService', () => {
         'Do a task',
         { working_dir: '/tmp' },
         {
-          maxTurns: 8,
+          maxMessages: 8,
           maxContextTokens: 20000
         }
       )
@@ -142,18 +142,18 @@ describe('AgentService', () => {
         'Do a task',
         false,
         expect.objectContaining({
-          maxTurns: 8,
+          maxMessages: 8,
           maxContextTokens: 20000
         })
       )
     })
 
-    it('should treat 0 as a valid maxTurns value and not override with defaults', async () => {
+    it('should treat 0 as a valid maxMessages value and not override with defaults', async () => {
       await service.start(
         'Do a task',
         { working_dir: '/tmp' },
         {
-          maxTurns: 0,
+          maxMessages: 0,
           maxContextTokens: 0
         }
       )
@@ -163,7 +163,7 @@ describe('AgentService', () => {
         'Do a task',
         false,
         expect.objectContaining({
-          maxTurns: 0,
+          maxMessages: 0,
           maxContextTokens: 0
         })
       )
@@ -249,7 +249,7 @@ describe('AgentService', () => {
         { working_dir: '/tmp' },
         {
           model: 'claude-haiku-4-5',
-          maxTurns: 10
+          maxMessages: 10
         }
       )
 
@@ -259,7 +259,7 @@ describe('AgentService', () => {
         false,
         expect.objectContaining({
           model: 'claude-haiku-4-5',
-          maxTurns: 10,
+          maxMessages: 10,
           maxContextTokens: -1
         })
       )
@@ -282,13 +282,13 @@ describe('AgentService', () => {
       expect(sessionDomain.getPath).toHaveBeenCalledWith(mockSession.id)
       expect(agentDomain.run).toHaveBeenCalledWith(mockSession, 'Do a task', false, {
         model: 'claude-opus-4-6',
-        maxTurns: -1,
+        maxMessages: -1,
         maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
       expect(agentDomain.isLimitExceeded).toHaveBeenCalledWith(mockResponse, {
         model: 'claude-opus-4-6',
-        maxTurns: -1,
+        maxMessages: -1,
         maxContextTokens: -1
       })
       expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
@@ -300,69 +300,38 @@ describe('AgentService', () => {
       await service.start('Do a task', { working_dir: '/tmp' })
 
       expect(agentDomain.run).toHaveBeenCalledWith(mockSession, 'Do a task', false, {
-        maxTurns: -1,
+        maxMessages: -1,
         maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
     })
 
-    it('should run graceful termination when limit is exceeded', async () => {
-      const gracefulResponse = { ...mockResponse, content: 'Graceful summary' }
+    it('should call onLimitExceeded when limit is exceeded', async () => {
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
-      vi.mocked(agentDomain.run)
-        .mockResolvedValueOnce(mockResponse)
-        .mockResolvedValueOnce(gracefulResponse)
+      const onLimitExceeded = vi.fn()
 
-      const result = await service.start('Do a task', { working_dir: '/tmp' })
+      const result = await service.start('Do a task', { working_dir: '/tmp' }, { onLimitExceeded })
 
-      expect(agentDomain.run).toHaveBeenCalledTimes(2)
-      expect(agentDomain.run).toHaveBeenLastCalledWith(
-        mockSession,
-        expect.stringContaining('You have reached the operation limit'),
-        true,
-        expect.objectContaining({ sessionFilePath: SESSION_FILE_PATH })
-      )
-      expect(result.response).toBe(gracefulResponse)
+      expect(agentDomain.run).toHaveBeenCalledTimes(1)
+      expect(onLimitExceeded).toHaveBeenCalledTimes(1)
+      expect(result.response).toBe(mockResponse)
     })
 
-    it('should pass isMainTurn=false to first run, true to graceful termination', async () => {
+    it('should not call onLimitExceeded when limit is not exceeded', async () => {
+      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(false)
+      const onLimitExceeded = vi.fn()
+
+      await service.start('Do a task', { working_dir: '/tmp' }, { onLimitExceeded })
+
+      expect(onLimitExceeded).not.toHaveBeenCalled()
+    })
+
+    it('should call updateStatus after limit check', async () => {
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
-      vi.mocked(agentDomain.run)
-        .mockResolvedValueOnce(mockResponse)
-        .mockResolvedValueOnce(mockResponse)
 
       await service.start('Do a task', { working_dir: '/tmp' })
 
-      expect(agentDomain.run).toHaveBeenNthCalledWith(
-        1,
-        mockSession,
-        'Do a task',
-        false,
-        expect.any(Object)
-      )
-      expect(agentDomain.run).toHaveBeenNthCalledWith(
-        2,
-        mockSession,
-        expect.any(String),
-        true,
-        expect.any(Object)
-      )
-    })
-
-    it('should call updateStatus after limit check completes', async () => {
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
-      vi.mocked(agentDomain.run)
-        .mockResolvedValueOnce(mockResponse)
-        .mockResolvedValueOnce(mockResponse)
-
-      await service.start('Do a task', { working_dir: '/tmp' })
-
-      const runCallCount = vi.mocked(agentDomain.run).mock.calls.length
-      const updateStatusCallIndex = vi.mocked(sessionDomain.updateStatus).mock
-        .invocationCallOrder[0]
-      const lastRunCallIndex = vi.mocked(agentDomain.run).mock.invocationCallOrder[runCallCount - 1]
-
-      expect(updateStatusCallIndex).toBeGreaterThan(lastRunCallIndex)
+      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
     })
   })
 
@@ -376,14 +345,14 @@ describe('AgentService', () => {
       expect(sessionDomain.getPath).toHaveBeenCalledWith(mockSession.id)
       expect(agentDomain.resume).toHaveBeenCalledWith(mockSession, 'Continue', {
         model: 'claude-sonnet-4-6',
-        maxTurns: -1,
+        maxMessages: -1,
         maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
       expect(sessionDomain.save).toHaveBeenCalledWith(mockSession)
       expect(agentDomain.isLimitExceeded).toHaveBeenCalledWith(mockResponse, {
         model: 'claude-sonnet-4-6',
-        maxTurns: -1,
+        maxMessages: -1,
         maxContextTokens: -1
       })
       expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
@@ -394,7 +363,7 @@ describe('AgentService', () => {
       await service.resume(mockSession.id, 'Continue')
 
       expect(agentDomain.resume).toHaveBeenCalledWith(mockSession, 'Continue', {
-        maxTurns: -1,
+        maxMessages: -1,
         maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
@@ -409,31 +378,25 @@ describe('AgentService', () => {
       expect(saveCallIndex).toBeLessThan(limitCheckIndex)
     })
 
-    it('should run graceful termination when limit is exceeded', async () => {
-      const gracefulResponse = { ...mockResponse, content: 'Graceful summary' }
+    it('should call onLimitExceeded when limit is exceeded', async () => {
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
-      vi.mocked(agentDomain.run).mockResolvedValueOnce(gracefulResponse)
+      const onLimitExceeded = vi.fn()
 
-      const result = await service.resume(mockSession.id, 'Continue')
-
-      expect(agentDomain.run).toHaveBeenCalledTimes(1)
-      expect(agentDomain.run).toHaveBeenCalledWith(
-        mockSession,
-        expect.stringContaining('You have reached the operation limit'),
-        true,
-        expect.objectContaining({ sessionFilePath: SESSION_FILE_PATH })
-      )
-      expect(result).toBe(gracefulResponse)
-    })
-
-    it('should call agentDomain.run instead of resume when limit is exceeded', async () => {
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
-      vi.mocked(agentDomain.run).mockResolvedValueOnce(mockResponse)
-
-      await service.resume(mockSession.id, 'Continue')
+      const result = await service.resume(mockSession.id, 'Continue', { onLimitExceeded })
 
       expect(agentDomain.resume).toHaveBeenCalledTimes(1)
-      expect(agentDomain.run).toHaveBeenCalledTimes(1)
+      expect(agentDomain.run).not.toHaveBeenCalled()
+      expect(onLimitExceeded).toHaveBeenCalledTimes(1)
+      expect(result).toBe(mockResponse)
+    })
+
+    it('should not call onLimitExceeded when limit is not exceeded', async () => {
+      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(false)
+      const onLimitExceeded = vi.fn()
+
+      await service.resume(mockSession.id, 'Continue', { onLimitExceeded })
+
+      expect(onLimitExceeded).not.toHaveBeenCalled()
     })
 
     it('should update status to active after handling limit check', async () => {

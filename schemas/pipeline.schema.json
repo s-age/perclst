@@ -77,9 +77,9 @@
           "items": { "type": "string" },
           "description": "Tools to deny."
         },
-        "max_turns": {
+        "max_messages": {
           "type": "integer",
-          "description": "Turn limit before graceful termination."
+          "description": "Message count limit before graceful termination."
         },
         "max_context_tokens": {
           "type": "integer",
