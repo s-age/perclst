@@ -47,14 +47,17 @@ describe('showCommand — display', () => {
     })
 
     // Setup default parseShowSession behavior
-    vi.mocked(parseShowSession).mockImplementation((input: Record<string, unknown>) => ({
-      sessionId: input.sessionId as string,
-      format: input.format as string | undefined,
-      head: input.head as string | undefined,
-      tail: input.tail as string | undefined,
-      order: input.order as string | undefined,
-      length: input.length ? parseInt(input.length as string, 10) : undefined
-    }))
+    vi.mocked(parseShowSession).mockImplementation((raw: unknown) => {
+      const input = raw as Record<string, unknown>
+      return {
+        sessionId: input.sessionId as string,
+        format: (input.format as 'text' | 'json' | undefined) ?? 'text',
+        order: (input.order as 'asc' | 'desc' | undefined) ?? 'asc',
+        head: input.head as number | undefined,
+        tail: input.tail as number | undefined,
+        length: input.length ? parseInt(input.length as string, 10) : undefined
+      }
+    })
 
     // Setup ansis.strip to return input as-is (default)
     vi.mocked(ansis.strip).mockImplementation((text: string) => text)

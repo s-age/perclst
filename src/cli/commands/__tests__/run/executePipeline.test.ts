@@ -40,8 +40,8 @@ describe('executePipeline', () => {
     vi.clearAllMocks()
 
     mockStdout = { print: vi.fn() }
-    vi.mocked(stdout).print = mockStdout.print
-    vi.mocked(stderr).print = vi.fn()
+    vi.mocked(stdout).print = mockStdout.print as never
+    vi.mocked(stderr).print = vi.fn() as never
 
     mockPipelineFileService = {
       loadRawPipeline: vi.fn(),
@@ -68,13 +68,13 @@ describe('executePipeline', () => {
       display: { header_color: '#D97757', no_color: false }
     } as Config
 
-    vi.mocked(container).resolve = vi.fn((token) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.PipelineFileService) return mockPipelineFileService
       if (token === TOKENS.PipelineService) return mockPipelineService
       if (token === TOKENS.AbortService) return mockAbortService
       if (token === TOKENS.Config) return mockConfig
       return null
-    })
+    }) as never
 
     vi.mocked(parseRunOptions).mockReturnValue({
       pipelinePath: 'test.json',
@@ -96,7 +96,8 @@ describe('executePipeline', () => {
 
     const mockExit = vi.fn()
     const mockOnce = vi.fn()
-    global.process = { ...process, exit: mockExit, once: mockOnce }
+    // eslint-disable-next-line local/no-any
+    global.process = { ...process, exit: mockExit as any, once: mockOnce as any }
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
   })
 
@@ -112,7 +113,7 @@ describe('executePipeline', () => {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -143,7 +144,7 @@ describe('executePipeline', () => {
       yield results[1]
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -156,7 +157,7 @@ describe('executePipeline', () => {
       yield undefined
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -183,7 +184,7 @@ describe('executePipeline', () => {
       yield undefined
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -210,7 +211,7 @@ describe('executePipeline', () => {
       yield undefined
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -228,7 +229,7 @@ describe('executePipeline', () => {
       throw new Error('File not found')
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})

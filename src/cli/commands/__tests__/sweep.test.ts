@@ -18,7 +18,7 @@ const mockSessionService = {
   sweep: vi.fn()
 }
 
-vi.mocked(container).resolve = vi.fn(() => mockSessionService)
+vi.mocked(container).resolve = vi.fn(() => mockSessionService) as never
 
 describe('sweepCommand', () => {
   beforeEach(() => {

@@ -36,12 +36,12 @@ describe('resumeCommand', () => {
     vi.clearAllMocks()
 
     // Setup container.resolve mock to return services
-    vi.mocked(container.resolve).mockImplementation((token: string) => {
+    vi.mocked(container.resolve).mockImplementation((token: unknown) => {
       if (token === TOKENS.SessionService) return mockSessionService as unknown
       if (token === TOKENS.AgentService) return mockAgentService as unknown
       if (token === TOKENS.Config) return mockConfig as unknown
-      throw new Error(`Unknown token: ${token}`)
-    })
+      throw new Error(`Unknown token: ${String(token)}`)
+    }) as unknown as typeof container.resolve
 
     // Setup default successful response
     vi.mocked(mockAgentService.resume).mockResolvedValue({
@@ -296,9 +296,9 @@ describe('resumeCommand', () => {
 
     await resumeCommand(sessionId, instruction, options)
 
-    const printResponseCall = vi.mocked(printResponse).mock.calls[0]
-    expect(printResponseCall[1].silentThoughts).toBe(true)
-    expect(printResponseCall[1].silentToolResponse).toBe(true)
+    const printResponseCall = vi.mocked(printResponse).mock.calls[0]!
+    expect(printResponseCall[1]!.silentThoughts).toBe(true)
+    expect(printResponseCall[1]!.silentToolResponse).toBe(true)
   })
 
   it('should handle ValidationError by printing error message and exiting', async () => {
@@ -330,7 +330,7 @@ describe('resumeCommand', () => {
     const instruction = 'test'
     const options = {}
     const rateLimitError = new RateLimitError('Rate limit exceeded')
-    rateLimitError.resetInfo = '2026-04-23T15:30:00Z'
+    ;(rateLimitError as { resetInfo: string | undefined }).resetInfo = '2026-04-23T15:30:00Z'
 
     vi.mocked(mockAgentService.resume).mockRejectedValue(rateLimitError)
 
@@ -353,7 +353,7 @@ describe('resumeCommand', () => {
     const instruction = 'test'
     const options = {}
     const rateLimitError = new RateLimitError('Rate limit exceeded')
-    rateLimitError.resetInfo = undefined
+    ;(rateLimitError as { resetInfo: string | undefined }).resetInfo = undefined
 
     vi.mocked(mockAgentService.resume).mockRejectedValue(rateLimitError)
 
@@ -422,8 +422,8 @@ describe('resumeCommand', () => {
     // Simulate calling the stream event handler
     if (streamHandler) {
       const mockEvent: AgentStreamEvent = {
-        type: 'text',
-        content: 'streaming text'
+        type: 'thought',
+        thinking: 'streaming text'
       }
       streamHandler(mockEvent)
 

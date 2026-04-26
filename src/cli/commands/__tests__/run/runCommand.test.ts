@@ -45,8 +45,8 @@ describe('runCommand', () => {
 
     mockStdout = { print: vi.fn() }
     mockStderr = { print: vi.fn() }
-    vi.mocked(stdout).print = mockStdout.print
-    vi.mocked(stderr).print = mockStderr.print
+    vi.mocked(stdout).print = mockStdout.print as never
+    vi.mocked(stderr).print = mockStderr.print as never
 
     mockPipelineFileService = {
       loadRawPipeline: vi.fn(),
@@ -73,13 +73,13 @@ describe('runCommand', () => {
       display: { header_color: '#D97757', no_color: false }
     } as Config
 
-    vi.mocked(container).resolve = vi.fn((token) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.PipelineFileService) return mockPipelineFileService
       if (token === TOKENS.PipelineService) return mockPipelineService
       if (token === TOKENS.AbortService) return mockAbortService
       if (token === TOKENS.Config) return mockConfig
       return null
-    })
+    }) as never
 
     vi.mocked(parseRunOptions).mockReturnValue({
       pipelinePath: 'test.json',
@@ -105,7 +105,7 @@ describe('runCommand', () => {
     global.process = { ...process, exit: mockExit, once: mockOnce } as any
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
   })
 
@@ -149,7 +149,7 @@ describe('runCommand', () => {
   it('should handle PipelineMaxRetriesError', async () => {
     mockPipelineService.run.mockImplementation(async function* () {
       yield undefined
-      throw new PipelineMaxRetriesError('Max retries exceeded')
+      throw new PipelineMaxRetriesError(0, 3)
     })
 
     await runCommand('test.json', {})
@@ -161,9 +161,7 @@ describe('runCommand', () => {
   it('should handle RateLimitError with reset info', async () => {
     mockPipelineService.run.mockImplementation(async function* () {
       yield undefined
-      const error = new RateLimitError('Rate limited')
-      error.resetInfo = '2024-01-01 12:00:00'
-      throw error
+      throw new RateLimitError('2024-01-01 12:00:00')
     })
 
     await runCommand('test.json', {})

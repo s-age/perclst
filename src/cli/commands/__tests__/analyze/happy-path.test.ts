@@ -26,9 +26,7 @@ function createMockSession(overrides?: Partial<Session>): Session {
     claude_session_id: 'claude-123',
     working_dir: '/home/user/project',
     procedure: undefined,
-    metadata: { status: 'completed', tags: [] },
-    injected_skills: [],
-    turns: [],
+    metadata: { status: 'completed', labels: [] },
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
     ...overrides
@@ -40,10 +38,9 @@ function createMockAnalysisSummary(overrides?: Partial<AnalysisSummary>): Analys
   return {
     turnsBreakdown: {
       userInstructions: 2,
-      thinking: 1,
+      apiCalls: 1,
       toolCalls: 3,
       toolResults: 3,
-      assistantResponse: 2,
       total: 11
     },
     toolUses: [],
@@ -82,11 +79,14 @@ describe('analyzeCommand - happy path', () => {
       }
     })
 
-    vi.mocked(parseAnalyzeSession).mockImplementation((input) => ({
-      sessionId: input.sessionId,
-      format: input.format,
-      printDetail: input.printDetail ?? false
-    }))
+    vi.mocked(parseAnalyzeSession).mockImplementation((raw: unknown) => {
+      const input = raw as Record<string, unknown>
+      return {
+        sessionId: input.sessionId as string,
+        format: (input.format as 'text' | 'json' | undefined) ?? 'text',
+        printDetail: (input.printDetail as boolean | undefined) ?? false
+      }
+    })
   })
 
   it('calls parseAnalyzeSession with input options', async () => {
@@ -173,7 +173,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -191,7 +191,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -209,7 +209,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -237,7 +237,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: true
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -264,7 +264,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -287,7 +287,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -308,7 +308,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -334,7 +334,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -360,7 +360,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -380,8 +380,18 @@ describe('analyzeCommand - happy path', () => {
           userMessage: undefined,
           thinkingBlocks: [],
           toolCalls: [
-            { name: 'Bash', input: { command: 'ls' }, result: 'file1.txt\nfile2.txt' },
-            { name: 'Read', input: { file_path: '/tmp/test' }, result: 'content here' }
+            {
+              name: 'Bash',
+              input: { command: 'ls' },
+              result: 'file1.txt\nfile2.txt',
+              isError: false
+            },
+            {
+              name: 'Read',
+              input: { file_path: '/tmp/test' },
+              result: 'content here',
+              isError: false
+            }
           ],
           assistantText: undefined
         }
@@ -390,7 +400,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: true
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -410,7 +420,9 @@ describe('analyzeCommand - happy path', () => {
         {
           userMessage: undefined,
           thinkingBlocks: [],
-          toolCalls: [{ name: 'Bash', input: { command: 'sleep 10' }, result: null }],
+          toolCalls: [
+            { name: 'Bash', input: { command: 'sleep 10' }, result: null, isError: false }
+          ],
           assistantText: undefined
         }
       ]
@@ -418,7 +430,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: true
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -445,7 +457,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: true
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
@@ -474,7 +486,7 @@ describe('analyzeCommand - happy path', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: true
     })
     mockSessionService.resolveId.mockResolvedValue('resolved-123')
