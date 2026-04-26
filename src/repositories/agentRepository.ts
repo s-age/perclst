@@ -1,4 +1,4 @@
-import { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
+import type { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
 import {
   createParseState,
   processLine,
@@ -14,7 +14,7 @@ import type { ClaudeAction, RawOutput } from '@src/types/claudeCode'
 import type { AgentStreamEvent } from '@src/types/agent'
 
 export class ClaudeCodeRepository implements IClaudeCodeRepository {
-  private infra = new ClaudeCodeInfra()
+  constructor(private infra: ClaudeCodeInfra) {}
 
   private classifyExitError(err: RawExitError): never {
     const { code, stderr } = err

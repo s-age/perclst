@@ -86,3 +86,54 @@ export function listDirEntries(dir: string): Dirent[] {
 export function isDirectory(path: string): boolean {
   return statSync(path).isDirectory()
 }
+
+export class FsInfra {
+  readJson<T>(path: string): T {
+    return readJson<T>(path)
+  }
+  writeJson(path: string, data: unknown): void {
+    writeJson(path, data)
+  }
+  readYaml<T>(path: string): T {
+    return readYaml<T>(path)
+  }
+  writeYaml(path: string, data: unknown): void {
+    writeYaml(path, data)
+  }
+  fileExists(path: string): boolean {
+    return fileExists(path)
+  }
+  removeFile(path: string): Promise<void> {
+    return removeFile(path)
+  }
+  listFiles(dir: string, ext: string): string[] {
+    return listFiles(dir, ext)
+  }
+  ensureDir(dir: string): void {
+    ensureDir(dir)
+  }
+  readText(path: string): string {
+    return readText(path)
+  }
+  writeText(path: string, content: string): void {
+    writeText(path, content)
+  }
+  removeFileSync(path: string): void {
+    removeFileSync(path)
+  }
+  cleanDir(dirPath: string): void {
+    cleanDir(dirPath)
+  }
+  homeDir(): string {
+    return homeDir()
+  }
+  currentWorkingDir(): string {
+    return currentWorkingDir()
+  }
+  listDirEntries(dir: string): Dirent[] {
+    return listDirEntries(dir)
+  }
+  isDirectory(path: string): boolean {
+    return isDirectory(path)
+  }
+}

@@ -1,222 +1,31 @@
 import { container } from './container'
 import { TOKENS } from './identifiers'
+import { setupInfrastructures, type Infras } from './setupInfrastructures'
+import { setupRepositories, type Repos } from './setupRepositories'
+import { setupDomains, type Domains } from './setupDomains'
+import { setupServices, type Services } from './setupServices'
 import { loadConfig, resolveSessionsDir, resolveKnowledgeDir } from '@src/repositories/config'
-import { SessionRepository } from '@src/repositories/sessions'
-import { ClaudeSessionRepository } from '@src/repositories/claudeSessions'
-import { ProcedureRepository } from '@src/repositories/procedures'
-import { CheckerRepository } from '@src/repositories/checkerRepository'
-import { TestStrategyRepository } from '@src/repositories/testStrategyRepository'
-import { SessionDomain } from '@src/domains/session'
-import { AgentDomain } from '@src/domains/agent'
-import { PipelineDomain } from '@src/domains/pipeline'
-import { AnalyzeDomain } from '@src/domains/analyze'
-import { ImportDomain } from '@src/domains/import'
-import { CheckerDomain } from '@src/domains/checker'
-import { TestStrategyDomain } from '@src/domains/testStrategy'
-import { AbortService } from '@src/services/abortService'
-import { SessionService } from '@src/services/sessionService'
-import { AgentService } from '@src/services/agentService'
-import { AnalyzeService } from '@src/services/analyzeService'
-import { ImportService } from '@src/services/importService'
-import { CheckerService } from '@src/services/checkerService'
-import { TestStrategistService } from '@src/services/testStrategistService'
-import { PipelineService } from '@src/services/pipelineService'
-import { ClaudeCodeRepository } from '@src/repositories/agentRepository'
-import { ShellRepository } from '@src/repositories/shell'
-import { ScriptDomain } from '@src/domains/script'
-import { KnowledgeSearchDomain } from '@src/domains/knowledgeSearch'
-import { KnowledgeSearchRepository } from '@src/repositories/knowledgeSearchRepository'
-import { KnowledgeSearchService } from '@src/services/knowledgeSearchService'
-import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
-import { TsAnalysisDomain } from '@src/domains/tsAnalysis'
-import { TsAnalysisService } from '@src/services/tsAnalysisService'
-import { PipelineFileRepository } from '@src/repositories/fileMoveRepository'
-import { GitRepository } from '@src/repositories/gitRepository'
-import { RejectionFeedbackRepository } from '@src/repositories/rejectionFeedback'
-import { PipelineFileDomain } from '@src/domains/pipelineFile'
-import { PipelineTaskDomain } from '@src/domains/pipelineTask'
-import { PipelineLoaderDomain } from '@src/domains/pipelineLoader'
-import { PipelineFileService } from '@src/services/pipelineFileService'
-import { PermissionPipeRepository } from '@src/repositories/permissionPipeRepository'
-import { PermissionPipeDomain } from '@src/domains/permissionPipe'
-import { PermissionPipeService } from '@src/services/permissionPipeService'
-import { GitPendingChangesDomain } from '@src/domains/gitPendingChanges'
-import { GitPendingChangesService } from '@src/services/gitPendingChangesService'
 import { DEFAULT_MODEL } from '@src/constants/config'
-import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 
-type Repos = {
-  fileMoveRepo: PipelineFileRepository
-  gitRepo: GitRepository
-  rejectionFeedbackRepo: RejectionFeedbackRepository
-  claudeCodeRepo: ClaudeCodeRepository
-  shellRepo: ShellRepository
-  sessionRepo: SessionRepository
-  claudeSessionRepo: ClaudeSessionRepository
-  procedureRepo: ProcedureRepository
-  checkerRepo: CheckerRepository
-  testStrategyRepo: TestStrategyRepository
-  knowledgeSearchRepo: KnowledgeSearchRepository
-  tsAnalysisRepo: TsAnalysisRepository
+export type { Infras, Repos, Domains, Services }
+
+export type ContainerOverrides = {
+  infras?: Partial<Infras>
+  repos?: Partial<Repos>
+  domains?: Partial<Domains>
+  services?: Partial<Services>
 }
 
-type Domains = {
-  pipelineFileDomain: PipelineFileDomain
-  pipelineTaskDomain: PipelineTaskDomain
-  pipelineLoaderDomain: PipelineLoaderDomain
-  scriptDomain: ScriptDomain
-  sessionDomain: SessionDomain
-  agentDomain: AgentDomain
-  pipelineDomain: PipelineDomain
-  analyzeDomain: AnalyzeDomain
-  importDomain: ImportDomain
-  checkerDomain: CheckerDomain
-  testStrategyDomain: TestStrategyDomain
-  knowledgeSearchDomain: KnowledgeSearchDomain
-  tsAnalysisDomain: TsAnalysisDomain
-  gitPendingChangesDomain: GitPendingChangesDomain
-}
-
-function buildRepos(sessionsDir: string, knowledgeDir: string): Repos {
-  return {
-    fileMoveRepo: new PipelineFileRepository(),
-    gitRepo: new GitRepository(),
-    rejectionFeedbackRepo: new RejectionFeedbackRepository(),
-    claudeCodeRepo: new ClaudeCodeRepository(),
-    shellRepo: new ShellRepository(),
-    sessionRepo: new SessionRepository(sessionsDir),
-    claudeSessionRepo: new ClaudeSessionRepository(),
-    procedureRepo: new ProcedureRepository(),
-    checkerRepo: new CheckerRepository(),
-    testStrategyRepo: new TestStrategyRepository(
-      new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
-    ),
-    knowledgeSearchRepo: new KnowledgeSearchRepository(knowledgeDir),
-    tsAnalysisRepo: new TsAnalysisRepository(new TsAnalyzer())
-  }
-}
-
-function buildDomains(model: string, repos: Repos): Domains {
-  const {
-    fileMoveRepo,
-    gitRepo,
-    rejectionFeedbackRepo,
-    claudeCodeRepo,
-    shellRepo,
-    sessionRepo,
-    claudeSessionRepo,
-    procedureRepo,
-    checkerRepo,
-    testStrategyRepo,
-    knowledgeSearchRepo,
-    tsAnalysisRepo
-  } = repos
-  const sessionDomain = new SessionDomain(sessionRepo)
-  const agentDomain = new AgentDomain(model, claudeCodeRepo, procedureRepo)
-  return {
-    pipelineFileDomain: new PipelineFileDomain(fileMoveRepo, gitRepo),
-    pipelineTaskDomain: new PipelineTaskDomain(),
-    pipelineLoaderDomain: new PipelineLoaderDomain(fileMoveRepo),
-    scriptDomain: new ScriptDomain(shellRepo),
-    sessionDomain,
-    agentDomain,
-    pipelineDomain: new PipelineDomain(agentDomain, sessionDomain, rejectionFeedbackRepo),
-    analyzeDomain: new AnalyzeDomain(sessionDomain, claudeSessionRepo),
-    importDomain: new ImportDomain(claudeSessionRepo),
-    checkerDomain: new CheckerDomain(checkerRepo),
-    testStrategyDomain: new TestStrategyDomain(testStrategyRepo),
-    knowledgeSearchDomain: new KnowledgeSearchDomain(knowledgeSearchRepo),
-    tsAnalysisDomain: new TsAnalysisDomain(tsAnalysisRepo),
-    gitPendingChangesDomain: new GitPendingChangesDomain(gitRepo)
-  }
-}
-
-function registerReposAndDomains(
-  config: ReturnType<typeof loadConfig>,
-  repos: Repos,
-  domains: Domains
-): void {
-  container.register(TOKENS.Config, config)
-  container.register(TOKENS.ShellRepository, repos.shellRepo)
-  container.register(TOKENS.ClaudeCodeRepository, repos.claudeCodeRepo)
-  container.register(TOKENS.SessionRepository, repos.sessionRepo)
-  container.register(TOKENS.ClaudeSessionRepository, repos.claudeSessionRepo)
-  container.register(TOKENS.ProcedureRepository, repos.procedureRepo)
-  container.register(TOKENS.CheckerRepository, repos.checkerRepo)
-  container.register(TOKENS.TestStrategyRepository, repos.testStrategyRepo)
-  container.register(TOKENS.KnowledgeSearchRepository, repos.knowledgeSearchRepo)
-  container.register(TOKENS.TsAnalysisRepository, repos.tsAnalysisRepo)
-  container.register(TOKENS.PipelineFileRepository, repos.fileMoveRepo)
-  container.register(TOKENS.GitRepository, repos.gitRepo)
-  container.register(TOKENS.RejectionFeedbackRepository, repos.rejectionFeedbackRepo)
-  container.register(TOKENS.ScriptDomain, domains.scriptDomain)
-  container.register(TOKENS.PipelineFileDomain, domains.pipelineFileDomain)
-  container.register(TOKENS.PipelineTaskDomain, domains.pipelineTaskDomain)
-  container.register(TOKENS.PipelineLoaderDomain, domains.pipelineLoaderDomain)
-  container.register(TOKENS.SessionDomain, domains.sessionDomain)
-  container.register(TOKENS.AgentDomain, domains.agentDomain)
-  container.register(TOKENS.PipelineDomain, domains.pipelineDomain)
-  container.register(TOKENS.AnalyzeDomain, domains.analyzeDomain)
-  container.register(TOKENS.ImportDomain, domains.importDomain)
-  container.register(TOKENS.CheckerDomain, domains.checkerDomain)
-  container.register(TOKENS.TestStrategyDomain, domains.testStrategyDomain)
-  container.register(TOKENS.KnowledgeSearchDomain, domains.knowledgeSearchDomain)
-  container.register(TOKENS.TsAnalysisDomain, domains.tsAnalysisDomain)
-}
-
-function registerServices(config: ReturnType<typeof loadConfig>, domains: Domains): void {
-  const {
-    pipelineFileDomain,
-    pipelineTaskDomain,
-    pipelineLoaderDomain,
-    sessionDomain,
-    agentDomain,
-    pipelineDomain,
-    scriptDomain,
-    analyzeDomain,
-    importDomain,
-    checkerDomain,
-    testStrategyDomain,
-    knowledgeSearchDomain,
-    tsAnalysisDomain,
-    gitPendingChangesDomain
-  } = domains
-  const abortService = new AbortService()
-  container.register(TOKENS.AbortService, abortService)
-  container.register(TOKENS.SessionService, new SessionService(sessionDomain))
-  container.register(TOKENS.AgentService, new AgentService(sessionDomain, agentDomain, config))
-  container.register(
-    TOKENS.PipelineService,
-    new PipelineService(pipelineDomain, scriptDomain, pipelineTaskDomain, pipelineLoaderDomain)
-  )
-  container.register(TOKENS.AnalyzeService, new AnalyzeService(analyzeDomain))
-  container.register(TOKENS.ImportService, new ImportService(sessionDomain, importDomain))
-  container.register(TOKENS.CheckerService, new CheckerService(checkerDomain))
-  container.register(TOKENS.TestStrategistService, new TestStrategistService(testStrategyDomain))
-  container.register(
-    TOKENS.KnowledgeSearchService,
-    new KnowledgeSearchService(knowledgeSearchDomain)
-  )
-  container.register(TOKENS.TsAnalysisService, new TsAnalysisService(tsAnalysisDomain))
-  container.register(TOKENS.PipelineFileService, new PipelineFileService(pipelineFileDomain))
-  const permPipeRepo = new PermissionPipeRepository()
-  const permPipeDomain = new PermissionPipeDomain(permPipeRepo)
-  container.register(TOKENS.PermissionPipeRepository, permPipeRepo)
-  container.register(TOKENS.PermissionPipeDomain, permPipeDomain)
-  container.register(TOKENS.PermissionPipeService, new PermissionPipeService(permPipeDomain))
-  container.register(
-    TOKENS.GitPendingChangesService,
-    new GitPendingChangesService(gitPendingChangesDomain)
-  )
-}
-
-export function setupContainer(): void {
+export function setupContainer(overrides?: ContainerOverrides): void {
   const config = loadConfig()
   const sessionsDir = resolveSessionsDir(config)
   const knowledgeDir = resolveKnowledgeDir()
   const model = config.model ?? DEFAULT_MODEL
-  const repos = buildRepos(sessionsDir, knowledgeDir)
-  const domains = buildDomains(model, repos)
-  registerReposAndDomains(config, repos, domains)
-  registerServices(config, domains)
+
+  container.register(TOKENS.Config, config)
+
+  const infras = setupInfrastructures(overrides?.infras)
+  const repos = setupRepositories(infras, { sessionsDir, knowledgeDir }, overrides?.repos)
+  const domains = setupDomains(model, repos, overrides?.domains)
+  setupServices(config, domains, repos, overrides?.services)
 }

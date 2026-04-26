@@ -1,30 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-// vi.hoisted: both the mock infra object and the constructor function are created together so the
-// factory can reference them without issues (vi.fn() inside vi.mock factories is unreliable because
-// mock factories are hoisted before module scope, but vi.hoisted values are evaluated first)
-const { mockInfra, MockClaudeCodeInfra } = vi.hoisted(() => {
-  const infra = {
-    buildArgs: vi.fn(),
-    resolveJsonlPath: vi.fn(),
-    readJsonlContent: vi.fn(),
-    runClaude: vi.fn(),
-    writeStderr: vi.fn()
-  }
-  // regular function (not arrow) so it is newable; returning an object from a constructor makes
-  // `new` yield that object — i.e. `new ClaudeCodeInfra()` will be `infra`
-  function MockInfra(): typeof infra {
-    return infra
-  }
-  return { mockInfra: infra, MockClaudeCodeInfra: MockInfra }
-})
-
-vi.mock('@src/infrastructures/claudeCode', () => ({
-  ClaudeCodeInfra: MockClaudeCodeInfra
-}))
-
-const mockParseState = {}
-
 vi.mock('@src/repositories/parsers/claudeCodeParser', () => ({
   createParseState: vi.fn(),
   processLine: vi.fn(),
@@ -37,6 +12,7 @@ vi.mock('@src/repositories/parsers/claudeSessionParser', () => ({
 }))
 
 import { ClaudeCodeRepository } from '../agentRepository'
+import type { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
 import {
   createParseState,
   processLine,
@@ -98,20 +74,27 @@ const forkAction: ForkAction = {
 // Tests
 // ---------------------------------------------------------------------------
 
+const mockParseState = {}
+
 describe('ClaudeCodeRepository', () => {
   let repo: ClaudeCodeRepository
+  let mockInfra: ClaudeCodeInfra
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockInfra.buildArgs.mockReturnValue(['-p', '--output-format', 'stream-json'])
-    mockInfra.resolveJsonlPath.mockReturnValue('/path/to/session.jsonl')
-    mockInfra.readJsonlContent.mockReturnValue('')
-    mockInfra.runClaude.mockReturnValue(yieldLines())
+    mockInfra = {
+      buildArgs: vi.fn().mockReturnValue(['-p', '--output-format', 'stream-json']),
+      resolveJsonlPath: vi.fn().mockReturnValue('/path/to/session.jsonl'),
+      readJsonlContent: vi.fn().mockReturnValue(''),
+      runClaude: vi.fn().mockReturnValue(yieldLines()),
+      writeStderr: vi.fn(),
+      spawnInteractive: vi.fn()
+    } as unknown as ClaudeCodeInfra
     vi.mocked(createParseState).mockReturnValue(
       mockParseState as ReturnType<typeof createParseState>
     )
     vi.mocked(finalizeParseState).mockReturnValue(stubRawOutput)
-    repo = new ClaudeCodeRepository()
+    repo = new ClaudeCodeRepository(mockInfra)
   })
 
   describe('dispatch', () => {
@@ -126,8 +109,8 @@ describe('ClaudeCodeRepository', () => {
     })
 
     it('calls processLine for each yielded line and finalizeParseState with the jsonl baseline', async () => {
-      mockInfra.runClaude.mockReturnValue(yieldLines('line1', 'line2'))
-      mockInfra.readJsonlContent.mockReturnValue('a\nb\nc\nd\ne')
+      mockInfra.runClaude = vi.fn().mockReturnValue(yieldLines('line1', 'line2'))
+      mockInfra.readJsonlContent = vi.fn().mockReturnValue('a\nb\nc\nd\ne')
 
       await repo.dispatch(startAction)
 
@@ -150,7 +133,7 @@ describe('ClaudeCodeRepository', () => {
 
     it('calls emitStreamEvents for each yielded line when onStreamEvent is provided', async () => {
       const onStreamEvent = vi.fn()
-      mockInfra.runClaude.mockReturnValue(yieldLines('line1', 'line2'))
+      mockInfra.runClaude = vi.fn().mockReturnValue(yieldLines('line1', 'line2'))
 
       await repo.dispatch(startAction, onStreamEvent)
 
@@ -167,7 +150,7 @@ describe('ClaudeCodeRepository', () => {
     })
 
     it('does not call emitStreamEvents when onStreamEvent is omitted', async () => {
-      mockInfra.runClaude.mockReturnValue(yieldLines('line1'))
+      mockInfra.runClaude = vi.fn().mockReturnValue(yieldLines('line1'))
 
       await repo.dispatch(startAction)
 
@@ -179,25 +162,27 @@ describe('ClaudeCodeRepository', () => {
     // -----------------------------------------------------------------------
 
     it('throws RateLimitError when RawExitError stderr contains "you\'ve hit your limit"', async () => {
-      mockInfra.runClaude.mockReturnValue(
-        throwImmediately(new RawExitError(1, "you've hit your limit"))
-      )
+      mockInfra.runClaude = vi
+        .fn()
+        .mockReturnValue(throwImmediately(new RawExitError(1, "you've hit your limit")))
 
       await expect(repo.dispatch(startAction)).rejects.toBeInstanceOf(RateLimitError)
     })
 
     it('throws RateLimitError when RawExitError stderr contains "you have hit your limit"', async () => {
-      mockInfra.runClaude.mockReturnValue(
-        throwImmediately(new RawExitError(1, 'you have hit your limit'))
-      )
+      mockInfra.runClaude = vi
+        .fn()
+        .mockReturnValue(throwImmediately(new RawExitError(1, 'you have hit your limit')))
 
       await expect(repo.dispatch(startAction)).rejects.toBeInstanceOf(RateLimitError)
     })
 
     it('includes extracted reset info in RateLimitError when stderr contains the resets? pattern', async () => {
-      mockInfra.runClaude.mockReturnValue(
-        throwAfterLines([], new RawExitError(1, "you've hit your limit resets in 3 hours"))
-      )
+      mockInfra.runClaude = vi
+        .fn()
+        .mockReturnValue(
+          throwAfterLines([], new RawExitError(1, "you've hit your limit resets in 3 hours"))
+        )
 
       let caught: unknown
       try {
@@ -211,9 +196,9 @@ describe('ClaudeCodeRepository', () => {
     })
 
     it('sets resetInfo to undefined in RateLimitError when the resets? pattern is absent from stderr', async () => {
-      mockInfra.runClaude.mockReturnValue(
-        throwImmediately(new RawExitError(1, "you've hit your limit"))
-      )
+      mockInfra.runClaude = vi
+        .fn()
+        .mockReturnValue(throwImmediately(new RawExitError(1, "you've hit your limit")))
 
       let caught: unknown
       try {
@@ -227,17 +212,17 @@ describe('ClaudeCodeRepository', () => {
     })
 
     it('throws APIError when RawExitError is not a rate-limit error', async () => {
-      mockInfra.runClaude.mockReturnValue(
-        throwImmediately(new RawExitError(2, 'some unexpected failure'))
-      )
+      mockInfra.runClaude = vi
+        .fn()
+        .mockReturnValue(throwImmediately(new RawExitError(2, 'some unexpected failure')))
 
       await expect(repo.dispatch(startAction)).rejects.toBeInstanceOf(APIError)
     })
 
     it('writes stderr to infra before throwing APIError when RawExitError has non-empty stderr', async () => {
-      mockInfra.runClaude.mockReturnValue(
-        throwImmediately(new RawExitError(2, 'some unexpected failure'))
-      )
+      mockInfra.runClaude = vi
+        .fn()
+        .mockReturnValue(throwImmediately(new RawExitError(2, 'some unexpected failure')))
 
       await expect(repo.dispatch(startAction)).rejects.toBeInstanceOf(APIError)
 
@@ -245,7 +230,7 @@ describe('ClaudeCodeRepository', () => {
     })
 
     it('does not call writeStderr when RawExitError has an empty stderr string', async () => {
-      mockInfra.runClaude.mockReturnValue(throwImmediately(new RawExitError(2, '')))
+      mockInfra.runClaude = vi.fn().mockReturnValue(throwImmediately(new RawExitError(2, '')))
 
       await expect(repo.dispatch(startAction)).rejects.toBeInstanceOf(APIError)
 
@@ -258,7 +243,7 @@ describe('ClaudeCodeRepository', () => {
 
     it('rethrows non-RawExitError errors from runClaude unchanged', async () => {
       const originalError = new Error('spawn failed')
-      mockInfra.runClaude.mockReturnValue(throwImmediately(originalError))
+      mockInfra.runClaude = vi.fn().mockReturnValue(throwImmediately(originalError))
 
       await expect(repo.dispatch(startAction)).rejects.toBe(originalError)
     })

@@ -8,3 +8,9 @@ export function execShell(command: string, cwd: string): Promise<ShellResult> {
     })
   })
 }
+
+export class ShellInfra {
+  execShell(command: string, cwd: string): Promise<ShellResult> {
+    return execShell(command, cwd)
+  }
+}

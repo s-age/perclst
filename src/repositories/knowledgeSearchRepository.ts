@@ -1,22 +1,25 @@
 import { join } from 'path'
 import type { IKnowledgeSearchRepository } from './ports/knowledgeSearch'
 import type { KnowledgeFileEntry } from '@src/types/knowledgeSearch'
-import { listFilesRecursive, readTextFile } from '@src/infrastructures/knowledgeReader'
+import type { KnowledgeReaderInfra } from '@src/infrastructures/knowledgeReader'
 
 export class KnowledgeSearchRepository implements IKnowledgeSearchRepository {
-  constructor(private readonly knowledgeDir: string) {}
+  constructor(
+    private reader: KnowledgeReaderInfra,
+    private readonly knowledgeDir: string
+  ) {}
 
   loadAll(includeDraft: boolean): KnowledgeFileEntry[] {
-    const files = listFilesRecursive(this.knowledgeDir, '.md')
+    const files = this.reader.listFilesRecursive(this.knowledgeDir, '.md')
     return files
       .filter((entry) => includeDraft || !entry.absolute.includes(`${this.knowledgeDir}/draft`))
       .map((entry) => ({
         relativePath: entry.relative,
-        content: readTextFile(entry.absolute)
+        content: this.reader.readTextFile(entry.absolute)
       }))
   }
 
   hasDraftEntries(): boolean {
-    return listFilesRecursive(join(this.knowledgeDir, 'draft'), '.md').length > 0
+    return this.reader.listFilesRecursive(join(this.knowledgeDir, 'draft'), '.md').length > 0
   }
 }

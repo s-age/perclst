@@ -22,3 +22,9 @@ export function searchDir(dir: string, stem: string, ext: string): string | null
   }
   return null
 }
+
+export class TestFileDiscoveryInfra {
+  searchDir(dir: string, stem: string, ext: string): string | null {
+    return searchDir(dir, stem, ext)
+  }
+}

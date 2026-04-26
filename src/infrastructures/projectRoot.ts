@@ -13,3 +13,9 @@ export function findProjectRoot(): string {
   }
   return process.cwd()
 }
+
+export class ProjectRootInfra {
+  findProjectRoot(): string {
+    return findProjectRoot()
+  }
+}

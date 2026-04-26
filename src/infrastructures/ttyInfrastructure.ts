@@ -21,3 +21,18 @@ export function readTty(fd: number, maxBytes: number = 256): string {
 export function closeTty(fd: number): void {
   closeSync(fd)
 }
+
+export class TtyInfra {
+  openTty(): number | null {
+    return openTty()
+  }
+  writeTty(fd: number, text: string): void {
+    writeTty(fd, text)
+  }
+  readTty(fd: number, maxBytes?: number): string {
+    return readTty(fd, maxBytes)
+  }
+  closeTty(fd: number): void {
+    closeTty(fd)
+  }
+}

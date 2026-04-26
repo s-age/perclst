@@ -17,3 +17,9 @@ export async function runCommand(command: string, cwd: string): Promise<RawComma
     }
   }
 }
+
+export class CommandRunnerInfra {
+  runCommand(command: string, cwd: string): Promise<RawCommandOutput> {
+    return runCommand(command, cwd)
+  }
+}

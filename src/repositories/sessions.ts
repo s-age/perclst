@@ -1,94 +1,61 @@
 import { join } from 'path'
 import type { Session } from '@src/types/session'
 import type { ISessionRepository } from '@src/repositories/ports/session'
+import type { FsInfra } from '@src/infrastructures/fs'
 import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
-import {
-  readJson,
-  writeJson,
-  fileExists,
-  removeFile,
-  listFiles,
-  ensureDir
-} from '@src/infrastructures/fs'
+
+type SessionFs = Pick<
+  FsInfra,
+  'ensureDir' | 'writeJson' | 'fileExists' | 'readJson' | 'removeFile' | 'listFiles'
+>
 
 export class SessionRepository implements ISessionRepository {
-  constructor(private sessionsDir: string) {}
+  constructor(
+    private fs: SessionFs,
+    private sessionsDir: string
+  ) {}
 
   save(session: Session): void {
-    saveSession(this.sessionsDir, session)
+    this.fs.ensureDir(this.sessionsDir)
+    this.fs.writeJson(join(this.sessionsDir, `${session.id}.json`), session)
   }
 
   load(sessionId: string): Session {
-    return loadSession(this.sessionsDir, sessionId)
+    const path = join(this.sessionsDir, `${sessionId}.json`)
+    if (!this.fs.fileExists(path)) throw new SessionNotFoundError(sessionId)
+    return this.fs.readJson<Session>(path)
   }
 
   exists(sessionId: string): boolean {
-    return existsSession(this.sessionsDir, sessionId)
+    return this.fs.fileExists(join(this.sessionsDir, `${sessionId}.json`))
   }
 
   async delete(sessionId: string): Promise<void> {
-    await deleteSession(this.sessionsDir, sessionId)
+    const path = join(this.sessionsDir, `${sessionId}.json`)
+    if (!this.fs.fileExists(path)) throw new SessionNotFoundError(sessionId)
+    await this.fs.removeFile(path)
   }
 
   list(): Session[] {
-    return listSessions(this.sessionsDir)
+    const files = this.fs.listFiles(this.sessionsDir, '.json')
+    const sessions: Session[] = []
+    for (const file of files) {
+      const sessionId = file.replace('.json', '')
+      try {
+        sessions.push(this.load(sessionId))
+      } catch {
+        continue
+      }
+    }
+    return sessions
   }
 
   getPath(sessionId: string): string {
-    return getSessionPath(this.sessionsDir, sessionId)
+    return join(this.sessionsDir, `${sessionId}.json`)
   }
 
   findByName(name: string): Session | null {
-    return findSessionByName(this.sessionsDir, name)
+    const all = this.list()
+    return all.find((s) => s.name === name) ?? null
   }
-}
-
-export function getSessionPath(sessionsDir: string, sessionId: string): string {
-  return join(sessionsDir, `${sessionId}.json`)
-}
-
-export function saveSession(sessionsDir: string, session: Session): void {
-  ensureDir(sessionsDir)
-  writeJson(getSessionPath(sessionsDir, session.id), session)
-}
-
-export function loadSession(sessionsDir: string, sessionId: string): Session {
-  const path = getSessionPath(sessionsDir, sessionId)
-  if (!fileExists(path)) {
-    throw new SessionNotFoundError(sessionId)
-  }
-  return readJson<Session>(path)
-}
-
-export function existsSession(sessionsDir: string, sessionId: string): boolean {
-  return fileExists(getSessionPath(sessionsDir, sessionId))
-}
-
-export async function deleteSession(sessionsDir: string, sessionId: string): Promise<void> {
-  const path = getSessionPath(sessionsDir, sessionId)
-  if (!fileExists(path)) {
-    throw new SessionNotFoundError(sessionId)
-  }
-  await removeFile(path)
-}
-
-export function findSessionByName(sessionsDir: string, name: string): Session | null {
-  const sessions = listSessions(sessionsDir)
-  return sessions.find((s) => s.name === name) ?? null
-}
-
-export function listSessions(sessionsDir: string): Session[] {
-  const files = listFiles(sessionsDir, '.json')
-  const sessions: Session[] = []
-
-  for (const file of files) {
-    const sessionId = file.replace('.json', '')
-    try {
-      sessions.push(loadSession(sessionsDir, sessionId))
-    } catch {
-      continue
-    }
-  }
-
-  return sessions
 }
