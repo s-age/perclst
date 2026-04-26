@@ -1,32 +1,29 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { KnowledgeSearchRepository } from '@src/repositories/knowledgeSearchRepository'
-import { listFilesRecursive, readTextFile } from '@src/infrastructures/knowledgeReader'
-
-vi.mock('@src/infrastructures/knowledgeReader', () => ({
-  listFilesRecursive: vi.fn(),
-  readTextFile: vi.fn()
-}))
-
-const mockListFilesRecursive = vi.mocked(listFilesRecursive)
-const mockReadTextFile = vi.mocked(readTextFile)
+import type { KnowledgeReaderInfra } from '@src/infrastructures/knowledgeReader'
 
 describe('KnowledgeSearchRepository', () => {
   let repo: KnowledgeSearchRepository
+  let mockReader: KnowledgeReaderInfra
 
   beforeEach(() => {
     vi.clearAllMocks()
-    repo = new KnowledgeSearchRepository('/knowledge')
+    mockReader = {
+      listFilesRecursive: vi.fn(),
+      readTextFile: vi.fn()
+    } as unknown as KnowledgeReaderInfra
+    repo = new KnowledgeSearchRepository(mockReader, '/knowledge')
   })
 
   // ─── loadAll ──────────────────────────────────────────────────────────────
 
   describe('loadAll', () => {
     it('returns entries for all files including draft when includeDraft is true', () => {
-      mockListFilesRecursive.mockReturnValue([
+      vi.mocked(mockReader.listFilesRecursive).mockReturnValue([
         { absolute: '/knowledge/foo.md', relative: 'foo.md' },
         { absolute: '/knowledge/draft/bar.md', relative: 'draft/bar.md' }
       ])
-      mockReadTextFile.mockImplementation((path) => `content of ${path}`)
+      vi.mocked(mockReader.readTextFile).mockImplementation((path) => `content of ${path}`)
 
       expect(repo.loadAll(true)).toEqual([
         { relativePath: 'foo.md', content: 'content of /knowledge/foo.md' },
@@ -35,11 +32,11 @@ describe('KnowledgeSearchRepository', () => {
     })
 
     it('excludes draft entries when includeDraft is false', () => {
-      mockListFilesRecursive.mockReturnValue([
+      vi.mocked(mockReader.listFilesRecursive).mockReturnValue([
         { absolute: '/knowledge/foo.md', relative: 'foo.md' },
         { absolute: '/knowledge/draft/bar.md', relative: 'draft/bar.md' }
       ])
-      mockReadTextFile.mockImplementation((path) => `content of ${path}`)
+      vi.mocked(mockReader.readTextFile).mockImplementation((path) => `content of ${path}`)
 
       expect(repo.loadAll(false)).toEqual([
         { relativePath: 'foo.md', content: 'content of /knowledge/foo.md' }
@@ -47,7 +44,7 @@ describe('KnowledgeSearchRepository', () => {
     })
 
     it('returns an empty array when no files exist', () => {
-      mockListFilesRecursive.mockReturnValue([])
+      vi.mocked(mockReader.listFilesRecursive).mockReturnValue([])
 
       expect(repo.loadAll(true)).toEqual([])
     })
@@ -57,7 +54,7 @@ describe('KnowledgeSearchRepository', () => {
 
   describe('hasDraftEntries', () => {
     it('returns true when draft directory contains files', () => {
-      mockListFilesRecursive.mockReturnValue([
+      vi.mocked(mockReader.listFilesRecursive).mockReturnValue([
         { absolute: '/knowledge/draft/foo.md', relative: 'draft/foo.md' }
       ])
 
@@ -65,7 +62,7 @@ describe('KnowledgeSearchRepository', () => {
     })
 
     it('returns false when draft directory is empty', () => {
-      mockListFilesRecursive.mockReturnValue([])
+      vi.mocked(mockReader.listFilesRecursive).mockReturnValue([])
 
       expect(repo.hasDraftEntries()).toBe(false)
     })

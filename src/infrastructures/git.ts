@@ -10,3 +10,12 @@ export function spawnGitSync(args: string[], cwd?: string): string {
   const result = spawnSync('git', args, { encoding: 'utf-8', cwd })
   return (result.stdout ?? '').trim()
 }
+
+export class GitInfra {
+  execGitSync(args: string, cwd?: string): string {
+    return execGitSync(args, cwd)
+  }
+  spawnGitSync(args: string[], cwd?: string): string {
+    return spawnGitSync(args, cwd)
+  }
+}

@@ -1,54 +1,52 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { GitRepository } from '@src/repositories/gitRepository'
-import { execGitSync, spawnGitSync } from '@src/infrastructures/git'
-import { findProjectRoot } from '@src/infrastructures/projectRoot'
-
-vi.mock('@src/infrastructures/git', () => ({
-  execGitSync: vi.fn(),
-  spawnGitSync: vi.fn()
-}))
-
-vi.mock('@src/infrastructures/projectRoot', () => ({
-  findProjectRoot: vi.fn(() => '/repo')
-}))
-
-const mockExecGitSync = vi.mocked(execGitSync)
-const mockSpawnGitSync = vi.mocked(spawnGitSync)
-const mockFindProjectRoot = vi.mocked(findProjectRoot)
+import type { GitInfra } from '@src/infrastructures/git'
+import type { ProjectRootInfra } from '@src/infrastructures/projectRoot'
 
 describe('GitRepository', () => {
   let repo: GitRepository
+  let mockGit: GitInfra
+  let mockProjectRoot: ProjectRootInfra
 
   beforeEach(() => {
     vi.clearAllMocks()
-    repo = new GitRepository()
+    mockGit = {
+      execGitSync: vi.fn(),
+      spawnGitSync: vi.fn()
+    } as unknown as GitInfra
+    mockProjectRoot = {
+      findProjectRoot: vi.fn().mockReturnValue('/repo')
+    } as unknown as ProjectRootInfra
+    repo = new GitRepository(mockGit, mockProjectRoot)
   })
 
   // ─── getDiffStat ───────────────────────────────────────────────────────────
 
   describe('getDiffStat', () => {
     it('returns combined staged and unstaged stat when both are non-empty', () => {
-      mockExecGitSync.mockReturnValueOnce('staged stat').mockReturnValueOnce('unstaged stat')
+      vi.mocked(mockGit.execGitSync)
+        .mockReturnValueOnce('staged stat')
+        .mockReturnValueOnce('unstaged stat')
       expect(repo.getDiffStat()).toBe('staged stat\nunstaged stat')
     })
 
     it('returns only the non-empty part when unstaged stat is empty', () => {
-      mockExecGitSync.mockReturnValueOnce('staged stat').mockReturnValueOnce('')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('staged stat').mockReturnValueOnce('')
       expect(repo.getDiffStat()).toBe('staged stat')
     })
 
     it('returns only the non-empty part when staged stat is empty', () => {
-      mockExecGitSync.mockReturnValueOnce('').mockReturnValueOnce('unstaged stat')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('').mockReturnValueOnce('unstaged stat')
       expect(repo.getDiffStat()).toBe('unstaged stat')
     })
 
     it('returns null when both staged and unstaged stats are empty strings', () => {
-      mockExecGitSync.mockReturnValueOnce('').mockReturnValueOnce('')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('').mockReturnValueOnce('')
       expect(repo.getDiffStat()).toBeNull()
     })
 
     it('returns null when execGitSync throws', () => {
-      mockExecGitSync.mockImplementation(() => {
+      vi.mocked(mockGit.execGitSync).mockImplementation(() => {
         throw new Error('git error')
       })
       expect(repo.getDiffStat()).toBeNull()
@@ -59,18 +57,18 @@ describe('GitRepository', () => {
 
   describe('getHead', () => {
     it('returns the HEAD commit sha', () => {
-      mockExecGitSync.mockReturnValueOnce('abc123def456')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('abc123def456')
       expect(repo.getHead()).toBe('abc123def456')
     })
 
     it('passes the correct git command', () => {
-      mockExecGitSync.mockReturnValueOnce('abc123')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('abc123')
       repo.getHead()
-      expect(mockExecGitSync).toHaveBeenCalledWith('rev-parse HEAD')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith('rev-parse HEAD')
     })
 
     it('returns null when execGitSync throws', () => {
-      mockExecGitSync.mockImplementation(() => {
+      vi.mocked(mockGit.execGitSync).mockImplementation(() => {
         throw new Error('not a git repo')
       })
       expect(repo.getHead()).toBeNull()
@@ -81,23 +79,23 @@ describe('GitRepository', () => {
 
   describe('getDiffSummary', () => {
     it('returns the diff stat between two refs', () => {
-      mockExecGitSync.mockReturnValueOnce('1 file changed, 3 insertions(+)')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('1 file changed, 3 insertions(+)')
       expect(repo.getDiffSummary('HEAD~1', 'HEAD')).toBe('1 file changed, 3 insertions(+)')
     })
 
     it('uses three-dot diff syntax in the git command', () => {
-      mockExecGitSync.mockReturnValueOnce('stat output')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('stat output')
       repo.getDiffSummary('main', 'feature')
-      expect(mockExecGitSync).toHaveBeenCalledWith('diff main...feature --stat')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith('diff main...feature --stat')
     })
 
     it('returns null when the stat output is an empty string', () => {
-      mockExecGitSync.mockReturnValueOnce('')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('')
       expect(repo.getDiffSummary('HEAD~1', 'HEAD')).toBeNull()
     })
 
     it('returns null when execGitSync throws', () => {
-      mockExecGitSync.mockImplementation(() => {
+      vi.mocked(mockGit.execGitSync).mockImplementation(() => {
         throw new Error('unknown ref')
       })
       expect(repo.getDiffSummary('bad-ref', 'HEAD')).toBeNull()
@@ -108,23 +106,23 @@ describe('GitRepository', () => {
 
   describe('getDiff', () => {
     it('returns the diff output between two refs', () => {
-      mockExecGitSync.mockReturnValueOnce('diff --git a/foo.ts b/foo.ts\n...')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('diff --git a/foo.ts b/foo.ts\n...')
       expect(repo.getDiff('HEAD~1', 'HEAD')).toBe('diff --git a/foo.ts b/foo.ts\n...')
     })
 
     it('uses two-dot diff syntax in the git command', () => {
-      mockExecGitSync.mockReturnValueOnce('diff output')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('diff output')
       repo.getDiff('main', 'feature')
-      expect(mockExecGitSync).toHaveBeenCalledWith('diff main feature')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith('diff main feature')
     })
 
     it('returns null when the diff output is an empty string', () => {
-      mockExecGitSync.mockReturnValueOnce('')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('')
       expect(repo.getDiff('HEAD~1', 'HEAD')).toBeNull()
     })
 
     it('returns null when execGitSync throws', () => {
-      mockExecGitSync.mockImplementation(() => {
+      vi.mocked(mockGit.execGitSync).mockImplementation(() => {
         throw new Error('bad revision')
       })
       expect(repo.getDiff('bad-ref', 'HEAD')).toBeNull()
@@ -135,13 +133,13 @@ describe('GitRepository', () => {
 
   describe('stageUpdated', () => {
     it('calls execGitSync with the correct add -u command', () => {
-      mockExecGitSync.mockReturnValueOnce('')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('')
       repo.stageUpdated('src/foo.ts')
-      expect(mockExecGitSync).toHaveBeenCalledWith('add -u "src/foo.ts"')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith('add -u "src/foo.ts"')
     })
 
     it('propagates an error thrown by execGitSync', () => {
-      mockExecGitSync.mockImplementation(() => {
+      vi.mocked(mockGit.execGitSync).mockImplementation(() => {
         throw new Error('nothing to stage')
       })
       expect(() => repo.stageUpdated('src/foo.ts')).toThrow('nothing to stage')
@@ -152,13 +150,13 @@ describe('GitRepository', () => {
 
   describe('stageNew', () => {
     it('calls execGitSync with the correct add command', () => {
-      mockExecGitSync.mockReturnValueOnce('')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('')
       repo.stageNew('src/bar.ts')
-      expect(mockExecGitSync).toHaveBeenCalledWith('add "src/bar.ts"')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith('add "src/bar.ts"')
     })
 
     it('propagates an error thrown by execGitSync', () => {
-      mockExecGitSync.mockImplementation(() => {
+      vi.mocked(mockGit.execGitSync).mockImplementation(() => {
         throw new Error('pathspec did not match')
       })
       expect(() => repo.stageNew('nonexistent.ts')).toThrow('pathspec did not match')
@@ -169,13 +167,13 @@ describe('GitRepository', () => {
 
   describe('commit', () => {
     it('calls execGitSync with the correct commit -m command', () => {
-      mockExecGitSync.mockReturnValueOnce('')
+      vi.mocked(mockGit.execGitSync).mockReturnValueOnce('')
       repo.commit('feat: add new feature')
-      expect(mockExecGitSync).toHaveBeenCalledWith('commit -m "feat: add new feature"')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith('commit -m "feat: add new feature"')
     })
 
     it('propagates an error thrown by execGitSync', () => {
-      mockExecGitSync.mockImplementation(() => {
+      vi.mocked(mockGit.execGitSync).mockImplementation(() => {
         throw new Error('nothing to commit')
       })
       expect(() => repo.commit('empty commit')).toThrow('nothing to commit')
@@ -186,7 +184,7 @@ describe('GitRepository', () => {
 
   describe('getPendingDiff', () => {
     it('returns combined staged, unstaged, and untracked diffs', () => {
-      mockSpawnGitSync
+      vi.mocked(mockGit.spawnGitSync)
         .mockReturnValueOnce('staged diff')
         .mockReturnValueOnce('unstaged diff')
         .mockReturnValueOnce('new-file.ts')
@@ -195,37 +193,37 @@ describe('GitRepository', () => {
     })
 
     it('calls git diff --cached and git diff without pathspecs when no extensions given', () => {
-      mockSpawnGitSync.mockReturnValue('')
+      vi.mocked(mockGit.spawnGitSync).mockReturnValue('')
       repo.getPendingDiff()
-      expect(mockSpawnGitSync).toHaveBeenCalledWith(['diff', '--cached'], '/repo')
-      expect(mockSpawnGitSync).toHaveBeenCalledWith(['diff'], '/repo')
-      expect(mockSpawnGitSync).toHaveBeenCalledWith(
+      expect(mockGit.spawnGitSync).toHaveBeenCalledWith(['diff', '--cached'], '/repo')
+      expect(mockGit.spawnGitSync).toHaveBeenCalledWith(['diff'], '/repo')
+      expect(mockGit.spawnGitSync).toHaveBeenCalledWith(
         ['ls-files', '--others', '--exclude-standard'],
         '/repo'
       )
     })
 
     it('appends pathspec args when extensions are provided', () => {
-      mockSpawnGitSync.mockReturnValue('')
+      vi.mocked(mockGit.spawnGitSync).mockReturnValue('')
       repo.getPendingDiff(undefined, ['ts', 'tsx'])
-      expect(mockSpawnGitSync).toHaveBeenCalledWith(
+      expect(mockGit.spawnGitSync).toHaveBeenCalledWith(
         ['diff', '--cached', '--', '*.ts', '*.tsx'],
         '/repo'
       )
-      expect(mockSpawnGitSync).toHaveBeenCalledWith(['diff', '--', '*.ts', '*.tsx'], '/repo')
-      expect(mockSpawnGitSync).toHaveBeenCalledWith(
+      expect(mockGit.spawnGitSync).toHaveBeenCalledWith(['diff', '--', '*.ts', '*.tsx'], '/repo')
+      expect(mockGit.spawnGitSync).toHaveBeenCalledWith(
         ['ls-files', '--others', '--exclude-standard', '--', '*.ts', '*.tsx'],
         '/repo'
       )
     })
 
     it('returns null when all diffs are empty', () => {
-      mockSpawnGitSync.mockReturnValue('')
+      vi.mocked(mockGit.spawnGitSync).mockReturnValue('')
       expect(repo.getPendingDiff()).toBeNull()
     })
 
     it('returns null when findProjectRoot throws', () => {
-      mockFindProjectRoot.mockImplementationOnce(() => {
+      vi.mocked(mockProjectRoot.findProjectRoot).mockImplementationOnce(() => {
         throw new Error('not a git repo')
       })
       expect(repo.getPendingDiff()).toBeNull()

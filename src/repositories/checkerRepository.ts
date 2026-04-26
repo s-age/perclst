@@ -1,7 +1,7 @@
 import type { ICheckerRepository } from '@src/repositories/ports/checker'
 import type { CommandResult } from '@src/types/checker'
-import { runCommand } from '@src/infrastructures/commandRunner'
-import { findProjectRoot } from '@src/infrastructures/projectRoot'
+import type { CommandRunnerInfra } from '@src/infrastructures/commandRunner'
+import type { ProjectRootInfra } from '@src/infrastructures/projectRoot'
 
 const DEFAULT_LINT_COMMAND = 'npm run lint:fix'
 const DEFAULT_BUILD_COMMAND = 'npm run build'
@@ -35,27 +35,32 @@ function parseOutput(stdout: string, stderr: string, exitCode: number): CommandR
 }
 
 export class CheckerRepository implements ICheckerRepository {
+  constructor(
+    private runner: CommandRunnerInfra,
+    private projectRoot: ProjectRootInfra
+  ) {}
+
   findProjectRoot(): string {
-    return findProjectRoot()
+    return this.projectRoot.findProjectRoot()
   }
 
   async runLint(cwd: string, command = DEFAULT_LINT_COMMAND): Promise<CommandResult> {
-    const { stdout, stderr, exitCode } = await runCommand(command, cwd)
+    const { stdout, stderr, exitCode } = await this.runner.runCommand(command, cwd)
     return parseOutput(stdout, stderr, exitCode)
   }
 
   async runBuild(cwd: string, command = DEFAULT_BUILD_COMMAND): Promise<CommandResult> {
-    const { stdout, stderr, exitCode } = await runCommand(command, cwd)
+    const { stdout, stderr, exitCode } = await this.runner.runCommand(command, cwd)
     return parseOutput(stdout, stderr, exitCode)
   }
 
   async runTypecheck(cwd: string, command = DEFAULT_TYPECHECK_COMMAND): Promise<CommandResult> {
-    const { stdout, stderr, exitCode } = await runCommand(command, cwd)
+    const { stdout, stderr, exitCode } = await this.runner.runCommand(command, cwd)
     return parseOutput(stdout, stderr, exitCode)
   }
 
   async runTest(cwd: string, command = DEFAULT_TEST_COMMAND): Promise<CommandResult> {
-    const { stdout, stderr, exitCode } = await runCommand(command, cwd)
+    const { stdout, stderr, exitCode } = await this.runner.runCommand(command, cwd)
     return parseOutput(stdout, stderr, exitCode)
   }
 }

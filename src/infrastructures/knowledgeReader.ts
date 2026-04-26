@@ -24,3 +24,12 @@ export function listFilesRecursive(
 export function readTextFile(path: string): string {
   return readFileSync(path, 'utf-8')
 }
+
+export class KnowledgeReaderInfra {
+  listFilesRecursive(dir: string, ext?: string): { absolute: string; relative: string }[] {
+    return listFilesRecursive(dir, ext)
+  }
+  readTextFile(path: string): string {
+    return readTextFile(path)
+  }
+}

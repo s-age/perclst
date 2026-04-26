@@ -1,27 +1,29 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { PipelineFileRepository } from '@src/repositories/fileMoveRepository'
+import type { FileMoveInfra } from '@src/infrastructures/fileMove'
+import type { FsInfra } from '@src/infrastructures/fs'
 
-vi.mock('@src/infrastructures/fileMove', () => ({
-  moveFile: vi.fn()
-}))
-
-vi.mock('@src/infrastructures/fs', () => ({
-  readJson: vi.fn(),
-  writeJson: vi.fn(),
-  readYaml: vi.fn(),
-  writeYaml: vi.fn(),
-  cleanDir: vi.fn()
-}))
-
-import { moveFile } from '@src/infrastructures/fileMove'
-import { readJson, writeJson, readYaml, writeYaml, cleanDir } from '@src/infrastructures/fs'
+type PipelineFileFs = Pick<
+  FsInfra,
+  'readJson' | 'writeJson' | 'readYaml' | 'writeYaml' | 'cleanDir'
+>
 
 describe('PipelineFileRepository', () => {
   let repo: PipelineFileRepository
+  let mockFileMoveInfra: FileMoveInfra
+  let mockFs: PipelineFileFs
 
   beforeEach(() => {
     vi.clearAllMocks()
-    repo = new PipelineFileRepository()
+    mockFileMoveInfra = { moveFile: vi.fn() } as unknown as FileMoveInfra
+    mockFs = {
+      readJson: vi.fn(),
+      writeJson: vi.fn(),
+      readYaml: vi.fn(),
+      writeYaml: vi.fn(),
+      cleanDir: vi.fn()
+    } as unknown as PipelineFileFs
+    repo = new PipelineFileRepository(mockFileMoveInfra, mockFs)
   })
 
   // ─── moveToDone ────────────────────────────────────────────────────────────
@@ -30,7 +32,7 @@ describe('PipelineFileRepository', () => {
     it('delegates to moveFile with the provided src and dest paths', () => {
       repo.moveToDone('/tmp/a.json', '/done/a.json')
 
-      expect(moveFile).toHaveBeenCalledWith('/tmp/a.json', '/done/a.json')
+      expect(mockFileMoveInfra.moveFile).toHaveBeenCalledWith('/tmp/a.json', '/done/a.json')
     })
   })
 
@@ -39,39 +41,39 @@ describe('PipelineFileRepository', () => {
   describe('readRaw', () => {
     it('calls readJson for .json paths', () => {
       const fixture = { key: 'value' }
-      vi.mocked(readJson).mockReturnValue(fixture)
+      vi.mocked(mockFs.readJson).mockReturnValue(fixture)
 
       const result = repo.readRaw('/some/file.json')
 
       expect(result).toBe(fixture)
-      expect(readJson).toHaveBeenCalledWith('/some/file.json')
-      expect(readYaml).not.toHaveBeenCalled()
+      expect(mockFs.readJson).toHaveBeenCalledWith('/some/file.json')
+      expect(mockFs.readYaml).not.toHaveBeenCalled()
     })
 
     it('calls readYaml for .yaml paths', () => {
       const fixture = { tasks: [] }
-      vi.mocked(readYaml).mockReturnValue(fixture)
+      vi.mocked(mockFs.readYaml).mockReturnValue(fixture)
 
       const result = repo.readRaw('/some/file.yaml')
 
       expect(result).toBe(fixture)
-      expect(readYaml).toHaveBeenCalledWith('/some/file.yaml')
-      expect(readJson).not.toHaveBeenCalled()
+      expect(mockFs.readYaml).toHaveBeenCalledWith('/some/file.yaml')
+      expect(mockFs.readJson).not.toHaveBeenCalled()
     })
 
     it('calls readYaml for .yml paths', () => {
       const fixture = { tasks: [] }
-      vi.mocked(readYaml).mockReturnValue(fixture)
+      vi.mocked(mockFs.readYaml).mockReturnValue(fixture)
 
       const result = repo.readRaw('/some/file.yml')
 
       expect(result).toBe(fixture)
-      expect(readYaml).toHaveBeenCalledWith('/some/file.yml')
-      expect(readJson).not.toHaveBeenCalled()
+      expect(mockFs.readYaml).toHaveBeenCalledWith('/some/file.yml')
+      expect(mockFs.readJson).not.toHaveBeenCalled()
     })
 
     it('returns null when readJson returns null', () => {
-      vi.mocked(readJson).mockReturnValue(null)
+      vi.mocked(mockFs.readJson).mockReturnValue(null)
 
       const result = repo.readRaw('/null.json')
 
@@ -87,8 +89,8 @@ describe('PipelineFileRepository', () => {
 
       repo.write('/out/file.json', data)
 
-      expect(writeJson).toHaveBeenCalledWith('/out/file.json', data)
-      expect(writeYaml).not.toHaveBeenCalled()
+      expect(mockFs.writeJson).toHaveBeenCalledWith('/out/file.json', data)
+      expect(mockFs.writeYaml).not.toHaveBeenCalled()
     })
 
     it('calls writeYaml for .yaml paths', () => {
@@ -96,8 +98,8 @@ describe('PipelineFileRepository', () => {
 
       repo.write('/out/file.yaml', data)
 
-      expect(writeYaml).toHaveBeenCalledWith('/out/file.yaml', data)
-      expect(writeJson).not.toHaveBeenCalled()
+      expect(mockFs.writeYaml).toHaveBeenCalledWith('/out/file.yaml', data)
+      expect(mockFs.writeJson).not.toHaveBeenCalled()
     })
 
     it('calls writeYaml for .yml paths', () => {
@@ -105,14 +107,14 @@ describe('PipelineFileRepository', () => {
 
       repo.write('/out/file.yml', data)
 
-      expect(writeYaml).toHaveBeenCalledWith('/out/file.yml', data)
-      expect(writeJson).not.toHaveBeenCalled()
+      expect(mockFs.writeYaml).toHaveBeenCalledWith('/out/file.yml', data)
+      expect(mockFs.writeJson).not.toHaveBeenCalled()
     })
 
     it('passes null data through to writeJson', () => {
       repo.write('/out/null.json', null)
 
-      expect(writeJson).toHaveBeenCalledWith('/out/null.json', null)
+      expect(mockFs.writeJson).toHaveBeenCalledWith('/out/null.json', null)
     })
   })
 
@@ -122,7 +124,7 @@ describe('PipelineFileRepository', () => {
     it('delegates to the fs cleanDir with the provided directory path', () => {
       repo.cleanDir('/tmp/workdir')
 
-      expect(cleanDir).toHaveBeenCalledWith('/tmp/workdir')
+      expect(mockFs.cleanDir).toHaveBeenCalledWith('/tmp/workdir')
     })
   })
 })

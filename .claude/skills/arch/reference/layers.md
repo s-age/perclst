@@ -36,4 +36,4 @@
 | `infrastructures` | `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains`, `repositories` |
 | `utils` | external libraries, Node.js non-I/O built-ins (e.g. `crypto`), `types` | `cli`, `validators`, `services`, `domains`, `repositories`, `infrastructures`, `errors`, `constants`, `core/di` |
 | `types` | nothing | all other layers |
-| `core/di/setup.ts` | all layers | — (sole exception: DI wiring is its responsibility) |
+| `core/di/` | all layers | — (sole exception: DI wiring is its responsibility; applies to all files in this directory) |

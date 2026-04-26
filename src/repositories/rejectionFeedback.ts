@@ -1,25 +1,21 @@
 import { resolve } from 'path'
-import { fileExists, readText, removeFile, currentWorkingDir } from '@src/infrastructures/fs'
 import type { IRejectionFeedbackRepository } from '@src/repositories/ports/rejectionFeedback'
+import type { FsInfra } from '@src/infrastructures/fs'
 
-export async function getRejectionFeedback(taskName: string): Promise<string | undefined> {
-  const tmpPath = resolve(`.claude/tmp/${taskName}`)
-  if (!fileExists(tmpPath)) return undefined
-  const feedback = readText(tmpPath)
-  await removeFile(tmpPath)
-  return feedback
-}
-
-export function getCwd(): string {
-  return currentWorkingDir()
-}
+type RejectionFs = Pick<FsInfra, 'fileExists' | 'readText' | 'removeFile' | 'currentWorkingDir'>
 
 export class RejectionFeedbackRepository implements IRejectionFeedbackRepository {
+  constructor(private fs: RejectionFs) {}
+
   async getFeedback(taskName: string): Promise<string | undefined> {
-    return getRejectionFeedback(taskName)
+    const tmpPath = resolve(`.claude/tmp/${taskName}`)
+    if (!this.fs.fileExists(tmpPath)) return undefined
+    const feedback = this.fs.readText(tmpPath)
+    await this.fs.removeFile(tmpPath)
+    return feedback
   }
 
   getCwd(): string {
-    return getCwd()
+    return this.fs.currentWorkingDir()
   }
 }

@@ -1,8 +1,10 @@
 import type { IShellRepository, ShellResult } from '@src/repositories/ports/shell'
-import { execShell } from '@src/infrastructures/shell'
+import type { ShellInfra } from '@src/infrastructures/shell'
 
 export class ShellRepository implements IShellRepository {
+  constructor(private shellInfra: ShellInfra) {}
+
   exec(command: string, cwd: string): Promise<ShellResult> {
-    return execShell(command, cwd)
+    return this.shellInfra.execShell(command, cwd)
   }
 }

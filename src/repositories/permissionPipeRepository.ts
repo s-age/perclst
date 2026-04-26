@@ -1,10 +1,17 @@
 import type { IPermissionPipeRepository } from '@src/repositories/ports/permissionPipe.js'
 import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe.js'
-import { fileExists, readText, removeFileSync, writeText } from '@src/infrastructures/fs.js'
-import { openTty, writeTty, readTty, closeTty } from '@src/infrastructures/ttyInfrastructure.js'
+import type { FsInfra } from '@src/infrastructures/fs'
+import type { TtyInfra } from '@src/infrastructures/ttyInfrastructure.js'
 import { formatInputSummary } from '@src/utils/formatInputSummary.js'
 
+type PermissionPipeFs = Pick<FsInfra, 'fileExists' | 'readText' | 'removeFileSync' | 'writeText'>
+
 export class PermissionPipeRepository implements IPermissionPipeRepository {
+  constructor(
+    private fs: PermissionPipeFs,
+    private tty: TtyInfra
+  ) {}
+
   private get pipePath(): string | null {
     return process.env.PERCLST_PERMISSION_PIPE ?? null
   }
@@ -13,11 +20,11 @@ export class PermissionPipeRepository implements IPermissionPipeRepository {
     const p = this.pipePath
     if (!p) return null
     const reqPath = `${p}.req`
-    if (!fileExists(reqPath)) return null
+    if (!this.fs.fileExists(reqPath)) return null
     try {
-      const req = JSON.parse(readText(reqPath)) as PermissionRequest
+      const req = JSON.parse(this.fs.readText(reqPath)) as PermissionRequest
       try {
-        removeFileSync(reqPath)
+        this.fs.removeFileSync(reqPath)
       } catch {
         /* ignore */
       }
@@ -31,7 +38,7 @@ export class PermissionPipeRepository implements IPermissionPipeRepository {
     const p = this.pipePath
     if (!p) return
     try {
-      writeText(`${p}.res`, JSON.stringify(result))
+      this.fs.writeText(`${p}.res`, JSON.stringify(result))
     } catch {
       /* ignore */
     }
@@ -55,7 +62,7 @@ export class PermissionPipeRepository implements IPermissionPipeRepository {
   ): Promise<PermissionResult> {
     const reqPath = `${pipePath}.req`
     const resPath = `${pipePath}.res`
-    writeText(
+    this.fs.writeText(
       reqPath,
       JSON.stringify({
         tool_name: args.tool_name,
@@ -66,11 +73,11 @@ export class PermissionPipeRepository implements IPermissionPipeRepository {
     const deadline = Date.now() + 60_000
     while (Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, 100))
-      if (fileExists(resPath)) {
+      if (this.fs.fileExists(resPath)) {
         try {
-          const res = JSON.parse(readText(resPath)) as PermissionResult
+          const res = JSON.parse(this.fs.readText(resPath)) as PermissionResult
           try {
-            removeFileSync(resPath)
+            this.fs.removeFileSync(resPath)
           } catch {
             /* ignore */
           }
@@ -94,18 +101,18 @@ export class PermissionPipeRepository implements IPermissionPipeRepository {
       `  Input: ${summary.replace(/\n/g, '\n         ')}\n` +
       `  Allow? [y/N] `
 
-    const fd = openTty()
+    const fd = this.tty.openTty()
     if (fd === null)
       return { behavior: 'deny', message: 'No terminal available for interactive prompt' }
 
     try {
-      writeTty(fd, prompt)
-      const answer = readTty(fd).trim().toLowerCase()
+      this.tty.writeTty(fd, prompt)
+      const answer = this.tty.readTty(fd).trim().toLowerCase()
       return answer === 'y' || answer === 'yes'
         ? { behavior: 'allow', updatedInput: args.input }
         : { behavior: 'deny', message: 'User denied permission' }
     } finally {
-      closeTty(fd)
+      this.tty.closeTty(fd)
     }
   }
 }
