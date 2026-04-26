@@ -21,6 +21,17 @@ const templatePath = join(repoDir, '.claude', 'settings.json')
 const destPath = join(homedir(), '.claude', 'settings.json')
 const backupPath = destPath + '.bak'
 
+// --- Copy config.default.ts -> config.ts (if missing) ---
+const configDefaultSrc = join(repoDir, 'src', 'constants', 'config.default.ts')
+const configDest = join(repoDir, 'src', 'constants', 'config.ts')
+if (!existsSync(configDest)) {
+  copyFileSync(configDefaultSrc, configDest)
+  stdout.print(`created: ${configDest}`)
+} else {
+  stdout.print(`exists:  ${configDest} (skipped)`)
+}
+stdout.print('')
+
 // --- Copy skill-inject.mjs to ~/.perclst/ ---
 const hookSrc = join(repoDir, 'hooks', 'skill-inject.mjs')
 const hookDest = join(homedir(), '.perclst', 'skill-inject.mjs')
