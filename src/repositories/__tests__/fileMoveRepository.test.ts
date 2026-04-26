@@ -8,11 +8,13 @@ vi.mock('@src/infrastructures/fileMove', () => ({
 vi.mock('@src/infrastructures/fs', () => ({
   readJson: vi.fn(),
   writeJson: vi.fn(),
+  readYaml: vi.fn(),
+  writeYaml: vi.fn(),
   cleanDir: vi.fn()
 }))
 
 import { moveFile } from '@src/infrastructures/fileMove'
-import { readJson, writeJson, cleanDir } from '@src/infrastructures/fs'
+import { readJson, writeJson, readYaml, writeYaml, cleanDir } from '@src/infrastructures/fs'
 
 describe('PipelineFileRepository', () => {
   let repo: PipelineFileRepository
@@ -32,46 +34,83 @@ describe('PipelineFileRepository', () => {
     })
   })
 
-  // ─── readRawJson ───────────────────────────────────────────────────────────
+  // ─── readRaw ───────────────────────────────────────────────────────────────
 
-  describe('readRawJson', () => {
-    it('returns the value produced by readJson for the given path', () => {
+  describe('readRaw', () => {
+    it('calls readJson for .json paths', () => {
       const fixture = { key: 'value' }
       vi.mocked(readJson).mockReturnValue(fixture)
 
-      const result = repo.readRawJson('/some/file.json')
+      const result = repo.readRaw('/some/file.json')
 
       expect(result).toBe(fixture)
+      expect(readJson).toHaveBeenCalledWith('/some/file.json')
+      expect(readYaml).not.toHaveBeenCalled()
     })
 
-    it('passes the path argument through to readJson', () => {
-      repo.readRawJson('/some/file.json')
+    it('calls readYaml for .yaml paths', () => {
+      const fixture = { tasks: [] }
+      vi.mocked(readYaml).mockReturnValue(fixture)
 
-      expect(readJson).toHaveBeenCalledWith('/some/file.json')
+      const result = repo.readRaw('/some/file.yaml')
+
+      expect(result).toBe(fixture)
+      expect(readYaml).toHaveBeenCalledWith('/some/file.yaml')
+      expect(readJson).not.toHaveBeenCalled()
+    })
+
+    it('calls readYaml for .yml paths', () => {
+      const fixture = { tasks: [] }
+      vi.mocked(readYaml).mockReturnValue(fixture)
+
+      const result = repo.readRaw('/some/file.yml')
+
+      expect(result).toBe(fixture)
+      expect(readYaml).toHaveBeenCalledWith('/some/file.yml')
+      expect(readJson).not.toHaveBeenCalled()
     })
 
     it('returns null when readJson returns null', () => {
       vi.mocked(readJson).mockReturnValue(null)
 
-      const result = repo.readRawJson('/null.json')
+      const result = repo.readRaw('/null.json')
 
       expect(result).toBeNull()
     })
   })
 
-  // ─── writeJson ─────────────────────────────────────────────────────────────
+  // ─── write ─────────────────────────────────────────────────────────────────
 
-  describe('writeJson', () => {
-    it('delegates to the fs writeJson with the provided path and data', () => {
+  describe('write', () => {
+    it('calls writeJson for .json paths', () => {
       const data = { hello: 'world' }
 
-      repo.writeJson('/out/file.json', data)
+      repo.write('/out/file.json', data)
 
       expect(writeJson).toHaveBeenCalledWith('/out/file.json', data)
+      expect(writeYaml).not.toHaveBeenCalled()
     })
 
-    it('passes null data through to the fs writeJson', () => {
-      repo.writeJson('/out/null.json', null)
+    it('calls writeYaml for .yaml paths', () => {
+      const data = { tasks: [] }
+
+      repo.write('/out/file.yaml', data)
+
+      expect(writeYaml).toHaveBeenCalledWith('/out/file.yaml', data)
+      expect(writeJson).not.toHaveBeenCalled()
+    })
+
+    it('calls writeYaml for .yml paths', () => {
+      const data = { tasks: [] }
+
+      repo.write('/out/file.yml', data)
+
+      expect(writeYaml).toHaveBeenCalledWith('/out/file.yml', data)
+      expect(writeJson).not.toHaveBeenCalled()
+    })
+
+    it('passes null data through to writeJson', () => {
+      repo.write('/out/null.json', null)
 
       expect(writeJson).toHaveBeenCalledWith('/out/null.json', null)
     })

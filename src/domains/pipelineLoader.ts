@@ -6,6 +6,6 @@ export class PipelineLoaderDomain implements IPipelineLoaderDomain {
   constructor(private readonly repo: IPipelineFileRepository) {}
 
   load(absolutePath: string): Pipeline {
-    return this.repo.readRawJson(absolutePath) as Pipeline
+    return this.repo.readRaw(absolutePath) as Pipeline
   }
 }

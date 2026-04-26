@@ -250,8 +250,8 @@ program
 // Run command
 program
   .command('run')
-  .description('Execute a pipeline of agent tasks from a JSON file')
-  .argument('<pipeline-path>', 'Path to the pipeline JSON file')
+  .description('Execute a pipeline of agent tasks from a JSON or YAML file')
+  .argument('<pipeline-path>', 'Path to the pipeline file (.json, .yaml, or .yml)')
   .option('--model <model>', 'Default model for all agent tasks (e.g. sonnet, opus, haiku)')
   .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
   .option('--batch', 'Disable TUI and use plain output')

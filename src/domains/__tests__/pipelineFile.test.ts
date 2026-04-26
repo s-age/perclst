@@ -9,10 +9,11 @@ vi.mock('@src/utils/path', () => ({
   resolve: vi.fn(),
   dirname: vi.fn(),
   basename: vi.fn(),
+  extname: vi.fn(),
   join: vi.fn()
 }))
 
-import { resolve, dirname, basename, join } from '@src/utils/path'
+import { resolve, dirname, basename, extname, join } from '@src/utils/path'
 
 describe('PipelineFileDomain', () => {
   let fileMoveRepo: IPipelineFileRepository
@@ -25,8 +26,8 @@ describe('PipelineFileDomain', () => {
     fileMoveRepo = {
       moveToDone: vi.fn(),
       cleanDir: vi.fn(),
-      readRawJson: vi.fn(),
-      writeJson: vi.fn()
+      readRaw: vi.fn(),
+      write: vi.fn()
     } as unknown as IPipelineFileRepository
 
     gitRepo = {
@@ -47,6 +48,7 @@ describe('PipelineFileDomain', () => {
       // Setup mocks - join is called twice: once for absolute dest, once for relative dest
       vi.mocked(resolve).mockReturnValue('/home/user/pipelines/task1.json')
       vi.mocked(dirname).mockReturnValue('/home/user/pipelines')
+      vi.mocked(extname).mockReturnValue('.json')
       vi.mocked(basename).mockReturnValue('task1')
       vi.mocked(join)
         .mockReturnValueOnce('/home/user/pipelines/done/task1.json') // for dest
@@ -59,10 +61,43 @@ describe('PipelineFileDomain', () => {
       expect(result).toBe('done/task1.json')
       expect(resolve).toHaveBeenCalledWith('/home/user/pipelines/task1.json')
       expect(dirname).toHaveBeenCalledWith('/home/user/pipelines/task1.json')
+      expect(extname).toHaveBeenCalledWith('/home/user/pipelines/task1.json')
       expect(basename).toHaveBeenCalledWith('/home/user/pipelines/task1.json', '.json')
+    })
+
+    it('should move yaml pipeline and preserve .yaml extension', () => {
+      vi.mocked(resolve).mockReturnValue('/home/user/pipelines/task1.yaml')
+      vi.mocked(dirname).mockReturnValue('/home/user/pipelines')
+      vi.mocked(extname).mockReturnValue('.yaml')
+      vi.mocked(basename).mockReturnValue('task1')
+      vi.mocked(join)
+        .mockReturnValueOnce('/home/user/pipelines/done/task1.yaml')
+        .mockReturnValueOnce('done/task1.yaml')
+
+      const result = domain.moveToDone('/home/user/pipelines/task1.yaml')
+
+      expect(result).toBe('done/task1.yaml')
+      expect(extname).toHaveBeenCalledWith('/home/user/pipelines/task1.yaml')
+      expect(basename).toHaveBeenCalledWith('/home/user/pipelines/task1.yaml', '.yaml')
+    })
+
+    it('should move yml pipeline and preserve .yml extension', () => {
+      vi.mocked(resolve).mockReturnValue('/home/user/pipelines/task1.yml')
+      vi.mocked(dirname).mockReturnValue('/home/user/pipelines')
+      vi.mocked(extname).mockReturnValue('.yml')
+      vi.mocked(basename).mockReturnValue('task1')
+      vi.mocked(join)
+        .mockReturnValueOnce('/home/user/pipelines/done/task1.yml')
+        .mockReturnValueOnce('done/task1.yml')
+
+      const result = domain.moveToDone('/home/user/pipelines/task1.yml')
+
+      expect(result).toBe('done/task1.yml')
+      expect(extname).toHaveBeenCalledWith('/home/user/pipelines/task1.yml')
+      expect(basename).toHaveBeenCalledWith('/home/user/pipelines/task1.yml', '.yml')
       expect(fileMoveRepo.moveToDone).toHaveBeenCalledWith(
-        '/home/user/pipelines/task1.json',
-        '/home/user/pipelines/done/task1.json'
+        '/home/user/pipelines/task1.yml',
+        '/home/user/pipelines/done/task1.yml'
       )
     })
 
@@ -70,6 +105,7 @@ describe('PipelineFileDomain', () => {
       // Setup: filename is like "agent__subtask__final.json"
       vi.mocked(resolve).mockReturnValue('/home/user/pipelines/agent__subtask__final.json')
       vi.mocked(dirname).mockReturnValue('/home/user/pipelines')
+      vi.mocked(extname).mockReturnValue('.json')
       vi.mocked(basename).mockReturnValue('agent__subtask__final')
       vi.mocked(join)
         .mockReturnValueOnce('/home/user/pipelines/done/agent/subtask/final.json') // for dest
@@ -315,17 +351,17 @@ describe('PipelineFileDomain', () => {
   describe('loadRawPipeline', () => {
     it('should load raw pipeline from file repository', () => {
       const expectedPipeline = { tasks: [{ id: 'task1', type: 'agent' }] }
-      vi.mocked(fileMoveRepo.readRawJson).mockReturnValue(expectedPipeline as unknown)
+      vi.mocked(fileMoveRepo.readRaw).mockReturnValue(expectedPipeline as unknown)
 
       const result = domain.loadRawPipeline('/home/user/pipeline.json')
 
       expect(result).toEqual(expectedPipeline)
-      expect(fileMoveRepo.readRawJson).toHaveBeenCalledWith('/home/user/pipeline.json')
+      expect(fileMoveRepo.readRaw).toHaveBeenCalledWith('/home/user/pipeline.json')
     })
 
     it('should return raw JSON object from repository', () => {
       const rawData = { random: 'data', nested: { value: 42 } }
-      vi.mocked(fileMoveRepo.readRawJson).mockReturnValue(rawData as unknown)
+      vi.mocked(fileMoveRepo.readRaw).mockReturnValue(rawData as unknown)
 
       const result = domain.loadRawPipeline('/path/to/file.json')
 
@@ -333,11 +369,11 @@ describe('PipelineFileDomain', () => {
     })
 
     it('should pass absolute path to repository method', () => {
-      vi.mocked(fileMoveRepo.readRawJson).mockReturnValue({} as unknown)
+      vi.mocked(fileMoveRepo.readRaw).mockReturnValue({} as unknown)
 
       domain.loadRawPipeline('/absolute/path/file.json')
 
-      expect(fileMoveRepo.readRawJson).toHaveBeenCalledWith('/absolute/path/file.json')
+      expect(fileMoveRepo.readRaw).toHaveBeenCalledWith('/absolute/path/file.json')
     })
   })
 
@@ -347,7 +383,7 @@ describe('PipelineFileDomain', () => {
 
       domain.savePipeline('/home/user/pipeline.json', pipeline)
 
-      expect(fileMoveRepo.writeJson).toHaveBeenCalledWith('/home/user/pipeline.json', pipeline)
+      expect(fileMoveRepo.write).toHaveBeenCalledWith('/home/user/pipeline.json', pipeline)
     })
 
     it('should save pipeline with correct path and data', () => {
@@ -360,8 +396,8 @@ describe('PipelineFileDomain', () => {
 
       domain.savePipeline('/path/to/output.json', pipeline)
 
-      expect(fileMoveRepo.writeJson).toHaveBeenCalledWith('/path/to/output.json', pipeline)
-      expect(fileMoveRepo.writeJson).toHaveBeenCalledTimes(1)
+      expect(fileMoveRepo.write).toHaveBeenCalledWith('/path/to/output.json', pipeline)
+      expect(fileMoveRepo.write).toHaveBeenCalledTimes(1)
     })
 
     it('should write JSON exactly once per invocation', () => {
@@ -370,7 +406,7 @@ describe('PipelineFileDomain', () => {
       domain.savePipeline('/path/file.json', pipeline)
       domain.savePipeline('/path/file2.json', pipeline)
 
-      expect(fileMoveRepo.writeJson).toHaveBeenCalledTimes(2)
+      expect(fileMoveRepo.write).toHaveBeenCalledTimes(2)
     })
   })
 })
