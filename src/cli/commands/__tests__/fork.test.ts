@@ -61,16 +61,17 @@ describe('forkCommand', () => {
       disallowedTools: [],
       model: 'claude-sonnet-4-6',
       maxTurns: 10,
-      maxContextTokens: 4000
+      maxContextTokens: 4000,
+      format: 'text' as const
     }
 
     // Mock container.resolve to return our mocked services
-    vi.mocked(container).resolve = vi.fn((token: symbol | string): unknown => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown): unknown => {
       if (token === TOKENS.SessionService) return mockSessionService
       if (token === TOKENS.AgentService) return mockAgentService
       if (token === TOKENS.Config) return mockConfig
       throw new Error(`Unknown token: ${String(token)}`)
-    })
+    }) as never
 
     // Mock parseForkSession default behavior
     vi.mocked(parseForkSession).mockReturnValue(mockParseForkSessionData)
@@ -171,7 +172,7 @@ describe('forkCommand', () => {
 
   it('should handle RateLimitError without resetInfo and exit with status 1', async () => {
     const rateLimitError = new RateLimitError('Rate limit exceeded')
-    rateLimitError.resetInfo = undefined
+    ;(rateLimitError as { resetInfo: string | undefined }).resetInfo = undefined
     vi.mocked(parseForkSession).mockReturnValue(mockParseForkSessionData)
     mockSessionService.resolveId.mockImplementation(() => {
       throw rateLimitError
@@ -190,7 +191,7 @@ describe('forkCommand', () => {
 
   it('should handle RateLimitError with resetInfo and exit with status 1', async () => {
     const rateLimitError = new RateLimitError('Rate limit exceeded')
-    rateLimitError.resetInfo = '2026-04-22T15:30:00Z'
+    ;(rateLimitError as { resetInfo: string | undefined }).resetInfo = '2026-04-22T15:30:00Z'
     vi.mocked(parseForkSession).mockReturnValue(mockParseForkSessionData)
     mockSessionService.resolveId.mockImplementation(() => {
       throw rateLimitError

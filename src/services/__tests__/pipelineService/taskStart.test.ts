@@ -32,7 +32,9 @@ describe('PipelineService', () => {
     findOuterRejectionTarget: vi.fn(),
     resolveScriptRejection: vi.fn()
   }
-  const mockScriptDomain: IScriptDomain = { run: vi.fn<[string, string], Promise<ScriptResult>>() }
+  const mockScriptDomain: IScriptDomain = {
+    run: vi.fn<(command: string, cwd: string) => Promise<ScriptResult>>()
+  }
   const mockPipelineTaskDomain: IPipelineTaskDomain = { markTaskDone: vi.fn() }
   const mockLoaderDomain: IPipelineLoaderDomain = { load: vi.fn() }
 

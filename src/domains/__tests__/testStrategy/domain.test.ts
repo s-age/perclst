@@ -56,7 +56,7 @@ describe('TestStrategyDomain', () => {
       const rawFunctions: RawFunctionInfo[] = [
         {
           name: 'myFunc',
-          class_name: null,
+          class_name: undefined,
           lineno: 10,
           branchCount: 1,
           loopCount: 0,
@@ -89,7 +89,7 @@ describe('TestStrategyDomain', () => {
       const rawFunctions: RawFunctionInfo[] = [
         {
           name: 'myFunc',
-          class_name: null,
+          class_name: undefined,
           lineno: 10,
           branchCount: 0,
           loopCount: 0,
@@ -120,7 +120,7 @@ describe('TestStrategyDomain', () => {
       const rawFunctions: RawFunctionInfo[] = [
         {
           name: 'myFunc',
-          class_name: null,
+          class_name: undefined,
           lineno: 10,
           branchCount: 0,
           loopCount: 0,

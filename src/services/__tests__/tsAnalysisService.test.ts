@@ -9,7 +9,7 @@ import type {
 import { TsAnalysisService } from '../tsAnalysisService'
 
 describe('TsAnalysisService', () => {
-  let mockDomain: Partial<ITsAnalysisDomain>
+  let mockDomain: ITsAnalysisDomain
   let service: TsAnalysisService
 
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe('TsAnalysisService', () => {
       getReferencesRecursive: vi.fn(),
       getTypeDefinitions: vi.fn()
     }
-    service = new TsAnalysisService(mockDomain as ITsAnalysisDomain)
+    service = new TsAnalysisService(mockDomain)
     vi.clearAllMocks()
   })
 
@@ -27,7 +27,7 @@ describe('TsAnalysisService', () => {
     it('should call domain.analyze with filePath and return result', () => {
       const filePath = '/path/to/file.ts'
       const mockAnalysis: TypeScriptAnalysis = {
-        file: filePath,
+        file_path: filePath,
         symbols: [],
         imports: [],
         exports: []
@@ -44,7 +44,7 @@ describe('TsAnalysisService', () => {
     it('should return analysis with symbols', () => {
       const filePath = '/path/to/service.ts'
       const mockAnalysis: TypeScriptAnalysis = {
-        file: filePath,
+        file_path: filePath,
         symbols: [
           {
             name: 'MyService',
@@ -72,7 +72,7 @@ describe('TsAnalysisService', () => {
       const result = service.analyze(filePath)
 
       expect(result.symbols).toHaveLength(1)
-      expect(result.symbols[0].name).toBe('MyService')
+      expect(result.symbols![0].name).toBe('MyService')
       expect(result.imports).toHaveLength(1)
       expect(result.exports).toHaveLength(1)
     })
@@ -84,11 +84,10 @@ describe('TsAnalysisService', () => {
       const symbolName = 'MyFunction'
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller.ts',
+          file_path: '/path/to/caller.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()',
-          callers: []
+          snippet: 'myFunction()'
         }
       ]
       vi.mocked(mockDomain.getReferencesRecursive).mockReturnValue(mockReferences)
@@ -121,14 +120,13 @@ describe('TsAnalysisService', () => {
     it('should call getReferencesRecursive when recursive is true', () => {
       const filePath = '/path/to/file.ts'
       const symbolName = 'MyFunction'
-      const options = { recursive: true, includeTest: true }
+      const options = { recursive: true as const, includeTest: true }
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller.ts',
+          file_path: '/path/to/caller.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()',
-          callers: []
+          snippet: 'myFunction()'
         }
       ]
       vi.mocked(mockDomain.getReferencesRecursive).mockReturnValue(mockReferences)
@@ -143,13 +141,13 @@ describe('TsAnalysisService', () => {
     it('should call getReferences when recursive is explicitly false', () => {
       const filePath = '/path/to/file.ts'
       const symbolName = 'MyFunction'
-      const options = { recursive: false }
+      const options = { recursive: false as const }
       const mockReferences: ReferenceInfo[] = [
         {
-          file: '/path/to/caller.ts',
+          file_path: '/path/to/caller.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()'
+          snippet: 'myFunction()'
         }
       ]
       vi.mocked(mockDomain.getReferences).mockReturnValue(mockReferences)
@@ -177,7 +175,7 @@ describe('TsAnalysisService', () => {
     it('should pass includeTest option to getReferences when recursive is false', () => {
       const filePath = '/path/to/file.ts'
       const symbolName = 'MyFunction'
-      const options = { recursive: false, includeTest: true }
+      const options = { recursive: false as const, includeTest: true }
       vi.mocked(mockDomain.getReferences).mockReturnValue([])
 
       service.getReferences(filePath, symbolName, options)
@@ -200,7 +198,7 @@ describe('TsAnalysisService', () => {
       const symbolName = 'UnusedFunction'
       vi.mocked(mockDomain.getReferences).mockReturnValue([])
 
-      const result = service.getReferences(filePath, symbolName, { recursive: false })
+      const result = service.getReferences(filePath, symbolName, { recursive: false as const })
 
       expect(result).toEqual([])
     })
@@ -210,25 +208,22 @@ describe('TsAnalysisService', () => {
       const symbolName = 'MyFunction'
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller1.ts',
+          file_path: '/path/to/caller1.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()',
-          callers: [
-            {
-              file: '/path/to/caller2.ts',
-              line: 15,
-              column: 5,
-              context: 'wrapper()'
-            }
-          ]
+          snippet: 'myFunction()',
+          caller: {
+            symbol_name: 'wrapper',
+            file_path: '/path/to/caller2.ts',
+            line: 15,
+            references: []
+          }
         },
         {
-          file: '/path/to/caller3.ts',
+          file_path: '/path/to/caller3.ts',
           line: 20,
           column: 12,
-          context: 'myFunction()',
-          callers: []
+          snippet: 'myFunction()'
         }
       ]
       vi.mocked(mockDomain.getReferencesRecursive).mockReturnValue(mockReferences)
@@ -236,8 +231,8 @@ describe('TsAnalysisService', () => {
       const result = service.getReferences(filePath, symbolName)
 
       expect(result).toHaveLength(2)
-      expect(result[0].callers).toHaveLength(1)
-      expect(result[1].callers).toHaveLength(0)
+      expect((result as RecursiveReferenceInfo[])[0].caller).toBeDefined()
+      expect((result as RecursiveReferenceInfo[])[1].caller).toBeUndefined()
     })
   })
 
@@ -247,8 +242,7 @@ describe('TsAnalysisService', () => {
       const symbolName = 'MyType'
       const mockDefinition: TypeDefinition = {
         name: 'MyType',
-        kind: 'interface',
-        signature: 'interface MyType { prop: string }',
+        type: 'interface MyType { prop: string }',
         parameters: [],
         returnType: undefined
       }
@@ -277,8 +271,7 @@ describe('TsAnalysisService', () => {
       const symbolName = 'myFunction'
       const mockDefinition: TypeDefinition = {
         name: 'myFunction',
-        kind: 'function',
-        signature: 'function myFunction(x: string, y: number): boolean',
+        type: 'function myFunction(x: string, y: number): boolean',
         parameters: [
           { name: 'x', type: 'string' },
           { name: 'y', type: 'number' }
@@ -298,8 +291,7 @@ describe('TsAnalysisService', () => {
       const symbolName = 'MyClass'
       const mockDefinition: TypeDefinition = {
         name: 'MyClass',
-        kind: 'class',
-        signature: 'class MyClass { ... }',
+        type: 'class MyClass { ... }',
         parameters: [],
         returnType: undefined
       }
@@ -307,7 +299,7 @@ describe('TsAnalysisService', () => {
 
       const result = service.getTypeDefinitions(filePath, symbolName)
 
-      expect(result?.kind).toBe('class')
+      expect(result?.type).toBe('class MyClass { ... }')
     })
   })
 })

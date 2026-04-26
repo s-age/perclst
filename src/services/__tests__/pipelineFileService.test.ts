@@ -199,7 +199,7 @@ describe('PipelineFileService', () => {
       const absolutePath = '/path/to/save'
       const pipeline: Pipeline = {
         tasks: [
-          { type: 'agent', prompt: 'task 1' },
+          { type: 'agent', task: 'task 1' },
           { type: 'script', command: 'echo done' }
         ]
       }

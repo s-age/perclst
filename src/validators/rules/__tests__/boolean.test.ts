@@ -16,7 +16,7 @@ describe('booleanRule', () => {
   })
 
   it('should call z.boolean() when invoked', () => {
-    const mockBooleanSchema = {}
+    const mockBooleanSchema = {} as unknown as ReturnType<typeof z.boolean>
     vi.mocked(z.boolean).mockReturnValue(mockBooleanSchema)
 
     booleanRule()
@@ -25,7 +25,7 @@ describe('booleanRule', () => {
   })
 
   it('should call z.boolean() with no arguments', () => {
-    const mockBooleanSchema = {}
+    const mockBooleanSchema = {} as unknown as ReturnType<typeof z.boolean>
     vi.mocked(z.boolean).mockReturnValue(mockBooleanSchema)
 
     booleanRule()
@@ -34,7 +34,7 @@ describe('booleanRule', () => {
   })
 
   it('should return the schema object returned by z.boolean()', () => {
-    const mockBooleanSchema = { parse: vi.fn() }
+    const mockBooleanSchema = { parse: vi.fn() } as unknown as ReturnType<typeof z.boolean>
     vi.mocked(z.boolean).mockReturnValue(mockBooleanSchema)
 
     const result = booleanRule()
@@ -43,11 +43,13 @@ describe('booleanRule', () => {
   })
 
   it('should return a new schema instance each time it is called', () => {
-    const mockSchema1 = { id: 1 }
-    const mockSchema2 = { id: 2 }
+    const mockSchema1 = { id: 1 } as unknown as ReturnType<typeof z.boolean>
+    const mockSchema2 = { id: 2 } as unknown as ReturnType<typeof z.boolean>
     const mockBooleanSchemas = [mockSchema1, mockSchema2]
 
-    vi.mocked(z.boolean).mockImplementation(() => mockBooleanSchemas.shift() || {})
+    vi.mocked(z.boolean).mockImplementation(
+      () => mockBooleanSchemas.shift() as ReturnType<typeof z.boolean>
+    )
 
     const result1 = booleanRule()
     const result2 = booleanRule()

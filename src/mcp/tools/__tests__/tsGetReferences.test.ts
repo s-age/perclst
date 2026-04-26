@@ -5,12 +5,11 @@ import { executeTsGetReferences } from '../tsGetReferences'
 
 // Mock the container and service
 const mockGetReferences = vi.fn()
-const mockTsAnalysisService: TsAnalysisService = {
+const mockTsAnalysisService = {
   analyze: vi.fn(),
   getReferences: mockGetReferences,
-  getReferencesRecursive: vi.fn(),
   getTypeDefinitions: vi.fn()
-}
+} as unknown as TsAnalysisService
 
 vi.mock('@src/core/di/container', () => ({
   container: {
@@ -33,11 +32,10 @@ describe('executeTsGetReferences', () => {
     it('should call service.getReferences with file_path and symbol_name', async () => {
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller.ts',
+          file_path: '/path/to/caller.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()',
-          callers: []
+          snippet: 'myFunction()'
         }
       ]
       vi.mocked(mockGetReferences).mockReturnValue(mockReferences)
@@ -58,11 +56,10 @@ describe('executeTsGetReferences', () => {
     it('should return formatted JSON response with symbol and references', async () => {
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller.ts',
+          file_path: '/path/to/caller.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()',
-          callers: []
+          snippet: 'myFunction()'
         }
       ]
       vi.mocked(mockGetReferences).mockReturnValue(mockReferences)
@@ -94,18 +91,16 @@ describe('executeTsGetReferences', () => {
     it('should return multiple references', async () => {
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller1.ts',
+          file_path: '/path/to/caller1.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()',
-          callers: []
+          snippet: 'myFunction()'
         },
         {
-          file: '/path/to/caller2.ts',
+          file_path: '/path/to/caller2.ts',
           line: 12,
           column: 8,
-          context: 'wrapper()',
-          callers: []
+          snippet: 'wrapper()'
         }
       ]
       vi.mocked(mockGetReferences).mockReturnValue(mockReferences)
@@ -119,21 +114,19 @@ describe('executeTsGetReferences', () => {
       expect(parsedText.references).toHaveLength(2)
     })
 
-    it('should return references with nested callers structure', async () => {
+    it('should return references with nested caller structure', async () => {
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller1.ts',
+          file_path: '/path/to/caller1.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()',
-          callers: [
-            {
-              file: '/path/to/caller2.ts',
-              line: 15,
-              column: 5,
-              context: 'wrapper()'
-            }
-          ]
+          snippet: 'myFunction()',
+          caller: {
+            symbol_name: 'wrapper',
+            file_path: '/path/to/caller2.ts',
+            line: 15,
+            references: []
+          }
         }
       ]
       vi.mocked(mockGetReferences).mockReturnValue(mockReferences)
@@ -144,8 +137,8 @@ describe('executeTsGetReferences', () => {
       })
 
       const parsedText = JSON.parse(result.content[0].text)
-      expect(parsedText.references[0].callers).toHaveLength(1)
-      expect(parsedText.references[0].callers[0].context).toBe('wrapper()')
+      expect(parsedText.references[0].caller).toBeDefined()
+      expect(parsedText.references[0].caller.symbol_name).toBe('wrapper')
     })
   })
 
@@ -276,11 +269,10 @@ describe('executeTsGetReferences', () => {
     it('should return valid JSON in text field', async () => {
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller.ts',
+          file_path: '/path/to/caller.ts',
           line: 5,
           column: 10,
-          context: 'myFunction()',
-          callers: []
+          snippet: 'myFunction()'
         }
       ]
       vi.mocked(mockGetReferences).mockReturnValue(mockReferences)
@@ -342,15 +334,14 @@ describe('executeTsGetReferences', () => {
       )
     })
 
-    it('should handle references with very long context strings', async () => {
-      const longContext = 'a'.repeat(1000)
+    it('should handle references with very long snippet strings', async () => {
+      const longSnippet = 'a'.repeat(1000)
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/caller.ts',
+          file_path: '/path/to/caller.ts',
           line: 5,
           column: 10,
-          context: longContext,
-          callers: []
+          snippet: longSnippet
         }
       ]
       vi.mocked(mockGetReferences).mockReturnValue(mockReferences)
@@ -361,17 +352,16 @@ describe('executeTsGetReferences', () => {
       })
 
       const parsedText = JSON.parse(result.content[0].text)
-      expect(parsedText.references[0].context).toBe(longContext)
+      expect(parsedText.references[0].snippet).toBe(longSnippet)
     })
 
-    it('should preserve reference metadata (file, line, column, context)', async () => {
+    it('should preserve reference metadata (file_path, line, column, snippet)', async () => {
       const mockReferences: RecursiveReferenceInfo[] = [
         {
-          file: '/path/to/specific/caller.ts',
+          file_path: '/path/to/specific/caller.ts',
           line: 42,
           column: 15,
-          context: 'specificContext()',
-          callers: []
+          snippet: 'specificContext()'
         }
       ]
       vi.mocked(mockGetReferences).mockReturnValue(mockReferences)
@@ -383,10 +373,10 @@ describe('executeTsGetReferences', () => {
 
       const parsedText = JSON.parse(result.content[0].text)
       const ref = parsedText.references[0]
-      expect(ref.file).toBe('/path/to/specific/caller.ts')
+      expect(ref.file_path).toBe('/path/to/specific/caller.ts')
       expect(ref.line).toBe(42)
       expect(ref.column).toBe(15)
-      expect(ref.context).toBe('specificContext()')
+      expect(ref.snippet).toBe('specificContext()')
     })
   })
 })

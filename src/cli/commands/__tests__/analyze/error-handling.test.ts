@@ -41,11 +41,14 @@ describe('analyzeCommand - error handling', () => {
       }
     })
 
-    vi.mocked(parseAnalyzeSession).mockImplementation((input) => ({
-      sessionId: input.sessionId,
-      format: input.format,
-      printDetail: input.printDetail ?? false
-    }))
+    vi.mocked(parseAnalyzeSession).mockImplementation((raw: unknown) => {
+      const input = raw as Record<string, unknown>
+      return {
+        sessionId: input.sessionId as string,
+        format: (input.format as 'text' | 'json' | undefined) ?? 'text',
+        printDetail: (input.printDetail as boolean | undefined) ?? false
+      }
+    })
   })
 
   it('handles validation error from parseAnalyzeSession', async () => {
@@ -66,7 +69,7 @@ describe('analyzeCommand - error handling', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
 
@@ -83,7 +86,7 @@ describe('analyzeCommand - error handling', () => {
 
     vi.mocked(parseAnalyzeSession).mockReturnValue({
       sessionId: 'test-123',
-      format: undefined,
+      format: 'text',
       printDetail: false
     })
 

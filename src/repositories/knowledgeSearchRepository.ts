@@ -1,5 +1,6 @@
 import { join } from 'path'
-import type { IKnowledgeSearchRepository, KnowledgeFileEntry } from './ports/knowledgeSearch'
+import type { IKnowledgeSearchRepository } from './ports/knowledgeSearch'
+import type { KnowledgeFileEntry } from '@src/types/knowledgeSearch'
 import { listFilesRecursive, readTextFile } from '@src/infrastructures/knowledgeReader'
 
 export class KnowledgeSearchRepository implements IKnowledgeSearchRepository {

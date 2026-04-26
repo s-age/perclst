@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { listCommand } from '../list.ts'
+import { listCommand } from '../list'
 import { parseListSessions } from '@src/validators/cli/listSessions'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
@@ -31,7 +31,8 @@ vi.mock('@src/utils/output', () => ({
   stderr: { print: mockStderrPrint }
 }))
 vi.mock('cli-table3', () => ({
-  default: vi.fn(function () {
+  // eslint-disable-next-line local/no-any
+  default: vi.fn(function (this: any) {
     this.push = mockTableInstance.push
     this.toString = mockTableInstance.toString
     return this

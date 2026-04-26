@@ -31,6 +31,7 @@ describe('tsChecker', () => {
         ok: true,
         lint: { errors: [], warnings: [], exitCode: 0 },
         build: { errors: [], warnings: [], exitCode: 0 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: [], warnings: [], exitCode: 0 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)
@@ -45,6 +46,7 @@ describe('tsChecker', () => {
         ok: true,
         lint: { errors: [], warnings: [], exitCode: 0 },
         build: { errors: [], warnings: [], exitCode: 0 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: [], warnings: [], exitCode: 0 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)
@@ -69,6 +71,7 @@ describe('tsChecker', () => {
         ok: true,
         lint: { errors: [], warnings: [], exitCode: 0 },
         build: { errors: [], warnings: [], exitCode: 0 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: [], warnings: [], exitCode: 0 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)
@@ -88,6 +91,7 @@ describe('tsChecker', () => {
         ok: true,
         lint: { errors: [], warnings: [], exitCode: 0 },
         build: { errors: [], warnings: [], exitCode: 0 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: [], warnings: [], exitCode: 0 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)
@@ -110,6 +114,7 @@ describe('tsChecker', () => {
         ok: true,
         lint: { errors: [], warnings: [], exitCode: 0 },
         build: { errors: [], warnings: [], exitCode: 0 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: [], warnings: [], exitCode: 0 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)
@@ -131,6 +136,7 @@ describe('tsChecker', () => {
         ok: false,
         lint: { errors: ['error1'], warnings: ['warning1'], exitCode: 1 },
         build: { errors: [], warnings: [], exitCode: 0 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: ['test-error'], warnings: [], exitCode: 1 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)
@@ -156,6 +162,7 @@ describe('tsChecker', () => {
         ok: false,
         lint: { errors: ['lint-error'], warnings: ['lint-warning'], exitCode: 1 },
         build: { errors: ['build-error'], warnings: [], exitCode: 1 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: ['test-error1', 'test-error2'], warnings: ['test-warning'], exitCode: 1 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)
@@ -174,6 +181,7 @@ describe('tsChecker', () => {
         ok: true,
         lint: { errors: [], warnings: [], exitCode: 0 },
         build: { errors: [], warnings: [], exitCode: 0 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: [], warnings: [], exitCode: 0 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)
@@ -192,6 +200,7 @@ describe('tsChecker', () => {
         ok: true,
         lint: { errors: [], warnings: ['warning1', 'warning2'], exitCode: 0 },
         build: { errors: [], warnings: ['build-warning'], exitCode: 0 },
+        typecheck: { errors: [], warnings: [], exitCode: 0 },
         test: { errors: [], warnings: [], exitCode: 0 }
       }
       mockCheckerService.check.mockResolvedValue(checkerResult)

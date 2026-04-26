@@ -41,8 +41,8 @@ describe('printTaskResult', () => {
     vi.clearAllMocks()
 
     mockStdout = { print: vi.fn() }
-    vi.mocked(stdout).print = mockStdout.print
-    vi.mocked(stderr).print = vi.fn()
+    vi.mocked(stdout).print = mockStdout.print as never
+    vi.mocked(stderr).print = vi.fn() as never
 
     mockPipelineFileService = {
       loadRawPipeline: vi.fn(),
@@ -69,13 +69,13 @@ describe('printTaskResult', () => {
       display: { header_color: '#D97757', no_color: false }
     } as Config
 
-    vi.mocked(container).resolve = vi.fn((token) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.PipelineFileService) return mockPipelineFileService
       if (token === TOKENS.PipelineService) return mockPipelineService
       if (token === TOKENS.AbortService) return mockAbortService
       if (token === TOKENS.Config) return mockConfig
       return null
-    })
+    }) as never
 
     vi.mocked(parseRunOptions).mockReturnValue({
       pipelinePath: 'test.json',
@@ -99,7 +99,8 @@ describe('printTaskResult', () => {
 
     const mockExit = vi.fn()
     const mockOnce = vi.fn()
-    global.process = { ...process, exit: mockExit, once: mockOnce }
+    // eslint-disable-next-line local/no-any
+    global.process = { ...process, exit: mockExit as any, once: mockOnce as any }
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
   })
 
@@ -107,13 +108,14 @@ describe('printTaskResult', () => {
     const result: PipelineTaskResult = {
       kind: 'task_start',
       taskPath: [],
-      taskIndex: 0
+      taskIndex: 0,
+      taskType: 'agent'
     }
     mockPipelineService.run.mockImplementation(async function* () {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -126,13 +128,14 @@ describe('printTaskResult', () => {
       kind: 'retry',
       taskPath: [],
       taskIndex: 0,
-      attempt: 1
+      retryCount: 1,
+      maxRetries: 3
     }
     mockPipelineService.run.mockImplementation(async function* () {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -143,13 +146,14 @@ describe('printTaskResult', () => {
   it('should skip printing pipeline_end results', async () => {
     const result: PipelineTaskResult = {
       kind: 'pipeline_end',
-      taskPath: []
+      taskPath: [],
+      taskIndex: 0
     }
     mockPipelineService.run.mockImplementation(async function* () {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -169,7 +173,7 @@ describe('printTaskResult', () => {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -190,7 +194,7 @@ describe('printTaskResult', () => {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -211,7 +215,7 @@ describe('printTaskResult', () => {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -231,7 +235,7 @@ describe('printTaskResult', () => {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -245,21 +249,25 @@ describe('printTaskResult', () => {
       taskPath: [],
       taskIndex: 0,
       name: 'test agent',
-      action: 'start',
+      action: 'started',
       sessionId: 'session-123',
-      response: 'agent response'
+      response: {
+        content: 'agent response',
+        model: 'claude-sonnet-4-6',
+        usage: { input_tokens: 0, output_tokens: 0 }
+      }
     }
     mockPipelineService.run.mockImplementation(async function* () {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
 
     expect(mockStdout.print).toHaveBeenCalledWith(
-      expect.stringContaining('Task 1: test agent [start]')
+      expect.stringContaining('Task 1: test agent [started]')
     )
   })
 
@@ -268,20 +276,24 @@ describe('printTaskResult', () => {
       kind: 'agent',
       taskPath: [],
       taskIndex: 0,
-      action: 'resume',
+      action: 'resumed',
       sessionId: 'session-123',
-      response: 'agent response'
+      response: {
+        content: 'agent response',
+        model: 'claude-sonnet-4-6',
+        usage: { input_tokens: 0, output_tokens: 0 }
+      }
     }
     mockPipelineService.run.mockImplementation(async function* () {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
 
-    expect(mockStdout.print).toHaveBeenCalledWith(expect.stringContaining('Task 1 [resume]'))
+    expect(mockStdout.print).toHaveBeenCalledWith(expect.stringContaining('Task 1 [resumed]'))
   })
 
   it('should pass streaming flag to printResponse', async () => {
@@ -289,21 +301,25 @@ describe('printTaskResult', () => {
       kind: 'agent',
       taskPath: [],
       taskIndex: 0,
-      action: 'start',
+      action: 'started',
       sessionId: 'session-123',
-      response: 'agent response'
+      response: {
+        content: 'agent response',
+        model: 'claude-sonnet-4-6',
+        usage: { input_tokens: 0, output_tokens: 0 }
+      }
     }
     mockPipelineService.run.mockImplementation(async function* () {
       yield result
     })
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', { outputOnly: true })
 
     expect(vi.mocked(printResponse)).toHaveBeenCalledWith(
-      expect.any(String),
+      expect.any(Object),
       expect.objectContaining({ silentThoughts: true, silentToolResponse: true }),
       expect.any(Object),
       expect.any(Object)

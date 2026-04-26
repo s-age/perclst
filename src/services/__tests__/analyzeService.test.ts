@@ -73,7 +73,8 @@ function makeMockDomain(): IAnalyzeDomain {
   return {
     analyze: vi.fn().mockResolvedValue(mockAnalyzeResult),
     getRewindTurns: vi.fn().mockResolvedValue(mockRewindTurns),
-    formatTurns: vi.fn()
+    formatTurns: vi.fn(),
+    summarize: vi.fn()
   }
 }
 

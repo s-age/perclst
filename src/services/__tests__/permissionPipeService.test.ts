@@ -29,8 +29,7 @@ describe('PermissionPipeService', () => {
     it('returns a PermissionRequest when domain.pollRequest returns one', () => {
       const mockRequest: PermissionRequest = {
         tool_name: 'WebFetch',
-        input: { url: 'https://example.com' },
-        tool_use_id: 'tool-123'
+        input: { url: 'https://example.com' }
       }
       vi.mocked(mockDomain.pollRequest).mockReturnValue(mockRequest)
 
@@ -52,8 +51,8 @@ describe('PermissionPipeService', () => {
   describe('respond', () => {
     it('calls domain.respond with the provided PermissionResult', () => {
       const mockResult: PermissionResult = {
-        tool_use_id: 'tool-456',
-        permitted: true
+        behavior: 'allow',
+        updatedInput: {}
       }
 
       service.respond(mockResult)
@@ -64,8 +63,8 @@ describe('PermissionPipeService', () => {
 
     it('calls domain.respond with denied permission result', () => {
       const mockResult: PermissionResult = {
-        tool_use_id: 'tool-789',
-        permitted: false
+        behavior: 'deny',
+        message: 'Permission denied'
       }
 
       service.respond(mockResult)
@@ -75,8 +74,8 @@ describe('PermissionPipeService', () => {
 
     it('returns void', () => {
       const mockResult: PermissionResult = {
-        tool_use_id: 'tool-999',
-        permitted: true
+        behavior: 'allow',
+        updatedInput: {}
       }
 
       const result = service.respond(mockResult)
@@ -88,8 +87,8 @@ describe('PermissionPipeService', () => {
   describe('askPermission', () => {
     it('returns the promise from domain.askPermission', async () => {
       const mockResult: PermissionResult = {
-        tool_use_id: 'tool-abc',
-        permitted: true
+        behavior: 'allow',
+        updatedInput: {}
       }
       vi.mocked(mockDomain.askPermission).mockResolvedValue(mockResult)
 
@@ -106,8 +105,8 @@ describe('PermissionPipeService', () => {
 
     it('calls domain.askPermission with the provided arguments', async () => {
       vi.mocked(mockDomain.askPermission).mockResolvedValue({
-        tool_use_id: 'tool-def',
-        permitted: false
+        behavior: 'deny',
+        message: 'Not allowed'
       })
 
       const args = {
@@ -124,8 +123,8 @@ describe('PermissionPipeService', () => {
 
     it('handles arguments without tool_use_id', async () => {
       const mockResult: PermissionResult = {
-        tool_use_id: 'generated-id',
-        permitted: true
+        behavior: 'allow',
+        updatedInput: {}
       }
       vi.mocked(mockDomain.askPermission).mockResolvedValue(mockResult)
 
@@ -154,8 +153,8 @@ describe('PermissionPipeService', () => {
 
     it('allows complex input objects', async () => {
       const mockResult: PermissionResult = {
-        tool_use_id: 'tool-ghi',
-        permitted: true
+        behavior: 'allow',
+        updatedInput: {}
       }
       vi.mocked(mockDomain.askPermission).mockResolvedValue(mockResult)
 

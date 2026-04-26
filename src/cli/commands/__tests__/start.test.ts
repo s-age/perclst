@@ -6,7 +6,7 @@ import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { printResponse, printStreamEvent } from '@src/cli/display'
 import type { AgentStreamEvent } from '@src/types/agent'
-import type { SpyInstance } from 'vitest'
+import type { MockInstance } from 'vitest'
 
 // Mock dependencies
 vi.mock('@src/core/di/container')
@@ -33,7 +33,7 @@ describe('startCommand', () => {
   let mockAgentService: MockAgentService
   let mockConfig: MockConfig
   let mockParseStartSessionFn: ReturnType<typeof vi.fn>
-  let exitSpy: SpyInstance
+  let exitSpy: MockInstance
 
   beforeEach(() => {
     // Setup mock AgentService
@@ -50,16 +50,16 @@ describe('startCommand', () => {
     }
 
     // Setup container mock
-    vi.mocked(container).resolve = vi.fn((token: string) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.AgentService) return mockAgentService
       if (token === TOKENS.Config) return mockConfig
       return undefined
-    })
+    }) as never
 
     // Setup output mocks
-    vi.mocked(debug).print = vi.fn()
-    vi.mocked(stdout).print = vi.fn()
-    vi.mocked(stderr).print = vi.fn()
+    vi.mocked(debug).print = vi.fn() as never
+    vi.mocked(stdout).print = vi.fn() as never
+    vi.mocked(stderr).print = vi.fn() as never
     vi.mocked(printStreamEvent).mockClear()
     vi.mocked(printResponse).mockClear()
 
@@ -202,9 +202,8 @@ describe('startCommand', () => {
     const mockSessionId = 'session-stream'
     const mockResponse = { result: 'success' }
     const mockStreamEvent: AgentStreamEvent = {
-      type: 'agent_message',
-      message: 'Test message',
-      timestamp: new Date()
+      type: 'thought',
+      thinking: 'Test message'
     }
 
     mockParseStartSessionFn.mockReturnValue({
@@ -356,7 +355,7 @@ describe('startCommand', () => {
 
   it('handles RateLimitError without resetInfo', async () => {
     const rateLimitError = new RateLimitError('Rate limited')
-    rateLimitError.resetInfo = undefined
+    ;(rateLimitError as { resetInfo: string | undefined }).resetInfo = undefined
 
     mockParseStartSessionFn.mockReturnValue({
       task: 'test task',
@@ -393,7 +392,7 @@ describe('startCommand', () => {
 
   it('handles RateLimitError with resetInfo', async () => {
     const rateLimitError = new RateLimitError('Rate limited')
-    rateLimitError.resetInfo = '2026-04-23T15:30:00Z'
+    ;(rateLimitError as { resetInfo: string | undefined }).resetInfo = '2026-04-23T15:30:00Z'
 
     mockParseStartSessionFn.mockReturnValue({
       task: 'test task',

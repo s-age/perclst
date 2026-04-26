@@ -37,15 +37,18 @@ describe('KnowledgeSearchService', () => {
 
   describe('search', () => {
     it('returns search results matching query', () => {
-      const options = { query: 'fork session' }
+      const options = { query: 'fork session', include_draft: false }
       const mockResult: KnowledgeSearchResult = {
-        matches: [
+        query: 'fork session',
+        results: [
           {
-            file: 'knowledge/fork-session.md',
-            keywords: ['fork', 'session'],
-            preview: 'Forking allows...'
+            file_path: 'knowledge/fork-session.md',
+            title: 'Fork Session',
+            excerpt: 'Forking allows...',
+            matched_terms: ['fork', 'session']
           }
-        ]
+        ],
+        total: 1
       }
       vi.mocked(mockDomain.search).mockReturnValue(mockResult)
 
@@ -57,20 +60,28 @@ describe('KnowledgeSearchService', () => {
     })
 
     it('returns empty results when no matches found', () => {
-      const options = { query: 'nonexistent-term-xyz' }
-      const mockResult: KnowledgeSearchResult = { matches: [] }
+      const options = { query: 'nonexistent-term-xyz', include_draft: false }
+      const mockResult: KnowledgeSearchResult = {
+        query: 'nonexistent-term-xyz',
+        results: [],
+        total: 0
+      }
       vi.mocked(mockDomain.search).mockReturnValue(mockResult)
 
       const result = service.search(options)
 
       expect(result).toEqual(mockResult)
-      expect(result.matches).toHaveLength(0)
+      expect(result.results).toHaveLength(0)
       expect(mockDomain.search).toHaveBeenCalledWith(options)
     })
 
     it('passes search options unchanged to domain', () => {
       const options = { query: 'test OR validation', include_draft: true }
-      const mockResult: KnowledgeSearchResult = { matches: [] }
+      const mockResult: KnowledgeSearchResult = {
+        query: 'test OR validation',
+        results: [],
+        total: 0
+      }
       vi.mocked(mockDomain.search).mockReturnValue(mockResult)
 
       service.search(options)
@@ -79,26 +90,30 @@ describe('KnowledgeSearchService', () => {
     })
 
     it('returns multiple matches when available', () => {
-      const options = { query: 'zod' }
+      const options = { query: 'zod', include_draft: false }
       const mockResult: KnowledgeSearchResult = {
-        matches: [
+        query: 'zod',
+        results: [
           {
-            file: 'knowledge/zod-patterns.md',
-            keywords: ['zod', 'validation'],
-            preview: 'Zod is...'
+            file_path: 'knowledge/zod-patterns.md',
+            title: 'Zod Patterns',
+            excerpt: 'Zod is...',
+            matched_terms: ['zod', 'validation']
           },
           {
-            file: 'knowledge/validators.md',
-            keywords: ['zod', 'schema'],
-            preview: 'Validator patterns...'
+            file_path: 'knowledge/validators.md',
+            title: 'Validators',
+            excerpt: 'Validator patterns...',
+            matched_terms: ['zod', 'schema']
           }
-        ]
+        ],
+        total: 2
       }
       vi.mocked(mockDomain.search).mockReturnValue(mockResult)
 
       const result = service.search(options)
 
-      expect(result.matches).toHaveLength(2)
+      expect(result.results).toHaveLength(2)
       expect(result).toEqual(mockResult)
       expect(mockDomain.search).toHaveBeenCalledWith(options)
     })

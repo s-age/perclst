@@ -107,7 +107,7 @@ describe('PipelineFileDomain', () => {
   describe('getDiffStat', () => {
     it('should return diff stat from git repository', () => {
       const expectedStat = 'file1.ts | 10 ++++++++++\nfile2.ts | 5 -----'
-      vi.mocked(gitRepo.getDiffStat).mockReturnValue(expectedStat as unknown)
+      vi.mocked(gitRepo.getDiffStat).mockReturnValue(expectedStat as string | null)
 
       const result = domain.getDiffStat()
 
@@ -116,7 +116,7 @@ describe('PipelineFileDomain', () => {
     })
 
     it('should return null when git repo returns null', () => {
-      vi.mocked(gitRepo.getDiffStat).mockReturnValue(null as unknown)
+      vi.mocked(gitRepo.getDiffStat).mockReturnValue(null as string | null)
 
       const result = domain.getDiffStat()
 
@@ -127,7 +127,7 @@ describe('PipelineFileDomain', () => {
   describe('getHead', () => {
     it('should return current head commit hash from git repository', () => {
       const expectedHead = 'abc123def456'
-      vi.mocked(gitRepo.getHead).mockReturnValue(expectedHead as unknown)
+      vi.mocked(gitRepo.getHead).mockReturnValue(expectedHead as string | null)
 
       const result = domain.getHead()
 
@@ -136,7 +136,7 @@ describe('PipelineFileDomain', () => {
     })
 
     it('should return null when not in a git repository', () => {
-      vi.mocked(gitRepo.getHead).mockReturnValue(null as unknown)
+      vi.mocked(gitRepo.getHead).mockReturnValue(null as string | null)
 
       const result = domain.getHead()
 
@@ -147,7 +147,7 @@ describe('PipelineFileDomain', () => {
   describe('getDiffSummary', () => {
     it('should return diff summary between two commits', () => {
       const expectedSummary = '2 files changed, 15 insertions(+), 3 deletions(-)'
-      vi.mocked(gitRepo.getDiffSummary).mockReturnValue(expectedSummary as unknown)
+      vi.mocked(gitRepo.getDiffSummary).mockReturnValue(expectedSummary as string | null)
 
       const result = domain.getDiffSummary('abc123', 'def456')
 
@@ -156,7 +156,7 @@ describe('PipelineFileDomain', () => {
     })
 
     it('should return null when diff not available', () => {
-      vi.mocked(gitRepo.getDiffSummary).mockReturnValue(null as unknown)
+      vi.mocked(gitRepo.getDiffSummary).mockReturnValue(null as string | null)
 
       const result = domain.getDiffSummary('abc123', 'def456')
 
@@ -168,7 +168,7 @@ describe('PipelineFileDomain', () => {
   describe('getDiff', () => {
     it('should return full diff between two commits', () => {
       const expectedDiff = '--- a/file.ts\n+++ b/file.ts\n@@ -1,3 +1,4 @@\n+new line'
-      vi.mocked(gitRepo.getDiff).mockReturnValue(expectedDiff as unknown)
+      vi.mocked(gitRepo.getDiff).mockReturnValue(expectedDiff as string | null)
 
       const result = domain.getDiff('abc123', 'def456')
 
@@ -177,7 +177,7 @@ describe('PipelineFileDomain', () => {
     })
 
     it('should return null when diff not available', () => {
-      vi.mocked(gitRepo.getDiff).mockReturnValue(null as unknown)
+      vi.mocked(gitRepo.getDiff).mockReturnValue(null as string | null)
 
       const result = domain.getDiff('abc123', 'def456')
 
@@ -343,7 +343,7 @@ describe('PipelineFileDomain', () => {
 
   describe('savePipeline', () => {
     it('should save pipeline to file repository', () => {
-      const pipeline: Pipeline = { tasks: [{ id: 'task1', type: 'agent' }] }
+      const pipeline: Pipeline = { tasks: [{ type: 'agent', task: 'task1' }] }
 
       domain.savePipeline('/home/user/pipeline.json', pipeline)
 
@@ -353,8 +353,8 @@ describe('PipelineFileDomain', () => {
     it('should save pipeline with correct path and data', () => {
       const pipeline: Pipeline = {
         tasks: [
-          { id: 'agent1', type: 'agent' },
-          { id: 'script1', type: 'script' }
+          { type: 'agent', task: 'agent1' },
+          { type: 'script', command: 'echo script1' }
         ]
       }
 

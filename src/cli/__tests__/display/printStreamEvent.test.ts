@@ -139,6 +139,7 @@ describe('printStreamEvent', (): void => {
     it('prints result label', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_result',
+        toolName: 'Bash',
         result: 'Command output here'
       }
 
@@ -150,6 +151,7 @@ describe('printStreamEvent', (): void => {
     it('formats simple text results', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_result',
+        toolName: 'Bash',
         result: 'Simple text result'
       }
 
@@ -161,6 +163,7 @@ describe('printStreamEvent', (): void => {
     it('formats JSON results with pretty-printing', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_result',
+        toolName: 'Bash',
         result: '{"key": "value", "nested": {"field": "data"}}'
       }
 
@@ -172,6 +175,7 @@ describe('printStreamEvent', (): void => {
     it('formats multiline results with indentation', (): void => {
       const event: AgentStreamEvent = {
         type: 'tool_result',
+        toolName: 'Bash',
         result: 'Line 1\nLine 2\nLine 3'
       }
 
@@ -188,6 +192,7 @@ describe('printStreamEvent', (): void => {
 
       const event: AgentStreamEvent = {
         type: 'tool_result',
+        toolName: 'Bash',
         result: contentBlocks
       }
 

@@ -38,8 +38,8 @@ describe('markTaskDone', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    vi.mocked(stdout).print = vi.fn()
-    vi.mocked(stderr).print = vi.fn()
+    vi.mocked(stdout).print = vi.fn() as never
+    vi.mocked(stderr).print = vi.fn() as never
 
     mockPipelineFileService = {
       loadRawPipeline: vi.fn(),
@@ -66,13 +66,13 @@ describe('markTaskDone', () => {
       display: { header_color: '#D97757', no_color: false }
     } as Config
 
-    vi.mocked(container).resolve = vi.fn((token) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.PipelineFileService) return mockPipelineFileService
       if (token === TOKENS.PipelineService) return mockPipelineService
       if (token === TOKENS.AbortService) return mockAbortService
       if (token === TOKENS.Config) return mockConfig
       return null
-    })
+    }) as never
 
     vi.mocked(parseRunOptions).mockReturnValue({
       pipelinePath: 'test.json',
@@ -94,14 +94,13 @@ describe('markTaskDone', () => {
 
     const mockExit = vi.fn()
     const mockOnce = vi.fn()
-    global.process = { ...process, exit: mockExit, once: mockOnce }
+    // eslint-disable-next-line local/no-any
+    global.process = { ...process, exit: mockExit as any, once: mockOnce as any }
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
   })
 
   it('should mark task done at root level', async () => {
     const pipeline: Pipeline = {
-      name: 'test',
-
       tasks: [
         // eslint-disable-next-line local/no-any
         { type: 'script', command: 'test', done: false } as any,
@@ -128,8 +127,6 @@ describe('markTaskDone', () => {
 
   it('should mark nested task done', async () => {
     const pipeline: Pipeline = {
-      name: 'test',
-
       tasks: [
         {
           type: 'pipeline',
@@ -185,8 +182,8 @@ describe('checkUncommittedChanges', () => {
 
     mockStdout = { print: vi.fn() }
     mockStderr = { print: vi.fn() }
-    vi.mocked(stdout).print = mockStdout.print
-    vi.mocked(stderr).print = mockStderr.print
+    vi.mocked(stdout).print = mockStdout.print as never
+    vi.mocked(stderr).print = mockStderr.print as never
 
     mockPipelineFileService = {
       loadRawPipeline: vi.fn(),
@@ -213,13 +210,13 @@ describe('checkUncommittedChanges', () => {
       display: { header_color: '#D97757', no_color: false }
     } as Config
 
-    vi.mocked(container).resolve = vi.fn((token) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.PipelineFileService) return mockPipelineFileService
       if (token === TOKENS.PipelineService) return mockPipelineService
       if (token === TOKENS.AbortService) return mockAbortService
       if (token === TOKENS.Config) return mockConfig
       return null
-    })
+    }) as never
 
     vi.mocked(parseRunOptions).mockReturnValue({
       pipelinePath: 'test.json',
@@ -240,14 +237,15 @@ describe('checkUncommittedChanges', () => {
 
     const mockExit = vi.fn()
     const mockOnce = vi.fn()
-    global.process = { ...process, exit: mockExit, once: mockOnce }
+    // eslint-disable-next-line local/no-any
+    global.process = { ...process, exit: mockExit as any, once: mockOnce as any }
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
   })
 
   it('should skip if no uncommitted changes', async () => {
     mockPipelineFileService.getDiffStat.mockReturnValue(null)
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -266,7 +264,7 @@ describe('checkUncommittedChanges', () => {
     }
     vi.mocked(readline.createInterface).mockReturnValue(mockReadlineInterface as readline.Interface)
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -285,7 +283,7 @@ describe('checkUncommittedChanges', () => {
     }
     vi.mocked(readline.createInterface).mockReturnValue(mockReadlineInterface as readline.Interface)
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -319,8 +317,8 @@ describe('printGitDiffSummary', () => {
     vi.clearAllMocks()
 
     mockStdout = { print: vi.fn() }
-    vi.mocked(stdout).print = mockStdout.print
-    vi.mocked(stderr).print = vi.fn()
+    vi.mocked(stdout).print = mockStdout.print as never
+    vi.mocked(stderr).print = vi.fn() as never
 
     mockPipelineFileService = {
       loadRawPipeline: vi.fn(),
@@ -347,13 +345,13 @@ describe('printGitDiffSummary', () => {
       display: { header_color: '#D97757', no_color: false }
     } as Config
 
-    vi.mocked(container).resolve = vi.fn((token) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.PipelineFileService) return mockPipelineFileService
       if (token === TOKENS.PipelineService) return mockPipelineService
       if (token === TOKENS.AbortService) return mockAbortService
       if (token === TOKENS.Config) return mockConfig
       return null
-    })
+    }) as never
 
     vi.mocked(parseRunOptions).mockReturnValue({
       pipelinePath: 'test.json',
@@ -374,14 +372,15 @@ describe('printGitDiffSummary', () => {
 
     const mockExit = vi.fn()
     const mockOnce = vi.fn()
-    global.process = { ...process, exit: mockExit, once: mockOnce }
+    // eslint-disable-next-line local/no-any
+    global.process = { ...process, exit: mockExit as any, once: mockOnce as any }
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
   })
 
   it('should skip if heads are same', async () => {
     mockPipelineFileService.getHead.mockReturnValue('abc123')
 
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -390,7 +389,7 @@ describe('printGitDiffSummary', () => {
   })
 
   it('should handle pipeline file loading', async () => {
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})
@@ -399,7 +398,7 @@ describe('printGitDiffSummary', () => {
   })
 
   it('should handle multiple pipeline tasks', async () => {
-    const pipeline: Pipeline = { name: 'test', tasks: [] }
+    const pipeline: Pipeline = { tasks: [] }
     vi.mocked(parsePipeline).mockReturnValue(pipeline)
 
     await runCommand('test.json', {})

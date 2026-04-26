@@ -15,14 +15,20 @@ import { ValidationError } from '@src/errors/validationError'
 import { parseRewindSession } from '@src/validators/cli/rewindSession'
 
 describe('rewindCommand', (): void => {
-  let mockAnalyzeService: ReturnType<typeof vi.fn>
-  let mockSessionService: ReturnType<typeof vi.fn>
+  let mockAnalyzeService: {
+    getRewindTurns: ReturnType<typeof vi.fn>
+    resolveTurnByIndex: ReturnType<typeof vi.fn>
+  }
+  let mockSessionService: {
+    resolveId: ReturnType<typeof vi.fn>
+    createRewindSession: ReturnType<typeof vi.fn>
+  }
   let mockParseRewindSession: ReturnType<typeof vi.fn>
   let mockContainerResolve: ReturnType<typeof vi.fn>
   let exitSpy: ReturnType<typeof vi.spyOn>
 
   const setupMockContainer = (): void => {
-    mockContainerResolve.mockImplementation((token: string) => {
+    mockContainerResolve.mockImplementation((token: unknown) => {
       if (token === TOKENS.SessionService) return mockSessionService
       if (token === TOKENS.AnalyzeService) return mockAnalyzeService
     })
@@ -44,12 +50,14 @@ describe('rewindCommand', (): void => {
     mockParseRewindSession = vi.fn()
     mockContainerResolve = vi.fn()
 
-    vi.mocked(container).resolve = mockContainerResolve
-    vi.mocked(parseRewindSession).mockImplementation(mockParseRewindSession)
+    vi.mocked(container).resolve = mockContainerResolve as never
+    vi.mocked(parseRewindSession).mockImplementation(mockParseRewindSession as never)
 
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number) => {
-      throw new Error(`process.exit(${code})`)
-    })
+    exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation((code?: string | number | null | undefined) => {
+        throw new Error(`process.exit(${code})`)
+      })
   })
 
   afterEach((): void => {
@@ -379,7 +387,7 @@ describe('handleListMode (internal function via rewindCommand)', (): void => {
       length: 100
     }
 
-    vi.mocked(container).resolve = vi.fn((token: string) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.SessionService) {
         return {
           resolveId: vi.fn().mockResolvedValue('resolved-id'),
@@ -389,7 +397,7 @@ describe('handleListMode (internal function via rewindCommand)', (): void => {
       if (token === TOKENS.AnalyzeService) {
         return { getRewindTurns: vi.fn().mockResolvedValue(turns) }
       }
-    })
+    }) as never
 
     vi.mocked(parseRewindSession).mockReturnValue(input)
 
@@ -410,7 +418,7 @@ describe('handleListMode (internal function via rewindCommand)', (): void => {
       length: 50
     }
 
-    vi.mocked(container).resolve = vi.fn((token: string) => {
+    vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.SessionService) {
         return {
           resolveId: vi.fn().mockResolvedValue('resolved-id'),
@@ -420,7 +428,7 @@ describe('handleListMode (internal function via rewindCommand)', (): void => {
       if (token === TOKENS.AnalyzeService) {
         return { getRewindTurns: vi.fn().mockResolvedValue(turns) }
       }
-    })
+    }) as never
 
     vi.mocked(parseRewindSession).mockReturnValue(input)
 
