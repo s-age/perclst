@@ -112,14 +112,14 @@ export class KnowledgeSearchDomain implements IKnowledgeSearchDomain {
   }
 
   search(options: KnowledgeSearchOptions): KnowledgeSearchResult {
-    const { query, include_draft } = options
+    const { query, include_draft: includeDraft } = options
     const orGroups = parseQuery(query)
 
     if (orGroups.length === 0) {
       return { query, results: [], total: 0 }
     }
 
-    const files = this.repo.loadAll(include_draft)
+    const files = this.repo.loadAll(includeDraft)
     const results: KnowledgeMatch[] = []
 
     for (const file of files) {

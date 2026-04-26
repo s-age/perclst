@@ -2,7 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { CheckerService } from '@src/services/checkerService'
 
-export const ts_checker: {
+export const tsChecker: {
   name: string
   description: string
   inputSchema: {

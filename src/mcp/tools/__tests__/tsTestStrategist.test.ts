@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { executeTsTestStrategist, ts_test_strategist } from '../tsTestStrategist'
+import { executeTsTestStrategist, tsTestStrategist } from '../tsTestStrategist'
 
 // Mock the DI container
 vi.mock('@src/core/di/container', () => ({
@@ -180,43 +180,43 @@ describe('executeTsTestStrategist', () => {
   })
 })
 
-describe('ts_test_strategist tool definition', () => {
+describe('tsTestStrategist tool definition', () => {
   it('has correct name', () => {
-    expect(ts_test_strategist.name).toBe('ts_test_strategist')
+    expect(tsTestStrategist.name).toBe('ts_test_strategist')
   })
 
   it('has descriptive description', () => {
-    expect(ts_test_strategist.description).toContain('unit test strategy')
-    expect(ts_test_strategist.description).toContain('TypeScript')
+    expect(tsTestStrategist.description).toContain('unit test strategy')
+    expect(tsTestStrategist.description).toContain('TypeScript')
   })
 
   it('defines inputSchema as object type', () => {
-    expect(ts_test_strategist.inputSchema.type).toBe('object')
+    expect(tsTestStrategist.inputSchema.type).toBe('object')
   })
 
   it('includes target_file_path property in inputSchema', () => {
-    expect(ts_test_strategist.inputSchema.properties).toHaveProperty('target_file_path')
-    expect(ts_test_strategist.inputSchema.properties.target_file_path.type).toBe('string')
-    expect(ts_test_strategist.inputSchema.properties.target_file_path.description).toContain(
+    expect(tsTestStrategist.inputSchema.properties).toHaveProperty('target_file_path')
+    expect(tsTestStrategist.inputSchema.properties.target_file_path.type).toBe('string')
+    expect(tsTestStrategist.inputSchema.properties.target_file_path.description).toContain(
       'TypeScript'
     )
   })
 
   it('includes test_file_path property in inputSchema', () => {
-    expect(ts_test_strategist.inputSchema.properties).toHaveProperty('test_file_path')
-    expect(ts_test_strategist.inputSchema.properties.test_file_path.type).toBe('string')
-    expect(ts_test_strategist.inputSchema.properties.test_file_path.description).toContain('test')
+    expect(tsTestStrategist.inputSchema.properties).toHaveProperty('test_file_path')
+    expect(tsTestStrategist.inputSchema.properties.test_file_path.type).toBe('string')
+    expect(tsTestStrategist.inputSchema.properties.test_file_path.description).toContain('test')
   })
 
   it('marks target_file_path as required', () => {
-    expect(ts_test_strategist.inputSchema.required).toContain('target_file_path')
+    expect(tsTestStrategist.inputSchema.required).toContain('target_file_path')
   })
 
   it('does not mark test_file_path as required', () => {
-    expect(ts_test_strategist.inputSchema.required).not.toContain('test_file_path')
+    expect(tsTestStrategist.inputSchema.required).not.toContain('test_file_path')
   })
 
   it('has both required properties defined', () => {
-    expect(ts_test_strategist.inputSchema.required.length).toBeGreaterThan(0)
+    expect(tsTestStrategist.inputSchema.required.length).toBeGreaterThan(0)
   })
 })

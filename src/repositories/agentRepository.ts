@@ -69,8 +69,8 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
     }
 
     const parsed = finalizeParseState(state, jsonlBaseline)
-    const messages_total =
+    const messagesTotal =
       baselineMessagesTotal + 1 + state.assistantEventCount + 2 * state.toolCallCount
-    return { ...parsed, messages_total }
+    return { ...parsed, messages_total: messagesTotal }
   }
 }

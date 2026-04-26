@@ -2,7 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { TsAnalysisService } from '@src/services/tsAnalysisService'
 
-export const ts_get_references: {
+export const tsGetReferences: {
   name: string
   description: string
   inputSchema: {

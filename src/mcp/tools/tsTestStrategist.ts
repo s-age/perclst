@@ -2,7 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { TestStrategistService } from '@src/services/testStrategistService'
 
-export const ts_test_strategist: {
+export const tsTestStrategist: {
   name: string
   description: string
   inputSchema: {
