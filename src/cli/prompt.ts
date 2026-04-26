@@ -1,5 +1,6 @@
 import * as readline from 'readline'
 import { UserCancelledError } from '@src/errors/userCancelledError'
+import { stderr } from '@src/utils/output'
 
 export function confirm(question: string): Promise<boolean> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stderr })
@@ -24,6 +25,24 @@ async function askWorkingDirSwitch(sessionDir: string, currentDir: string): Prom
       resolve(answer.trim().toLowerCase() !== 'n')
     })
   })
+}
+
+export async function confirmIfDuplicateName(
+  name: string,
+  findByName: (n: string) => Promise<{ id: string } | null>,
+  excludeId?: string,
+  interactive = true
+): Promise<void> {
+  if (!interactive) return
+  const existing = await findByName(name)
+  if (!existing) return
+  if (excludeId !== undefined && existing.id === excludeId) return
+  stderr.print(
+    `Warning: session name "${name}" already exists (${existing.id}).\n` +
+      `  In perclst analyze, the newer session's UUID takes precedence for name lookups.`
+  )
+  const ok = await confirm('Continue? [y/N] ')
+  if (!ok) throw new UserCancelledError()
 }
 
 export async function handleWorkingDirMismatch(

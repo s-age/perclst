@@ -22,6 +22,10 @@ type MockAgentService = {
   start: ReturnType<typeof vi.fn>
 }
 
+type MockSessionService = {
+  findByName: ReturnType<typeof vi.fn>
+}
+
 type MockConfig = {
   display: {
     header_color: string
@@ -31,6 +35,7 @@ type MockConfig = {
 
 describe('startCommand', () => {
   let mockAgentService: MockAgentService
+  let mockSessionService: MockSessionService
   let mockConfig: MockConfig
   let mockParseStartSessionFn: ReturnType<typeof vi.fn>
   let exitSpy: MockInstance
@@ -39,6 +44,11 @@ describe('startCommand', () => {
     // Setup mock AgentService
     mockAgentService = {
       start: vi.fn()
+    }
+
+    // Setup mock SessionService
+    mockSessionService = {
+      findByName: vi.fn().mockResolvedValue(null)
     }
 
     // Setup mock Config
@@ -53,6 +63,7 @@ describe('startCommand', () => {
     vi.mocked(container).resolve = vi.fn().mockImplementation((token: unknown) => {
       if (token === TOKENS.AgentService) return mockAgentService
       if (token === TOKENS.Config) return mockConfig
+      if (token === TOKENS.SessionService) return mockSessionService
       return undefined
     }) as never
 

@@ -34,7 +34,8 @@ describe('importCommand', () => {
     }
 
     const mockImportService = {
-      import: vi.fn().mockResolvedValue(mockSession)
+      import: vi.fn().mockResolvedValue(mockSession),
+      findByName: vi.fn().mockResolvedValue(null)
     }
 
     vi.mocked(parseImportSession).mockReturnValue({
@@ -72,7 +73,8 @@ describe('importCommand', () => {
     }
 
     const mockImportService = {
-      import: vi.fn().mockResolvedValue(mockSession)
+      import: vi.fn().mockResolvedValue(mockSession),
+      findByName: vi.fn().mockResolvedValue(null)
     }
 
     vi.mocked(parseImportSession).mockReturnValue({
@@ -109,7 +111,8 @@ describe('importCommand', () => {
     }
 
     const mockImportService = {
-      import: vi.fn().mockResolvedValue(mockSession)
+      import: vi.fn().mockResolvedValue(mockSession),
+      findByName: vi.fn().mockResolvedValue(null)
     }
 
     vi.mocked(parseImportSession).mockReturnValue({

@@ -16,6 +16,7 @@ describe('renameCommand', () => {
     resolveId: ReturnType<typeof vi.fn>
     rename: ReturnType<typeof vi.fn>
     setLabels: ReturnType<typeof vi.fn>
+    findByName: ReturnType<typeof vi.fn>
   }
 
   beforeEach(() => {
@@ -24,7 +25,8 @@ describe('renameCommand', () => {
     mockSessionService = {
       resolveId: vi.fn(),
       rename: vi.fn(),
-      setLabels: vi.fn()
+      setLabels: vi.fn(),
+      findByName: vi.fn().mockResolvedValue(null)
     }
 
     vi.mocked(container).resolve.mockReturnValue(mockSessionService as unknown as SessionService)
