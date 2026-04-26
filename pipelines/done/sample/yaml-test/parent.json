@@ -3,12 +3,14 @@
     {
       "type": "child",
       "path": "sample__yaml-test__child-readme.json",
-      "name": "readme"
+      "name": "readme",
+      "done": true
     },
     {
       "type": "child",
       "path": "sample__yaml-test__child-usage.json",
-      "name": "usage"
+      "name": "usage",
+      "done": true
     }
   ]
 }
