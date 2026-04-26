@@ -38,6 +38,28 @@ describe('parseRunOptions', () => {
     expect(() => parseRunOptions({ pipelinePath: '' })).toThrow(ValidationError)
   })
 
+  it('should accept .yaml extension', () => {
+    const result = parseRunOptions({ pipelinePath: 'pipelines/my-pipeline.yaml' })
+    expect(result.pipelinePath).toBe('pipelines/my-pipeline.yaml')
+  })
+
+  it('should accept .yml extension', () => {
+    const result = parseRunOptions({ pipelinePath: 'pipelines/my-pipeline.yml' })
+    expect(result.pipelinePath).toBe('pipelines/my-pipeline.yml')
+  })
+
+  it('should throw ValidationError for unsupported extension', () => {
+    expect(() => parseRunOptions({ pipelinePath: 'pipelines/my-pipeline.toml' })).toThrow(
+      ValidationError
+    )
+  })
+
+  it('should throw ValidationError when pipelinePath has no extension', () => {
+    expect(() => parseRunOptions({ pipelinePath: 'pipelines/my-pipeline' })).toThrow(
+      ValidationError
+    )
+  })
+
   it('should throw ValidationError for invalid format value', () => {
     expect(() => parseRunOptions({ ...minimal, format: 'xml' })).toThrow(ValidationError)
   })

@@ -2,7 +2,7 @@ import type { IPipelineFileDomain } from '@src/domains/ports/pipelineFile'
 import type { IPipelineFileRepository } from '@src/repositories/ports/fileMove'
 import type { Pipeline } from '@src/types/pipeline'
 import type { IGitRepository } from '@src/repositories/ports/git'
-import { resolve, dirname, basename, join } from '@src/utils/path'
+import { resolve, dirname, basename, extname, join } from '@src/utils/path'
 
 export class PipelineFileDomain implements IPipelineFileDomain {
   constructor(
@@ -14,9 +14,10 @@ export class PipelineFileDomain implements IPipelineFileDomain {
     const absoluteSrc = resolve(pipelinePath)
     const dir = dirname(absoluteSrc)
     if (dir.split('/').includes('done')) return null
-    const stem = basename(absoluteSrc, '.json')
+    const ext = extname(absoluteSrc) || '.json'
+    const stem = basename(absoluteSrc, ext)
     const segments = stem.split('__')
-    const filename = segments[segments.length - 1] + '.json'
+    const filename = segments[segments.length - 1] + ext
     const subDirs = segments.slice(0, -1)
     const dest = join(dir, 'done', ...subDirs, filename)
     const relativeDest = join('done', ...subDirs, filename)
@@ -55,10 +56,12 @@ export class PipelineFileDomain implements IPipelineFileDomain {
       } catch {
         // file may not exist yet
       }
-      try {
-        this.gitRepo.stageUpdated('.claude/tmp/')
-      } catch {
-        // no tracked tmp files to stage
+      if (this.gitRepo.hasTrackedFiles('.claude/tmp/')) {
+        try {
+          this.gitRepo.stageUpdated('.claude/tmp/')
+        } catch {
+          // staging failed
+        }
       }
       this.gitRepo.commit(`chore: mv ${filename}`)
     } catch {
@@ -71,10 +74,10 @@ export class PipelineFileDomain implements IPipelineFileDomain {
   }
 
   loadRawPipeline(absolutePath: string): unknown {
-    return this.fileMoveRepo.readRawJson(absolutePath)
+    return this.fileMoveRepo.readRaw(absolutePath)
   }
 
   savePipeline(absolutePath: string, pipeline: Pipeline): void {
-    this.fileMoveRepo.writeJson(absolutePath, pipeline)
+    this.fileMoveRepo.write(absolutePath, pipeline)
   }
 }

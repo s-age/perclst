@@ -11,6 +11,7 @@ import {
 import { unlink } from 'fs/promises'
 import { join } from 'path'
 import { homedir } from 'os'
+import { parseYaml, stringifyYaml } from '@src/utils/yaml'
 
 export function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf-8')) as T
@@ -18,6 +19,14 @@ export function readJson<T>(path: string): T {
 
 export function writeJson(path: string, data: unknown): void {
   writeFileSync(path, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+export function readYaml<T>(path: string): T {
+  return parseYaml(readFileSync(path, 'utf-8')) as T
+}
+
+export function writeYaml(path: string, data: unknown): void {
+  writeFileSync(path, stringifyYaml(data), 'utf-8')
 }
 
 export function fileExists(path: string): boolean {

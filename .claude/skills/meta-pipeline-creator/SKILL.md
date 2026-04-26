@@ -17,7 +17,7 @@ Write all pipeline content in **English**, regardless of the project's primary l
 
 Place new pipelines in `pipelines/` root. **Never** create files inside `pipelines/done/`.
 
-Filename format: `<namespace>__<namespace>__<name>.json`
+Filename format: `<namespace>__<namespace>__<name>.(json|yaml|yml)`
 
 - `__` separates namespace segments; `-` separates words within a segment
 - All lowercase; no underscores within segments, no camelCase
@@ -34,7 +34,7 @@ Omit `name` only for stateless or one-shot tasks.
 
 **Reviewer continuity**: when a pipeline has an initial reviewer followed by a loop reviewer, both agents MUST share the same `name`. The loop run resumes the initial session — the reviewer already knows what violations it found and skips re-scanning from scratch. `procedure` is ignored on resume; the flowchart remains in conversation history. Write the loop reviewer's `task` as a re-review instruction, not a repeat of the initial inputs. Do NOT split into `initial-reviewer` / `loop-reviewer` — that forces a cold-start and wastes tokens re-acquiring context.
 
-See `examples/arch-refactoring__foo.json` for a complete working example.
+See `examples/arch-refactoring__foo.yaml` (YAML, recommended) or `examples/arch-refactoring__foo.json` for a complete working example.
 
 ## `allowed_tools`
 
@@ -91,15 +91,28 @@ Place the commit agent **outside** the nested pipeline, after the outer script g
 
 See `examples/commit-pattern.json` for a complete working example.
 
+## Validation
+
+Before running, verify the file with:
+
+```bash
+bash ${CLAUDE_SKILL_DIR}/scripts/validate-name.sh pipelines/<name>.yaml
+node ${CLAUDE_SKILL_DIR}/scripts/validate-schema.cjs pipelines/<name>.yaml
+```
+
+`validate-name.sh` checks filename conventions (placement, extension, `__` separators).
+`validate-schema.cjs` parses the file (YAML → JSON if needed) and validates against `schemas/pipeline.schema.json`.
+
 ## Running
 
 ```bash
+perclst run pipelines/<name>.yaml   # YAML recommended (more token-efficient)
 perclst run pipelines/<name>.json
 ```
 
 ## Checklist
 
-- [ ] File at `pipelines/<name>.json` — not in `pipelines/done/` or a subdirectory
+- [ ] File at `pipelines/<name>.(json|yaml|yml)` — not in `pipelines/done/` or a subdirectory
 - [ ] Filename: `__` namespace separators, `-` word separators, all lowercase
 - [ ] Every MCP tool called by a procedure is listed in `allowed_tools`
 - [ ] `rejected.to` names an existing task in the same `tasks` array scope

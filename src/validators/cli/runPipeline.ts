@@ -1,12 +1,13 @@
 import { schema, safeParse } from '../schema'
-import { stringRule } from '../rules/string'
 import { booleanRule } from '../rules/boolean'
 import { formatRule } from '../rules/format'
+import { pipelinePathRule } from '../rules/pipelinePath'
 import { pipelineSchemaRule } from '../rules/pipeline'
+import { stringRule } from '../rules/string'
 import type { Pipeline } from '@src/types/pipeline'
 
 const runOptionsSchema = schema({
-  pipelinePath: stringRule({ required: true }),
+  pipelinePath: pipelinePathRule(),
   model: stringRule().optional(),
   outputOnly: booleanRule().optional(),
   batch: booleanRule().optional(),
