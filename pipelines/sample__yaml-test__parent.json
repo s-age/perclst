@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {
+      "type": "child",
+      "path": "sample__yaml-test__child-readme.json",
+      "name": "readme"
+    },
+    {
+      "type": "child",
+      "path": "sample__yaml-test__child-usage.json",
+      "name": "usage"
+    }
+  ]
+}

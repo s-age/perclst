@@ -1,0 +1,9 @@
+{
+  "tasks": [
+    {
+      "type": "agent",
+      "task": "README.md の内容を1行で説明してください。",
+      "labels": ["json-pipeline-test"]
+    }
+  ]
+}

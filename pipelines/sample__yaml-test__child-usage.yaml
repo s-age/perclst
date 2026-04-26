@@ -1,0 +1,5 @@
+tasks:
+  - type: agent
+    task: "docs/USAGE.md の内容を1行で説明してください。"
+    labels:
+      - yaml-pipeline-test

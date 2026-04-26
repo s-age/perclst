@@ -1,0 +1,7 @@
+tasks:
+  - type: child
+    path: sample__yaml-test__child-readme.yaml
+    name: readme
+  - type: child
+    path: sample__yaml-test__child-usage.yaml
+    name: usage
