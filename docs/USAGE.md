@@ -69,6 +69,8 @@ perclst resume <session> "Continue" --label wip
 
 `--label` appends to existing labels (does not replace).
 
+If the session's working directory differs from the current directory, you will be prompted to switch before the agent runs. Choose `Y` to switch and continue, or `n` to cancel. Use `--output-only` or `--format json` to skip this prompt (e.g. in scripts).
+
 > For all options: `perclst resume -h`
 
 ## `chat`
@@ -84,6 +86,8 @@ perclst chat <session>
 ```
 
 Hands off the terminal to `claude --resume <session-id>`. Useful when you know the session name but not the UUID.
+
+If the session's working directory differs from the current directory, you will be prompted to switch before handing off.
 
 ## `fork`
 

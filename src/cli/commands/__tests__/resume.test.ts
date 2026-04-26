@@ -7,6 +7,7 @@ import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { printResponse, printStreamEvent } from '@src/cli/display'
 import { parseResumeSession } from '@src/validators/cli/resumeSession'
+import { handleWorkingDirMismatch } from '@src/cli/prompt'
 import type { AgentStreamEvent } from '@src/types/agent'
 
 // Mock all dependencies
@@ -16,11 +17,13 @@ vi.mock('@src/services/agentService')
 vi.mock('@src/utils/output')
 vi.mock('@src/cli/display')
 vi.mock('@src/validators/cli/resumeSession')
+vi.mock('@src/cli/prompt')
 
 describe('resumeCommand', () => {
   const mockSessionService = {
     resolveId: vi.fn(),
-    addLabels: vi.fn()
+    addLabels: vi.fn(),
+    get: vi.fn()
   }
   const mockAgentService = {
     resume: vi.fn()
@@ -50,6 +53,8 @@ describe('resumeCommand', () => {
     })
 
     vi.mocked(mockSessionService.resolveId).mockResolvedValue('resolved-session-id')
+    vi.mocked(mockSessionService.get).mockResolvedValue({ working_dir: process.cwd() })
+    vi.mocked(handleWorkingDirMismatch).mockResolvedValue(undefined)
     vi.mocked(parseResumeSession).mockReturnValue({
       sessionId: 'resolved-session-id',
       instruction: 'test instruction',
