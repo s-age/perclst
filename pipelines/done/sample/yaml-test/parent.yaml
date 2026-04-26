@@ -2,6 +2,8 @@ tasks:
   - type: child
     path: sample__yaml-test__child-readme.yaml
     name: readme
+    done: true
   - type: child
     path: sample__yaml-test__child-usage.yaml
     name: usage
+    done: true
