@@ -134,6 +134,7 @@ export class PipelineDomain implements IPipelineDomain {
     const session = await this.sessionDomain.create({
       name: task.name,
       procedure: task.procedure,
+      labels: task.labels,
       working_dir: this.getWorkingDirectory()
     })
     const sessionFilePath = this.sessionDomain.getPath(session.id)

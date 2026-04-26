@@ -25,6 +25,7 @@ export type AgentPipelineTask = {
   task: string
   procedure?: string
   model?: string
+  labels?: string[]
   allowed_tools?: string[]
   disallowed_tools?: string[]
   max_turns?: number

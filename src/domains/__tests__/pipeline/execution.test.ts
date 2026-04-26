@@ -92,6 +92,34 @@ describe('PipelineDomain - execution', () => {
       expect(sessionDomain.updateStatus).toHaveBeenCalledWith('existing-session-id', 'active')
     })
 
+    it('forwards task labels to session create', async () => {
+      const task: AgentPipelineTask = {
+        type: 'agent',
+        task: 'do something',
+        name: 'task-with-labels',
+        labels: ['ci', 'nightly']
+      }
+      const session: Session = { id: 'session-id' } as Session
+      const agentResponse: AgentResponse = { message_count: 1 } as AgentResponse
+
+      vi.mocked(sessionDomain.findByName).mockResolvedValue(null)
+      vi.mocked(sessionDomain.create).mockResolvedValue(session)
+      vi.mocked(sessionDomain.getPath).mockReturnValue('/path/to/session')
+      vi.mocked(agentDomain.run).mockResolvedValue(agentResponse)
+
+      const options: PipelineRunOptions = {
+        model: 'claude-opus',
+        maxTurns: 10,
+        maxContextTokens: 5000
+      }
+
+      await pipelineDomain.runAgentTask(task, { index: 0, taskPath: [0] }, options)
+
+      expect(sessionDomain.create).toHaveBeenCalledWith(
+        expect.objectContaining({ labels: ['ci', 'nightly'] })
+      )
+    })
+
     it('includes task procedure when creating session', async () => {
       const task: AgentPipelineTask = {
         type: 'agent',

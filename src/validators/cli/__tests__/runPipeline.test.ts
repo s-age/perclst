@@ -85,6 +85,7 @@ describe('parsePipeline', () => {
             name: 'my-agent',
             procedure: 'default',
             model: 'sonnet',
+            labels: ['ci', 'nightly'],
             allowed_tools: ['Bash', 'Read'],
             disallowed_tools: ['Write'],
             max_turns: 5,
@@ -98,11 +99,20 @@ describe('parsePipeline', () => {
         name: 'my-agent',
         procedure: 'default',
         model: 'sonnet',
+        labels: ['ci', 'nightly'],
         allowed_tools: ['Bash', 'Read'],
         disallowed_tools: ['Write'],
         max_turns: 5,
         max_context_tokens: 10000
       })
+    })
+
+    it('should parse agent task with labels', () => {
+      const result = parsePipeline({
+        tasks: [{ type: 'agent', task: 'do something', labels: ['feature-x'] }]
+      })
+      const task = result.tasks[0] as { labels?: string[] }
+      expect(task.labels).toEqual(['feature-x'])
     })
 
     it('should parse agent task with rejected config', () => {
