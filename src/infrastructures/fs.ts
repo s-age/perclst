@@ -11,7 +11,7 @@ import {
 import { unlink } from 'fs/promises'
 import { join } from 'path'
 import { homedir } from 'os'
-import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+import { parseYaml, stringifyYaml } from '@src/utils/yaml'
 
 export function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf-8')) as T
