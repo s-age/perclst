@@ -1,30 +1,19 @@
 tasks:
   - type: script
-    command: >-
-      rm -f
-      .claude/tmp/cli-integ-delete-reviewer
-      .claude/tmp/cli-integ-tag-reviewer
-      .claude/tmp/cli-integ-list-reviewer
-      .claude/tmp/cli-integ-rename-reviewer
-      .claude/tmp/cli-integ-show-reviewer
-      .claude/tmp/cli-integ-sweep-reviewer
-      .claude/tmp/cli-integ-rewind-reviewer
+    command: rm -f .claude/tmp/cli-integ-delete-reviewer
+      .claude/tmp/cli-integ-tag-reviewer .claude/tmp/cli-integ-list-reviewer
+      .claude/tmp/cli-integ-rename-reviewer .claude/tmp/cli-integ-show-reviewer
+      .claude/tmp/cli-integ-sweep-reviewer .claude/tmp/cli-integ-rewind-reviewer
       .claude/tmp/cli-integ-analyze-reviewer
       .claude/tmp/cli-integ-summarize-reviewer
-      .claude/tmp/cli-integ-fork-reviewer
-      .claude/tmp/cli-integ-survey-reviewer
+      .claude/tmp/cli-integ-fork-reviewer .claude/tmp/cli-integ-survey-reviewer
       .claude/tmp/cli-integ-review-cmd-reviewer
       .claude/tmp/cli-integ-retrieve-reviewer
       .claude/tmp/cli-integ-curate-reviewer
-      .claude/tmp/cli-integ-import-reviewer
-      .claude/tmp/cli-integ-chat-reviewer
+      .claude/tmp/cli-integ-import-reviewer .claude/tmp/cli-integ-chat-reviewer
       .claude/tmp/cli-integ-forge-reviewer
-      .claude/tmp/cli-integ-inspect-reviewer
-      .claude/tmp/cli-integ-run-reviewer
-
-  # ── Phase 1: Pure session management (no agent stub needed) ───────────────
-
-  # 1. delete
+      .claude/tmp/cli-integ-inspect-reviewer .claude/tmp/cli-integ-run-reviewer
+    done: true
   - type: agent
     name: cli-integ-delete-implementer
     task: "target_command: delete"
@@ -36,11 +25,13 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
+    done: true
   - type: agent
     name: cli-integ-delete-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/delete.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/delete.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-delete-reviewer
     procedure: arch/review
     model: sonnet
@@ -54,22 +45,24 @@ tasks:
     rejected:
       to: cli-integ-delete-implementer
       max_retries: 3
-
+    done: true
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-delete-implementer
       max_retries: 3
-
+    done: true
   - type: agent
     name: cli-integ-delete-implementer
-    task: "delete.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for delete command)."
+    task: "delete.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for delete command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 2. tag
+    done: true
   - type: agent
     name: cli-integ-tag-implementer
     task: "target_command: tag"
@@ -81,11 +74,13 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
+    done: true
   - type: agent
     name: cli-integ-tag-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/tag.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/tag.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-tag-reviewer
     procedure: arch/review
     model: sonnet
@@ -99,22 +94,24 @@ tasks:
     rejected:
       to: cli-integ-tag-implementer
       max_retries: 3
-
+    done: true
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-tag-implementer
       max_retries: 3
-
+    done: true
   - type: agent
     name: cli-integ-tag-implementer
-    task: "tag.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for tag command)."
+    task: "tag.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for tag command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 3. list
+    done: true
   - type: agent
     name: cli-integ-list-implementer
     task: "target_command: list"
@@ -126,11 +123,13 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
+    done: true
   - type: agent
     name: cli-integ-list-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/list.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/list.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-list-reviewer
     procedure: arch/review
     model: sonnet
@@ -144,22 +143,24 @@ tasks:
     rejected:
       to: cli-integ-list-implementer
       max_retries: 3
-
+    done: true
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-list-implementer
       max_retries: 3
-
+    done: true
   - type: agent
     name: cli-integ-list-implementer
-    task: "list.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for list command)."
+    task: "list.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for list command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 4. rename
+    done: true
   - type: agent
     name: cli-integ-rename-implementer
     task: "target_command: rename"
@@ -171,11 +172,13 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
+    done: true
   - type: agent
     name: cli-integ-rename-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/rename.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/rename.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-rename-reviewer
     procedure: arch/review
     model: sonnet
@@ -189,22 +192,24 @@ tasks:
     rejected:
       to: cli-integ-rename-implementer
       max_retries: 3
-
+    done: true
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-rename-implementer
       max_retries: 3
-
+    done: true
   - type: agent
     name: cli-integ-rename-implementer
-    task: "rename.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for rename command)."
+    task: "rename.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for rename command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 5. show
+    done: true
   - type: agent
     name: cli-integ-show-implementer
     task: "target_command: show"
@@ -216,11 +221,13 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
+    done: true
   - type: agent
     name: cli-integ-show-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/show.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/show.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-show-reviewer
     procedure: arch/review
     model: sonnet
@@ -234,22 +241,24 @@ tasks:
     rejected:
       to: cli-integ-show-implementer
       max_retries: 3
-
+    done: true
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-show-implementer
       max_retries: 3
-
+    done: true
   - type: agent
     name: cli-integ-show-implementer
-    task: "show.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for show command)."
+    task: "show.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for show command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 6. sweep
+    done: true
   - type: agent
     name: cli-integ-sweep-implementer
     task: "target_command: sweep"
@@ -261,11 +270,13 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
+    done: true
   - type: agent
     name: cli-integ-sweep-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/sweep.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/sweep.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-sweep-reviewer
     procedure: arch/review
     model: sonnet
@@ -279,22 +290,23 @@ tasks:
     rejected:
       to: cli-integ-sweep-implementer
       max_retries: 3
-
+    done: true
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-sweep-implementer
       max_retries: 3
-
+    done: true
   - type: agent
     name: cli-integ-sweep-implementer
-    task: "sweep.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for sweep command)."
+    task: "sweep.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for sweep command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 7. rewind
   - type: agent
     name: cli-integ-rewind-implementer
     task: "target_command: rewind"
@@ -306,11 +318,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-rewind-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/rewind.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/rewind.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-rewind-reviewer
     procedure: arch/review
     model: sonnet
@@ -324,24 +337,21 @@ tasks:
     rejected:
       to: cli-integ-rewind-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-rewind-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-rewind-implementer
-    task: "rewind.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for rewind command)."
+    task: "rewind.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for rewind command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # ── Phase 2: Agent-wrapping (claudeCodeInfra stub required) ───────────────
-
-  # 8. analyze
   - type: agent
     name: cli-integ-analyze-implementer
     task: "target_command: analyze"
@@ -353,11 +363,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-analyze-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/analyze.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/analyze.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-analyze-reviewer
     procedure: arch/review
     model: sonnet
@@ -371,22 +382,21 @@ tasks:
     rejected:
       to: cli-integ-analyze-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-analyze-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-analyze-implementer
-    task: "analyze.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for analyze command)."
+    task: "analyze.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(cli): add integration
+      test for analyze command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 9. summarize
   - type: agent
     name: cli-integ-summarize-implementer
     task: "target_command: summarize"
@@ -398,11 +408,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-summarize-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/summarize.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/summarize.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-summarize-reviewer
     procedure: arch/review
     model: sonnet
@@ -416,22 +427,21 @@ tasks:
     rejected:
       to: cli-integ-summarize-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-summarize-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-summarize-implementer
-    task: "summarize.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for summarize command)."
+    task: "summarize.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(cli): add integration
+      test for summarize command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 10. fork
   - type: agent
     name: cli-integ-fork-implementer
     task: "target_command: fork"
@@ -443,11 +453,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-fork-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/fork.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/fork.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-fork-reviewer
     procedure: arch/review
     model: sonnet
@@ -461,22 +472,21 @@ tasks:
     rejected:
       to: cli-integ-fork-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-fork-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-fork-implementer
-    task: "fork.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for fork command)."
+    task: "fork.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for fork command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 11. survey
   - type: agent
     name: cli-integ-survey-implementer
     task: "target_command: survey"
@@ -488,11 +498,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-survey-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/survey.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/survey.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-survey-reviewer
     procedure: arch/review
     model: sonnet
@@ -506,22 +517,21 @@ tasks:
     rejected:
       to: cli-integ-survey-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-survey-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-survey-implementer
-    task: "survey.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for survey command)."
+    task: "survey.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for survey command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 12. review (command; "review-cmd" prefix avoids collision with pipeline naming)
   - type: agent
     name: cli-integ-review-cmd-implementer
     task: "target_command: review"
@@ -533,11 +543,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-review-cmd-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/review.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/review.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-review-cmd-reviewer
     procedure: arch/review
     model: sonnet
@@ -551,22 +562,21 @@ tasks:
     rejected:
       to: cli-integ-review-cmd-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-review-cmd-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-review-cmd-implementer
-    task: "review.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for review command)."
+    task: "review.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for review command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 13. retrieve
   - type: agent
     name: cli-integ-retrieve-implementer
     task: "target_command: retrieve"
@@ -578,11 +588,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-retrieve-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/retrieve.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/retrieve.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-retrieve-reviewer
     procedure: arch/review
     model: sonnet
@@ -596,22 +607,21 @@ tasks:
     rejected:
       to: cli-integ-retrieve-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-retrieve-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-retrieve-implementer
-    task: "retrieve.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for retrieve command)."
+    task: "retrieve.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(cli): add integration
+      test for retrieve command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 14. curate
   - type: agent
     name: cli-integ-curate-implementer
     task: "target_command: curate"
@@ -623,11 +633,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-curate-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/curate.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/curate.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-curate-reviewer
     procedure: arch/review
     model: sonnet
@@ -641,24 +652,21 @@ tasks:
     rejected:
       to: cli-integ-curate-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-curate-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-curate-implementer
-    task: "curate.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for curate command)."
+    task: "curate.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for curate command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # ── Phase 3: Complex / special commands ───────────────────────────────────
-
-  # 15. import
   - type: agent
     name: cli-integ-import-implementer
     task: "target_command: import"
@@ -670,11 +678,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-import-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/import.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/import.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-import-reviewer
     procedure: arch/review
     model: sonnet
@@ -688,22 +697,21 @@ tasks:
     rejected:
       to: cli-integ-import-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-import-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-import-implementer
-    task: "import.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for import command)."
+    task: "import.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for import command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 16. chat
   - type: agent
     name: cli-integ-chat-implementer
     task: "target_command: chat"
@@ -715,11 +723,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-chat-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/chat.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/chat.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-chat-reviewer
     procedure: arch/review
     model: sonnet
@@ -733,22 +742,21 @@ tasks:
     rejected:
       to: cli-integ-chat-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-chat-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-chat-implementer
-    task: "chat.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for chat command)."
+    task: "chat.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for chat command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 17. forge
   - type: agent
     name: cli-integ-forge-implementer
     task: "target_command: forge"
@@ -760,11 +768,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-forge-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/forge.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/forge.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-forge-reviewer
     procedure: arch/review
     model: sonnet
@@ -778,22 +787,21 @@ tasks:
     rejected:
       to: cli-integ-forge-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-forge-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-forge-implementer
-    task: "forge.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for forge command)."
+    task: "forge.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for forge command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 18. inspect
   - type: agent
     name: cli-integ-inspect-implementer
     task: "target_command: inspect"
@@ -805,11 +813,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-inspect-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/inspect.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/inspect.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-inspect-reviewer
     procedure: arch/review
     model: sonnet
@@ -823,22 +832,21 @@ tasks:
     rejected:
       to: cli-integ-inspect-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-inspect-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-inspect-implementer
-    task: "inspect.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for inspect command)."
+    task: "inspect.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(cli): add integration
+      test for inspect command)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
-  # 19. run (most complex — implemented last)
   - type: agent
     name: cli-integ-run-implementer
     task: "target_command: run"
@@ -850,11 +858,12 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
-
   - type: agent
     name: cli-integ-run-reviewer
-    task: |
-      target_path: src/cli/commands/__tests__/integration/run.integration.test.ts
+    task: >
+      target_path:
+      src/cli/commands/__tests__/integration/run.integration.test.ts
+
       ng_output_path: .claude/tmp/cli-integ-run-reviewer
     procedure: arch/review
     model: sonnet
@@ -868,16 +877,17 @@ tasks:
     rejected:
       to: cli-integ-run-implementer
       max_retries: 3
-
   - type: script
-    command: "npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit"
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
     rejected:
       to: cli-integ-run-implementer
       max_retries: 3
-
   - type: agent
     name: cli-integ-run-implementer
-    task: "run.integration.test.ts is implemented, reviewed, and verified. Commit with a conventional commit message (e.g. test(cli): add integration test for run command)."
+    task: "run.integration.test.ts is implemented, reviewed, and verified. Commit
+      with a conventional commit message (e.g. test(cli): add integration test
+      for run command)."
     model: haiku
     allowed_tools:
       - Read
