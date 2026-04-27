@@ -3,7 +3,7 @@ import { runCommand } from '../../run'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { stdout, stderr } from '@src/utils/output'
-import { printResponse } from '@src/cli/display'
+import { printResponse } from '@src/cli/view/display'
 import { parseRunOptions, parsePipeline } from '@src/validators/cli/runPipeline'
 import type { PipelineTaskResult } from '@src/services/pipelineService'
 import type { Config } from '@src/types/config'
@@ -12,7 +12,7 @@ import type { Pipeline } from '@src/types/pipeline'
 vi.mock('readline')
 vi.mock('@src/core/di/container')
 vi.mock('@src/utils/output')
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 vi.mock('@src/validators/cli/runPipeline')
 vi.mock('os')
 vi.mock('path')

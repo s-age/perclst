@@ -5,7 +5,7 @@ import { TOKENS } from '@src/core/di/identifiers'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
-import { printResponse } from '@src/cli/display'
+import { printResponse } from '@src/cli/view/display'
 import { parseForkSession } from '@src/validators/cli/forkSession'
 
 vi.mock('@src/core/di/container')
@@ -14,7 +14,7 @@ vi.mock('@src/utils/output', () => ({
   stderr: { print: vi.fn() },
   debug: { print: vi.fn() }
 }))
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 vi.mock('@src/validators/cli/forkSession')
 
 type MockSessionService = {

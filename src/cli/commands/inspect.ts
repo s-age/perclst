@@ -8,7 +8,7 @@ import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { parseInspectSession } from '@src/validators/cli/inspectSession'
 import { parseStartSession } from '@src/validators/cli/startSession'
-import { printResponse } from '@src/cli/display'
+import { printResponse } from '@src/cli/view/display'
 
 export async function inspectCommand(
   oldRef: string,

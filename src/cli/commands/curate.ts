@@ -8,7 +8,7 @@ import { stdout, stderr } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
 import { parseStartSession } from '@src/validators/cli/startSession'
-import { printResponse } from '@src/cli/display'
+import { printResponse } from '@src/cli/view/display'
 
 export async function curateCommand(): Promise<void> {
   try {

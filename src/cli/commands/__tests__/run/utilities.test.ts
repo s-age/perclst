@@ -11,7 +11,7 @@ import type { Pipeline } from '@src/types/pipeline'
 vi.mock('readline')
 vi.mock('@src/core/di/container')
 vi.mock('@src/utils/output')
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 vi.mock('@src/validators/cli/runPipeline')
 vi.mock('os')
 vi.mock('path')

@@ -5,7 +5,7 @@ import { TOKENS } from '@src/core/di/identifiers'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
-import { printResponse, printStreamEvent } from '@src/cli/display'
+import { printResponse, printStreamEvent } from '@src/cli/view/display'
 import { parseResumeSession } from '@src/validators/cli/resumeSession'
 import { handleWorkingDirMismatch } from '@src/cli/prompt'
 import type { AgentStreamEvent } from '@src/types/agent'
@@ -15,7 +15,7 @@ vi.mock('@src/core/di/container')
 vi.mock('@src/services/sessionService')
 vi.mock('@src/services/agentService')
 vi.mock('@src/utils/output')
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 vi.mock('@src/validators/cli/resumeSession')
 vi.mock('@src/cli/prompt')
 

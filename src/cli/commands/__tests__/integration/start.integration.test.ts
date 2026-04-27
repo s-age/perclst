@@ -5,7 +5,7 @@ import { startCommand } from '../../start'
 import { setupContainer } from '@src/core/di/setup'
 import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
 import { stderr } from '@src/utils/output'
-import { printResponse, printStreamEvent } from '@src/cli/display'
+import { printResponse, printStreamEvent } from '@src/cli/view/display'
 import { confirmIfDuplicateName } from '@src/cli/prompt'
 import { UserCancelledError } from '@src/errors/userCancelledError'
 import { ValidationError } from '@src/errors/validationError'
@@ -13,7 +13,7 @@ import { RateLimitError } from '@src/errors/rateLimitError'
 import type { Session } from '@src/types/session'
 
 vi.mock('@src/utils/output')
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 vi.mock('@src/cli/prompt')
 
 describe('startCommand (integration)', () => {

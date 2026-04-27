@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { printResponse } from '@src/cli/display'
+import { printResponse } from '@src/cli/view/display'
 import type { AgentResponse } from '@src/types/agent'
 import type { DisplayConfig } from '@src/types/config'
 import type { DisplayOptions } from '@src/types/display'

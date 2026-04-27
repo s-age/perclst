@@ -8,12 +8,12 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { stdout, stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
-import { printResponse } from '@src/cli/display'
+import { printResponse } from '@src/cli/view/display'
 
 vi.mock('@src/validators/cli/inspectSession')
 vi.mock('@src/core/di/container')
 vi.mock('@src/utils/output')
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 
 const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
   throw new Error('process.exit called')

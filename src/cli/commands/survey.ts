@@ -7,7 +7,7 @@ import { stderr } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
 import { parseStartSession } from '@src/validators/cli/startSession'
-import { printResponse, printStreamEvent } from '@src/cli/display'
+import { printResponse, printStreamEvent } from '@src/cli/view/display'
 
 const SURVEY_TOOLS = [
   'Skill',
