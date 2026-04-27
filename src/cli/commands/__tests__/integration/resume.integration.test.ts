@@ -1,12 +1,11 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { readdirSync, existsSync } from 'fs'
+import { readdirSync, existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { startCommand } from '../../start'
 import { resumeCommand } from '../../resume'
 import { setupContainer } from '@src/core/di/setup'
 import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
 import { stderr } from '@src/utils/output'
-import { readJson } from '@src/infrastructures/fs'
 import { UserCancelledError } from '@src/errors/userCancelledError'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
@@ -86,7 +85,7 @@ describe('resumeCommand (integration)', () => {
 
       await resumeCommand(sessionId, 'continue', { outputOnly: true, labels: ['foo', 'bar'] })
 
-      const session = readJson<Session>(join(dir, `${sessionId}.json`))
+      const session = JSON.parse(readFileSync(join(dir, `${sessionId}.json`), 'utf8')) as Session
       expect(session.metadata.labels).toEqual(['foo', 'bar'])
     })
   })

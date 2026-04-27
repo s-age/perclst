@@ -1,6 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { readdirSync } from 'fs'
-import { readJson } from '@src/infrastructures/fs'
+import { readdirSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { startCommand } from '../../start'
 import { setupContainer } from '@src/core/di/setup'
@@ -53,7 +52,7 @@ describe('startCommand (integration)', () => {
       await startCommand('test task', { outputOnly: true })
 
       const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
-      const session = readJson<Session>(join(dir, file))
+      const session = JSON.parse(readFileSync(join(dir, file), 'utf8')) as Session
       expect(session.metadata.status).toBe('active')
     })
 
@@ -79,7 +78,7 @@ describe('startCommand (integration)', () => {
 
       const session = ((): Session => {
         const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
-        return readJson<Session>(join(dir, file))
+        return JSON.parse(readFileSync(join(dir, file), 'utf8')) as Session
       })()
       expect(session.procedure).toBe('meta-librarian/curate')
     })
