@@ -26,8 +26,10 @@ const { tool_name, tool_input, cwd } = input
 if (!process.env.PERCLST_SESSION_FILE) process.exit(0)
 
 // If a global ~/.perclst/skill-inject.mjs exists, only run from there to avoid duplicate injection.
+// Use process.argv[1] (not import.meta.url) so symlinks are not resolved — the global script is
+// typically a symlink to this file, and import.meta.url would resolve to the same real path.
 const homePerclstScript = join(homedir(), '.perclst/skill-inject.mjs')
-const scriptPath = new URL(import.meta.url).pathname
+const scriptPath = process.argv[1]
 if (existsSync(homePerclstScript) && !scriptPath.startsWith(join(homedir(), '.perclst') + '/')) process.exit(0)
 
 // Only handle file-path tools
