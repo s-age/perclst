@@ -15,25 +15,31 @@ hook in Claude Code, so both can fire simultaneously during a session.
   use.
 - This causes the same skill to be injected twice into `additionalContext`, wasting context
   window tokens and potentially confusing the agent with duplicate instructions.
-- The fix: the project-local hook checks its own path via `import.meta.url` and exits early
-  if the global installation exists and the running script is **not** under it.
+- The fix: the project-local hook checks its own invocation path via `process.argv[1]` and exits
+  early if the global script file exists and the running script is **not** under `~/.perclst/`.
 
 ```js
-const homePerclst = join(homedir(), '.perclst')
-const scriptPath = new URL(import.meta.url).pathname
-if (existsSync(homePerclst) && !scriptPath.startsWith(homePerclst + '/')) process.exit(0)
+const homePerclstScript = join(homedir(), '.perclst/skill-inject.mjs')
+const scriptPath = process.argv[1]
+if (existsSync(homePerclstScript) && !scriptPath.startsWith(join(homedir(), '.perclst') + '/')) process.exit(0)
 ```
 
 - The global installation is preferred because it is typically more up-to-date.
-- `import.meta.url` is reliable for self-path detection in ES modules (the hook uses `import`).
+- **`process.argv[1]` must be used instead of `import.meta.url`**: `import.meta.url` resolves
+  symlinks to the real path, so both the global symlink and the project-local file would resolve
+  to the same real path — defeating the guard. `process.argv[1]` preserves the invocation path.
+- Check for the specific script file (`skill-inject.mjs`), not the parent directory — `~/.perclst/`
+  is a data/runtime directory that always exists after any `perclst` invocation, so it is not a
+  valid installation marker.
 - This guard must come **after** the `PERCLST_SESSION_FILE` guard — if not in headless mode the
   hook already exits before reaching it, so ordering only matters on the headless path.
 
 ## Do
 
 - Place the global/local dedup guard early in the hook script, right after the session-file guard.
-- Use `import.meta.url` (not `__filename`) for self-path detection in ES module hooks.
-- Defer entirely to the global installation when `~/.perclst/` exists.
+- Use `process.argv[1]` for self-path detection in hooks — it preserves symlink paths as invoked.
+- Check for the specific global script file (`~/.perclst/skill-inject.mjs`), not the directory.
+- Defer entirely to the global installation when that script file exists.
 
 ## Don't
 
