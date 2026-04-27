@@ -1,0 +1,72 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/cli-display-summarize-reviewer",
+      "done": true
+    },
+    {
+      "type": "pipeline",
+      "name": "cli-display-summarize",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "cli-display-summarize-implementer",
+          "task": "plan_path: plans/cli-display-extraction.md\n\nImplement Step 2 (summarize.ts) from the plan:\n- Create src/cli/view/summarizeDisplay.ts: extract printSummarizeJson(rows) and printSummarizeTable(rows) — move the Table construction, formatKilo usage, and stdout.print calls out of summarize.ts\n- Modify src/cli/commands/summarize.ts: replace JSON output and Table construction blocks with printSummarizeJson/printSummarizeTable calls, update imports to @src/cli/view/summarizeDisplay\n\nRun mcp__perclst__ts_checker after completing all changes.",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "done": true
+        },
+        {
+          "type": "agent",
+          "name": "cli-display-summarize-reviewer",
+          "task": "target_path: src/cli/view\nng_output_path: .claude/tmp/cli-display-summarize-reviewer\n\nFocus review on the newly created src/cli/view/summarizeDisplay.ts — verify it imports only from validators, services, types, errors, utils, constants (not repositories or infrastructures).",
+          "procedure": "arch/review",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "cli-display-summarize-implementer",
+            "max_retries": 3
+          },
+          "done": true
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "cli-display-summarize-implementer",
+            "max_retries": 3
+          },
+          "done": true
+        }
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "cli-display-summarize-implementer",
+      "task": "Implementation complete, architecture clean, and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(cli): extract summarize display logic to summarizeDisplay.ts).",
+      "model": "haiku",
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
+    }
+  ]
+}
