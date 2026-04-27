@@ -2,6 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
+import { printSweepResult } from '@src/cli/view/sweepDisplay'
 import { parseSweepSession } from '@src/validators/cli/sweepSession'
 import { ValidationError } from '@src/errors/validationError'
 
@@ -44,16 +45,7 @@ export async function sweepCommand(options: RawSweepOptions): Promise<void> {
       return
     }
 
-    if (input.dryRun) {
-      stdout.print(`\n[dry-run] ${targets.length} session(s) would be deleted:\n`)
-    } else {
-      stdout.print(`\nDeleted ${targets.length} session(s):\n`)
-    }
-
-    for (const s of targets) {
-      const label = `${s.name ?? 'anonymous'}(${s.id})`
-      stdout.print(`  [${s.metadata.status}] ${label}  created: ${s.created_at.slice(0, 10)}`)
-    }
+    printSweepResult(targets, input.dryRun ?? false)
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)
