@@ -15,6 +15,11 @@ const { tool_name, tool_input, cwd } = input
 // PERCLST_SESSION_FILE is only set when perclst spawns a sub-agent via claude -p.
 if (!process.env.PERCLST_SESSION_FILE) process.exit(0)
 
+// If a global ~/.perclst installation exists, only run from there to avoid duplicate injection.
+const homePerclst = join(homedir(), '.perclst')
+const scriptPath = new URL(import.meta.url).pathname
+if (existsSync(homePerclst) && !scriptPath.startsWith(homePerclst + '/')) process.exit(0)
+
 // Only handle file-path tools
 const FILE_TOOLS = new Set(['Read', 'Edit', 'Write', 'Glob', 'Grep'])
 if (!FILE_TOOLS.has(tool_name)) process.exit(0)
