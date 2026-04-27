@@ -119,7 +119,7 @@ Nonexistent `sessionId`: resolves to `process.exit(1)`.
 ## What NOT to do
 
 - Never call `ts_test_strategist` — test cases come from `plans/cli-integration-tests.md`
-- Never call `ts_call_graph` — knowing which service methods are called creates a path to mocking them individually, which bypasses DI and makes the test a wide-scope unit test rather than an integration test
+- Never call `ts_call_graph` — the mock boundary is fixed (infra layer only) and already known; call-graph analysis adds no information and does not apply when the boundary is predetermined
 - Never mock service classes — services must run through the full DI stack
 - Never use `--singleThread` or share workers across files
 - Never use `it.skip` or `@ts-ignore` to silence failures

@@ -46,7 +46,7 @@ Integration tests are organized around command contracts (exit codes, stderr out
 
 ### Never call `ts_call_graph`
 
-Knowing exactly which service methods a command calls creates a path to mocking those services individually — which would bypass DI and produce a wide-scope unit test, not an integration test. `ts_call_graph` is a tool for discovering what to mock; that framing is wrong for integration tests. Do not call it even for complex Phase 3 commands. If the command source is too long to grasp in one read, read it in sections — do not reach for call-graph analysis.
+The mock boundary in integration tests is fixed and already known: only `claudeCodeInfra` (the `claude -p` subprocess) is stubbed; everything above it (services, domains) runs for real against the tmp filesystem. Because the boundary is predetermined, call-graph analysis adds no information. The classification step (Pure vs Agent-wrapping) already answers whether `claudeCodeInfra` needs stubbing. `ts_call_graph` is designed to discover what to mock — a framing that does not apply when the mock boundary is fixed.
 
 ### Do not mock service classes
 
