@@ -18,6 +18,7 @@ export const TOKENS = {
 
   // Repositories
   CheckerRepository: Symbol.for('CheckerRepository'),
+  PlanFileRepository: Symbol.for('PlanFileRepository'),
   ClaudeCodeRepository: Symbol.for('ClaudeCodeRepository'),
   ClaudeSessionRepository: Symbol.for('ClaudeSessionRepository'),
   GitRepository: Symbol.for('GitRepository'),
@@ -33,6 +34,7 @@ export const TOKENS = {
 
   // Domains
   AgentDomain: Symbol.for('AgentDomain'),
+  PlanFileDomain: Symbol.for('PlanFileDomain'),
   AnalyzeDomain: Symbol.for('AnalyzeDomain'),
   CheckerDomain: Symbol.for('CheckerDomain'),
   GitPendingChangesDomain: Symbol.for('GitPendingChangesDomain'),
@@ -50,6 +52,7 @@ export const TOKENS = {
 
   // Services
   AbortService: Symbol.for('AbortService'),
+  PlanFileService: Symbol.for('PlanFileService'),
   AgentService: Symbol.for('AgentService'),
   AnalyzeService: Symbol.for('AnalyzeService'),
   CheckerService: Symbol.for('CheckerService'),

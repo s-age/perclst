@@ -16,6 +16,7 @@ import { PipelineTaskDomain } from '@src/domains/pipelineTask'
 import { PipelineLoaderDomain } from '@src/domains/pipelineLoader'
 import { PermissionPipeDomain } from '@src/domains/permissionPipe'
 import { GitPendingChangesDomain } from '@src/domains/gitPendingChanges'
+import { PlanFileDomain } from '@src/domains/planFile'
 
 export type Domains = {
   sessionDomain: SessionDomain
@@ -33,6 +34,7 @@ export type Domains = {
   pipelineLoaderDomain: PipelineLoaderDomain
   permissionPipeDomain: PermissionPipeDomain
   gitPendingChangesDomain: GitPendingChangesDomain
+  planFileDomain: PlanFileDomain
 }
 
 export function setupDomains(model: string, repos: Repos, overrides?: Partial<Domains>): Domains {
@@ -64,7 +66,8 @@ export function setupDomains(model: string, repos: Repos, overrides?: Partial<Do
     permissionPipeDomain:
       overrides?.permissionPipeDomain ?? new PermissionPipeDomain(repos.permissionPipeRepo),
     gitPendingChangesDomain:
-      overrides?.gitPendingChangesDomain ?? new GitPendingChangesDomain(repos.gitRepo)
+      overrides?.gitPendingChangesDomain ?? new GitPendingChangesDomain(repos.gitRepo),
+    planFileDomain: overrides?.planFileDomain ?? new PlanFileDomain(repos.planFileRepo)
   }
 
   container.register(TOKENS.SessionDomain, domains.sessionDomain)
@@ -82,6 +85,7 @@ export function setupDomains(model: string, repos: Repos, overrides?: Partial<Do
   container.register(TOKENS.PipelineLoaderDomain, domains.pipelineLoaderDomain)
   container.register(TOKENS.PermissionPipeDomain, domains.permissionPipeDomain)
   container.register(TOKENS.GitPendingChangesDomain, domains.gitPendingChangesDomain)
+  container.register(TOKENS.PlanFileDomain, domains.planFileDomain)
 
   return domains
 }

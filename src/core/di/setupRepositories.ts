@@ -14,6 +14,7 @@ import { PipelineFileRepository } from '@src/repositories/fileMoveRepository'
 import { GitRepository } from '@src/repositories/gitRepository'
 import { RejectionFeedbackRepository } from '@src/repositories/rejectionFeedback'
 import { PermissionPipeRepository } from '@src/repositories/permissionPipeRepository'
+import { PlanFileRepository } from '@src/repositories/planFileRepository'
 
 export type Repos = {
   claudeCodeRepo: ClaudeCodeRepository
@@ -29,6 +30,7 @@ export type Repos = {
   gitRepo: GitRepository
   rejectionFeedbackRepo: RejectionFeedbackRepository
   permissionPipeRepo: PermissionPipeRepository
+  planFileRepo: PlanFileRepository
 }
 
 export function setupRepositories(
@@ -62,9 +64,16 @@ export function setupRepositories(
     rejectionFeedbackRepo:
       overrides?.rejectionFeedbackRepo ?? new RejectionFeedbackRepository(infras.fsInfra),
     permissionPipeRepo:
-      overrides?.permissionPipeRepo ?? new PermissionPipeRepository(infras.fsInfra, infras.ttyInfra)
+      overrides?.permissionPipeRepo ??
+      new PermissionPipeRepository(infras.fsInfra, infras.ttyInfra),
+    planFileRepo: overrides?.planFileRepo ?? new PlanFileRepository(infras.fsInfra)
   }
 
+  registerAll(repos)
+  return repos
+}
+
+function registerAll(repos: Repos): void {
   container.register(TOKENS.ClaudeCodeRepository, repos.claudeCodeRepo)
   container.register(TOKENS.ShellRepository, repos.shellRepo)
   container.register(TOKENS.SessionRepository, repos.sessionRepo)
@@ -78,6 +87,5 @@ export function setupRepositories(
   container.register(TOKENS.GitRepository, repos.gitRepo)
   container.register(TOKENS.RejectionFeedbackRepository, repos.rejectionFeedbackRepo)
   container.register(TOKENS.PermissionPipeRepository, repos.permissionPipeRepo)
-
-  return repos
+  container.register(TOKENS.PlanFileRepository, repos.planFileRepo)
 }
