@@ -44,6 +44,10 @@ Each integration test file **must** run in its own Vitest worker process. Do not
 
 Integration tests are organized around command contracts (exit codes, stderr output, file system state), not function cyclomatic complexity. `ts_test_strategist` targets unit test mock strategy and will produce wrong suggestions (mocking service classes instead of infra stubs). Use the plan entry in `plans/cli-integration-tests.md` as the source of truth for what to test.
 
+### Never call `ts_call_graph`
+
+Knowing exactly which service methods a command calls creates a path to mocking those services individually — which would bypass DI and produce a wide-scope unit test, not an integration test. `ts_call_graph` is a tool for discovering what to mock; that framing is wrong for integration tests. Do not call it even for complex Phase 3 commands. If the command source is too long to grasp in one read, read it in sections — do not reach for call-graph analysis.
+
 ### Do not mock service classes
 
 Integration tests exist to verify the full DI stack. Only `claudeCodeInfra` (and command-specific display functions / `@src/cli/prompt`) should be mocked. Services (`SessionService`, `AgentService`, etc.) run against the real file system via the tmp directory.
