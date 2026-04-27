@@ -1,5 +1,6 @@
 import { Node, SyntaxKind } from 'ts-morph'
 import type {
+  Project,
   SourceFile,
   CallExpression,
   Symbol as TsSymbol,
@@ -61,6 +62,38 @@ function resolveTypeName(decl: Node): string | undefined {
   return undefined
 }
 
+type ImplCache = Map<string, Callee[]>
+const projectImplCache = new WeakMap<Project, ImplCache>()
+
+function buildImplCache(project: Project): ImplCache {
+  const cache: ImplCache = new Map()
+  for (const sf of project.getSourceFiles()) {
+    if (sf.getFilePath().includes('/node_modules/')) continue
+    for (const cls of sf.getClasses()) {
+      const className = cls.getName()
+      if (!className) continue
+      for (const impl of cls.getImplements()) {
+        const typeName = impl.getExpression().getText()
+        for (const method of cls.getMethods()) {
+          const methodName = method.getName()
+          const key = `${typeName}.${methodName}`
+          let entries = cache.get(key)
+          if (!entries) {
+            entries = []
+            cache.set(key, entries)
+          }
+          entries.push({
+            filePath: sf.getFilePath(),
+            symbolName: `${className}.${methodName}`,
+            kind: 'local'
+          })
+        }
+      }
+    }
+  }
+  return cache
+}
+
 function findConcreteImplementations(
   decl: Node,
   methodName: string,
@@ -69,32 +102,14 @@ function findConcreteImplementations(
   const typeName = resolveTypeName(decl)
   if (!typeName) return []
 
-  const results: Callee[] = []
-
-  for (const sf of sourceFile.getProject().getSourceFiles()) {
-    if (sf.getFilePath().includes('/node_modules/')) continue
-
-    for (const cls of sf.getClasses()) {
-      const implementsInterface = cls
-        .getImplements()
-        .some((impl) => impl.getExpression().getText() === typeName)
-      if (!implementsInterface) continue
-
-      const method = cls.getMethod(methodName)
-      if (!method) continue
-
-      const className = cls.getName()
-      if (!className) continue
-
-      results.push({
-        filePath: sf.getFilePath(),
-        symbolName: `${className}.${methodName}`,
-        kind: 'local'
-      })
-    }
+  const project = sourceFile.getProject()
+  let cache = projectImplCache.get(project)
+  if (!cache) {
+    cache = buildImplCache(project)
+    projectImplCache.set(project, cache)
   }
 
-  return results
+  return cache.get(`${typeName}.${methodName}`) ?? []
 }
 
 function resolvePropertyAccessCall(
