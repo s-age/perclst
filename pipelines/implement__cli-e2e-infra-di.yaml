@@ -1,21 +1,23 @@
 tasks:
   - type: script
-    command: >-
-      rm -f
-      .claude/tmp/cli-e2e-infra-di-helpers-reviewer
+    command: rm -f .claude/tmp/cli-e2e-infra-di-helpers-reviewer
       .claude/tmp/cli-e2e-infra-di-start-reviewer
       .claude/tmp/cli-e2e-infra-di-resume-reviewer
-
+    done: true
   - type: pipeline
     name: cli-e2e-infra-di-helpers
     tasks:
       - type: agent
         name: cli-e2e-infra-di-helpers-implementer
-        task: |
+        task: >
           plan_path: plans/cli-e2e-infra-di.md
 
-          Create src/cli/commands/__tests__/e2e/helpers.ts as specified in the plan (section 2).
+
+          Create src/cli/commands/__tests__/e2e/helpers.ts as specified in the
+          plan (section 2).
+
           src/core/di/setup.ts is already complete — do not modify it.
+
 
           Run ts_checker after creating the file and resolve any type errors.
         allowed_tools:
@@ -24,22 +26,30 @@ tasks:
           - Edit
           - Bash
           - mcp__perclst__ts_checker
-
+        done: true
       - type: agent
         name: cli-e2e-infra-di-helpers-reviewer
-        task: |
+        task: >
           Review src/cli/commands/__tests__/e2e/helpers.ts against the plan spec
+
           (plans/cli-e2e-infra-di.md section 2).
 
+
           Check:
+
           - All 4 factory functions present and matching the spec
             (makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig)
-          - vi.fn() wrappers on all ClaudeCodeInfra methods in buildClaudeCodeStub
+          - vi.fn() wrappers on all ClaudeCodeInfra methods in
+          buildClaudeCodeStub
+
           - Return types are correct and no missing imports
+
 
           ng_output_path: .claude/tmp/cli-e2e-infra-di-helpers-reviewer
 
+
           If critical or major issues found, write a summary to ng_output_path.
+
           If clean, do not write the file.
         allowed_tools:
           - Read
@@ -48,34 +58,40 @@ tasks:
         rejected:
           to: cli-e2e-infra-di-helpers-implementer
           max_retries: 3
-
+        done: true
       - type: script
-        command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit
+        command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+          test:unit
         rejected:
           to: cli-e2e-infra-di-helpers-implementer
           max_retries: 3
-
+        done: true
+    done: true
   - type: agent
     name: cli-e2e-infra-di-helpers-implementer
-    task: >-
-      helpers.ts is implemented, reviewed, and all checks pass.
-      Commit with a conventional commit message
-      (e.g. test(cli): add E2E test helpers for DI infra stubs).
+    task: "helpers.ts is implemented, reviewed, and all checks pass. Commit with a
+      conventional commit message (e.g. test(cli): add E2E test helpers for DI
+      infra stubs)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
+    done: true
   - type: pipeline
     name: cli-e2e-infra-di-start
     tasks:
       - type: agent
         name: cli-e2e-infra-di-start-implementer
-        task: |
+        task: >
           plan_path: plans/cli-e2e-infra-di.md
 
-          Create src/cli/commands/__tests__/e2e/start.e2e.test.ts as specified in the plan (section 3).
-          helpers.ts already exists at src/cli/commands/__tests__/e2e/helpers.ts.
+
+          Create src/cli/commands/__tests__/e2e/start.e2e.test.ts as specified
+          in the plan (section 3).
+
+          helpers.ts already exists at
+          src/cli/commands/__tests__/e2e/helpers.ts.
+
 
           Run ts_checker after creating the file and resolve any type errors.
         allowed_tools:
@@ -84,7 +100,7 @@ tasks:
           - Edit
           - Bash
           - mcp__perclst__ts_checker
-
+        done: true
       - type: agent
         name: cli-e2e-infra-di-start-reviewer
         task: |
@@ -99,34 +115,39 @@ tasks:
         rejected:
           to: cli-e2e-infra-di-start-implementer
           max_retries: 3
-
+        done: true
       - type: script
-        command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit
+        command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+          test:unit
         rejected:
           to: cli-e2e-infra-di-start-implementer
           max_retries: 3
-
+        done: true
+    done: true
   - type: agent
     name: cli-e2e-infra-di-start-implementer
-    task: >-
-      start.e2e.test.ts is implemented, reviewed, and all checks pass.
-      Commit with a conventional commit message
-      (e.g. test(cli): add E2E tests for startCommand with DI infra stubs).
+    task: "start.e2e.test.ts is implemented, reviewed, and all checks pass. Commit
+      with a conventional commit message (e.g. test(cli): add E2E tests for
+      startCommand with DI infra stubs)."
     model: haiku
     allowed_tools:
       - Read
       - Bash
-
   - type: pipeline
     name: cli-e2e-infra-di-resume
     tasks:
       - type: agent
         name: cli-e2e-infra-di-resume-implementer
-        task: |
+        task: >
           plan_path: plans/cli-e2e-infra-di.md
 
-          Create src/cli/commands/__tests__/e2e/resume.e2e.test.ts as specified in the plan (section 4).
-          helpers.ts already exists at src/cli/commands/__tests__/e2e/helpers.ts.
+
+          Create src/cli/commands/__tests__/e2e/resume.e2e.test.ts as specified
+          in the plan (section 4).
+
+          helpers.ts already exists at
+          src/cli/commands/__tests__/e2e/helpers.ts.
+
 
           Run ts_checker after creating the file and resolve any type errors.
         allowed_tools:
@@ -135,7 +156,6 @@ tasks:
           - Edit
           - Bash
           - mcp__perclst__ts_checker
-
       - type: agent
         name: cli-e2e-infra-di-resume-reviewer
         task: |
@@ -150,19 +170,17 @@ tasks:
         rejected:
           to: cli-e2e-infra-di-resume-implementer
           max_retries: 3
-
       - type: script
-        command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run test:unit
+        command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+          test:unit
         rejected:
           to: cli-e2e-infra-di-resume-implementer
           max_retries: 3
-
   - type: agent
     name: cli-e2e-infra-di-resume-implementer
-    task: >-
-      resume.e2e.test.ts is implemented, reviewed, and all checks pass.
-      Commit with a conventional commit message
-      (e.g. test(cli): add E2E tests for resumeCommand with DI infra stubs).
+    task: "resume.e2e.test.ts is implemented, reviewed, and all checks pass. Commit
+      with a conventional commit message (e.g. test(cli): add E2E tests for
+      resumeCommand with DI infra stubs)."
     model: haiku
     allowed_tools:
       - Read
