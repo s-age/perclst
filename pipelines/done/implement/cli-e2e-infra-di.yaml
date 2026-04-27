@@ -133,6 +133,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: pipeline
     name: cli-e2e-infra-di-resume
     tasks:
@@ -156,6 +157,7 @@ tasks:
           - Edit
           - Bash
           - mcp__perclst__ts_checker
+        done: true
       - type: agent
         name: cli-e2e-infra-di-resume-reviewer
         task: |
@@ -170,12 +172,15 @@ tasks:
         rejected:
           to: cli-e2e-infra-di-resume-implementer
           max_retries: 3
+        done: true
       - type: script
         command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
           test:unit
         rejected:
           to: cli-e2e-infra-di-resume-implementer
           max_retries: 3
+        done: true
+    done: true
   - type: agent
     name: cli-e2e-infra-di-resume-implementer
     task: "resume.e2e.test.ts is implemented, reviewed, and all checks pass. Commit
@@ -185,3 +190,4 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
