@@ -3,6 +3,7 @@ import { TOKENS } from './identifiers'
 import type { Infras } from './setupInfrastructures'
 import { SessionRepository } from '@src/repositories/sessions'
 import { ClaudeSessionRepository } from '@src/repositories/claudeSessions'
+import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import { ProcedureRepository } from '@src/repositories/procedures'
 import { CheckerRepository } from '@src/repositories/checkerRepository'
 import { TestStrategyRepository } from '@src/repositories/testStrategyRepository'
@@ -20,7 +21,7 @@ export type Repos = {
   claudeCodeRepo: ClaudeCodeRepository
   shellRepo: ShellRepository
   sessionRepo: SessionRepository
-  claudeSessionRepo: ClaudeSessionRepository
+  claudeSessionRepo: IClaudeSessionRepository
   procedureRepo: ProcedureRepository
   checkerRepo: CheckerRepository
   testStrategyRepo: TestStrategyRepository
