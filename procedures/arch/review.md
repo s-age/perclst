@@ -45,9 +45,9 @@ flowchart TD
     Tally -- No --> ReportClean["Write the clean variant of the report\nFormat: procedures/arch/template.md"]
     Tally -- Yes --> BuildReport["Write the violation report\nFormat: procedures/arch/template.md\nInclude one section per violation with file_path+line, layer, check, description, recommendation"]
 
-    ReportClean --> WriteOut
+    ReportClean --> Done([Print report to stdout and done])
     BuildReport --> WriteOut{ng_output_path\nprovided?}
-    WriteOut -- No --> Done([Print report to stdout and done])
+    WriteOut -- No --> Done
     WriteOut -- Yes --> WriteFile["mkdir -p $(dirname ng_output_path)\nWrite full violation report to ng_output_path\n(this file is the input for the arch/refactor procedure)"]
     WriteFile --> Done2([Done])
 ```
