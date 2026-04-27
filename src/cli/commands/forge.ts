@@ -7,6 +7,7 @@ import type { Config } from '@src/types/config'
 import { stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
+import { UserCancelledError } from '@src/errors/userCancelledError'
 import { parseForgeSession } from '@src/validators/cli/forgeSession'
 import { parseStartSession } from '@src/validators/cli/startSession'
 import { printResponse } from '@src/cli/display'
@@ -50,6 +51,11 @@ export async function forgeCommand(
 
     printResponse(response, startInput, config.display, { sessionId })
   } catch (error) {
+    if (error instanceof UserCancelledError) {
+      stderr.print('Cancelled.')
+      process.exit(0)
+      return
+    }
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)
     } else if (error instanceof RateLimitError) {
