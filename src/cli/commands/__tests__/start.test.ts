@@ -4,14 +4,14 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
-import { printResponse, printStreamEvent } from '@src/cli/display'
+import { printResponse, printStreamEvent } from '@src/cli/view/display'
 import type { AgentStreamEvent } from '@src/types/agent'
 import type { MockInstance } from 'vitest'
 
 // Mock dependencies
 vi.mock('@src/core/di/container')
 vi.mock('@src/utils/output')
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 vi.mock('@src/validators/cli/startSession')
 vi.mock('@src/errors/validationError')
 vi.mock('@src/errors/rateLimitError')

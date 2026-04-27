@@ -10,7 +10,7 @@ import { RateLimitError } from '@src/errors/rateLimitError'
 import { UserCancelledError } from '@src/errors/userCancelledError'
 import { parseForgeSession } from '@src/validators/cli/forgeSession'
 import { parseStartSession } from '@src/validators/cli/startSession'
-import { printResponse } from '@src/cli/display'
+import { printResponse } from '@src/cli/view/display'
 
 export async function forgeCommand(
   planFilePath: string,

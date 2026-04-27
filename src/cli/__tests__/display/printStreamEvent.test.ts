@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { printStreamEvent } from '@src/cli/display'
+import { printStreamEvent } from '@src/cli/view/display'
 import type { AgentStreamEvent } from '@src/types/agent'
 import type { DisplayConfig } from '@src/types/config'
 

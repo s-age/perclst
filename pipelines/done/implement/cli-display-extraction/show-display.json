@@ -1,0 +1,72 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/cli-display-show-reviewer",
+      "done": true
+    },
+    {
+      "type": "pipeline",
+      "name": "cli-display-show",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "cli-display-show-implementer",
+          "task": "plan_path: plans/cli-display-extraction.md\n\nImplement Step 1 from the plan (show.ts):\n- Create src/cli/view/showDisplay.ts: extract truncate() and printTurnsTable() from show.ts, add printShowText(session: Session) that prints the metadata block\n- Modify src/cli/commands/show.ts: remove truncate/printTurnsTable definitions, replace the metadata stdout.print block with a single printShowText(session) call, update imports to @src/cli/view/showDisplay\n\nRun mcp__perclst__ts_checker after completing all changes.",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "done": true
+        },
+        {
+          "type": "agent",
+          "name": "cli-display-show-reviewer",
+          "task": "target_path: src/cli/view\nng_output_path: .claude/tmp/cli-display-show-reviewer\n\nFocus review on the newly created src/cli/view/showDisplay.ts — verify it imports only from validators, services, types, errors, utils, constants (not repositories or infrastructures).",
+          "procedure": "arch/review",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "cli-display-show-implementer",
+            "max_retries": 3
+          },
+          "done": true
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "cli-display-show-implementer",
+            "max_retries": 3
+          },
+          "done": true
+        }
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "cli-display-show-implementer",
+      "task": "Implementation complete, architecture clean, and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(cli): extract show display logic to showDisplay.ts).",
+      "model": "haiku",
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
+    }
+  ]
+}

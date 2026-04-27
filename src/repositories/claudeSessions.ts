@@ -1,5 +1,5 @@
 import { join } from 'path'
-import type { AssistantTurnEntry, ClaudeSessionData } from '@src/types/analysis'
+import type { AssistantTurnEntry, ClaudeSessionData, SessionStats } from '@src/types/analysis'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import type { FsInfra } from '@src/infrastructures/fs'
 import {
@@ -7,6 +7,7 @@ import {
   buildToolResultMap,
   buildTurns,
   filterEntriesUpTo,
+  scanStats,
   type RawAssistantEntry
 } from '@src/repositories/parsers/claudeSessionParser'
 
@@ -128,6 +129,18 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     const toolResultMap = buildToolResultMap(entries)
     const { turns, tokens, contextWindow } = buildTurns(entries, toolResultMap)
     return { turns, tokens: { ...tokens, contextWindow } }
+  }
+
+  scanSessionStats(
+    claudeSessionId: string,
+    workingDir: string,
+    upToMessageId?: string
+  ): SessionStats {
+    const jsonlPath = this.resolveJsonlPath(claudeSessionId, workingDir)
+    if (!this.fs.fileExists(jsonlPath)) {
+      throw new Error(`Claude Code session file not found: ${jsonlPath}`)
+    }
+    return scanStats(this.fs.readText(jsonlPath), upToMessageId)
   }
 
   getAssistantTurns(claudeSessionId: string, workingDir: string): AssistantTurnEntry[] {

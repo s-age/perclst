@@ -7,7 +7,7 @@ paths:
 
 When creating, editing, or reviewing any file in `src/cli/`:
 
-- **Layer responsibility**: `index.ts` registers all `commander` v12 commands, calls `setupContainer()` once, then `program.parse()`. Command handlers resolve services via the DI container, delegate validation to `src/validators/cli/`, and forward business logic to `src/services/`. `display.ts` owns all terminal output (`printResponse`, `printStreamEvent`).
+- **Layer responsibility**: `index.ts` registers all `commander` v12 commands, calls `setupContainer()` once, then `program.parse()`. Command handlers resolve services via the DI container, delegate validation to `src/validators/cli/`, and forward business logic to `src/services/`. `src/cli/view/` owns all terminal output — `display.ts` for agent response rendering (`printResponse`, `printStreamEvent`), `*Display.ts` files for command-specific formatting (e.g. `analyzeDisplay.ts`, `showDisplay.ts`).
 - **Import allowlist**: `validators`, `services`, `types`, `errors`, `utils`, `constants`, `core/di` — never `repositories` or `infrastructures`.
 
 ## Command handler — resolve → validate → call → output → catch
@@ -66,6 +66,7 @@ if (opts.outputOnly) { /* only hides one thing */ }
 - Never pass raw `options.*` to services — always run through `parseXxx()` first
 - Never call `setupContainer()` inside command handlers — it belongs only in `index.ts`
 - Never instantiate services directly — use `container.resolve<T>(TOKENS.Xxx)`
+- Never put display/formatting logic (Table construction, multi-field print blocks, helper format functions) inside command files — extract to `src/cli/view/*Display.ts`
 
 ## References
 

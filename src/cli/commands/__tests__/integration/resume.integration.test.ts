@@ -12,7 +12,7 @@ import { RateLimitError } from '@src/errors/rateLimitError'
 import type { Session } from '@src/types/session'
 
 vi.mock('@src/utils/output')
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 vi.mock('@src/cli/prompt')
 
 describe('resumeCommand (integration)', () => {

@@ -1,0 +1,72 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/cli-display-sweep-reviewer",
+      "done": true
+    },
+    {
+      "type": "pipeline",
+      "name": "cli-display-sweep",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "cli-display-sweep-implementer",
+          "task": "plan_path: plans/cli-display-extraction.md\n\nImplement Step 3 (sweep.ts) from the plan:\n- Create src/cli/view/sweepDisplay.ts: extract printSweepResult(targets: Session[], dryRun: boolean) — moves the dry-run/deleted header print and the per-session format loop out of sweep.ts\n- Modify src/cli/commands/sweep.ts: replace the result format loop with a single printSweepResult(targets, input.dryRun) call, update imports to @src/cli/view/sweepDisplay\n\nRun mcp__perclst__ts_checker after completing all changes.",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "done": true
+        },
+        {
+          "type": "agent",
+          "name": "cli-display-sweep-reviewer",
+          "task": "target_path: src/cli/view\nng_output_path: .claude/tmp/cli-display-sweep-reviewer\n\nFocus review on the newly created src/cli/view/sweepDisplay.ts — verify it imports only from validators, services, types, errors, utils, constants (not repositories or infrastructures).",
+          "procedure": "arch/review",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "cli-display-sweep-implementer",
+            "max_retries": 3
+          },
+          "done": true
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "cli-display-sweep-implementer",
+            "max_retries": 3
+          },
+          "done": true
+        }
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "cli-display-sweep-implementer",
+      "task": "Implementation complete, architecture clean, and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(cli): extract sweep display logic to sweepDisplay.ts).",
+      "model": "haiku",
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
+    }
+  ]
+}

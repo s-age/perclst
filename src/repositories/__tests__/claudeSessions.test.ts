@@ -7,9 +7,11 @@ import {
   parseRawEntries,
   buildToolResultMap,
   buildTurns,
-  filterEntriesUpTo
+  filterEntriesUpTo,
+  scanStats
 } from '@src/repositories/parsers/claudeSessionParser'
 import type { RawEntry, TokenTotals } from '@src/repositories/parsers/claudeSessionParser'
+import type { SessionStats } from '@src/types/analysis'
 import type { ClaudeCodeTurn } from '@src/types/analysis'
 import type { FsInfra } from '@src/infrastructures/fs'
 import { ClaudeSessionRepository } from '@src/repositories/claudeSessions'
@@ -23,6 +25,7 @@ const mockParseRawEntries = vi.mocked(parseRawEntries)
 const mockBuildToolResultMap = vi.mocked(buildToolResultMap)
 const mockBuildTurns = vi.mocked(buildTurns)
 const mockFilterEntriesUpTo = vi.mocked(filterEntriesUpTo)
+const mockScanStats = vi.mocked(scanStats)
 
 type ToolResultMap = Map<string, { text: string | null; isError: boolean }>
 
@@ -253,6 +256,53 @@ describe('ClaudeSessionRepository', () => {
         turns: expectedTurns,
         tokens: { ...expectedTokens, contextWindow: 0 }
       })
+    })
+  })
+
+  // ─── scanSessionStats ───────────────────────────────────────────────────
+
+  describe('scanSessionStats', () => {
+    const makeStats = (): SessionStats => ({
+      apiCalls: 2,
+      toolCalls: 3,
+      tokens: {
+        totalInput: 100,
+        totalOutput: 50,
+        totalCacheRead: 0,
+        totalCacheCreation: 0,
+        contextWindow: 0
+      }
+    })
+
+    beforeEach(() => {
+      vi.mocked(mockFs.readText).mockReturnValue('raw content')
+    })
+
+    it('throws when the session JSONL file does not exist', () => {
+      vi.mocked(mockFs.fileExists).mockReturnValue(false)
+
+      expect(() => repo.scanSessionStats('session-1', '/work/dir')).toThrow(
+        'Claude Code session file not found'
+      )
+    })
+
+    it('returns the stats produced by scanStats', () => {
+      vi.mocked(mockFs.fileExists).mockReturnValue(true)
+      mockScanStats.mockReturnValue(makeStats())
+
+      const result = repo.scanSessionStats('session-1', '/work/dir')
+
+      expect(mockScanStats).toHaveBeenCalledWith('raw content', undefined)
+      expect(result).toEqual(makeStats())
+    })
+
+    it('passes upToMessageId to scanStats when provided', () => {
+      vi.mocked(mockFs.fileExists).mockReturnValue(true)
+      mockScanStats.mockReturnValue(makeStats())
+
+      repo.scanSessionStats('session-1', '/work/dir', 'msg-42')
+
+      expect(mockScanStats).toHaveBeenCalledWith('raw content', 'msg-42')
     })
   })
 

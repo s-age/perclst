@@ -5,29 +5,13 @@ import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr } from '@src/utils/output'
 import { ValidationError } from '@src/errors/validationError'
 import { parseRewindSession } from '@src/validators/cli/rewindSession'
+import { printRewindList } from '@src/cli/view/rewindDisplay'
 
 const DEFAULT_LENGTH = 120
 
 type RawRewindOptions = {
   list?: boolean
   length?: string
-}
-
-async function handleListMode(
-  analyzeService: AnalyzeService,
-  resolvedId: string,
-  displayLength: number
-): Promise<void> {
-  const turns = await analyzeService.getRewindTurns(resolvedId)
-  if (turns.length === 0) {
-    stdout.print('No assistant turns found.')
-    return
-  }
-  for (const turn of turns) {
-    const preview =
-      turn.text.length > displayLength ? turn.text.slice(0, displayLength) + '…' : turn.text
-    stdout.print(`  ${turn.index}: ${preview}`)
-  }
 }
 
 export async function rewindCommand(
@@ -48,7 +32,12 @@ export async function rewindCommand(
     const resolvedId = await sessionService.resolveId(input.sessionId)
 
     if (input.list) {
-      await handleListMode(analyzeService, resolvedId, input.length ?? DEFAULT_LENGTH)
+      const turns = await analyzeService.getRewindTurns(resolvedId)
+      if (turns.length === 0) {
+        stdout.print('No assistant turns found.')
+        return
+      }
+      printRewindList(turns, input.length ?? DEFAULT_LENGTH)
       return
     }
 

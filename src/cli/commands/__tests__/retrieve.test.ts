@@ -6,7 +6,7 @@ import { PROCEDURES_DIR } from './helper'
 
 vi.mock('@src/core/di/container')
 vi.mock('@src/utils/output')
-vi.mock('@src/cli/display')
+vi.mock('@src/cli/view/display')
 
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'

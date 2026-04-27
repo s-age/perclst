@@ -5,7 +5,7 @@ import type { SessionService } from '@src/services/sessionService'
 import { stdout, stderr, debug } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
-import { printResponse } from '@src/cli/display'
+import { printResponse } from '@src/cli/view/display'
 import type { Config } from '@src/types/config'
 import { parseForkSession } from '@src/validators/cli/forkSession'
 
