@@ -1,0 +1,72 @@
+{
+  "tasks": [
+    {
+      "type": "script",
+      "command": "rm -f .claude/tmp/cli-display-list-reviewer",
+      "done": true
+    },
+    {
+      "type": "pipeline",
+      "name": "cli-display-list",
+      "tasks": [
+        {
+          "type": "agent",
+          "name": "cli-display-list-implementer",
+          "task": "plan_path: plans/cli-display-extraction.md\n\nImplement Step 2 (list.ts) from the plan:\n- Create src/cli/view/listDisplay.ts: extract printSessionsTable(sessions: Session[]) — moves the cli-table3 Table construction and stdout.print call out of list.ts\n- Modify src/cli/commands/list.ts: replace the Table construction block with a single printSessionsTable(sessions) call, update imports to @src/cli/view/listDisplay\n\nRun mcp__perclst__ts_checker after completing all changes.",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Write",
+            "Edit",
+            "Bash",
+            "mcp__perclst__ts_checker",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "done": true
+        },
+        {
+          "type": "agent",
+          "name": "cli-display-list-reviewer",
+          "task": "target_path: src/cli/view\nng_output_path: .claude/tmp/cli-display-list-reviewer\n\nFocus review on the newly created src/cli/view/listDisplay.ts — verify it imports only from validators, services, types, errors, utils, constants (not repositories or infrastructures).",
+          "procedure": "arch/review",
+          "model": "sonnet",
+          "allowed_tools": [
+            "Read",
+            "Bash",
+            "mcp__perclst__ts_analyze",
+            "mcp__perclst__ts_get_references",
+            "mcp__perclst__ts_get_types"
+          ],
+          "rejected": {
+            "to": "cli-display-list-implementer",
+            "max_retries": 3
+          },
+          "done": true
+        },
+        {
+          "type": "script",
+          "command": "npm run format --fix && npm run lint:fix && npm run build && npm run test:unit",
+          "rejected": {
+            "to": "cli-display-list-implementer",
+            "max_retries": 3
+          },
+          "done": true
+        }
+      ],
+      "done": true
+    },
+    {
+      "type": "agent",
+      "name": "cli-display-list-implementer",
+      "task": "Implementation complete, architecture clean, and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(cli): extract list display logic to listDisplay.ts).",
+      "model": "haiku",
+      "allowed_tools": [
+        "Read",
+        "Bash"
+      ],
+      "done": true
+    }
+  ]
+}
