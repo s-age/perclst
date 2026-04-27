@@ -16,7 +16,7 @@ vi.mock('@src/utils/output')
 vi.mock('@src/cli/display')
 vi.mock('@src/cli/prompt')
 
-describe('resumeCommand (E2E)', () => {
+describe('resumeCommand (integration)', () => {
   let dir: string
   let cleanup: () => void
   let sessionId: string

@@ -17,7 +17,7 @@ vi.mock('@src/utils/output')
 vi.mock('@src/cli/display')
 vi.mock('@src/cli/prompt')
 
-describe('startCommand (E2E)', () => {
+describe('startCommand (integration)', () => {
   let dir: string
   let cleanup: () => void
   let exitSpy: ReturnType<typeof vi.spyOn>
