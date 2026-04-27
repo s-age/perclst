@@ -49,4 +49,4 @@ if (existsSync(homePerclstScript) && !scriptPath.startsWith(join(homedir(), '.pe
 
 ---
 
-**Keywords:** skill-inject, hook deduplication, global installation, local installation, additionalContext, double injection, import.meta.url, PreToolUse, ES module, npm link
+**Keywords:** skill-inject, hook deduplication, global installation, local installation, additionalContext, double injection, process.argv, import.meta.url, symlink, PreToolUse, ES module, npm link
