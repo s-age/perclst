@@ -45,7 +45,7 @@ describe('startCommand (integration)', () => {
       expect(files).toHaveLength(1)
     })
 
-    it('session の status が active になる', async () => {
+    it('session の status が completed になる', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -53,7 +53,7 @@ describe('startCommand (integration)', () => {
 
       const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
       const session = JSON.parse(readFileSync(join(dir, file), 'utf8')) as Session
-      expect(session.metadata.status).toBe('active')
+      expect(session.metadata.status).toBe('completed')
     })
 
     it('runClaude に task が prompt として渡される', async () => {

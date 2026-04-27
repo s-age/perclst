@@ -38,14 +38,21 @@ export class AgentService {
     const sessionFilePath = this.sessionDomain.getPath(session.id)
     const executeOptions = { ...resolved, sessionFilePath }
 
-    const response = await this.agentDomain.run(session, task, false, executeOptions)
-
-    if (this.agentDomain.isLimitExceeded(response, resolved)) {
-      resolved.onLimitExceeded?.()
-    }
-
     await this.sessionDomain.updateStatus(session.id, 'active')
-    return { sessionId: session.id, response }
+
+    try {
+      const response = await this.agentDomain.run(session, task, false, executeOptions)
+
+      if (this.agentDomain.isLimitExceeded(response, resolved)) {
+        resolved.onLimitExceeded?.()
+      }
+
+      await this.sessionDomain.updateStatus(session.id, 'completed')
+      return { sessionId: session.id, response }
+    } catch (error) {
+      await this.sessionDomain.updateStatus(session.id, 'failed').catch(() => {})
+      throw error
+    }
   }
 
   async chat(sessionId: string): Promise<void> {
@@ -64,14 +71,21 @@ export class AgentService {
     const sessionFilePath = this.sessionDomain.getPath(session.id)
     const executeOptions = { ...resolved, sessionFilePath }
 
-    const response = await this.agentDomain.resume(session, instruction, executeOptions)
-    await this.sessionDomain.save(session)
-
-    if (this.agentDomain.isLimitExceeded(response, resolved)) {
-      resolved.onLimitExceeded?.()
-    }
-
     await this.sessionDomain.updateStatus(session.id, 'active')
-    return response
+
+    try {
+      const response = await this.agentDomain.resume(session, instruction, executeOptions)
+
+      if (this.agentDomain.isLimitExceeded(response, resolved)) {
+        resolved.onLimitExceeded?.()
+      }
+
+      await this.sessionDomain.updateStatus(session.id, 'completed')
+      await this.sessionDomain.save(session)
+      return response
+    } catch (error) {
+      await this.sessionDomain.updateStatus(session.id, 'failed').catch(() => {})
+      throw error
+    }
   }
 }

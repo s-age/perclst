@@ -133,12 +133,19 @@ export class PipelineDomain implements IPipelineDomain {
       working_dir: this.getWorkingDirectory()
     })
     const sessionFilePath = this.sessionDomain.getPath(session.id)
-    const response = await this.runWithLimit(session, instruction, false, {
-      execOpts: { ...execOpts, sessionFilePath },
-      limits: { maxMessages, maxContextTokens },
-      onLimitExceeded: options.onLimitExceeded
-    })
     await this.sessionDomain.updateStatus(session.id, 'active')
+    let response
+    try {
+      response = await this.runWithLimit(session, instruction, false, {
+        execOpts: { ...execOpts, sessionFilePath },
+        limits: { maxMessages, maxContextTokens },
+        onLimitExceeded: options.onLimitExceeded
+      })
+    } catch (error) {
+      await this.sessionDomain.updateStatus(session.id, 'failed').catch(() => {})
+      throw error
+    }
+    await this.sessionDomain.updateStatus(session.id, 'completed')
     return {
       taskPath: taskLocation.taskPath,
       taskIndex: taskLocation.index,
@@ -162,12 +169,19 @@ export class PipelineDomain implements IPipelineDomain {
     const existing = await this.sessionDomain.findByName(task.name!)
     if (!existing) return null
     const sessionFilePath = this.sessionDomain.getPath(existing.id)
-    const response = await this.runWithLimit(existing, executionConfig.instruction, true, {
-      execOpts: { ...executionConfig.execOpts, sessionFilePath },
-      limits: executionConfig.limits,
-      onLimitExceeded: executionConfig.onLimitExceeded
-    })
     await this.sessionDomain.updateStatus(existing.id, 'active')
+    let response
+    try {
+      response = await this.runWithLimit(existing, executionConfig.instruction, true, {
+        execOpts: { ...executionConfig.execOpts, sessionFilePath },
+        limits: executionConfig.limits,
+        onLimitExceeded: executionConfig.onLimitExceeded
+      })
+    } catch (error) {
+      await this.sessionDomain.updateStatus(existing.id, 'failed').catch(() => {})
+      throw error
+    }
+    await this.sessionDomain.updateStatus(existing.id, 'completed')
     return {
       taskPath: taskLocation.taskPath,
       taskIndex: taskLocation.index,
