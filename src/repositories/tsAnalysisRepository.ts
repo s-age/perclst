@@ -8,8 +8,10 @@ import {
   extractReferences
 } from '@src/repositories/parsers/tsAnalysisParser'
 import { findContainingSymbol } from '@src/repositories/parsers/tsAstParser'
+import { extractCallees } from '@src/repositories/parsers/tsCallGraphParser'
 import type { ITsAnalysisRepository } from '@src/repositories/ports/tsAnalysis'
 import type { TypeScriptAnalysis, ReferenceInfo, TypeDefinition } from '@src/types/tsAnalysis'
+import type { Callee } from '@src/types/tsCallGraph'
 
 export class TsAnalysisRepository implements ITsAnalysisRepository {
   constructor(private infra: TsAnalyzer) {}
@@ -47,5 +49,10 @@ export class TsAnalysisRepository implements ITsAnalysisRepository {
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {
     const sf = this.infra.getSourceFile(filePath)
     return extractTypeDefinition(sf, symbolName)
+  }
+
+  getCallees(filePath: string, symbolName: string): Callee[] {
+    const sf = this.infra.getSourceFile(filePath)
+    return extractCallees(sf, symbolName)
   }
 }

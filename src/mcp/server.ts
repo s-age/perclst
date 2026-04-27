@@ -22,6 +22,7 @@ import { tsGetTypesParams } from '@src/validators/mcp/tsGetTypes'
 import { tsTestStrategistParams } from '@src/validators/mcp/tsTestStrategist'
 import { knowledgeSearchParams } from '@src/validators/mcp/knowledgeSearch'
 import { tsCheckerParams } from '@src/validators/mcp/tsChecker'
+import { tsCallGraphParams } from '@src/validators/mcp/tsCallGraph'
 import { gitPendingChangesParams } from '@src/validators/mcp/gitPendingChanges'
 import { executeTsAnalyze } from './tools/tsAnalyze'
 import { executeTsGetReferences } from './tools/tsGetReferences'
@@ -31,6 +32,7 @@ import { executeTsTestStrategist } from './tools/tsTestStrategist'
 import { executeKnowledgeSearch } from './tools/knowledgeSearch'
 import { executeAskPermission } from './tools/askPermission'
 import { executeGitPendingChanges } from './tools/gitPendingChanges'
+import { executeTsCallGraph } from './tools/tsCallGraph'
 import { setupContainer } from '@src/core/di/setup'
 
 setupContainer()
@@ -54,7 +56,9 @@ server.tool(
   'Returns all symbols (functions, variables, types), imports, and exports of a TypeScript file. ' +
     'When: first step before writing tests, editing, or reviewing any file in src/ — before reading line by line. ' +
     'Why: gives a complete surface map without reading the full source. ' +
-    'How: use the symbol list to identify what to test or where to make changes; feed key symbols into ts_get_types for exact signatures.',
+    'How: use the symbol list to identify what to test or where to make changes; feed key symbols into ts_get_types for exact signatures. ' +
+    'To trace all callers of a symbol (up the call chain): ts_get_references. ' +
+    'To trace the full execution path from a function (down the call chain): ts_call_graph.',
   tsAnalyzeParams,
   ({ file_path }) => executeTsAnalyze({ file_path })
 )
@@ -114,6 +118,16 @@ server.tool(
   tsCheckerParams,
   ({ project_root, lint_command, build_command, test_command }) =>
     executeTsChecker({ project_root, lint_command, build_command, test_command })
+)
+
+server.tool(
+  'ts_call_graph',
+  'Traces the call graph of a TypeScript function or method, resolving imports and DI-injected dependencies down to the infrastructure layer. ' +
+    'When: you need to understand the full execution path of a function across layers. ' +
+    'Why: ts_analyze shows only direct imports; ts_call_graph follows actual call chains through DI boundaries. ' +
+    'How: provide file_path and optionally an entry point (e.g. "runCommand" or "PipelineService.execute"); nodes marked [di] were resolved via container.resolve.',
+  tsCallGraphParams,
+  ({ file_path, entry, max_depth }) => executeTsCallGraph({ file_path, entry, max_depth })
 )
 
 server.tool(

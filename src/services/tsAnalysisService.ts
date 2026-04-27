@@ -5,6 +5,7 @@ import type {
   RecursiveReferenceInfo,
   TypeDefinition
 } from '@src/types/tsAnalysis'
+import type { CallGraphNode } from '@src/types/tsCallGraph'
 
 export class TsAnalysisService {
   constructor(private readonly domain: ITsAnalysisDomain) {}
@@ -36,5 +37,19 @@ export class TsAnalysisService {
 
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {
     return this.domain.getTypeDefinitions(filePath, symbolName)
+  }
+
+  getCallGraph(
+    filePath: string,
+    entry?: string,
+    maxDepth?: number
+  ): { file_path: string; entry: string | null; max_depth: number; nodes: CallGraphNode[] } {
+    const resolvedMaxDepth = maxDepth ?? 5
+    return {
+      file_path: filePath,
+      entry: entry ?? null,
+      max_depth: resolvedMaxDepth,
+      nodes: this.domain.getCallGraph(filePath, entry, resolvedMaxDepth)
+    }
   }
 }

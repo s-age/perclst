@@ -14,9 +14,11 @@ flowchart TD
     AnyFiles -- No --> ReportNotFound[Report: nothing found — suggest where to add it]
     AnyFiles -- Yes --> DeepDive[Run ts_analyze on candidate files]
     DeepDive --> NeedRefs{Need call-chain context?}
-    NeedRefs -- Yes --> GetRefs[Run ts_get_references to trace usage]
+    NeedRefs -- Callers / up --> GetRefs[Run ts_get_references to trace usage]
+    NeedRefs -- Callees / down --> GetCallGraph[Run ts_call_graph to trace execution path]
     NeedRefs -- No --> Synthesize
     GetRefs --> Synthesize[Synthesize: Where + What exists]
+    GetCallGraph --> Synthesize
     Synthesize --> CaptureKnowledge{Anything worth preserving?}
     CaptureKnowledge -- Yes --> WriteKnowledge[Write to knowledge/draft/ — problems, discoveries, gotchas, design decisions]
     CaptureKnowledge -- No --> Report

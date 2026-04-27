@@ -17,7 +17,8 @@ describe('TsAnalysisService', () => {
       analyze: vi.fn(),
       getReferences: vi.fn(),
       getReferencesRecursive: vi.fn(),
-      getTypeDefinitions: vi.fn()
+      getTypeDefinitions: vi.fn(),
+      getCallGraph: vi.fn()
     }
     service = new TsAnalysisService(mockDomain)
     vi.clearAllMocks()

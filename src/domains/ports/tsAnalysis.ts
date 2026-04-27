@@ -4,6 +4,7 @@ import type {
   RecursiveReferenceInfo,
   TypeDefinition
 } from '@src/types/tsAnalysis'
+import type { CallGraphNode } from '@src/types/tsCallGraph'
 
 export type ITsAnalysisDomain = {
   analyze(filePath: string): TypeScriptAnalysis
@@ -18,4 +19,5 @@ export type ITsAnalysisDomain = {
     options?: { includeTest?: boolean }
   ): RecursiveReferenceInfo[]
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null
+  getCallGraph(filePath: string, entry?: string, maxDepth?: number): CallGraphNode[]
 }

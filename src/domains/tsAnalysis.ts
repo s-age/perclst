@@ -6,6 +6,7 @@ import type {
   RecursiveReferenceInfo,
   TypeDefinition
 } from '@src/types/tsAnalysis'
+import type { CallGraphNode } from '@src/types/tsCallGraph'
 
 export class TsAnalysisDomain implements ITsAnalysisDomain {
   constructor(private readonly repo: ITsAnalysisRepository) {}
@@ -74,5 +75,63 @@ export class TsAnalysisDomain implements ITsAnalysisDomain {
 
   getTypeDefinitions(filePath: string, symbolName: string): TypeDefinition | null {
     return this.repo.getTypeDefinitions(filePath, symbolName)
+  }
+
+  getCallGraph(filePath: string, entry?: string, maxDepth = 5): CallGraphNode[] {
+    const visiting = new Set<string>()
+    if (entry) {
+      return [
+        this.buildNode({ filePath, symbolName: entry, kind: 'local', depth: maxDepth }, visiting)
+      ]
+    }
+    const analysis = this.repo.analyzeFile(filePath)
+    return (analysis.exports ?? [])
+      .filter((e) => e.kind === 'function')
+      .map((e) =>
+        this.buildNode({ filePath, symbolName: e.name, kind: 'local', depth: maxDepth }, visiting)
+      )
+  }
+
+  private buildNode(
+    opts: { filePath: string; symbolName: string; kind: CallGraphNode['kind']; depth: number },
+    visiting: Set<string>
+  ): CallGraphNode {
+    const { filePath, symbolName, kind, depth } = opts
+    const key = `${filePath}::${symbolName}`
+
+    if (visiting.has(key)) {
+      return { filePath, symbolName, kind: 'circular', children: [] }
+    }
+    if (depth === 0) {
+      return { filePath, symbolName, kind: 'max_depth', children: [] }
+    }
+
+    visiting.add(key)
+
+    const callees = this.repo.getCallees(filePath, symbolName)
+    const children = callees.map((callee) => {
+      if (callee.kind === 'external' || !callee.filePath || !callee.symbolName) {
+        return {
+          filePath: null,
+          symbolName: null,
+          externalName: callee.externalName ?? 'unknown',
+          kind: 'external' as const,
+          children: []
+        }
+      }
+      return this.buildNode(
+        {
+          filePath: callee.filePath,
+          symbolName: callee.symbolName,
+          kind: callee.kind,
+          depth: depth - 1
+        },
+        visiting
+      )
+    })
+
+    visiting.delete(key)
+
+    return { filePath, symbolName, kind, children }
   }
 }
