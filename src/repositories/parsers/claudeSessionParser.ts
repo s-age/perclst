@@ -1,4 +1,4 @@
-import type { ClaudeCodeTurn, ToolCall } from '@src/types/analysis'
+import type { ClaudeCodeTurn, SessionStats, ToolCall } from '@src/types/analysis'
 
 export type RawUserEntry = {
   type: 'user'
@@ -255,6 +255,87 @@ export function computeMessagesTotalFromContent(content: string): number {
   if (!content.trim()) return 0
   const entries = parseRawEntries(content)
   return computeMessagesTotal(buildTurns(entries, buildToolResultMap(entries)).turns)
+}
+
+type ScanGroup = { active: boolean; hasContent: boolean; toolCount: number; tokens: TokenTotals }
+type ScanAccum = { apiCalls: number; toolCalls: number; tokens: TokenTotals; contextWindow: number }
+
+const zeroTokens = (): TokenTotals => ({
+  totalInput: 0,
+  totalOutput: 0,
+  totalCacheRead: 0,
+  totalCacheCreation: 0
+})
+
+function flushScanGroup(g: ScanGroup, a: ScanAccum): void {
+  if (!g.active) return
+  if (g.hasContent) {
+    a.apiCalls++
+    a.toolCalls += g.toolCount
+    a.tokens.totalInput += g.tokens.totalInput
+    a.tokens.totalOutput += g.tokens.totalOutput
+    a.tokens.totalCacheRead += g.tokens.totalCacheRead
+    a.tokens.totalCacheCreation += g.tokens.totalCacheCreation
+    a.contextWindow = g.tokens.totalInput + g.tokens.totalCacheRead + g.tokens.totalCacheCreation
+  }
+  g.active = false
+  g.hasContent = false
+  g.toolCount = 0
+  g.tokens = zeroTokens()
+}
+
+function processScanAssistant(ae: RawAssistantEntry, g: ScanGroup): void {
+  if (!g.active) {
+    g.active = true
+    g.hasContent = false
+    g.toolCount = 0
+    g.tokens = zeroTokens()
+  }
+  for (const block of ae.message.content ?? []) {
+    if (block.type === 'text' || block.type === 'tool_use') {
+      g.hasContent = true
+      if (block.type === 'tool_use') g.toolCount++
+    }
+  }
+  // Overwrite rather than accumulate — same deduplication as mergeAssistantGroup
+  const u = ae.message.usage
+  if (u) {
+    g.tokens = {
+      totalInput: u.input_tokens ?? 0,
+      totalOutput: u.output_tokens ?? 0,
+      totalCacheRead: u.cache_read_input_tokens ?? 0,
+      totalCacheCreation: u.cache_creation_input_tokens ?? 0
+    }
+  }
+}
+
+export function scanStats(raw: string, upToMessageId?: string): SessionStats {
+  const a: ScanAccum = { apiCalls: 0, toolCalls: 0, tokens: zeroTokens(), contextWindow: 0 }
+  const g: ScanGroup = { active: false, hasContent: false, toolCount: 0, tokens: zeroTokens() }
+  let cutoffReached = false
+
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+    const entry = JSON.parse(trimmed) as RawEntry
+
+    if (entry.type === 'user') {
+      flushScanGroup(g, a)
+      if (cutoffReached) break
+    } else if (entry.type === 'assistant') {
+      if (cutoffReached) continue
+      const ae = entry as RawAssistantEntry
+      processScanAssistant(ae, g)
+      if (upToMessageId && ae.uuid === upToMessageId) cutoffReached = true
+    }
+  }
+  flushScanGroup(g, a)
+
+  return {
+    apiCalls: a.apiCalls,
+    toolCalls: a.toolCalls,
+    tokens: { ...a.tokens, contextWindow: a.contextWindow }
+  }
 }
 
 export function filterEntriesUpTo(entries: RawEntry[], messageId: string): RawEntry[] {

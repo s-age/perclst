@@ -2,7 +2,12 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ISessionDomain } from '@src/domains/ports/session'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import type { Session } from '@src/types/session'
-import type { AnalysisSummary, AssistantTurnEntry, ClaudeSessionData } from '@src/types/analysis'
+import type {
+  AnalysisSummary,
+  AssistantTurnEntry,
+  ClaudeSessionData,
+  SessionStats
+} from '@src/types/analysis'
 import { AnalyzeDomain } from '../analyze'
 
 const mockSessionDomain: ISessionDomain = {
@@ -27,6 +32,7 @@ const mockClaudeSessionRepo: IClaudeSessionRepository = {
   decodeWorkingDir: vi.fn(),
   validateSessionAtDir: vi.fn(),
   readSession: vi.fn(),
+  scanSessionStats: vi.fn(),
   getAssistantTurns: vi.fn()
 }
 
@@ -42,6 +48,18 @@ const makeSession = (overrides: Partial<Session> = {}): Session => ({
 
 const makeSessionData = (): ClaudeSessionData => ({
   turns: [],
+  tokens: {
+    totalInput: 0,
+    totalOutput: 0,
+    totalCacheRead: 0,
+    totalCacheCreation: 0,
+    contextWindow: 0
+  }
+})
+
+const makeSessionStats = (): SessionStats => ({
+  apiCalls: 0,
+  toolCalls: 0,
   tokens: {
     totalInput: 0,
     totalOutput: 0,
@@ -238,7 +256,7 @@ describe('AnalyzeDomain', () => {
     it('should build a summary row for each session', async () => {
       const session = makeSession()
       vi.mocked(mockSessionDomain.list).mockResolvedValue([session])
-      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(makeSessionData())
+      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockReturnValue(makeSessionStats())
 
       const result = await domain.summarize({})
 
@@ -250,7 +268,7 @@ describe('AnalyzeDomain', () => {
       const withName = makeSession({ name: 'My Session' })
       const withoutName = makeSession({ id: 'session-2' })
       vi.mocked(mockSessionDomain.list).mockResolvedValue([withName, withoutName])
-      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(makeSessionData())
+      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockReturnValue(makeSessionStats())
 
       const result = await domain.summarize({})
 
@@ -261,11 +279,11 @@ describe('AnalyzeDomain', () => {
     it('should read from rewind_source_claude_session_id when set', async () => {
       const session = makeSession({ rewind_source_claude_session_id: 'source-abc' })
       vi.mocked(mockSessionDomain.list).mockResolvedValue([session])
-      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(makeSessionData())
+      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockReturnValue(makeSessionStats())
 
       await domain.summarize({})
 
-      expect(mockClaudeSessionRepo.readSession).toHaveBeenCalledWith(
+      expect(mockClaudeSessionRepo.scanSessionStats).toHaveBeenCalledWith(
         'source-abc',
         session.working_dir,
         undefined
@@ -276,8 +294,8 @@ describe('AnalyzeDomain', () => {
       const ok = makeSession({ id: 'ok-session' })
       const bad = makeSession({ id: 'bad-session' })
       vi.mocked(mockSessionDomain.list).mockResolvedValue([ok, bad])
-      vi.mocked(mockClaudeSessionRepo.readSession)
-        .mockReturnValueOnce(makeSessionData())
+      vi.mocked(mockClaudeSessionRepo.scanSessionStats)
+        .mockReturnValueOnce(makeSessionStats())
         .mockImplementationOnce(() => {
           throw new Error('ENOENT')
         })

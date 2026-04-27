@@ -59,9 +59,7 @@ export type ClaudeSessionData = {
   tokens: AnalysisSummary['tokens']
 }
 
-export type SessionSummaryRow = {
-  name: string
-  id: string
+export type SessionStats = {
   apiCalls: number
   toolCalls: number
   tokens: {
@@ -72,3 +70,8 @@ export type SessionSummaryRow = {
     contextWindow: number
   }
 }
+
+export type SessionSummaryRow = {
+  name: string
+  id: string
+} & SessionStats

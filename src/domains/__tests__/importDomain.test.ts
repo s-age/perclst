@@ -13,6 +13,7 @@ const mockClaudeSessionRepo: IClaudeSessionRepository = {
   decodeWorkingDir: vi.fn(),
   validateSessionAtDir: vi.fn(),
   readSession: vi.fn(),
+  scanSessionStats: vi.fn(),
   getAssistantTurns: vi.fn()
 }
 

@@ -76,18 +76,17 @@ export class AnalyzeDomain implements IAnalyzeDomain {
     for (const session of sessions) {
       try {
         const effectiveId = session.rewind_source_claude_session_id ?? session.claude_session_id
-        const data = this.claudeSessionRepo.readSession(
+        const stats = this.claudeSessionRepo.scanSessionStats(
           effectiveId,
           session.working_dir,
           session.rewind_to_message_id
         )
-        const { turnsBreakdown } = buildSummaryStats(data.turns)
         rows.push({
           name: session.name ?? session.id,
           id: session.id,
-          apiCalls: turnsBreakdown.apiCalls,
-          toolCalls: turnsBreakdown.toolCalls,
-          tokens: data.tokens
+          apiCalls: stats.apiCalls,
+          toolCalls: stats.toolCalls,
+          tokens: stats.tokens
         })
       } catch {
         // skip sessions with missing JSONL files
