@@ -291,7 +291,8 @@ describe('AgentService', () => {
         maxMessages: -1,
         maxContextTokens: -1
       })
-      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenNthCalledWith(1, mockSession.id, 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenNthCalledWith(2, mockSession.id, 'completed')
       expect(result.sessionId).toBe(mockSession.id)
       expect(result.response).toBe(mockResponse)
     })
@@ -326,12 +327,22 @@ describe('AgentService', () => {
       expect(onLimitExceeded).not.toHaveBeenCalled()
     })
 
-    it('should call updateStatus after limit check', async () => {
+    it('should call updateStatus with completed after limit check', async () => {
       vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
 
       await service.start('Do a task', { working_dir: '/tmp' })
 
-      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'completed')
+    })
+
+    it('should update status to failed when run throws', async () => {
+      vi.mocked(agentDomain.run).mockRejectedValue(new Error('run failed'))
+
+      await expect(service.start('Do a task', { working_dir: '/tmp' })).rejects.toThrow(
+        'run failed'
+      )
+
+      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'failed')
     })
   })
 
@@ -355,7 +366,8 @@ describe('AgentService', () => {
         maxMessages: -1,
         maxContextTokens: -1
       })
-      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenNthCalledWith(1, mockSession.id, 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenNthCalledWith(2, mockSession.id, 'completed')
       expect(result).toBe(mockResponse)
     })
 
@@ -369,13 +381,13 @@ describe('AgentService', () => {
       })
     })
 
-    it('should save session before checking limit', async () => {
+    it('should save session after completed status update', async () => {
       await service.resume(mockSession.id, 'Continue')
 
+      const completedCallIndex = vi.mocked(sessionDomain.updateStatus).mock.invocationCallOrder[1]
       const saveCallIndex = vi.mocked(sessionDomain.save).mock.invocationCallOrder[0]
-      const limitCheckIndex = vi.mocked(agentDomain.isLimitExceeded).mock.invocationCallOrder[0]
 
-      expect(saveCallIndex).toBeLessThan(limitCheckIndex)
+      expect(completedCallIndex).toBeLessThan(saveCallIndex)
     })
 
     it('should call onLimitExceeded when limit is exceeded', async () => {
@@ -399,10 +411,20 @@ describe('AgentService', () => {
       expect(onLimitExceeded).not.toHaveBeenCalled()
     })
 
-    it('should update status to active after handling limit check', async () => {
+    it('should update status to active before run and completed after', async () => {
       await service.resume(mockSession.id, 'Continue')
 
+      expect(sessionDomain.updateStatus).toHaveBeenNthCalledWith(1, mockSession.id, 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenNthCalledWith(2, mockSession.id, 'completed')
+    })
+
+    it('should update status to failed when resume throws', async () => {
+      vi.mocked(agentDomain.resume).mockRejectedValue(new Error('resume failed'))
+
+      await expect(service.resume(mockSession.id, 'Continue')).rejects.toThrow('resume failed')
+
       expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenCalledWith(mockSession.id, 'failed')
     })
 
     it('should pass instruction to agentDomain.resume unchanged', async () => {

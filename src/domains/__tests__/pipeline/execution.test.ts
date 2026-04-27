@@ -63,6 +63,7 @@ describe('PipelineDomain - execution', () => {
       expect(result.sessionId).toBe('new-session-id')
       expect(sessionDomain.create).toHaveBeenCalled()
       expect(sessionDomain.updateStatus).toHaveBeenCalledWith('new-session-id', 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenCalledWith('new-session-id', 'completed')
     })
 
     it('resumes existing named session instead of creating new one', async () => {
@@ -90,6 +91,7 @@ describe('PipelineDomain - execution', () => {
       expect(result.sessionId).toBe('existing-session-id')
       expect(sessionDomain.create).not.toHaveBeenCalled()
       expect(sessionDomain.updateStatus).toHaveBeenCalledWith('existing-session-id', 'active')
+      expect(sessionDomain.updateStatus).toHaveBeenCalledWith('existing-session-id', 'completed')
     })
 
     it('forwards task labels to session create', async () => {
