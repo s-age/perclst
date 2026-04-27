@@ -256,8 +256,8 @@ program
     'Review pending changes or a target path for architectural, security, and performance issues'
   )
   .argument('[target-path]', 'Path to review (defaults to pending git changes)')
+  .option('-p, --prompt <prompt>', 'Additional instruction appended to the review prompt')
   .option('--output <path>', 'Write violation report to this file')
-  .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
   .action(reviewCommand)
 
 // Forge command

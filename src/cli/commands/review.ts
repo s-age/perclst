@@ -5,6 +5,7 @@ import type { Config } from '@src/types/config'
 import { stderr } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
+import { parseReviewSession } from '@src/validators/cli/reviewSession'
 import { parseStartSession } from '@src/validators/cli/startSession'
 import { printResponse } from '@src/cli/view/display'
 
@@ -21,41 +22,39 @@ const REVIEW_TOOLS = [
   'mcp__perclst__ts_get_types'
 ]
 
-type ReviewOptions = {
-  output?: string
-  outputOnly?: boolean
-}
-
 export async function reviewCommand(
   targetPath: string | undefined,
-  options: ReviewOptions
+  options: { output?: string; prompt?: string }
 ): Promise<void> {
   try {
-    const target = targetPath ? `target_path: ${targetPath}` : 'the pending git changes'
-    const outputLine = options.output ? `\n\nng_output_path: ${options.output}` : ''
-    const task = `Review ${target} for architectural violations, security issues, and performance problems.${outputLine}`
+    const input = parseReviewSession({ targetPath, output: options.output, prompt: options.prompt })
+
+    const target = input.targetPath ? `target_path: ${input.targetPath}` : 'the pending git changes'
+    const additionalPrompt = input.prompt ? `\n\nAdditional instructions: ${input.prompt}` : ''
+    const outputLine = input.output ? `\n\nng_output_path: ${input.output}` : ''
+    const task = `Review ${target} for architectural violations, security issues, and performance problems.${additionalPrompt}${outputLine}`
 
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
     const config = container.resolve<Config>(TOKENS.Config)
-    const input = parseStartSession({
+    const startInput = parseStartSession({
       task,
       procedure: 'arch/review',
       labels: ['review'],
       allowedTools: REVIEW_TOOLS,
-      outputOnly: options.outputOnly
+      outputOnly: true
     })
 
     const { sessionId, response } = await agentService.start(
-      input.task,
-      { procedure: input.procedure, labels: input.labels, working_dir: process.cwd() },
+      startInput.task,
+      { procedure: startInput.procedure, labels: startInput.labels, working_dir: process.cwd() },
       {
-        allowedTools: input.allowedTools,
-        disallowedTools: input.disallowedTools,
-        model: input.model
+        allowedTools: startInput.allowedTools,
+        disallowedTools: startInput.disallowedTools,
+        model: startInput.model
       }
     )
 
-    printResponse(response, input, config.display, { sessionId })
+    printResponse(response, startInput, config.display, { sessionId })
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)
