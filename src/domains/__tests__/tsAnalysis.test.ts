@@ -13,7 +13,8 @@ describe('TsAnalysisDomain', () => {
       analyzeFile: vi.fn(),
       getReferences: vi.fn(),
       findContainingSymbol: vi.fn(),
-      getTypeDefinitions: vi.fn()
+      getTypeDefinitions: vi.fn(),
+      getCallees: vi.fn()
     }
     domain = new TsAnalysisDomain(mockRepo as unknown as ITsAnalysisRepository)
   })

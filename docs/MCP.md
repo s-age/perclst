@@ -89,6 +89,20 @@ Get the type definition for a named symbol in a TypeScript file.
 
 ---
 
+### `ts_call_graph`
+
+Trace the full execution path of a TypeScript function or method, following imports and DI-injected dependencies down to the infrastructure layer. Nodes marked `[di]` were resolved via `container.resolve`; `[circular]` indicates recursive calls; `[...]` marks subtrees already expanded elsewhere.
+
+Use this tool when you need to understand **what a function does** across layers (down the call chain). For the inverse direction — finding **who calls a function** — use `ts_get_references`.
+
+| Input | Type | Required | Description |
+|---|---|---|---|
+| `file_path` | string | yes | Path to the TypeScript file to trace |
+| `entry` | string | no | Entry point symbol: `"functionName"` or `"ClassName.methodName"`. Omit to trace all exported functions. |
+| `max_depth` | number | no | Maximum recursion depth (1–10, default: 5) |
+
+---
+
 ### `ts_checker`
 
 Run lint (`lint:fix`), build, and unit tests in one shot and report errors/warnings for each stage. Use this after making TypeScript changes to verify correctness before completing a task.

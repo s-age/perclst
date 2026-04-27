@@ -8,7 +8,10 @@ flowchart TD
     ReadDiff --> ReviewCode[Review code changes for quality issues]
     ReviewCode --> CheckSensitive[Check for sensitive data leaks]
     CheckSensitive --> CheckArch[Check for architecture violations in changed TypeScript files]
-    CheckArch --> AnyIssues{Issues found?}
+    CheckArch --> NeedCallGraph{Changed function crosses layers?}
+    NeedCallGraph -- Yes --> TraceCallGraph[Run ts_call_graph on changed entry points to confirm layer flow]
+    NeedCallGraph -- No --> AnyIssues
+    TraceCallGraph --> AnyIssues{Issues found?}
     AnyIssues -- Yes --> Report[Report findings by severity]
     AnyIssues -- No --> Clean[Report clean — no issues found]
     Report --> HasCritical{Any CRITICAL issues?}
