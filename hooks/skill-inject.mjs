@@ -3,24 +3,42 @@
 // Reads skills from .claude/skills/*/SKILL.md (Claude Code native format)
 // and injects matching skill content as additionalContext.
 
-import { readFileSync, existsSync, writeFileSync, appendFileSync, renameSync, readdirSync, openSync, writeSync, closeSync } from 'fs'
+import {
+  readFileSync,
+  existsSync,
+  writeFileSync,
+  appendFileSync,
+  renameSync,
+  readdirSync,
+  openSync,
+  writeSync,
+  closeSync
+} from 'fs'
 import { join, matchesGlob } from 'path'
 import { homedir } from 'os'
 
 // --- stdin ---
 const input = JSON.parse(readFileSync('/dev/stdin', 'utf-8'))
-const { tool_name, tool_input, cwd } = input
+const { tool_name: toolName, tool_input: toolInput, cwd } = input
 
 // Skip in interactive mode — skills are injected natively by Claude Code there.
 // PERCLST_SESSION_FILE is only set when perclst spawns a sub-agent via claude -p.
 if (!process.env.PERCLST_SESSION_FILE) process.exit(0)
 
+// If a global ~/.perclst/skill-inject.mjs exists, only run from there to avoid duplicate injection.
+// Use process.argv[1] (not import.meta.url) so symlinks are not resolved — the global script is
+// typically a symlink to this file, and import.meta.url would resolve to the same real path.
+const homePerclstScript = join(homedir(), '.perclst/skill-inject.mjs')
+const scriptPath = process.argv[1]
+if (existsSync(homePerclstScript) && !scriptPath.startsWith(join(homedir(), '.perclst') + '/'))
+  process.exit(0)
+
 // Only handle file-path tools
 const FILE_TOOLS = new Set(['Read', 'Edit', 'Write', 'Glob', 'Grep'])
-if (!FILE_TOOLS.has(tool_name)) process.exit(0)
+if (!FILE_TOOLS.has(toolName)) process.exit(0)
 
 // Extract file path — key name differs by tool
-const filePath = tool_input.file_path ?? tool_input.path ?? tool_input.pattern ?? ''
+const filePath = toolInput.file_path ?? toolInput.path ?? toolInput.pattern ?? ''
 if (!filePath) process.exit(0)
 
 // Normalize to absolute, then to CWD-relative for glob matching
@@ -29,10 +47,9 @@ const relPath = absPath.startsWith(cwd + '/') ? absPath.slice(cwd.length + 1) : 
 
 // --- Locate .claude/skills dirs: project-local takes priority over global ---
 // Each dir is scanned for <skill-name>/SKILL.md
-const skillsDirs = [
-  join(cwd, '.claude/skills'),
-  join(homedir(), '.claude/skills'),
-].filter(existsSync)
+const skillsDirs = [join(cwd, '.claude/skills'), join(homedir(), '.claude/skills')].filter(
+  existsSync
+)
 
 if (skillsDirs.length === 0) process.exit(0)
 
@@ -54,16 +71,19 @@ function parseFrontmatter(content) {
   const autoInject = autoInjectMatch ? autoInjectMatch[1].trim() !== 'false' : true
 
   // Extract paths (YAML list)
-  const pathsMatch = fm.match(/^paths:\n((?:  - .+\n?)*)/m)
+  const pathsMatch = fm.match(/^paths:\n((?: {2}- .+\n?)*)/m)
   if (!pathsMatch) return { name, paths: [], autoInject }
 
   const paths = pathsMatch[1]
     .split('\n')
-    .map(line => {
+    .map((line) => {
       const val = line.match(/^\s+-\s+(.+)$/)?.[1]?.trim()
       if (!val) return undefined
       // Strip surrounding YAML quotes (' or ")
-      if ((val.startsWith("'") && val.endsWith("'")) || (val.startsWith('"') && val.endsWith('"'))) {
+      if (
+        (val.startsWith("'") && val.endsWith("'")) ||
+        (val.startsWith('"') && val.endsWith('"'))
+      ) {
         return val.slice(1, -1)
       }
       return val
@@ -87,7 +107,9 @@ function collectSkills(skillsDirs) {
         // Body is everything after the closing ---
         const body = content.replace(/^---\n[\s\S]*?\n---\n/, '')
         skills.push({ name: fm.name, paths: fm.paths, autoInject: fm.autoInject, body })
-      } catch {}
+      } catch {
+        // noop
+      }
     }
   }
   return skills
@@ -95,12 +117,17 @@ function collectSkills(skillsDirs) {
 
 // --- Load display config for color output ---
 function loadDisplayConfig() {
-  for (const cfgPath of [join(cwd, '.perclst/config.json'), join(homedir(), '.perclst/config.json')]) {
+  for (const cfgPath of [
+    join(cwd, '.perclst/config.json'),
+    join(homedir(), '.perclst/config.json')
+  ]) {
     if (!existsSync(cfgPath)) continue
     try {
       const cfg = JSON.parse(readFileSync(cfgPath, 'utf-8'))
       return cfg.display ?? {}
-    } catch {}
+    } catch {
+      // noop
+    }
   }
   return {}
 }
@@ -117,14 +144,14 @@ if (!existsSync(procState)) {
       const session = JSON.parse(readFileSync(sessionFile, 'utf-8'))
       seed = (session.injected_skills ?? []).join('\n')
       if (seed) seed += '\n'
-    } catch {}
+    } catch {
+      // noop
+    }
   }
   writeFileSync(procState, seed)
 }
 
-const injectedSet = new Set(
-  readFileSync(procState, 'utf-8').split('\n').filter(Boolean)
-)
+const injectedSet = new Set(readFileSync(procState, 'utf-8').split('\n').filter(Boolean))
 
 // --- Match skills against the target file ---
 const skills = collectSkills(skillsDirs)
@@ -137,7 +164,7 @@ for (const { name, paths, autoInject, body } of skills) {
   if (!autoInject) continue
   if (paths.length === 0) continue
 
-  const matches = paths.some(pattern => matchesGlob(relPath, pattern))
+  const matches = paths.some((pattern) => matchesGlob(relPath, pattern))
   if (!matches) continue
 
   context += `\n=== Skill: ${name} ===\n> HEADLESS MODE: The Skill tool is not available. Execute these instructions directly without invoking Skill().\n\n${body}`
@@ -159,7 +186,9 @@ if (sessionFile && existsSync(sessionFile)) {
     const tmp = sessionFile + '.tmp'
     writeFileSync(tmp, JSON.stringify(session, null, 2))
     renameSync(tmp, sessionFile)
-  } catch {}
+  } catch {
+    // noop
+  }
 }
 
 // --- Styled stderr notification ---
@@ -188,10 +217,12 @@ try {
 }
 
 // --- JSON response to stdout ---
-process.stdout.write(JSON.stringify({
-  hookSpecificOutput: {
-    hookEventName: 'PreToolUse',
-    permissionDecision: 'allow',
-    additionalContext: context,
-  },
-}))
+process.stdout.write(
+  JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      permissionDecision: 'allow',
+      additionalContext: context
+    }
+  })
+)
