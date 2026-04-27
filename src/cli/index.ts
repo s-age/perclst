@@ -17,6 +17,7 @@ import { rewindCommand } from './commands/rewind'
 import { runCommand } from './commands/run'
 import { curateCommand } from './commands/curate'
 import { inspectCommand } from './commands/inspect'
+import { reviewCommand } from './commands/review'
 import { forgeCommand } from './commands/forge'
 import { chatCommand } from './commands/chat'
 import { retrieveCommand } from './commands/retrieve'
@@ -247,6 +248,17 @@ program
   .argument('<new>', 'Head git ref (newer commit or branch)')
   .option('-p, --prompt <prompt>', 'Additional instruction appended to the inspection prompt')
   .action(inspectCommand)
+
+// Review command
+program
+  .command('review')
+  .description(
+    'Review pending changes or a target path for architectural, security, and performance issues'
+  )
+  .argument('[target-path]', 'Path to review (defaults to pending git changes)')
+  .option('--output <path>', 'Write violation report to this file')
+  .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
+  .action(reviewCommand)
 
 // Forge command
 program
