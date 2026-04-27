@@ -74,6 +74,19 @@ export default tseslint.config(
     }
   },
   {
+    // hooks/ scripts are plain ESM Node scripts — apply Node globals and relax TS-specific rules
+    files: ['hooks/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        URL: 'readonly',
+      }
+    },
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    }
+  },
+  {
     ignores: ['dist/**', 'node_modules/**', 'eslint-rules/**']
   }
 )
