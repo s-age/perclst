@@ -4,7 +4,7 @@ import { join } from 'path'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { executeGitPendingChanges } from '../../gitPendingChanges'
 import { setupContainer } from '@src/core/di/setup'
-import { makeTmpDir, buildTestConfig } from '@src/cli/commands/__tests__/integration/helpers'
+import { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
 
 describe('executeGitPendingChanges (integration)', () => {
   let dir: string

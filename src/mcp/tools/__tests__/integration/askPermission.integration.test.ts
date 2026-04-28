@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { executeAskPermission } from '../../askPermission'
 import { setupContainer } from '@src/core/di/setup'
-import { makeTmpDir, buildTestConfig } from '@src/cli/commands/__tests__/integration/helpers'
+import { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
 import type { TtyInfra } from '@src/infrastructures/ttyInfrastructure'
 
 describe('executeAskPermission (integration)', () => {
