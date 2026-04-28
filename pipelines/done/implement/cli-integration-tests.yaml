@@ -307,6 +307,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-rewind-implementer
     task: "target_command: rewind"
@@ -318,6 +319,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-rewind-reviewer
     task: >
@@ -337,12 +339,14 @@ tasks:
     rejected:
       to: cli-integ-rewind-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-rewind-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-rewind-implementer
     task: "rewind.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -352,6 +356,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-analyze-implementer
     task: "target_command: analyze"
@@ -363,6 +368,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-analyze-reviewer
     task: >
@@ -382,12 +388,14 @@ tasks:
     rejected:
       to: cli-integ-analyze-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-analyze-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-analyze-implementer
     task: "analyze.integration.test.ts is implemented, reviewed, and verified.
@@ -397,6 +405,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-summarize-implementer
     task: "target_command: summarize"
@@ -408,6 +417,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-summarize-reviewer
     task: >
@@ -427,12 +437,14 @@ tasks:
     rejected:
       to: cli-integ-summarize-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-summarize-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-summarize-implementer
     task: "summarize.integration.test.ts is implemented, reviewed, and verified.
@@ -442,6 +454,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-fork-implementer
     task: "target_command: fork"
@@ -453,6 +466,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-fork-reviewer
     task: >
@@ -472,12 +486,14 @@ tasks:
     rejected:
       to: cli-integ-fork-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-fork-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-fork-implementer
     task: "fork.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -487,6 +503,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-survey-implementer
     task: "target_command: survey"
@@ -498,6 +515,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-survey-reviewer
     task: >
@@ -517,12 +535,14 @@ tasks:
     rejected:
       to: cli-integ-survey-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-survey-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-survey-implementer
     task: "survey.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -532,6 +552,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-review-cmd-implementer
     task: "target_command: review"
@@ -543,6 +564,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-review-cmd-reviewer
     task: >
@@ -562,12 +584,14 @@ tasks:
     rejected:
       to: cli-integ-review-cmd-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-review-cmd-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-review-cmd-implementer
     task: "review.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -577,6 +601,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-retrieve-implementer
     task: "target_command: retrieve"
@@ -588,6 +613,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-retrieve-reviewer
     task: >
@@ -607,12 +633,14 @@ tasks:
     rejected:
       to: cli-integ-retrieve-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-retrieve-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-retrieve-implementer
     task: "retrieve.integration.test.ts is implemented, reviewed, and verified.
@@ -622,6 +650,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-curate-implementer
     task: "target_command: curate"
@@ -633,6 +662,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-curate-reviewer
     task: >
@@ -652,12 +682,14 @@ tasks:
     rejected:
       to: cli-integ-curate-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-curate-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-curate-implementer
     task: "curate.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -667,6 +699,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-import-implementer
     task: "target_command: import"
@@ -678,6 +711,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-import-reviewer
     task: >
@@ -697,12 +731,14 @@ tasks:
     rejected:
       to: cli-integ-import-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-import-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-import-implementer
     task: "import.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -712,6 +748,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-chat-implementer
     task: "target_command: chat"
@@ -723,6 +760,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-chat-reviewer
     task: >
@@ -742,12 +780,14 @@ tasks:
     rejected:
       to: cli-integ-chat-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-chat-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-chat-implementer
     task: "chat.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -757,6 +797,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-forge-implementer
     task: "target_command: forge"
@@ -768,6 +809,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-forge-reviewer
     task: >
@@ -787,12 +829,14 @@ tasks:
     rejected:
       to: cli-integ-forge-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-forge-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-forge-implementer
     task: "forge.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -802,6 +846,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-inspect-implementer
     task: "target_command: inspect"
@@ -813,6 +858,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-inspect-reviewer
     task: >
@@ -832,12 +878,14 @@ tasks:
     rejected:
       to: cli-integ-inspect-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-inspect-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-inspect-implementer
     task: "inspect.integration.test.ts is implemented, reviewed, and verified.
@@ -847,6 +895,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: cli-integ-run-implementer
     task: "target_command: run"
@@ -858,6 +907,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: cli-integ-run-reviewer
     task: >
@@ -877,12 +927,14 @@ tasks:
     rejected:
       to: cli-integ-run-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: cli-integ-run-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: cli-integ-run-implementer
     task: "run.integration.test.ts is implemented, reviewed, and verified. Commit
@@ -892,3 +944,4 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
