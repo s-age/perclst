@@ -225,8 +225,8 @@ describe('PipelineRunner/utils', () => {
   })
 
   describe('exported constants', () => {
-    it('exports SPINNER_INTERVAL_MS as 80', () => {
-      expect(SPINNER_INTERVAL_MS).toBe(80)
+    it('exports SPINNER_INTERVAL_MS as 300', () => {
+      expect(SPINNER_INTERVAL_MS).toBe(300)
     })
 
     it('exports PERM_PANEL_ROWS as 8', () => {
