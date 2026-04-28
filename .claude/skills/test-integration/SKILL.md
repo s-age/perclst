@@ -116,14 +116,23 @@ Cover only the error types the command actually catches:
 
 Nonexistent `sessionId`: resolves to `process.exit(1)`.
 
+## Approved exception: pipeline-command service-level stubs
+
+The `run` command stubs `PipelineFileService` and `PipelineService` at the service layer rather than via `infras`. This is an intentional deviation — not a pattern to copy — for two specific reasons:
+
+1. `PipelineFileService` relies on `GitInfra` operations (`getDiffStat`, `getHead`, `moveToDone`, `commitMove`) that fail in a non-git tmpdir. Stubbing at the infra level would require mocking the entire `GitInfra` interface.
+2. Specific error conditions (`PipelineMaxRetriesError`) cannot be injected through `claudeCodeInfra` without a complex pipeline+rejection fixture.
+
+Apply this exception only when **both** conditions hold: the service depends on git infrastructure incompatible with a tmpdir, **and** the error condition cannot be triggered through infra-level stubs. For all other commands, keep the default infra-only stubbing rule. `inspect.integration.test.ts` uses the same exception for `PipelineFileService`.
+
 ## What NOT to do
 
 - Never call `ts_test_strategist` — test cases come from `plans/cli-integration-tests.md`
 - Never call `ts_call_graph` — the mock boundary is fixed (infra layer only) and already known; call-graph analysis adds no information and does not apply when the boundary is predetermined
-- Never mock service classes — services must run through the full DI stack
+- Never mock service classes — services must run through the full DI stack (see the approved exception above for the narrow case when this rule may not apply)
 - Never use `--singleThread` or share workers across files
 - Never use `it.skip` or `@ts-ignore` to silence failures
-- One assertion per `it` block — do not bundle multiple behaviors
+- One assertion per `it` block — do not bundle multiple behaviors; use `try/catch` to drive commands past a mocked `process.exit` throw when the assertion is about a side effect, not the exit itself
 
 ## Full agent workflow
 
