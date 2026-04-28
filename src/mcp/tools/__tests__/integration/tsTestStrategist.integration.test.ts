@@ -136,6 +136,121 @@ describe('executeTsTestStrategist (integration)', () => {
     })
   })
 
+  describe('parseFunctions — AST pattern coverage', () => {
+    it('counts loops in fixture with for / while / do-while', async () => {
+      const fixturePath = join(dir, 'loops.ts')
+      writeFileSync(
+        fixturePath,
+        [
+          'export function withLoops(items: number[]): number {',
+          '  let sum = 0',
+          '  for (let i = 0; i < items.length; i++) { sum += items[i] }',
+          '  while (sum > 100) { sum -= 10 }',
+          '  do { sum++ } while (sum < 0)',
+          '  return sum',
+          '}'
+        ].join('\n')
+      )
+
+      const result = await executeTsTestStrategist({ target_file_path: fixturePath })
+      const parsed = JSON.parse(result.content[0].text) as TestStrategyResult
+
+      expect(parsed.strategies).toHaveLength(1)
+      expect(parsed.strategies[0].complexity).toBeGreaterThanOrEqual(4)
+    })
+
+    it('counts catch clauses in fixture with try/catch', async () => {
+      const fixturePath = join(dir, 'trycatch.ts')
+      writeFileSync(
+        fixturePath,
+        [
+          'export function safeParse(json: string): unknown {',
+          '  try {',
+          '    return JSON.parse(json)',
+          '  } catch (e) {',
+          '    return null',
+          '  }',
+          '}'
+        ].join('\n')
+      )
+
+      const result = await executeTsTestStrategist({ target_file_path: fixturePath })
+      const parsed = JSON.parse(result.content[0].text) as TestStrategyResult
+
+      expect(parsed.strategies).toHaveLength(1)
+      expect(parsed.strategies[0].complexity).toBeGreaterThanOrEqual(2)
+    })
+
+    it('counts logical operators (&&, ||, ??) in fixture', async () => {
+      const fixturePath = join(dir, 'logical.ts')
+      writeFileSync(
+        fixturePath,
+        [
+          'export function check(a: boolean, b: boolean, c?: string): string {',
+          "  if (a && b) return 'both'",
+          "  if (a || b) return 'either'",
+          "  return c ?? 'default'",
+          '}'
+        ].join('\n')
+      )
+
+      const result = await executeTsTestStrategist({ target_file_path: fixturePath })
+      const parsed = JSON.parse(result.content[0].text) as TestStrategyResult
+
+      expect(parsed.strategies).toHaveLength(1)
+      expect(parsed.strategies[0].complexity).toBeGreaterThanOrEqual(6)
+    })
+
+    it('detects arrow function and function expression variable declarations', async () => {
+      const fixturePath = join(dir, 'varfuncs.ts')
+      writeFileSync(
+        fixturePath,
+        [
+          'export const add = (a: number, b: number): number => a + b',
+          'export const mul = function(a: number, b: number): number { return a * b }',
+          'export function div(a: number, b: number): number { return a / b }'
+        ].join('\n')
+      )
+
+      const result = await executeTsTestStrategist({ target_file_path: fixturePath })
+      const parsed = JSON.parse(result.content[0].text) as TestStrategyResult
+
+      const names = parsed.strategies.map((s) => s.function_name)
+      expect(names).toContain('add')
+      expect(names).toContain('mul')
+      expect(names).toContain('div')
+    })
+
+    it('collects named/default/namespace imports as suggested_mocks', async () => {
+      const fixturePath = join(dir, 'imports.ts')
+      writeFileSync(
+        fixturePath,
+        [
+          "import { readFile, writeFile } from 'fs'",
+          "import path from 'path'",
+          "import * as os from 'os'",
+          "import type { Buffer } from 'buffer'",
+          '',
+          'export function loadConfig(): string {',
+          '  const home = os.homedir()',
+          '  const full = path.join(home, ".config")',
+          '  return readFile(full, "utf-8") as unknown as string',
+          '}'
+        ].join('\n')
+      )
+
+      const result = await executeTsTestStrategist({ target_file_path: fixturePath })
+      const parsed = JSON.parse(result.content[0].text) as TestStrategyResult
+
+      expect(parsed.strategies).toHaveLength(1)
+      const mocks = parsed.strategies[0].suggested_mocks
+      expect(mocks).toContain('readFile')
+      expect(mocks).toContain('path')
+      expect(mocks).toContain('os')
+      expect(mocks).not.toContain('Buffer')
+    })
+  })
+
   describe('error path', () => {
     it('returns error field in content when target file path does not exist', async () => {
       const nonExistentPath = join(dir, 'nonexistent.ts')
