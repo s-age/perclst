@@ -1,0 +1,525 @@
+tasks:
+  - type: script
+    command: rm -f .claude/tmp/mcp-integ-askPermission-reviewer
+      .claude/tmp/mcp-integ-gitPendingChanges-reviewer
+      .claude/tmp/mcp-integ-knowledgeSearch-reviewer
+      .claude/tmp/mcp-integ-tsAnalyze-reviewer
+      .claude/tmp/mcp-integ-tsCallGraph-reviewer
+      .claude/tmp/mcp-integ-tsChecker-reviewer
+      .claude/tmp/mcp-integ-tsGetReferences-reviewer
+      .claude/tmp/mcp-integ-tsGetTypes-reviewer
+      .claude/tmp/mcp-integ-tsTestStrategist-reviewer
+    done: true
+  - type: agent
+    name: mcp-integ-askPermission-implementer
+    task: >
+      target_tool: askPermission
+
+      test_cases:
+        - happy path: service approves request → content[0].text contains approval JSON
+        - happy path: service denies request → content[0].text contains denial JSON
+        - error: service throws → exception propagates
+
+      mock_boundary: PermissionPipeService が使う Unix socket（外部 I/O のみ）
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-askPermission-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/askPermission.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-askPermission-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-askPermission-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-askPermission-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-askPermission-implementer
+    task: "askPermission.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(mcp): add integration
+      test for askPermission tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
+  - type: agent
+    name: mcp-integ-gitPendingChanges-implementer
+    task: >
+      target_tool: gitPendingChanges
+
+      test_cases:
+        - happy path: staged + unstaged changes exist → content[0].text lists changed files
+        - happy path: clean working tree → content[0].text indicates no changes
+        - error: directory is not a git repo → error message in content or exception
+
+      mock_boundary: なし（tmp dir に実 git リポジトリを初期化して使う）
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-gitPendingChanges-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/gitPendingChanges.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-gitPendingChanges-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-gitPendingChanges-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-gitPendingChanges-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-gitPendingChanges-implementer
+    task: "gitPendingChanges.integration.test.ts is implemented, reviewed, and
+      verified. Commit with a conventional commit message (e.g. test(mcp): add
+      integration test for gitPendingChanges tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
+  - type: agent
+    name: mcp-integ-knowledgeSearch-implementer
+    task: >
+      target_tool: knowledgeSearch
+
+      test_cases:
+        - happy path: query matches knowledge file content → matched entries returned
+        - happy path: query matches nothing → empty result returned
+        - happy path: knowledge directory is empty → empty result returned
+
+      mock_boundary: なし（tmp dir に knowledge/*.md ファイルを配置して使う）
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-knowledgeSearch-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/knowledgeSearch.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-knowledgeSearch-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-knowledgeSearch-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-knowledgeSearch-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-knowledgeSearch-implementer
+    task: "knowledgeSearch.integration.test.ts is implemented, reviewed, and
+      verified. Commit with a conventional commit message (e.g. test(mcp): add
+      integration test for knowledgeSearch tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
+  - type: agent
+    name: mcp-integ-tsAnalyze-implementer
+    task: >
+      target_tool: tsAnalyze
+
+      test_cases:
+        - happy path: valid .ts fixture with class + function → returned JSON contains symbols list
+        - happy path: file with no exports → returned JSON has empty exports array
+        - error: non-existent file path → error message in content
+
+      mock_boundary: なし（tmp dir に fixture .ts ファイルを書いて使う）
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-tsAnalyze-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/tsAnalyze.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-tsAnalyze-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-tsAnalyze-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-tsAnalyze-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-tsAnalyze-implementer
+    task: "tsAnalyze.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(mcp): add integration
+      test for tsAnalyze tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
+  - type: agent
+    name: mcp-integ-tsCallGraph-implementer
+    task: >
+      target_tool: tsCallGraph
+
+      test_cases:
+        - happy path: fixture with function A calling function B → call graph contains A→B edge
+        - happy path: fixture with no calls → call graph has empty edges
+        - error: non-existent file path → error message in content
+
+      mock_boundary: なし（tmp dir に fixture .ts ファイルを書いて使う）
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-tsCallGraph-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/tsCallGraph.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-tsCallGraph-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-tsCallGraph-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-tsCallGraph-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-tsCallGraph-implementer
+    task: "tsCallGraph.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(mcp): add integration
+      test for tsCallGraph tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
+  - type: agent
+    name: mcp-integ-tsChecker-implementer
+    task: >
+      target_tool: tsChecker
+
+      test_cases:
+        - happy path: project with no errors → result JSON shows all phases passed
+        - happy path: custom commands passed → service uses the overridden commands
+
+      mock_boundary: CheckerService が呼ぶシェル実行インフラ（実 npm プロセスは起動しない）
+                     ※ CheckerService の構造を確認してからスタブ対象を決定すること
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-tsChecker-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/tsChecker.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-tsChecker-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-tsChecker-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-tsChecker-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-tsChecker-implementer
+    task: "tsChecker.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(mcp): add integration
+      test for tsChecker tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
+  - type: agent
+    name: mcp-integ-tsGetReferences-implementer
+    task: >
+      target_tool: tsGetReferences
+
+      test_cases:
+        - happy path: symbol referenced in multiple files → returned JSON lists all reference locations
+        - happy path: symbol with no references → empty references array
+        - error: non-existent symbol → error message in content
+
+      mock_boundary: なし（tmp dir に fixture .ts ファイル群を書いて使う）
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-tsGetReferences-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/tsGetReferences.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-tsGetReferences-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-tsGetReferences-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-tsGetReferences-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-tsGetReferences-implementer
+    task: "tsGetReferences.integration.test.ts is implemented, reviewed, and
+      verified. Commit with a conventional commit message (e.g. test(mcp): add
+      integration test for tsGetReferences tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
+  - type: agent
+    name: mcp-integ-tsGetTypes-implementer
+    task: >
+      target_tool: tsGetTypes
+
+      test_cases:
+        - happy path: class symbol in fixture → returned JSON contains class type info
+        - happy path: interface symbol in fixture → returned JSON contains interface type info
+        - error: non-existent symbol → error message in content
+
+      mock_boundary: なし（tmp dir に fixture .ts ファイルを書いて使う）
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-tsGetTypes-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/tsGetTypes.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-tsGetTypes-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-tsGetTypes-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-tsGetTypes-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-tsGetTypes-implementer
+    task: "tsGetTypes.integration.test.ts is implemented, reviewed, and verified.
+      Commit with a conventional commit message (e.g. test(mcp): add integration
+      test for tsGetTypes tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
+  - type: agent
+    name: mcp-integ-tsTestStrategist-implementer
+    task: >
+      target_tool: tsTestStrategist
+
+      test_cases:
+        - happy path: fixture class with branching logic → returned JSON contains strategy recommendations
+        - happy path: fixture with simple function → recommendations include at least one test case
+        - error: non-existent file path → error message in content
+
+      mock_boundary: なし（tmp dir に fixture .ts ファイルを書いて使う）
+    procedure: test-integration/implement
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - mcp__perclst__ts_checker
+    done: true
+  - type: agent
+    name: mcp-integ-tsTestStrategist-reviewer
+    task: >
+      target_path:
+      src/mcp/tools/__tests__/integration/tsTestStrategist.integration.test.ts
+
+      ng_output_path: .claude/tmp/mcp-integ-tsTestStrategist-reviewer
+    procedure: arch/review
+    model: sonnet
+    allowed_tools:
+      - Read
+      - Bash
+      - mcp__perclst__ts_analyze
+      - mcp__perclst__ts_get_references
+      - mcp__perclst__ts_get_types
+      - mcp__perclst__ts_checker
+    rejected:
+      to: mcp-integ-tsTestStrategist-implementer
+      max_retries: 3
+    done: true
+  - type: script
+    command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
+      test:unit
+    rejected:
+      to: mcp-integ-tsTestStrategist-implementer
+      max_retries: 3
+    done: true
+  - type: agent
+    name: mcp-integ-tsTestStrategist-implementer
+    task: "tsTestStrategist.integration.test.ts is implemented, reviewed, and
+      verified. Commit with a conventional commit message (e.g. test(mcp): add
+      integration test for tsTestStrategist tool)."
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
+    done: true
