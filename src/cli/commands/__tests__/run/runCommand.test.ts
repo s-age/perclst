@@ -101,8 +101,14 @@ describe('runCommand', () => {
 
     const mockExit = vi.fn()
     const mockOnce = vi.fn()
-    // eslint-disable-next-line local/no-any
-    global.process = { ...process, exit: mockExit, once: mockOnce } as any
+    const mockRemoveListener = vi.fn()
+
+    global.process = {
+      ...process,
+      exit: mockExit,
+      once: mockOnce,
+      removeListener: mockRemoveListener
+    } as any // eslint-disable-line local/no-any
     Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
 
     const pipeline: Pipeline = { tasks: [] }
