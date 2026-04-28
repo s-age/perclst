@@ -3,6 +3,7 @@ import { TOKENS } from '@src/core/di/identifiers'
 import type { AnalyzeService } from '@src/services/analyzeService'
 import type { SessionService } from '@src/services/sessionService'
 import { stderr } from '@src/utils/output'
+import { ValidationError } from '@src/errors/validationError'
 import { parseAnalyzeSession } from '@src/validators/cli/analyzeSession'
 import {
   printAnalyzeJson,
@@ -34,7 +35,11 @@ export async function analyzeCommand(sessionId: string, options: RawAnalyzeOptio
       printAnalyzeDetail(summary.turns)
     }
   } catch (error) {
-    stderr.print('Failed to analyze session', error as Error)
+    if (error instanceof ValidationError) {
+      stderr.print(`Invalid arguments: ${error.message}`)
+    } else {
+      stderr.print('Failed to analyze session', error as Error)
+    }
     process.exit(1)
   }
 }
