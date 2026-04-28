@@ -94,10 +94,7 @@ describe('executeTsTestStrategist (integration)', () => {
       const testDir = join(dir, '__tests__')
       mkdirSync(testDir, { recursive: true })
 
-      writeFileSync(
-        targetPath,
-        'export function double(n: number): number { return n * 2 }'
-      )
+      writeFileSync(targetPath, 'export function double(n: number): number { return n * 2 }')
       writeFileSync(
         join(testDir, 'util.test.ts'),
         "import { describe, it } from 'vitest'\ndescribe('double', () => { it('doubles value', () => {}) })"

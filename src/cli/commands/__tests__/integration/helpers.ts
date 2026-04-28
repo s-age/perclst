@@ -25,6 +25,31 @@ export function makeResultLines(text: string): string[] {
   ]
 }
 
+/** tool_use → tool_result → text → result の 4 行 fixture */
+export function makeToolResultLines(
+  tool: { id: string; name: string; input: unknown; result: string },
+  finalText: string
+): string[] {
+  return [
+    JSON.stringify({
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'tool_use', id: tool.id, name: tool.name, input: tool.input }],
+        usage: { input_tokens: 10, output_tokens: 5 }
+      }
+    }),
+    JSON.stringify({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: [{ type: 'tool_result', tool_use_id: tool.id, content: tool.result }]
+      }
+    }),
+    ...makeResultLines(finalText)
+  ]
+}
+
 /**
  * ClaudeCodeInfra のスタブ。
  * `runClaude` だけ差し替え、残りは最小 no-op。

@@ -3,7 +3,13 @@ import { readdirSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { startCommand } from '../../start'
 import { setupContainer } from '@src/core/di/setup'
-import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeResultLines,
+  makeToolResultLines,
+  buildClaudeCodeStub,
+  makeTmpDir,
+  buildTestConfig
+} from './helpers'
 import { stderr } from '@src/utils/output'
 import { printResponse, printStreamEvent } from '@src/cli/view/display'
 import { confirmIfDuplicateName } from '@src/cli/prompt'
@@ -103,6 +109,41 @@ describe('startCommand (integration)', () => {
         expect.objectContaining({ silentThoughts: true, silentToolResponse: true }),
         undefined,
         expect.objectContaining({ sessionId: expect.any(String) })
+      )
+    })
+
+    it('tool_use → tool_result が printResponse の response に含まれる', async () => {
+      const lines = makeToolResultLines(
+        { id: 'tu-1', name: 'Bash', input: { command: 'ls' }, result: 'file.txt' },
+        'done'
+      )
+      const stub = buildClaudeCodeStub(lines)
+      setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
+
+      await startCommand('task', { outputOnly: true })
+
+      const response = vi.mocked(printResponse).mock.calls[0][0]
+      expect(response.tool_history).toEqual([
+        expect.objectContaining({ id: 'tu-1', name: 'Bash', result: 'file.txt' })
+      ])
+    })
+
+    it('streaming モードで tool_use/tool_result の printStreamEvent が呼ばれる', async () => {
+      const lines = makeToolResultLines(
+        { id: 'tu-2', name: 'Read', input: { file_path: '/tmp/x' }, result: 'content' },
+        'done'
+      )
+      const stub = buildClaudeCodeStub(lines)
+      setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
+
+      await startCommand('task', { outputOnly: false })
+
+      const calls = vi.mocked(printStreamEvent).mock.calls.map(([e]) => e)
+      expect(calls).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'tool_use', name: 'Read' }),
+          expect.objectContaining({ type: 'tool_result', toolName: 'Read' })
+        ])
       )
     })
 

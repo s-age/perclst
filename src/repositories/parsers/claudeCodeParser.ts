@@ -203,9 +203,3 @@ export function finalizeParseState(state: ParseState, jsonlBaseline: number): Ra
     message_count: messageCount
   }
 }
-
-export function parseStreamEvents(lines: string[], jsonlBaseline: number): RawOutput {
-  const state = createParseState()
-  for (const line of lines) processLine(state, line)
-  return finalizeParseState(state, jsonlBaseline)
-}

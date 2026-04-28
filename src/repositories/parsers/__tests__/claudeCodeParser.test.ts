@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import {
-  parseStreamEvents,
-  createParseState,
-  processLine,
-  finalizeParseState
-} from '../claudeCodeParser'
+import { createParseState, processLine, finalizeParseState } from '../claudeCodeParser'
+import type { RawOutput } from '@src/types/claudeCode'
+
+function parseStreamEvents(lines: string[], jsonlBaseline: number): RawOutput {
+  const state = createParseState()
+  for (const line of lines) processLine(state, line)
+  return finalizeParseState(state, jsonlBaseline)
+}
 
 function lines(...events: object[]): string[] {
   return events.map((e) => JSON.stringify(e))
