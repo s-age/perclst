@@ -9,7 +9,7 @@ tasks:
       .claude/tmp/mcp-integ-tsGetReferences-reviewer
       .claude/tmp/mcp-integ-tsGetTypes-reviewer
       .claude/tmp/mcp-integ-tsTestStrategist-reviewer
-
+    done: true
   - type: agent
     name: mcp-integ-askPermission-implementer
     task: >
@@ -29,6 +29,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-askPermission-reviewer
     task: >
@@ -48,12 +49,14 @@ tasks:
     rejected:
       to: mcp-integ-askPermission-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-askPermission-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-askPermission-implementer
     task: "askPermission.integration.test.ts is implemented, reviewed, and verified.
@@ -63,7 +66,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
-
+    done: true
   - type: agent
     name: mcp-integ-gitPendingChanges-implementer
     task: >
@@ -83,6 +86,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-gitPendingChanges-reviewer
     task: >
@@ -102,12 +106,14 @@ tasks:
     rejected:
       to: mcp-integ-gitPendingChanges-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-gitPendingChanges-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-gitPendingChanges-implementer
     task: "gitPendingChanges.integration.test.ts is implemented, reviewed, and
@@ -117,7 +123,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
-
+    done: true
   - type: agent
     name: mcp-integ-knowledgeSearch-implementer
     task: >
@@ -137,6 +143,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-knowledgeSearch-reviewer
     task: >
@@ -156,12 +163,14 @@ tasks:
     rejected:
       to: mcp-integ-knowledgeSearch-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-knowledgeSearch-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-knowledgeSearch-implementer
     task: "knowledgeSearch.integration.test.ts is implemented, reviewed, and
@@ -171,7 +180,6 @@ tasks:
     allowed_tools:
       - Read
       - Bash
-
   - type: agent
     name: mcp-integ-tsAnalyze-implementer
     task: >
@@ -225,7 +233,6 @@ tasks:
     allowed_tools:
       - Read
       - Bash
-
   - type: agent
     name: mcp-integ-tsCallGraph-implementer
     task: >
@@ -279,7 +286,6 @@ tasks:
     allowed_tools:
       - Read
       - Bash
-
   - type: agent
     name: mcp-integ-tsChecker-implementer
     task: >
@@ -333,7 +339,6 @@ tasks:
     allowed_tools:
       - Read
       - Bash
-
   - type: agent
     name: mcp-integ-tsGetReferences-implementer
     task: >
@@ -387,7 +392,6 @@ tasks:
     allowed_tools:
       - Read
       - Bash
-
   - type: agent
     name: mcp-integ-tsGetTypes-implementer
     task: >
@@ -441,7 +445,6 @@ tasks:
     allowed_tools:
       - Read
       - Bash
-
   - type: agent
     name: mcp-integ-tsTestStrategist-implementer
     task: >
