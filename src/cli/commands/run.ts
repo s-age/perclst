@@ -241,41 +241,46 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions): 
 
     await checkUncommittedChanges(pipelineFileService)
 
-    process.once('SIGINT', () => abortService.abort())
+    const onSigint = (): void => abortService.abort()
+    process.once('SIGINT', onSigint)
 
-    const input = parseRunOptions({ pipelinePath, ...options })
-    const headBefore = pipelineFileService.getHead()
+    try {
+      const input = parseRunOptions({ pipelinePath, ...options })
+      const headBefore = pipelineFileService.getHead()
 
-    const completedChildPaths: string[] = []
-    const onChildPipelineDone = (absolutePath: string): void => {
-      completedChildPaths.push(absolutePath)
-    }
-
-    if (process.stdout.isTTY && !input.batch) {
-      await executeTUIPipeline(input, pipelineFileService, onChildPipelineDone, abortService)
-    } else {
-      await executePipeline(input, pipelineFileService, onChildPipelineDone, abortService.signal)
-    }
-
-    const headAfter = pipelineFileService.getHead()
-    if (headBefore && headAfter && headBefore !== headAfter) {
-      printGitDiffSummary(pipelineFileService, headBefore, headAfter)
-    }
-
-    for (const childPath of completedChildPaths) {
-      const childDonePath = pipelineFileService.moveToDone(childPath)
-      if (childDonePath) {
-        stdout.print(`\nMoved to: ${childDonePath}`)
-        pipelineFileService.commitMove(childPath, childDonePath)
+      const completedChildPaths: string[] = []
+      const onChildPipelineDone = (absolutePath: string): void => {
+        completedChildPaths.push(absolutePath)
       }
-    }
 
-    const donePath = pipelineFileService.moveToDone(input.pipelinePath)
-    if (donePath) {
-      stdout.print(`\nMoved to: ${donePath}`)
-      pipelineFileService.commitMove(input.pipelinePath, donePath)
+      if (process.stdout.isTTY && !input.batch) {
+        await executeTUIPipeline(input, pipelineFileService, onChildPipelineDone, abortService)
+      } else {
+        await executePipeline(input, pipelineFileService, onChildPipelineDone, abortService.signal)
+      }
+
+      const headAfter = pipelineFileService.getHead()
+      if (headBefore && headAfter && headBefore !== headAfter) {
+        printGitDiffSummary(pipelineFileService, headBefore, headAfter)
+      }
+
+      for (const childPath of completedChildPaths) {
+        const childDonePath = pipelineFileService.moveToDone(childPath)
+        if (childDonePath) {
+          stdout.print(`\nMoved to: ${childDonePath}`)
+          pipelineFileService.commitMove(childPath, childDonePath)
+        }
+      }
+
+      const donePath = pipelineFileService.moveToDone(input.pipelinePath)
+      if (donePath) {
+        stdout.print(`\nMoved to: ${donePath}`)
+        pipelineFileService.commitMove(input.pipelinePath, donePath)
+      }
+      pipelineFileService.cleanTmpDir()
+    } finally {
+      process.removeListener('SIGINT', onSigint)
     }
-    pipelineFileService.cleanTmpDir()
   } catch (error) {
     handleRunCommandError(error, abortService)
   }

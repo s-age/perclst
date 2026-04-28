@@ -2,7 +2,7 @@ import type { AgentStreamEvent } from '@src/types/agent.js'
 import type { Pipeline } from '@src/types/pipeline.js'
 import type { TaskState } from './types.js'
 
-export const SPINNER_INTERVAL_MS = 80
+export const SPINNER_INTERVAL_MS = 300
 export const PERM_PANEL_ROWS = 8
 // rows reserved in right panel: header(1) + blank(1) + status(1)
 export const STREAM_HEADER_ROWS = 3
@@ -27,15 +27,24 @@ export function splitToLines(text: string, width: number, prefix: string): strin
   return lines.length > 0 ? lines : [prefix]
 }
 
+// Max chars to process per event before trimming — 3 display lines is plenty
+const MAX_STREAM_INPUT = 600
+
 export function formatStreamLines(event: AgentStreamEvent, lineWidth: number): string[] {
   if (event.type === 'thought') {
-    const text = event.thinking.trim().replace(/\s+/g, ' ')
+    const raw =
+      event.thinking.length > MAX_STREAM_INPUT
+        ? event.thinking.slice(0, MAX_STREAM_INPUT)
+        : event.thinking
+    const text = raw.trim().replace(/\s+/g, ' ')
     return splitToLines(text, lineWidth, '  ')
   }
   if (event.type === 'tool_use') {
     return [`  → ${event.name}`]
   }
-  const result = event.result.trim().replace(/\s+/g, ' ')
+  const raw =
+    event.result.length > MAX_STREAM_INPUT ? event.result.slice(0, MAX_STREAM_INPUT) : event.result
+  const result = raw.trim().replace(/\s+/g, ' ')
   const header = `  ← ${event.toolName}`
   if (!result) return [header]
   return [header, ...splitToLines(result, lineWidth - 4, '    ').slice(0, 3)]

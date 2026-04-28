@@ -253,8 +253,51 @@ export function computeMessagesTotal(turns: ClaudeCodeTurn[]): number {
 
 export function computeMessagesTotalFromContent(content: string): number {
   if (!content.trim()) return 0
-  const entries = parseRawEntries(content)
-  return computeMessagesTotal(buildTurns(entries, buildToolResultMap(entries)).turns)
+
+  let total = 0
+  let groupActive = false
+  let groupHasContent = false
+  let groupToolCount = 0
+
+  const flushGroup = (): void => {
+    if (groupActive && groupHasContent) {
+      total++ // assistant turn
+      total += groupToolCount * 2 // tool_use + tool_result pairs
+    }
+    groupActive = false
+    groupHasContent = false
+    groupToolCount = 0
+  }
+
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+    // Parse one entry at a time — object is not stored, eligible for GC after each iteration
+    const entry = JSON.parse(trimmed) as RawEntry
+    if (entry.type === 'user') {
+      flushGroup()
+      const userContent = (entry as RawUserEntry).message.content
+      if (typeof userContent === 'string') {
+        total++
+      } else if (Array.isArray(userContent) && !userContent.some((b) => b.type === 'tool_result')) {
+        if (userContent.some((b) => b.type === 'text')) total++
+      }
+    } else if (entry.type === 'assistant') {
+      if (!groupActive) {
+        groupActive = true
+        groupHasContent = false
+        groupToolCount = 0
+      }
+      for (const block of (entry as RawAssistantEntry).message.content ?? []) {
+        if (block.type === 'text' || block.type === 'tool_use') {
+          groupHasContent = true
+          if (block.type === 'tool_use') groupToolCount++
+        }
+      }
+    }
+  }
+  flushGroup()
+  return total
 }
 
 type ScanGroup = { active: boolean; hasContent: boolean; toolCount: number; tokens: TokenTotals }

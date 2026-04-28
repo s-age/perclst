@@ -16,6 +16,17 @@ import type { AgentStreamEvent } from '@src/types/agent'
 export class ClaudeCodeRepository implements IClaudeCodeRepository {
   constructor(private infra: ClaudeCodeInfra) {}
 
+  private readBaselines(jsonlPath: string): {
+    jsonlBaseline: number
+    baselineMessagesTotal: number
+  } {
+    const jsonlContent = this.infra.readJsonlContent(jsonlPath)
+    return {
+      jsonlBaseline: jsonlContent.split('\n').filter((l) => l.trim()).length,
+      baselineMessagesTotal: computeMessagesTotalFromContent(jsonlContent)
+    }
+  }
+
   private classifyExitError(err: RawExitError): never {
     const { code, stderr } = err
     const rateLimitMatch = stderr.match(/resets?\s+([^\n\r]+)/i)
@@ -45,9 +56,11 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
     const baselineWorkingDir =
       action.type === 'fork' ? action.originalWorkingDir : action.workingDir
     const jsonlPath = this.infra.resolveJsonlPath(baselineSessionId, baselineWorkingDir)
-    const jsonlContent = this.infra.readJsonlContent(jsonlPath)
-    const jsonlBaseline = jsonlContent.split('\n').filter((l) => l.trim()).length
-    const baselineMessagesTotal = computeMessagesTotalFromContent(jsonlContent)
+    // readJsonlContent can return a large string for long sessions. Extract the
+    // scalar values here via a helper so jsonlContent is never a local variable
+    // of dispatch itself — async continuations keep all locals alive across
+    // every await inside the for-await loop below.
+    const { jsonlBaseline, baselineMessagesTotal } = this.readBaselines(jsonlPath)
 
     const state = createParseState()
     const toolNameMap = new Map<string, string>()
