@@ -29,10 +29,6 @@ export function resolveSessionsDir(config: Config): string {
   return resolvePath(config.sessions_dir || DEFAULT_CONFIG.sessions_dir!)
 }
 
-export function resolveLogsDir(config: Config): string {
-  return resolvePath(config.logs_dir || DEFAULT_CONFIG.logs_dir!)
-}
-
 export function resolveKnowledgeDir(): string {
   return join(currentWorkingDir(), 'knowledge')
 }

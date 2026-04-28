@@ -1,46 +1,37 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { readdirSync } from 'fs'
+import { mkdtempSync, readdirSync, rmSync } from 'fs'
+import { join } from 'path'
+import { tmpdir } from 'os'
 import { startCommand } from '../../start'
 import { rewindCommand } from '../../rewind'
 import { setupContainer } from '@src/core/di/setup'
-import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeResultLines,
+  buildClaudeCodeStub,
+  makeTmpDir,
+  buildTestConfig,
+  buildFsInfraWithHome,
+  makeClaudeSessionJsonl,
+  setupClaudeSessionFixture
+} from './helpers'
 import { stdout, stderr } from '@src/utils/output'
 import { printRewindList } from '@src/cli/view/rewindDisplay'
-import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
-import type { AssistantTurnEntry, ClaudeSessionData } from '@src/types/analysis'
 
 vi.mock('@src/utils/output')
 vi.mock('@src/cli/view/display')
 vi.mock('@src/cli/prompt')
 vi.mock('@src/cli/view/rewindDisplay')
 
-const emptyTokens: ClaudeSessionData['tokens'] = {
-  totalInput: 0,
-  totalOutput: 0,
-  totalCacheRead: 0,
-  totalCacheCreation: 0,
-  contextWindow: 0
-}
-
-function buildClaudeSessionRepoStub(turns: AssistantTurnEntry[]): IClaudeSessionRepository {
-  return {
-    findEncodedDirBySessionId: vi.fn(() => ''),
-    decodeWorkingDir: vi.fn(() => ({ path: null, ambiguous: false })),
-    validateSessionAtDir: vi.fn(),
-    readSession: vi.fn(() => ({ turns: [], tokens: emptyTokens })),
-    scanSessionStats: vi.fn(() => ({ apiCalls: 0, toolCalls: 0, tokens: emptyTokens })),
-    getAssistantTurns: vi.fn(() => turns)
-  }
-}
-
 describe('rewindCommand (integration)', () => {
   let dir: string
   let cleanup: () => void
   let sessionId: string
+  let fakeHome: string
 
   beforeEach(async () => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
+    fakeHome = mkdtempSync(join(tmpdir(), 'fake-home-'))
     vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('exit')
     })
@@ -55,15 +46,22 @@ describe('rewindCommand (integration)', () => {
 
   afterEach(() => {
     cleanup()
+    rmSync(fakeHome, { recursive: true, force: true })
     vi.restoreAllMocks()
   })
 
   describe('happy path', () => {
     it('--list: printRewindList is called with the mapped turns when turns exist', async () => {
-      const claudeSessionRepo = buildClaudeSessionRepoStub([
-        { uuid: 'uuid-1', text: 'first assistant turn' }
-      ])
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      setupClaudeSessionFixture(
+        fakeHome,
+        sessionId,
+        process.cwd(),
+        makeClaudeSessionJsonl({ uuid: 'uuid-1', text: 'first assistant turn' })
+      )
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await rewindCommand(sessionId, undefined, { list: true })
 
@@ -74,8 +72,11 @@ describe('rewindCommand (integration)', () => {
     })
 
     it('--list: stdout.print "No assistant turns found." when no turns exist', async () => {
-      const claudeSessionRepo = buildClaudeSessionRepoStub([])
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      setupClaudeSessionFixture(fakeHome, sessionId, process.cwd(), '')
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await rewindCommand(sessionId, undefined, { list: true })
 
@@ -83,11 +84,18 @@ describe('rewindCommand (integration)', () => {
     })
 
     it('index=1: a new session JSON file is created in the sessions directory', async () => {
-      const claudeSessionRepo = buildClaudeSessionRepoStub([
-        { uuid: 'uuid-0', text: 'turn 0' },
-        { uuid: 'uuid-1', text: 'turn 1' }
-      ])
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      setupClaudeSessionFixture(
+        fakeHome,
+        sessionId,
+        process.cwd(),
+        makeClaudeSessionJsonl({ uuid: 'uuid-0', text: 'turn 0' }) +
+          '\n' +
+          makeClaudeSessionJsonl({ uuid: 'uuid-1', text: 'turn 1' })
+      )
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await rewindCommand(sessionId, '1', {})
 
@@ -123,16 +131,32 @@ describe('rewindCommand (integration)', () => {
     })
 
     it('out-of-range index causes process.exit(1)', async () => {
-      const claudeSessionRepo = buildClaudeSessionRepoStub([{ uuid: 'uuid-0', text: 'only turn' }])
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      setupClaudeSessionFixture(
+        fakeHome,
+        sessionId,
+        process.cwd(),
+        makeClaudeSessionJsonl({ uuid: 'uuid-0', text: 'only turn' })
+      )
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await expect(rewindCommand(sessionId, '5', {})).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
     it('out-of-range index prints the RangeError message', async () => {
-      const claudeSessionRepo = buildClaudeSessionRepoStub([{ uuid: 'uuid-0', text: 'only turn' }])
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      setupClaudeSessionFixture(
+        fakeHome,
+        sessionId,
+        process.cwd(),
+        makeClaudeSessionJsonl({ uuid: 'uuid-0', text: 'only turn' })
+      )
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await expect(rewindCommand(sessionId, '5', {})).rejects.toThrow('exit')
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith(

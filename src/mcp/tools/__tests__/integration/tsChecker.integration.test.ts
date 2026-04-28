@@ -1,33 +1,25 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { executeTsChecker } from '../../tsChecker'
-import { setupContainer, type Services } from '@src/core/di/setup'
+import { setupContainer } from '@src/core/di/setup'
 import { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
+import { buildCommandRunnerInfraStub } from '@src/cli/commands/__tests__/integration/helpers'
 import type { CheckerResult } from '@src/types/checker'
-
-const passResult: CheckerResult = {
-  ok: true,
-  lint: { errors: [], warnings: [], exitCode: 0 },
-  build: { errors: [], warnings: [], exitCode: 0 },
-  typecheck: { errors: [], warnings: [], exitCode: 0 },
-  test: { errors: [], warnings: [], exitCode: 0 }
-}
+import type { Infras } from '@src/core/di/setupInfrastructures'
 
 describe('executeTsChecker (integration)', () => {
   let dir: string
   let cleanup: () => void
-  let mockCheckerService: Services['checkerService']
+  let commandRunner: Infras['commandRunnerInfra']
 
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
 
-    mockCheckerService = {
-      check: vi.fn().mockResolvedValue(passResult)
-    } as unknown as Services['checkerService']
+    commandRunner = buildCommandRunnerInfraStub({ exitCode: 0 })
 
     setupContainer({
       config: buildTestConfig(dir),
-      services: { checkerService: mockCheckerService }
+      infras: { commandRunnerInfra: commandRunner }
     })
   })
 
@@ -56,37 +48,79 @@ describe('executeTsChecker (integration)', () => {
       )
     })
 
+    describe('output parsing', () => {
+      it('error/warning 行がファイルパス付きで分類される', async () => {
+        const runner = buildCommandRunnerInfraStub({
+          exitCode: 1,
+          stdout: [
+            '/src/file.ts',
+            '  1:1  error  Missing semicolon  semi',
+            '  2:1  warning  Unused variable  no-unused-vars',
+            '',
+            '2 problems (1 error, 1 warning)'
+          ].join('\n')
+        })
+        setupContainer({ config: buildTestConfig(dir), infras: { commandRunnerInfra: runner } })
+
+        const result = await executeTsChecker({ project_root: dir })
+        const parsed = JSON.parse(result.content[0].text) as CheckerResult
+
+        expect(parsed.lint.errors[0]).toContain('/src/file.ts')
+        expect(parsed.lint.warnings[0]).toContain('/src/file.ts')
+      })
+
+      it('ERROR_IGNORE_PATTERNS にマッチする行はフィルタされる', async () => {
+        const runner = buildCommandRunnerInfraStub({
+          exitCode: 1,
+          stdout: 'Error: rollup plugin failed\n  1:1  error  Real error  rule'
+        })
+        setupContainer({ config: buildTestConfig(dir), infras: { commandRunnerInfra: runner } })
+
+        const result = await executeTsChecker({ project_root: dir })
+        const parsed = JSON.parse(result.content[0].text) as CheckerResult
+
+        expect(parsed.lint.errors).toHaveLength(1)
+        expect(parsed.lint.errors[0]).toContain('Real error')
+      })
+    })
+
+    describe('project_root fallback', () => {
+      it('project_root 省略時に findProjectRoot が使われる', async () => {
+        setupContainer({
+          config: buildTestConfig(dir),
+          infras: { commandRunnerInfra: commandRunner }
+        })
+
+        const result = await executeTsChecker({})
+        const parsed = JSON.parse(result.content[0].text) as CheckerResult
+
+        expect(parsed.ok).toBe(true)
+      })
+    })
+
     describe('custom commands', () => {
-      it('forwards lint_command to checkerService.check as lintCommand', async () => {
+      it('forwards lint_command to commandRunnerInfra.runCommand', async () => {
         await executeTsChecker({ project_root: dir, lint_command: 'custom-lint' })
 
-        expect(vi.mocked(mockCheckerService.check)).toHaveBeenCalledWith(
-          expect.objectContaining({ lintCommand: 'custom-lint' })
-        )
+        expect(commandRunner.runCommand).toHaveBeenCalledWith('custom-lint', dir)
       })
 
-      it('forwards build_command to checkerService.check as buildCommand', async () => {
+      it('forwards build_command to commandRunnerInfra.runCommand', async () => {
         await executeTsChecker({ project_root: dir, build_command: 'custom-build' })
 
-        expect(vi.mocked(mockCheckerService.check)).toHaveBeenCalledWith(
-          expect.objectContaining({ buildCommand: 'custom-build' })
-        )
+        expect(commandRunner.runCommand).toHaveBeenCalledWith('custom-build', dir)
       })
 
-      it('forwards typecheck_command to checkerService.check as typecheckCommand', async () => {
+      it('forwards typecheck_command to commandRunnerInfra.runCommand', async () => {
         await executeTsChecker({ project_root: dir, typecheck_command: 'custom-typecheck' })
 
-        expect(vi.mocked(mockCheckerService.check)).toHaveBeenCalledWith(
-          expect.objectContaining({ typecheckCommand: 'custom-typecheck' })
-        )
+        expect(commandRunner.runCommand).toHaveBeenCalledWith('custom-typecheck', dir)
       })
 
-      it('forwards test_command to checkerService.check as testCommand', async () => {
+      it('forwards test_command to commandRunnerInfra.runCommand', async () => {
         await executeTsChecker({ project_root: dir, test_command: 'custom-test' })
 
-        expect(vi.mocked(mockCheckerService.check)).toHaveBeenCalledWith(
-          expect.objectContaining({ testCommand: 'custom-test' })
-        )
+        expect(commandRunner.runCommand).toHaveBeenCalledWith('custom-test', dir)
       })
     })
   })

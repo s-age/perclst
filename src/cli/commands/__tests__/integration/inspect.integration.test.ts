@@ -1,11 +1,16 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { inspectCommand } from '../../inspect'
 import { setupContainer } from '@src/core/di/setup'
-import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeResultLines,
+  buildClaudeCodeStub,
+  buildGitInfraStub,
+  makeTmpDir,
+  buildTestConfig
+} from './helpers'
 import { stdout, stderr } from '@src/utils/output'
 import { printResponse } from '@src/cli/view/display'
 import { RateLimitError } from '@src/errors/rateLimitError'
-import type { PipelineFileService } from '@src/services/pipelineFileService'
 
 vi.mock('@src/utils/output')
 vi.mock('@src/cli/view/display')
@@ -28,18 +33,14 @@ describe('inspectCommand (integration)', () => {
     vi.restoreAllMocks()
   })
 
-  function makePipelineFileServiceStub(diff: string | null): PipelineFileService {
-    return { getDiff: vi.fn(() => diff) } as unknown as PipelineFileService
-  }
-
   describe('happy path', () => {
     it('diff ありのとき printResponse が呼ばれる', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('inspection done'))
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: stub },
-        services: {
-          pipelineFileService: makePipelineFileServiceStub('diff --git a/foo.ts b/foo.ts')
+        infras: {
+          claudeCodeInfra: stub,
+          gitInfra: buildGitInfraStub({ diff: 'diff --git a/foo.ts b/foo.ts' })
         }
       })
 
@@ -52,8 +53,10 @@ describe('inspectCommand (integration)', () => {
       const stub = buildClaudeCodeStub([])
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: stub },
-        services: { pipelineFileService: makePipelineFileServiceStub(null) }
+        infras: {
+          claudeCodeInfra: stub,
+          gitInfra: buildGitInfraStub()
+        }
       })
 
       await inspectCommand('main', 'HEAD', {})
@@ -95,8 +98,10 @@ describe('inspectCommand (integration)', () => {
     it('Generic Error のとき process.exit が 1 で呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new Error('spawn failed')) },
-        services: { pipelineFileService: makePipelineFileServiceStub('diff content') }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new Error('spawn failed')),
+          gitInfra: buildGitInfraStub({ diff: 'diff content' })
+        }
       })
 
       await expect(inspectCommand('main', 'HEAD', {})).rejects.toThrow('exit')
@@ -107,8 +112,10 @@ describe('inspectCommand (integration)', () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(err) },
-        services: { pipelineFileService: makePipelineFileServiceStub('diff content') }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(err),
+          gitInfra: buildGitInfraStub({ diff: 'diff content' })
+        }
       })
 
       await expect(inspectCommand('main', 'HEAD', {})).rejects.toThrow('exit')
@@ -118,8 +125,10 @@ describe('inspectCommand (integration)', () => {
     it('RateLimitError(resetInfo あり) のとき process.exit が 1 で呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) },
-        services: { pipelineFileService: makePipelineFileServiceStub('diff content') }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')),
+          gitInfra: buildGitInfraStub({ diff: 'diff content' })
+        }
       })
 
       await expect(inspectCommand('main', 'HEAD', {})).rejects.toThrow('exit')
@@ -129,8 +138,10 @@ describe('inspectCommand (integration)', () => {
     it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) },
-        services: { pipelineFileService: makePipelineFileServiceStub('diff content') }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')),
+          gitInfra: buildGitInfraStub({ diff: 'diff content' })
+        }
       })
 
       await expect(inspectCommand('main', 'HEAD', {})).rejects.toThrow('exit')
@@ -142,8 +153,10 @@ describe('inspectCommand (integration)', () => {
     it('RateLimitError(resetInfo なし) のとき process.exit が 1 で呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) },
-        services: { pipelineFileService: makePipelineFileServiceStub('diff content') }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError()),
+          gitInfra: buildGitInfraStub({ diff: 'diff content' })
+        }
       })
 
       await expect(inspectCommand('main', 'HEAD', {})).rejects.toThrow('exit')
@@ -153,8 +166,10 @@ describe('inspectCommand (integration)', () => {
     it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) },
-        services: { pipelineFileService: makePipelineFileServiceStub('diff content') }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError()),
+          gitInfra: buildGitInfraStub({ diff: 'diff content' })
+        }
       })
 
       await expect(inspectCommand('main', 'HEAD', {})).rejects.toThrow('exit')

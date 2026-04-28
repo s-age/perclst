@@ -1,46 +1,36 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { mkdirSync, writeFileSync, rmSync } from 'fs'
+import { join } from 'path'
 import { runCommand } from '../../run'
 import { setupContainer } from '@src/core/di/setup'
-import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeResultLines,
+  buildClaudeCodeStub,
+  buildGitInfraStub,
+  buildFileMoveInfraStub,
+  buildShellInfraStub,
+  buildFsInfraWithCwd,
+  writePipelineFixture,
+  makeTmpDir,
+  buildTestConfig
+} from './helpers'
 import { stdout, stderr } from '@src/utils/output'
 import { confirm } from '@src/cli/prompt'
 import { printStreamEvent } from '@src/cli/view/display'
+import { RawExitError } from '@src/errors/rawExitError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 import { APIError } from '@src/errors/apiError'
 import type { AbortService } from '@src/services/abortService'
-import type { PipelineFileService } from '@src/services/pipelineFileService'
 import type { PipelineService, PipelineTaskResult } from '@src/services/pipelineService'
 
 vi.mock('@src/utils/output')
 vi.mock('@src/cli/view/display')
 vi.mock('@src/cli/prompt')
 
-/** パスの拡張子バリデーションを通過する最小パス。ファイルは不要（loadRawPipeline をモック）。 */
-const PIPELINE_PATH = 'pipeline.yaml'
-
 /** parsePipeline を通過する最小パイプライン構造 */
 const MINIMAL_PIPELINE_RAW = {
   tasks: [{ type: 'agent', task: 'do something' }]
-}
-
-// PipelineFileService is stubbed at the service level because its underlying GitInfra
-// operations (getDiffStat, getHead, moveToDone, commitMove) fail in a non-git tmpdir.
-// Pattern follows inspect.integration.test.ts.
-function makePipelineFileServiceStub(opts?: {
-  diffStat?: string | null
-  rawPipeline?: unknown
-}): PipelineFileService {
-  return {
-    getDiffStat: vi.fn(() => opts?.diffStat ?? null),
-    getHead: vi.fn(() => null),
-    getDiffSummary: vi.fn(() => null),
-    loadRawPipeline: vi.fn(() => opts?.rawPipeline ?? MINIMAL_PIPELINE_RAW),
-    savePipeline: vi.fn(),
-    moveToDone: vi.fn(() => null),
-    commitMove: vi.fn(),
-    cleanTmpDir: vi.fn()
-  } as unknown as PipelineFileService
 }
 
 function makeThrowingStub(err: Error): ReturnType<typeof buildClaudeCodeStub> {
@@ -70,10 +60,12 @@ function makePipelineServiceThrowingStub(err: Error): PipelineService {
 describe('runCommand (integration)', () => {
   let dir: string
   let cleanup: () => void
+  let pipelinePath: string
 
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
+    pipelinePath = writePipelineFixture(dir, MINIMAL_PIPELINE_RAW)
     vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('exit')
     })
@@ -89,11 +81,14 @@ describe('runCommand (integration)', () => {
       const stub = buildClaudeCodeStub(makeResultLines('task done'))
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: stub },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: stub,
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(pipelinePath, { batch: true })
 
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('Running pipeline: 1 task(s)')
     })
@@ -102,11 +97,14 @@ describe('runCommand (integration)', () => {
       const stub = buildClaudeCodeStub(makeResultLines('task done'))
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: stub },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: stub,
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(pipelinePath, { batch: true })
 
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
         expect.stringContaining('Pipeline complete.')
@@ -117,11 +115,14 @@ describe('runCommand (integration)', () => {
       vi.mocked(confirm).mockResolvedValue(false)
       setupContainer({
         config: buildTestConfig(dir),
-        services: { pipelineFileService: makePipelineFileServiceStub({ diffStat: 'M src/foo.ts' }) }
+        infras: {
+          gitInfra: buildGitInfraStub({ diffStat: 'M src/foo.ts' }),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -133,11 +134,14 @@ describe('runCommand (integration)', () => {
       vi.mocked(confirm).mockResolvedValue(false)
       setupContainer({
         config: buildTestConfig(dir),
-        services: { pipelineFileService: makePipelineFileServiceStub({ diffStat: 'M src/foo.ts' }) }
+        infras: {
+          gitInfra: buildGitInfraStub({ diffStat: 'M src/foo.ts' }),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -149,11 +153,14 @@ describe('runCommand (integration)', () => {
       const stub = buildClaudeCodeStub(makeResultLines('task done'))
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: stub },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: stub,
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
-      await runCommand(PIPELINE_PATH, { outputOnly: true, batch: true })
+      await runCommand(pipelinePath, { outputOnly: true, batch: true })
 
       expect(vi.mocked(printStreamEvent)).not.toHaveBeenCalled()
     })
@@ -163,7 +170,7 @@ describe('runCommand (integration)', () => {
     it('不正な拡張子のパスのとき process.exit(1) が呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() }
       })
 
       try {
@@ -178,7 +185,7 @@ describe('runCommand (integration)', () => {
     it('不正な拡張子のパスのとき stderr に Invalid arguments が出力される', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() }
       })
 
       try {
@@ -195,12 +202,15 @@ describe('runCommand (integration)', () => {
     it('RateLimitError(resetInfo あり) のとき process.exit(1) が呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -211,12 +221,15 @@ describe('runCommand (integration)', () => {
     it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -229,12 +242,15 @@ describe('runCommand (integration)', () => {
     it('RateLimitError(resetInfo なし) のとき process.exit(1) が呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError()),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -245,12 +261,15 @@ describe('runCommand (integration)', () => {
     it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError()),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -263,14 +282,14 @@ describe('runCommand (integration)', () => {
     it('PipelineMaxRetriesError のとき process.exit(1) が呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
+        infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() },
         services: {
-          pipelineFileService: makePipelineFileServiceStub(),
           pipelineService: makePipelineServiceThrowingStub(new PipelineMaxRetriesError(0, 3))
         }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -282,14 +301,14 @@ describe('runCommand (integration)', () => {
       const err = new PipelineMaxRetriesError(0, 3)
       setupContainer({
         config: buildTestConfig(dir),
+        infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() },
         services: {
-          pipelineFileService: makePipelineFileServiceStub(),
           pipelineService: makePipelineServiceThrowingStub(err)
         }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -298,17 +317,14 @@ describe('runCommand (integration)', () => {
     })
 
     it('loadRawPipeline が例外を投げるとき process.exit(1) が呼ばれる', async () => {
-      const fileService = makePipelineFileServiceStub()
-      ;(fileService.loadRawPipeline as ReturnType<typeof vi.fn>).mockImplementation(() => {
-        throw new Error('file not found')
-      })
+      const nonexistentPath = join(dir, 'nonexistent.yaml')
       setupContainer({
         config: buildTestConfig(dir),
-        services: { pipelineFileService: fileService }
+        infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(nonexistentPath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -317,17 +333,14 @@ describe('runCommand (integration)', () => {
     })
 
     it('loadRawPipeline が例外を投げるとき stderr に "Failed to read pipeline file:" が出力される', async () => {
-      const fileService = makePipelineFileServiceStub()
-      ;(fileService.loadRawPipeline as ReturnType<typeof vi.fn>).mockImplementation(() => {
-        throw new Error('file not found')
-      })
+      const nonexistentPath = join(dir, 'nonexistent.yaml')
       setupContainer({
         config: buildTestConfig(dir),
-        services: { pipelineFileService: fileService }
+        infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(nonexistentPath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -340,12 +353,15 @@ describe('runCommand (integration)', () => {
     it('APIError のとき process.exit(1) が呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new APIError('api failed')) },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new APIError('api failed')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -356,12 +372,15 @@ describe('runCommand (integration)', () => {
     it('APIError のとき stderr に "Pipeline failed:" が出力される', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new APIError('api failed')) },
-        services: { pipelineFileService: makePipelineFileServiceStub() }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new APIError('api failed')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -378,15 +397,15 @@ describe('runCommand (integration)', () => {
       } as unknown as AbortService
       setupContainer({
         config: buildTestConfig(dir),
+        infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() },
         services: {
-          pipelineFileService: makePipelineFileServiceStub(),
           pipelineService: makePipelineServiceThrowingStub(new Error('cancelled')),
           abortService: abortedService
         }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
@@ -401,20 +420,214 @@ describe('runCommand (integration)', () => {
       } as unknown as AbortService
       setupContainer({
         config: buildTestConfig(dir),
+        infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() },
         services: {
-          pipelineFileService: makePipelineFileServiceStub(),
           pipelineService: makePipelineServiceThrowingStub(new Error('cancelled')),
           abortService: abortedService
         }
       })
 
       try {
-        await runCommand(PIPELINE_PATH, { batch: true })
+        await runCommand(pipelinePath, { batch: true })
       } catch {
         /* expected exit */
       }
 
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('Aborted.')
+    })
+  })
+
+  describe('RawExitError classification', () => {
+    it('RawExitError の stderr に rate limit メッセージがあるとき RateLimitError として処理される', async () => {
+      const rawErr = new RawExitError(1, "you've hit your limit. Resets at 2026-12-31")
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: {
+          claudeCodeInfra: makeThrowingStub(rawErr),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
+      })
+
+      try {
+        await runCommand(pipelinePath, { batch: true })
+      } catch {
+        /* expected exit */
+      }
+
+      expect(vi.mocked(stderr).print).toHaveBeenCalledWith(
+        expect.stringContaining('Claude usage limit reached')
+      )
+    })
+
+    it('RawExitError の stderr に rate limit 以外のメッセージがあるとき APIError として処理される', async () => {
+      const rawErr = new RawExitError(1, 'some unexpected error')
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: {
+          claudeCodeInfra: makeThrowingStub(rawErr),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
+      })
+
+      try {
+        await runCommand(pipelinePath, { batch: true })
+      } catch {
+        /* expected exit */
+      }
+
+      expect(vi.mocked(stderr).print).toHaveBeenCalledWith(
+        expect.stringContaining('Pipeline failed:')
+      )
+    })
+  })
+
+  describe('script rejection flow', () => {
+    it('script 失敗 + rejected.to のとき agent が retry された後 PipelineMaxRetriesError で exit(1)', async () => {
+      const rejectionPipeline = {
+        tasks: [
+          { type: 'agent', name: 'fixer', task: 'fix it' },
+          { type: 'script', command: 'test', rejected: { to: 'fixer', max_retries: 1 } }
+        ]
+      }
+      const path = writePipelineFixture(dir, rejectionPipeline)
+      const claudeStub = buildClaudeCodeStub(makeResultLines('done'))
+
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: {
+          claudeCodeInfra: claudeStub,
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub(),
+          shellInfra: buildShellInfraStub({ exitCode: 1, stdout: 'test failed', stderr: '' })
+        }
+      })
+
+      try {
+        await runCommand(path, { batch: true })
+      } catch {
+        /* expected exit */
+      }
+
+      expect(process.exit).toHaveBeenCalledWith(1)
+      expect(claudeStub.runClaude).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('agent limit exceeded', () => {
+    it('max_messages 超過時にパイプラインが正常完了する', async () => {
+      const limitPipeline = {
+        tasks: [{ type: 'agent', task: 'do something', max_messages: 1 }]
+      }
+      const path = writePipelineFixture(dir, limitPipeline)
+
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
+      })
+
+      await runCommand(path, { batch: true })
+
+      expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
+        expect.stringContaining('Pipeline complete.')
+      )
+    })
+
+    it('max_context_tokens 超過時にパイプラインが正常完了する', async () => {
+      const limitPipeline = {
+        tasks: [{ type: 'agent', task: 'do something', max_context_tokens: 5 }]
+      }
+      const path = writePipelineFixture(dir, limitPipeline)
+
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
+      })
+
+      await runCommand(path, { batch: true })
+
+      expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
+        expect.stringContaining('Pipeline complete.')
+      )
+    })
+  })
+
+  describe('agent rejection via feedback file', () => {
+    const feedbackDir = join(process.cwd(), '.claude', 'tmp')
+
+    afterEach(() => {
+      rmSync(feedbackDir, { recursive: true, force: true })
+    })
+
+    it('agent の rejected + feedback file があるとき retry 後にパイプラインが完了する', async () => {
+      mkdirSync(feedbackDir, { recursive: true })
+      writeFileSync(join(feedbackDir, 'coder'), 'assertion error in test.ts')
+
+      const rejectionPipeline = {
+        tasks: [
+          {
+            type: 'agent',
+            name: 'coder',
+            task: 'write code',
+            rejected: { to: 'coder', max_retries: 1 }
+          }
+        ]
+      }
+      const path = writePipelineFixture(dir, rejectionPipeline)
+      const claudeStub = buildClaudeCodeStub(makeResultLines('done'))
+
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: {
+          claudeCodeInfra: claudeStub,
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
+        }
+      })
+
+      await runCommand(path, { batch: true })
+
+      expect(claudeStub.runClaude).toHaveBeenCalledTimes(2)
+      expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
+        expect.stringContaining('Pipeline complete.')
+      )
+    })
+  })
+
+  describe('procedure loading', () => {
+    it('task に procedure を指定するとローカル procedure が読み込まれる', async () => {
+      mkdirSync(join(dir, 'procedures'), { recursive: true })
+      writeFileSync(join(dir, 'procedures', 'test-proc.md'), '# Test procedure')
+
+      const procPipeline = {
+        tasks: [{ type: 'agent', task: 'do something', procedure: 'test-proc' }]
+      }
+      const path = writePipelineFixture(dir, procPipeline)
+
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub(),
+          fsInfra: buildFsInfraWithCwd(dir)
+        }
+      })
+
+      await runCommand(path, { batch: true })
+
+      expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
+        expect.stringContaining('Pipeline complete.')
+      )
     })
   })
 })

@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { fileExists, readJson, homeDir, currentWorkingDir } from '@src/infrastructures/fs'
 import { DEFAULT_CONFIG } from '@src/constants/config'
-import { loadConfig, resolveSessionsDir, resolveLogsDir, resolveKnowledgeDir } from '../config'
+import { loadConfig, resolveSessionsDir, resolveKnowledgeDir } from '../config'
 
 vi.mock('@src/infrastructures/fs', () => ({
   fileExists: vi.fn(),
@@ -134,28 +134,6 @@ describe('resolveSessionsDir', () => {
     // DEFAULT_CONFIG.sessions_dir is '~/.perclst/sessions' → expands with homeDir()
     const result = resolveSessionsDir({})
     expect(result).toBe('/home/user/.perclst/sessions')
-  })
-})
-
-// ─── resolveLogsDir ──────────────────────────────────────────────────────────
-// resolvePath branches are already covered above; only test distinct behavior here.
-
-describe('resolveLogsDir', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockHomeDir.mockReturnValue('/home/user')
-    mockCurrentWorkingDir.mockReturnValue('/project')
-  })
-
-  it('returns the resolved logs_dir from config', () => {
-    const result = resolveLogsDir({ logs_dir: '/var/log/perclst' })
-    expect(result).toBe('/var/log/perclst')
-  })
-
-  it('falls back to DEFAULT_CONFIG.logs_dir when logs_dir is not set', () => {
-    // DEFAULT_CONFIG.logs_dir is '~/.perclst/logs' → expands with homeDir()
-    const result = resolveLogsDir({})
-    expect(result).toBe('/home/user/.perclst/logs')
   })
 })
 

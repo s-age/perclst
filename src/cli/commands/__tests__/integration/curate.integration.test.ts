@@ -1,12 +1,17 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { curateCommand } from '../../curate'
 import { setupContainer } from '@src/core/di/setup'
-import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeResultLines,
+  buildClaudeCodeStub,
+  buildKnowledgeReaderStub,
+  makeTmpDir,
+  buildTestConfig
+} from './helpers'
 import { stdout, stderr } from '@src/utils/output'
 import { printResponse } from '@src/cli/view/display'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
-import type { KnowledgeSearchService } from '@src/services/knowledgeSearchService'
 
 vi.mock('@src/utils/output')
 vi.mock('@src/cli/view/display')
@@ -29,13 +34,6 @@ describe('curateCommand (integration)', () => {
     vi.restoreAllMocks()
   })
 
-  function makeKnowledgeStub(hasDraft: boolean): KnowledgeSearchService {
-    return {
-      hasDraftEntries: vi.fn().mockReturnValue(hasDraft),
-      search: vi.fn()
-    } as unknown as KnowledgeSearchService
-  }
-
   function makeThrowingStub(err: Error): ReturnType<typeof buildClaudeCodeStub> {
     const stub = buildClaudeCodeStub([])
     ;(stub.runClaude as ReturnType<typeof vi.fn>).mockImplementation(
@@ -51,7 +49,7 @@ describe('curateCommand (integration)', () => {
     it('draft なしのとき "No draft entries to curate." が stdout に出る', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        services: { knowledgeSearchService: makeKnowledgeStub(false) }
+        infras: { knowledgeReaderInfra: buildKnowledgeReaderStub(false) }
       })
 
       await curateCommand()
@@ -63,8 +61,7 @@ describe('curateCommand (integration)', () => {
       const stub = buildClaudeCodeStub(makeResultLines('curated'))
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: stub },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: { claudeCodeInfra: stub, knowledgeReaderInfra: buildKnowledgeReaderStub(true) }
       })
 
       await curateCommand()
@@ -77,8 +74,10 @@ describe('curateCommand (integration)', () => {
     it('Generic Error のとき process.exit が 1 で呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new Error('spawn failed')) },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new Error('spawn failed')),
+          knowledgeReaderInfra: buildKnowledgeReaderStub(true)
+        }
       })
 
       await expect(curateCommand()).rejects.toThrow('exit')
@@ -89,8 +88,10 @@ describe('curateCommand (integration)', () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(err) },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(err),
+          knowledgeReaderInfra: buildKnowledgeReaderStub(true)
+        }
       })
 
       await expect(curateCommand()).rejects.toThrow('exit')
@@ -100,8 +101,10 @@ describe('curateCommand (integration)', () => {
     it('ValidationError のとき process.exit が 1 で呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')),
+          knowledgeReaderInfra: buildKnowledgeReaderStub(true)
+        }
       })
 
       await expect(curateCommand()).rejects.toThrow('exit')
@@ -111,8 +114,10 @@ describe('curateCommand (integration)', () => {
     it('ValidationError のとき stderr に Invalid arguments が出る', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')),
+          knowledgeReaderInfra: buildKnowledgeReaderStub(true)
+        }
       })
 
       await expect(curateCommand()).rejects.toThrow('exit')
@@ -122,8 +127,10 @@ describe('curateCommand (integration)', () => {
     it('RateLimitError(resetInfo あり) のとき process.exit が 1 で呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')),
+          knowledgeReaderInfra: buildKnowledgeReaderStub(true)
+        }
       })
 
       await expect(curateCommand()).rejects.toThrow('exit')
@@ -133,8 +140,10 @@ describe('curateCommand (integration)', () => {
     it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')),
+          knowledgeReaderInfra: buildKnowledgeReaderStub(true)
+        }
       })
 
       await expect(curateCommand()).rejects.toThrow('exit')
@@ -146,8 +155,10 @@ describe('curateCommand (integration)', () => {
     it('RateLimitError(resetInfo なし) のとき process.exit が 1 で呼ばれる', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError()),
+          knowledgeReaderInfra: buildKnowledgeReaderStub(true)
+        }
       })
 
       await expect(curateCommand()).rejects.toThrow('exit')
@@ -157,8 +168,10 @@ describe('curateCommand (integration)', () => {
     it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) },
-        services: { knowledgeSearchService: makeKnowledgeStub(true) }
+        infras: {
+          claudeCodeInfra: makeThrowingStub(new RateLimitError()),
+          knowledgeReaderInfra: buildKnowledgeReaderStub(true)
+        }
       })
 
       await expect(curateCommand()).rejects.toThrow('exit')

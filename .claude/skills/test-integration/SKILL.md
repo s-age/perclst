@@ -1,19 +1,31 @@
 ---
 name: test-integration
-description: Patterns and conventions for writing *.integration.test.ts files for CLI commands. Load when creating or editing integration test files under src/cli/commands/__tests__/integration/. Covers DI stub strategy, file placement, mock setup, and Vitest isolation requirements. For the full agent-driven workflow use procedures/test-integration/implement.md.
+description: Patterns and conventions for writing *.integration.test.ts files. Covers DI stub strategy (infra-layer only), file placement, mock setup, and Vitest isolation requirements. Applies to CLI commands and MCP tools. For the full agent-driven workflow use procedures/test-integration/implement.md.
 paths:
-  - src/cli/commands/__tests__/integration/**/*.ts
+  - src/**/*.integration.test.ts
 ---
+
+## Stub boundary
+
+**Stub only the infra layer.** Inject I/O stubs via `setupContainer({ infras: {...} })` so that Service → Domain → Repository real code executes end-to-end.
+
+```ts
+setupContainer({
+  config: buildTestConfig(dir),
+  infras: { claudeCodeInfra: stub, gitInfra: buildGitInfraStub() }
+})
+```
+
+Never mock service or domain classes — doing so skips the code paths under test and creates coverage gaps. See `examples/service-level-stub-exception.md` for the narrow cases where service-level stubs are permitted.
 
 ## File placement
 
-Integration tests for CLI commands live at:
-
 ```
 src/cli/commands/__tests__/integration/<command>.integration.test.ts
+src/mcp/tools/__tests__/integration/<tool>.integration.test.ts
 ```
 
-One file per command. Do not merge multiple commands into a single file.
+One file per command / tool. Do not merge multiple into a single file.
 
 ## Vitest worker isolation (required)
 
@@ -23,7 +35,7 @@ One file per command. Do not merge multiple commands into a single file.
 
 ## Standard mock set
 
-Every integration test file opens with the same three module mocks:
+### CLI commands
 
 ```ts
 vi.mock('@src/utils/output')
@@ -31,9 +43,15 @@ vi.mock('@src/cli/view/display')
 vi.mock('@src/cli/prompt')
 ```
 
-Add command-specific display mocks below these (e.g. `vi.mock('@src/cli/view/listDisplay')`). Do **not** mock service classes (`SessionService`, `AgentService`, etc.) — they run against the real filesystem via the tmp directory.
+Add command-specific display mocks below these (e.g. `vi.mock('@src/cli/view/listDisplay')`).
+
+### MCP tools
+
+MCP tools do not go through the CLI output/prompt layer, so the above mocks are unnecessary. DI wiring alone is sufficient.
 
 ## beforeEach / afterEach
+
+### CLI commands
 
 ```ts
 let dir: string
@@ -51,6 +69,26 @@ afterEach(() => {
 })
 ```
 
+### MCP tools
+
+```ts
+let dir: string
+let cleanup: () => void
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  ;({ dir, cleanup } = makeTmpDir())
+  setupContainer({ config: buildTestConfig(dir) })
+})
+
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
+```
+
+No `process.exit` spy needed. MCP tools either throw exceptions or return results in `content[0].text`.
+
 ## DI wiring
 
 Always call `setupContainer` inside each `it` (or in `beforeEach` for the shared stub case), never at module scope:
@@ -60,13 +98,13 @@ const stub = buildClaudeCodeStub(makeResultLines('done'))
 setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 ```
 
-For pure session-management commands that never call the Claude agent, omit `infras`:
+For pure session-management commands or MCP tools that never call the Claude agent, omit `infras`:
 
 ```ts
 setupContainer({ config: buildTestConfig(dir) })
 ```
 
-## Prerequisite session (commands that take sessionId)
+## Prerequisite session (CLI commands that take sessionId)
 
 Commands that accept a `sessionId` argument need an existing session. Create it in `beforeEach` using a separate stub before the per-test setup:
 
@@ -85,7 +123,7 @@ beforeEach(async () => {
 })
 ```
 
-## Error path stub
+## Error path stub (CLI commands)
 
 For agent-wrapping commands, use `makeThrowingStub` to simulate errors from `runClaude`:
 
@@ -102,7 +140,7 @@ function makeThrowingStub(err: Error): ReturnType<typeof buildClaudeCodeStub> {
 }
 ```
 
-## Standard error cases
+## Standard error cases (CLI commands)
 
 Cover only the error types the command actually catches:
 
@@ -116,20 +154,21 @@ Cover only the error types the command actually catches:
 
 Nonexistent `sessionId`: resolves to `process.exit(1)`.
 
-## Approved exception: pipeline-command service-level stubs
+## MCP tool response validation
 
-The `run` command stubs `PipelineFileService` and `PipelineService` at the service layer rather than via `infras`. This is an intentional deviation — not a pattern to copy — for two specific reasons:
+MCP tools return `{ content: [{ type: 'text', text: string }] }`. Parse `text` as JSON and assert on the result:
 
-1. `PipelineFileService` relies on `GitInfra` operations (`getDiffStat`, `getHead`, `moveToDone`, `commitMove`) that fail in a non-git tmpdir. Stubbing at the infra level would require mocking the entire `GitInfra` interface.
-2. Specific error conditions (`PipelineMaxRetriesError`) cannot be injected through `claudeCodeInfra` without a complex pipeline+rejection fixture.
-
-Apply this exception only when **both** conditions hold: the service depends on git infrastructure incompatible with a tmpdir, **and** the error condition cannot be triggered through infra-level stubs. For all other commands, keep the default infra-only stubbing rule. `inspect.integration.test.ts` uses the same exception for `PipelineFileService`.
+```ts
+const result = await executeTsChecker({ project_root: dir })
+const parsed = JSON.parse(result.content[0].text) as CheckerResult
+expect(parsed.ok).toBe(true)
+```
 
 ## What NOT to do
 
+- Never mock service or domain classes — services must run through the full DI stack
 - Never call `ts_test_strategist` — test cases come from `plans/cli-integration-tests.md`
-- Never call `ts_call_graph` — the mock boundary is fixed (infra layer only) and already known; call-graph analysis adds no information and does not apply when the boundary is predetermined
-- Never mock service classes — services must run through the full DI stack (see the approved exception above for the narrow case when this rule may not apply)
+- Never call `ts_call_graph` — the mock boundary is fixed (infra layer only) and already known
 - Never use `--singleThread` or share workers across files
 - Never use `it.skip` or `@ts-ignore` to silence failures
 - One assertion per `it` block — do not bundle multiple behaviors; use `try/catch` to drive commands past a mocked `process.exit` throw when the assertion is about a side effect, not the exit itself

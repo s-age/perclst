@@ -1,45 +1,36 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { mkdtempSync, readdirSync, rmSync } from 'fs'
+import { join } from 'path'
+import { tmpdir } from 'os'
 import { startCommand } from '../../start'
 import { summarizeCommand } from '../../summarize'
 import { setupContainer } from '@src/core/di/setup'
-import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeResultLines,
+  buildClaudeCodeStub,
+  makeTmpDir,
+  buildTestConfig,
+  buildFsInfraWithHome,
+  makeClaudeSessionJsonl,
+  setupClaudeSessionFixture
+} from './helpers'
 import { stdout, stderr } from '@src/utils/output'
 import { printSummarizeTable, printSummarizeJson } from '@src/cli/view/summarizeDisplay'
-import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 
 vi.mock('@src/utils/output')
 vi.mock('@src/cli/view/display')
 vi.mock('@src/cli/prompt')
 vi.mock('@src/cli/view/summarizeDisplay')
 
-function buildClaudeSessionRepoMock(): IClaudeSessionRepository {
-  return {
-    readSession: vi.fn(),
-    findEncodedDirBySessionId: vi.fn(() => ''),
-    decodeWorkingDir: vi.fn(() => ({ path: null, ambiguous: false })),
-    validateSessionAtDir: vi.fn(),
-    scanSessionStats: vi.fn(() => ({
-      apiCalls: 0,
-      toolCalls: 0,
-      tokens: {
-        totalInput: 0,
-        totalOutput: 0,
-        totalCacheRead: 0,
-        totalCacheCreation: 0,
-        contextWindow: 0
-      }
-    })),
-    getAssistantTurns: vi.fn(() => [])
-  } as unknown as IClaudeSessionRepository
-}
-
 describe('summarizeCommand (integration)', () => {
   let dir: string
   let cleanup: () => void
+  let fakeHome: string
 
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
+    fakeHome = mkdtempSync(join(tmpdir(), 'fake-home-'))
     vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('exit')
     })
@@ -47,6 +38,7 @@ describe('summarizeCommand (integration)', () => {
 
   afterEach(() => {
     cleanup()
+    rmSync(fakeHome, { recursive: true, force: true })
     vi.restoreAllMocks()
   })
 
@@ -64,8 +56,13 @@ describe('summarizeCommand (integration)', () => {
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true })
 
-      const claudeSessionRepo = buildClaudeSessionRepoMock()
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
+      const sessionId = file.replace('.json', '')
+      setupClaudeSessionFixture(fakeHome, sessionId, process.cwd(), makeClaudeSessionJsonl())
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await summarizeCommand({})
 
@@ -85,8 +82,13 @@ describe('summarizeCommand (integration)', () => {
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true, labels: ['keep'] })
 
-      const claudeSessionRepo = buildClaudeSessionRepoMock()
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
+      const sessionId = file.replace('.json', '')
+      setupClaudeSessionFixture(fakeHome, sessionId, process.cwd(), makeClaudeSessionJsonl())
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await summarizeCommand({ label: 'keep' })
 
@@ -98,8 +100,13 @@ describe('summarizeCommand (integration)', () => {
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true, name: 'my-special-session' })
 
-      const claudeSessionRepo = buildClaudeSessionRepoMock()
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
+      const sessionId = file.replace('.json', '')
+      setupClaudeSessionFixture(fakeHome, sessionId, process.cwd(), makeClaudeSessionJsonl())
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await summarizeCommand({ like: 'my-special' })
 

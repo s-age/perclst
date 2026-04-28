@@ -49,6 +49,49 @@ describe('ClaudeSessionRepository', () => {
     repo = new ClaudeSessionRepository(mockFs)
   })
 
+  // ─── resolveProjectDir (long path) ──────────────────────────────────────
+
+  describe('resolveProjectDir (long path via validateSessionAtDir)', () => {
+    const longDir = '/' + 'a'.repeat(250)
+    const sanitized = longDir.replace(/[^a-zA-Z0-9]/g, '-')
+    const prefix = sanitized.slice(0, 200)
+
+    it('sanitized path が 200 文字超のとき listDirEntries で prefix マッチを試みる', () => {
+      const matchedDirName = `${prefix}-abc123`
+      vi.mocked(mockFs.fileExists).mockImplementation((p: string) => {
+        if (p === '/mock-home/.claude/projects') return true
+        if (p === `/mock-home/.claude/projects/${matchedDirName}/session-1.jsonl`) return true
+        return false
+      })
+      vi.mocked(mockFs.listDirEntries).mockReturnValue([
+        makeDirEntry(matchedDirName, true)
+      ] as unknown as Dirent[])
+
+      expect(() => repo.validateSessionAtDir('session-1', longDir)).not.toThrow()
+    })
+
+    it('prefix マッチする既存ディレクトリがないとき sanitizeProjectDir でハッシュ付き名を生成する', () => {
+      vi.mocked(mockFs.fileExists).mockImplementation((p: string) => {
+        if (p === '/mock-home/.claude/projects') return true
+        return p.includes('.jsonl')
+      })
+      vi.mocked(mockFs.listDirEntries).mockReturnValue([
+        makeDirEntry('unrelated-dir', true)
+      ] as unknown as Dirent[])
+
+      expect(() => repo.validateSessionAtDir('session-1', longDir)).not.toThrow()
+    })
+
+    it('projects ディレクトリが存在しないとき sanitizeProjectDir へフォールバックする', () => {
+      vi.mocked(mockFs.fileExists).mockImplementation((p: string) => {
+        if (p === '/mock-home/.claude/projects') return false
+        return p.includes('.jsonl')
+      })
+
+      expect(() => repo.validateSessionAtDir('session-1', longDir)).not.toThrow()
+    })
+  })
+
   // ─── findEncodedDirBySessionId ───────────────────────────────────────────
 
   describe('findEncodedDirBySessionId', () => {
