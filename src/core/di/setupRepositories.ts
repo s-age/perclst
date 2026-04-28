@@ -58,7 +58,8 @@ export function setupRepositories(
     knowledgeSearchRepo:
       overrides?.knowledgeSearchRepo ??
       new KnowledgeSearchRepository(infras.knowledgeReaderInfra, opts.knowledgeDir),
-    tsAnalysisRepo: overrides?.tsAnalysisRepo ?? new TsAnalysisRepository(infras.tsAnalyzer),
+    tsAnalysisRepo:
+      overrides?.tsAnalysisRepo ?? new TsAnalysisRepository(infras.tsAnalyzerSkipAddFiles),
     fileMoveRepo:
       overrides?.fileMoveRepo ?? new PipelineFileRepository(infras.fileMoveInfra, infras.fsInfra),
     gitRepo: overrides?.gitRepo ?? new GitRepository(infras.gitInfra, infras.projectRootInfra),

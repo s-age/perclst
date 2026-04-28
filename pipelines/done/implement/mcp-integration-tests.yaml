@@ -180,6 +180,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: mcp-integ-tsAnalyze-implementer
     task: >
@@ -199,6 +200,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-tsAnalyze-reviewer
     task: >
@@ -218,12 +220,14 @@ tasks:
     rejected:
       to: mcp-integ-tsAnalyze-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-tsAnalyze-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-tsAnalyze-implementer
     task: "tsAnalyze.integration.test.ts is implemented, reviewed, and verified.
@@ -233,6 +237,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: mcp-integ-tsCallGraph-implementer
     task: >
@@ -252,6 +257,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-tsCallGraph-reviewer
     task: >
@@ -271,12 +277,14 @@ tasks:
     rejected:
       to: mcp-integ-tsCallGraph-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-tsCallGraph-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-tsCallGraph-implementer
     task: "tsCallGraph.integration.test.ts is implemented, reviewed, and verified.
@@ -286,6 +294,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: mcp-integ-tsChecker-implementer
     task: >
@@ -305,6 +314,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-tsChecker-reviewer
     task: >
@@ -324,12 +334,14 @@ tasks:
     rejected:
       to: mcp-integ-tsChecker-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-tsChecker-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-tsChecker-implementer
     task: "tsChecker.integration.test.ts is implemented, reviewed, and verified.
@@ -339,6 +351,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: mcp-integ-tsGetReferences-implementer
     task: >
@@ -358,6 +371,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-tsGetReferences-reviewer
     task: >
@@ -377,12 +391,14 @@ tasks:
     rejected:
       to: mcp-integ-tsGetReferences-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-tsGetReferences-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-tsGetReferences-implementer
     task: "tsGetReferences.integration.test.ts is implemented, reviewed, and
@@ -392,6 +408,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: mcp-integ-tsGetTypes-implementer
     task: >
@@ -411,6 +428,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-tsGetTypes-reviewer
     task: >
@@ -430,12 +448,14 @@ tasks:
     rejected:
       to: mcp-integ-tsGetTypes-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-tsGetTypes-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-tsGetTypes-implementer
     task: "tsGetTypes.integration.test.ts is implemented, reviewed, and verified.
@@ -445,6 +465,7 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
   - type: agent
     name: mcp-integ-tsTestStrategist-implementer
     task: >
@@ -464,6 +485,7 @@ tasks:
       - Edit
       - Bash
       - mcp__perclst__ts_checker
+    done: true
   - type: agent
     name: mcp-integ-tsTestStrategist-reviewer
     task: >
@@ -483,12 +505,14 @@ tasks:
     rejected:
       to: mcp-integ-tsTestStrategist-implementer
       max_retries: 3
+    done: true
   - type: script
     command: npm run lint --fix && npm run build && npx tsc --noEmit 2>&1 && npm run
       test:unit
     rejected:
       to: mcp-integ-tsTestStrategist-implementer
       max_retries: 3
+    done: true
   - type: agent
     name: mcp-integ-tsTestStrategist-implementer
     task: "tsTestStrategist.integration.test.ts is implemented, reviewed, and
@@ -498,3 +522,4 @@ tasks:
     allowed_tools:
       - Read
       - Bash
+    done: true
