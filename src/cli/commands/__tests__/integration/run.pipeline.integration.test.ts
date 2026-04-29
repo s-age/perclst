@@ -38,7 +38,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
   })
 
   describe('script rejection flow', () => {
-    it('script 失敗 + rejected.to のとき agent が retry された後 PipelineMaxRetriesError で exit(1)', async () => {
+    it('script fails + when rejected.to agent retries then exits with PipelineMaxRetriesError (exit 1)', async () => {
       const rejectionPipeline = {
         tasks: [
           { type: 'agent', name: 'fixer', task: 'fix it' },
@@ -70,7 +70,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
   })
 
   describe('agent limit exceeded', () => {
-    it('max_messages 超過時にパイプラインが正常完了する', async () => {
+    it('pipeline completes normally when max_messages exceeded', async () => {
       const limitPipeline = {
         tasks: [{ type: 'agent', task: 'do something', max_messages: 1 }]
       }
@@ -92,7 +92,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
       )
     })
 
-    it('max_context_tokens 超過時にパイプラインが正常完了する', async () => {
+    it('pipeline completes normally when max_context_tokens exceeded', async () => {
       const limitPipeline = {
         tasks: [{ type: 'agent', task: 'do something', max_context_tokens: 5 }]
       }
@@ -122,7 +122,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
       rmSync(feedbackDir, { recursive: true, force: true })
     })
 
-    it('agent の rejected + feedback file があるとき retry 後にパイプラインが完了する', async () => {
+    it('when agent is rejected + feedback file exists pipeline completes after retry', async () => {
       mkdirSync(feedbackDir, { recursive: true })
       writeFileSync(join(feedbackDir, 'coder'), 'assertion error in test.ts')
 
@@ -158,7 +158,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
   })
 
   describe('nested pipeline (type: pipeline)', () => {
-    it('インラインネストパイプラインのタスクが実行されパイプラインが完了する', async () => {
+    it('inline nested pipeline tasks execute and pipeline completes', async () => {
       const nestedPipeline = {
         tasks: [
           {
@@ -190,7 +190,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
   })
 
   describe('script rejection with intermediate task skip', () => {
-    it('3タスクで retry 時に中間タスクが done のままスキップされる', async () => {
+    it('during retry with 3 tasks intermediate task skipped while remaining done', async () => {
       const pipeline = {
         tasks: [
           { type: 'agent', name: 'coder', task: 'write code' },
@@ -223,7 +223,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
   })
 
   describe('outerRejection propagation to nested pipeline', () => {
-    it('script rejection がネストパイプラインに伝播しても再実行されない (done-flag bug)', async () => {
+    it('script rejection propagates to nested pipeline but is not re-executed (done-flag bug)', async () => {
       const pipeline = {
         tasks: [
           {
@@ -259,7 +259,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
   })
 
   describe('procedure loading', () => {
-    it('task に procedure を指定するとローカル procedure が読み込まれる', async () => {
+    it('when procedure is specified on task local procedure is loaded', async () => {
       mkdirSync(join(dir, 'procedures'), { recursive: true })
       writeFileSync(join(dir, 'procedures', 'test-proc.md'), '# Test procedure')
 

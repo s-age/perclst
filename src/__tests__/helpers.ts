@@ -3,13 +3,13 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import type { Config } from '@src/types/config'
 
-/** tmpdir を作成して返す。cleanup() で削除する。 */
+/** Creates and returns a tmpdir. Delete with cleanup(). */
 export function makeTmpDir(): { dir: string; cleanup: () => void } {
   const dir = mkdtempSync(join(tmpdir(), 'perclst-integration-'))
   return { dir, cleanup: () => rmSync(dir, { recursive: true, force: true }) }
 }
 
-/** sessions_dir を tmpdir に向けた最小テスト用 Config */
+/** Minimal test Config with sessions_dir pointing to tmpdir */
 export function buildTestConfig(sessionsDir: string, overrides?: Partial<Config>): Config {
   return {
     model: 'claude-sonnet-4-6',

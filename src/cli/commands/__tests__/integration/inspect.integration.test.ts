@@ -34,7 +34,7 @@ describe('inspectCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('diff ありのとき printResponse が呼ばれる', async () => {
+    it('printResponse is called when diff exists', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('inspection done'))
       setupContainer({
         config: buildTestConfig(dir),
@@ -49,7 +49,7 @@ describe('inspectCommand (integration)', () => {
       expect(vi.mocked(printResponse)).toHaveBeenCalled()
     })
 
-    it('diff なしのとき No differences found が出力される', async () => {
+    it('No differences found is output when there is no diff', async () => {
       const stub = buildClaudeCodeStub([])
       setupContainer({
         config: buildTestConfig(dir),
@@ -79,14 +79,14 @@ describe('inspectCommand (integration)', () => {
       return stub
     }
 
-    it('不正な gitRef のとき process.exit が 1 で呼ばれる', async () => {
+    it('process.exit is called with 1 when gitRef is invalid', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(inspectCommand('!@#invalid', 'HEAD', {})).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('不正な gitRef のとき stderr に Invalid arguments が出る', async () => {
+    it('Invalid arguments appears in stderr when gitRef is invalid', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(inspectCommand('!@#invalid', 'HEAD', {})).rejects.toThrow('exit')
@@ -95,7 +95,7 @@ describe('inspectCommand (integration)', () => {
       )
     })
 
-    it('Generic Error のとき process.exit が 1 で呼ばれる', async () => {
+    it('process.exit is called with 1 when Generic Error occurs', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -108,7 +108,7 @@ describe('inspectCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき stderr に Failed to run inspect が出る', async () => {
+    it('Failed to run inspect appears in stderr when Generic Error occurs', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
@@ -122,7 +122,7 @@ describe('inspectCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to run inspect', err)
     })
 
-    it('RateLimitError(resetInfo あり) のとき process.exit が 1 で呼ばれる', async () => {
+    it('process.exit is called with 1 when RateLimitError has resetInfo', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -135,7 +135,7 @@ describe('inspectCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('message containing Resets appears when RateLimitError has resetInfo', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -150,7 +150,7 @@ describe('inspectCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき process.exit が 1 で呼ばれる', async () => {
+    it('process.exit is called with 1 when RateLimitError has no resetInfo', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -163,7 +163,7 @@ describe('inspectCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('message without Resets appears when RateLimitError has no resetInfo', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {

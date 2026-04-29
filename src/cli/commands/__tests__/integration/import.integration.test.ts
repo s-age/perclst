@@ -42,7 +42,7 @@ describe('importCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('stdout に "Imported: <id>" が出力される', async () => {
+    it('outputs "Imported: <id>" to stdout', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
@@ -53,7 +53,7 @@ describe('importCommand (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(expect.stringContaining('Imported:'))
     })
 
-    it('stdout に "  Claude session: <claude_session_id>" が出力される', async () => {
+    it('outputs "  Claude session: <claude_session_id>" to stdout', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
@@ -64,7 +64,7 @@ describe('importCommand (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(`  Claude session: ${CLAUDE_SESSION_ID}`)
     })
 
-    it('--name 指定のとき confirmIfDuplicateName が findByName コールバックを実行する', async () => {
+    it('when --name is specified, confirmIfDuplicateName executes the findByName callback', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
@@ -78,7 +78,7 @@ describe('importCommand (integration)', () => {
       expect(vi.mocked(confirmIfDuplicateName)).toHaveBeenCalled()
     })
 
-    it('--labels 指定のとき import に labels が渡される', async () => {
+    it('when --labels is specified, labels are passed to import', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
@@ -94,7 +94,7 @@ describe('importCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('UserCancelledError のとき process.exit(0) と "Cancelled." が出る', async () => {
+    it('when UserCancelledError occurs, process.exit(0) and "Cancelled." are output', async () => {
       vi.mocked(confirmIfDuplicateName).mockRejectedValue(new UserCancelledError())
       setupContainer({
         config: buildTestConfig(dir),
@@ -106,7 +106,7 @@ describe('importCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Cancelled.')
     })
 
-    it('Generic Error のとき process.exit(1) と "Failed to import session" が出る', async () => {
+    it('when Generic Error occurs, process.exit(1) and "Failed to import session" are output', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }

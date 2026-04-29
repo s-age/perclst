@@ -57,7 +57,7 @@ describe('ClaudeSessionRepository (integration)', () => {
     const sanitized = longDir.replace(/[^a-zA-Z0-9]/g, '-')
     const prefix = sanitized.slice(0, MAX_SANITIZED_LENGTH)
 
-    it('prefix マッチする既存ディレクトリがあるとき readSession が成功する', () => {
+    it('readSession succeeds when a matching existing directory with prefix exists', () => {
       const matchedDirName = `${prefix}-somehash`
       const projectDir = join(fakeHome, '.claude', 'projects', matchedDirName)
       mkdirSync(projectDir, { recursive: true })
@@ -68,7 +68,7 @@ describe('ClaudeSessionRepository (integration)', () => {
       expect(result.turns).toBeDefined()
     })
 
-    it('prefix マッチなしで sanitizeProjectDir フォールバックを経由する', () => {
+    it('goes through sanitizeProjectDir fallback when no prefix match', () => {
       mkdirSync(join(fakeHome, '.claude', 'projects', 'unrelated'), { recursive: true })
 
       expect(() => repo.readSession('sess-1', longDir)).toThrow(
@@ -80,13 +80,13 @@ describe('ClaudeSessionRepository (integration)', () => {
   // ─── findEncodedDirBySessionId ──────────────────────────────────────────
 
   describe('findEncodedDirBySessionId', () => {
-    it('projects ディレクトリが存在しないとき throw する', () => {
+    it('throws when projects directory does not exist', () => {
       expect(() => repo.findEncodedDirBySessionId('any-session')).toThrow(
         'Claude Code projects directory not found'
       )
     })
 
-    it('同一セッション ID が複数ディレクトリに存在するとき throw する', () => {
+    it('throws when the same session ID exists in multiple directories', () => {
       const projectsDir = join(fakeHome, '.claude', 'projects')
       mkdirSync(join(projectsDir, 'project-a'), { recursive: true })
       mkdirSync(join(projectsDir, 'project-b'), { recursive: true })
@@ -109,14 +109,14 @@ describe('ClaudeSessionRepository (integration)', () => {
       }
     })
 
-    it('候補パスが存在しないとき { path: null, ambiguous: false } を返す', () => {
+    it('returns { path: null, ambiguous: false } when candidate path does not exist', () => {
       expect(repo.decodeWorkingDir('-zzznonexistent')).toEqual({
         path: null,
         ambiguous: false
       })
     })
 
-    it('複数候補パスが存在するとき { path: null, ambiguous: true } を返す', () => {
+    it('returns { path: null, ambiguous: true } when multiple candidate paths exist', () => {
       ambigBase = mkdtempSync('/tmp/ptambig')
       mkdirSync(join(ambigBase, 'a', 'b'), { recursive: true })
       mkdirSync(join(ambigBase, 'a-b'), { recursive: true })
@@ -134,7 +134,7 @@ describe('ClaudeSessionRepository (integration)', () => {
   // ─── readSession ───────────────────────────────────────────────────────
 
   describe('readSession', () => {
-    it('JSONL ファイルが存在しないとき throw する', () => {
+    it('throws when JSONL file does not exist', () => {
       expect(() => repo.readSession('nonexistent', '/work')).toThrow(
         'Claude Code session file not found'
       )
@@ -144,13 +144,13 @@ describe('ClaudeSessionRepository (integration)', () => {
   // ─── scanSessionStats ─────────────────────────────────────────────────
 
   describe('scanSessionStats', () => {
-    it('JSONL ファイルが存在しないとき throw する', () => {
+    it('throws when JSONL file does not exist', () => {
       expect(() => repo.scanSessionStats('nonexistent', '/work')).toThrow(
         'Claude Code session file not found'
       )
     })
 
-    it('有効な JSONL から stats を返す', () => {
+    it('returns stats from valid JSONL', () => {
       setupJsonlFixture(fakeHome, 'sess-1', '/work', makeMinimalJsonl())
 
       const stats = repo.scanSessionStats('sess-1', '/work')
@@ -164,13 +164,13 @@ describe('ClaudeSessionRepository (integration)', () => {
   // ─── getAssistantTurns ─────────────────────────────────────────────────
 
   describe('getAssistantTurns', () => {
-    it('JSONL ファイルが存在しないとき throw する', () => {
+    it('throws when JSONL file does not exist', () => {
       expect(() => repo.getAssistantTurns('nonexistent', '/work')).toThrow(
         'Claude Code session file not found'
       )
     })
 
-    it('assistant エントリからテキストを抽出して返す', () => {
+    it('extracts and returns text from assistant entries', () => {
       setupJsonlFixture(fakeHome, 'sess-1', '/work', makeMinimalJsonl())
 
       const turns = repo.getAssistantTurns('sess-1', '/work')

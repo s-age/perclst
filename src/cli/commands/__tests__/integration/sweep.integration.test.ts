@@ -31,7 +31,7 @@ describe('sweepCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('マッチなしのとき stdout に No sessions matched が出る', async () => {
+    it('when no match, stdout prints No sessions matched', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await sweepCommand({ status: 'active', force: true })
@@ -39,7 +39,7 @@ describe('sweepCommand (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('No sessions matched the given filters')
     })
 
-    it('dryRun: true のときファイルが残る', async () => {
+    it('when dryRun: true, files remain', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true })
@@ -51,7 +51,7 @@ describe('sweepCommand (integration)', () => {
       expect(existsSync(join(dir, file))).toBe(true)
     })
 
-    it('dryRun: true のとき printSweepResult が dryRun=true で呼ばれる', async () => {
+    it('when dryRun: true, printSweepResult is called with dryRun=true', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true })
@@ -67,7 +67,7 @@ describe('sweepCommand (integration)', () => {
       )
     })
 
-    it('force: true のとき対象セッションのファイルが消える', async () => {
+    it('when force: true, target session files are deleted', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true })
@@ -79,7 +79,7 @@ describe('sweepCommand (integration)', () => {
       expect(existsSync(join(dir, file))).toBe(false)
     })
 
-    it('--status フィルタで対象ステータスのセッションのみ削除される', async () => {
+    it('--status filter deletes only sessions with matching status', async () => {
       // Create two sessions
       const startStub1 = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub1 } })
@@ -102,14 +102,14 @@ describe('sweepCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('不正な日付形式のとき process.exit(1) になる', async () => {
+    it('when invalid date format, process.exit(1) is called', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(sweepCommand({ from: 'not-a-date', force: true })).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('不正な日付形式のとき Invalid arguments が stderr に出る', async () => {
+    it('when invalid date format, stderr prints Invalid arguments', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(sweepCommand({ from: 'not-a-date', force: true })).rejects.toThrow('exit')
@@ -118,28 +118,28 @@ describe('sweepCommand (integration)', () => {
       )
     })
 
-    it('フィルタ未指定のとき process.exit(1) になる', async () => {
+    it('when no filter is specified, process.exit(1) is called', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(sweepCommand({})).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('不正な status 値のとき process.exit(1) になる', async () => {
+    it('when invalid status value, process.exit(1) is called', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(sweepCommand({ status: 'unknown', force: true })).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('--to 省略かつ --force も --dry-run もないとき process.exit(1) になる', async () => {
+    it('when --to is omitted and neither --force nor --dry-run is provided, process.exit(1) is called', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(sweepCommand({ status: 'completed' })).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき process.exit(1) と Failed to sweep sessions が出る', async () => {
+    it('when Generic Error occurs, process.exit(1) is called and Failed to sweep sessions is printed', async () => {
       // Force an error by patching the container after setup
       setupContainer({ config: buildTestConfig(dir) })
 

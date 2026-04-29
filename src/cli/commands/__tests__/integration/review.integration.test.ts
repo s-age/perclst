@@ -29,7 +29,7 @@ describe('reviewCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('targetPath ありのとき printResponse が呼ばれる', async () => {
+    it('When targetPath is provided, printResponse is called', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('review done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -38,7 +38,7 @@ describe('reviewCommand (integration)', () => {
       expect(vi.mocked(printResponse)).toHaveBeenCalled()
     })
 
-    it('targetPath なしのとき printResponse が呼ばれる（デフォルト動作）', async () => {
+    it('When targetPath is not provided, printResponse is called (default behavior)', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('review done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -60,7 +60,7 @@ describe('reviewCommand (integration)', () => {
       return stub
     }
 
-    it('Generic Error のとき process.exit が 1 で呼ばれる', async () => {
+    it('When Generic Error is thrown, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new Error('spawn failed')) }
@@ -70,7 +70,7 @@ describe('reviewCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき stderr に Failed to run review が出る', async () => {
+    it('When Generic Error is thrown, Failed to run review is printed to stderr', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
@@ -81,7 +81,7 @@ describe('reviewCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to run review', err)
     })
 
-    it('ValidationError のとき process.exit が 1 で呼ばれる', async () => {
+    it('When ValidationError is thrown, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -91,7 +91,7 @@ describe('reviewCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('ValidationError のとき stderr に Invalid arguments が出る', async () => {
+    it('When ValidationError is thrown, Invalid arguments is printed to stderr', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -101,7 +101,7 @@ describe('reviewCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: bad input')
     })
 
-    it('RateLimitError(resetInfo あり) のとき process.exit が 1 で呼ばれる', async () => {
+    it('When RateLimitError with resetInfo is thrown, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -111,7 +111,7 @@ describe('reviewCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('When RateLimitError with resetInfo is thrown, a message containing Resets is printed', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -123,7 +123,7 @@ describe('reviewCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき process.exit が 1 で呼ばれる', async () => {
+    it('When RateLimitError without resetInfo is thrown, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }
@@ -133,7 +133,7 @@ describe('reviewCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('When RateLimitError without resetInfo is thrown, a message without Resets is printed', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }

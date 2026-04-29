@@ -46,7 +46,7 @@ describe('curateCommand (integration)', () => {
   }
 
   describe('happy path', () => {
-    it('draft なしのとき "No draft entries to curate." が stdout に出る', async () => {
+    it('when no drafts exist, "No draft entries to curate." is printed to stdout', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { knowledgeReaderInfra: buildKnowledgeReaderStub(false) }
@@ -57,7 +57,7 @@ describe('curateCommand (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('No draft entries to curate.')
     })
 
-    it('draft ありのとき printResponse が呼ばれる', async () => {
+    it('when drafts exist, printResponse is called', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('curated'))
       setupContainer({
         config: buildTestConfig(dir),
@@ -71,7 +71,7 @@ describe('curateCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('Generic Error のとき process.exit が 1 で呼ばれる', async () => {
+    it('when Generic Error occurs, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -84,7 +84,7 @@ describe('curateCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき stderr に Failed to curate knowledge が出る', async () => {
+    it('when Generic Error occurs, "Failed to curate knowledge" is printed to stderr', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
@@ -98,7 +98,7 @@ describe('curateCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to curate knowledge', err)
     })
 
-    it('ValidationError のとき process.exit が 1 で呼ばれる', async () => {
+    it('when ValidationError occurs, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -111,7 +111,7 @@ describe('curateCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('ValidationError のとき stderr に Invalid arguments が出る', async () => {
+    it('when ValidationError occurs, "Invalid arguments" is printed to stderr', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -124,7 +124,7 @@ describe('curateCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: bad input')
     })
 
-    it('RateLimitError(resetInfo あり) のとき process.exit が 1 で呼ばれる', async () => {
+    it('when RateLimitError with resetInfo occurs, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -137,7 +137,7 @@ describe('curateCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('when RateLimitError with resetInfo occurs, a message containing "Resets" is printed', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -152,7 +152,7 @@ describe('curateCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき process.exit が 1 で呼ばれる', async () => {
+    it('when RateLimitError without resetInfo occurs, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -165,7 +165,7 @@ describe('curateCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('when RateLimitError without resetInfo occurs, a message without "Resets" is printed', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {

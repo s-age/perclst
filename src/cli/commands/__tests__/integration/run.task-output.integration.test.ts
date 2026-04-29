@@ -66,7 +66,7 @@ describe('runCommand task output (integration)', () => {
   })
 
   describe('printTaskResult: script', () => {
-    it('exitCode 0 のとき "[script] ok:" を含む行が stdout に出力される', async () => {
+    it('when exitCode is 0, a line containing "[script] ok:" is printed to stdout', async () => {
       const scriptPipeline = writePipelineFixture(dir, {
         tasks: [{ type: 'script', command: 'echo hi' }]
       })
@@ -84,7 +84,7 @@ describe('runCommand task output (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(expect.stringContaining('[script] ok:'))
     })
 
-    it('exitCode 非 0 のとき "[script] exit 1:" を含む行が stdout に出力される', async () => {
+    it('when exitCode is non-zero, a line containing "[script] exit 1:" is printed to stdout', async () => {
       const scriptPipeline = writePipelineFixture(dir, {
         tasks: [{ type: 'script', command: 'false' }]
       })
@@ -104,7 +104,7 @@ describe('runCommand task output (integration)', () => {
       )
     })
 
-    it('script の stdout が空でない場合は trimEnd した値が stdout に出力される', async () => {
+    it('when script stdout is non-empty, the trimEnd value is printed to stdout', async () => {
       const scriptPipeline = writePipelineFixture(dir, {
         tasks: [{ type: 'script', command: 'echo hi' }]
       })
@@ -122,7 +122,7 @@ describe('runCommand task output (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('hello world')
     })
 
-    it('script の stderr が空でない場合は trimEnd した値が stdout に出力される', async () => {
+    it('when script stderr is non-empty, the trimEnd value is printed to stdout', async () => {
       const scriptPipeline = writePipelineFixture(dir, {
         tasks: [{ type: 'script', command: 'echo hi >&2' }]
       })
@@ -142,7 +142,7 @@ describe('runCommand task output (integration)', () => {
   })
 
   describe('printTaskResult: task_start', () => {
-    it('taskType が "child" のとき "[child]:" を含む行が stdout に出力される', async () => {
+    it('when taskType is "child", a line containing "[child]:" is printed to stdout', async () => {
       const childPipelineRaw = { tasks: [{ type: 'agent', task: 'child task' }] }
       const mainRaw = { tasks: [{ type: 'child', path: 'child.yaml' }] }
       const mainPipeline = writePipelineFixture(dir, mainRaw)
@@ -162,7 +162,7 @@ describe('runCommand task output (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(expect.stringContaining('[child]:'))
     })
 
-    it('taskType が "child" かつ name あり のとき name が含まれる行が stdout に出力される', async () => {
+    it('when taskType is "child" and name is provided, a line containing the name is printed to stdout', async () => {
       const childPipelineRaw = { tasks: [{ type: 'agent', task: 'child task' }] }
       const mainRawNamed = { tasks: [{ type: 'child', name: 'MyChildTask', path: 'child.yaml' }] }
       const mainPipeline = writePipelineFixture(dir, mainRawNamed)
@@ -184,7 +184,7 @@ describe('runCommand task output (integration)', () => {
   })
 
   describe('printTaskResult: retry / pipeline_end', () => {
-    it('retry result のとき "Task" を含む行が stdout に出力されない', async () => {
+    it('when result is retry, no line containing "Task" is printed to stdout', async () => {
       const result: PipelineTaskResult = {
         kind: 'retry',
         taskPath: [],
@@ -203,7 +203,7 @@ describe('runCommand task output (integration)', () => {
       expect(vi.mocked(stdout).print).not.toHaveBeenCalledWith(expect.stringContaining('Task'))
     })
 
-    it('pipeline_end result のとき "Task" を含む行が stdout に出力されない', async () => {
+    it('when result is pipeline_end, no line containing "Task" is printed to stdout', async () => {
       const result: PipelineTaskResult = {
         kind: 'pipeline_end',
         taskPath: [],
@@ -222,7 +222,7 @@ describe('runCommand task output (integration)', () => {
   })
 
   describe('streaming', () => {
-    it('outputOnly なしのとき onStreamEvent callback が printStreamEvent を呼ぶ', async () => {
+    it('when outputOnly is not set, onStreamEvent callback calls printStreamEvent', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { gitInfra: buildGitInfraStub(), fileMoveInfra: buildFileMoveInfraStub() },

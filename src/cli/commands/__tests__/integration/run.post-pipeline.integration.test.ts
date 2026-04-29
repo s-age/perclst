@@ -47,7 +47,7 @@ describe('runCommand post-pipeline behavior (integration)', () => {
   })
 
   describe('git diff summary', () => {
-    it('headBefore と headAfter が異なるとき "Changes committed during pipeline" が stdout に出力される', async () => {
+    it('When headBefore and headAfter differ, "Changes committed during pipeline" is printed to stdout', async () => {
       const gitInfra = buildGitInfraStub({
         head: ['abc1234567', 'def4567890'],
         diffSummary: '1 file changed'
@@ -68,7 +68,7 @@ describe('runCommand post-pipeline behavior (integration)', () => {
       )
     })
 
-    it('headBefore と headAfter が同一のとき diff summary が出力されない', async () => {
+    it('When headBefore and headAfter are the same, diff summary is not printed', async () => {
       const gitInfra = buildGitInfraStub({
         head: ['abc1234567', 'abc1234567'],
         diffSummary: '1 file changed'
@@ -89,7 +89,7 @@ describe('runCommand post-pipeline behavior (integration)', () => {
       )
     })
 
-    it('headBefore が null のとき diff summary が出力されない', async () => {
+    it('When headBefore is null, diff summary is not printed', async () => {
       const gitInfra = buildGitInfraStub({
         head: [null, 'def4567890'],
         diffSummary: '1 file changed'
@@ -112,7 +112,7 @@ describe('runCommand post-pipeline behavior (integration)', () => {
   })
 
   describe('moveToDone (main pipeline)', () => {
-    it('moveToDone がパスを返すとき stdout に "Moved to:" が出力される', async () => {
+    it('When moveToDone returns a path, "Moved to:" is printed to stdout', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -127,7 +127,7 @@ describe('runCommand post-pipeline behavior (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(expect.stringContaining('Moved to:'))
     })
 
-    it('moveToDone がパスを返すとき commitMove が呼ばれる (git commit が実行される)', async () => {
+    it('When moveToDone returns a path, commitMove is called (git commit is executed)', async () => {
       const gitInfra = buildGitInfraStub()
       setupContainer({
         config: buildTestConfig(dir),
@@ -143,8 +143,8 @@ describe('runCommand post-pipeline behavior (integration)', () => {
       expect(gitInfra.execGitSync).toHaveBeenCalledWith(expect.stringContaining('commit'))
     })
 
-    it('moveToDone が null を返すとき stdout に "Moved to:" が出力されない', async () => {
-      // パスに done/ を含むディレクトリに pipeline を配置すると moveToDone は null を返す
+    it('When moveToDone returns null, "Moved to:" is not printed to stdout', async () => {
+      // When pipeline is placed in a directory containing done/ in the path, moveToDone returns null
       mkdirSync(join(dir, 'done'), { recursive: true })
       const donePath = writePipelineFixture(join(dir, 'done'), MINIMAL_PIPELINE_RAW)
       setupContainer({
@@ -163,7 +163,7 @@ describe('runCommand post-pipeline behavior (integration)', () => {
   })
 
   describe('cleanTmpDir', () => {
-    it('パイプライン完了後に cleanTmpDir が正常に呼ばれる (例外なし)', async () => {
+    it('After pipeline completes, cleanTmpDir is called successfully (no exceptions)', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: {
@@ -173,13 +173,13 @@ describe('runCommand post-pipeline behavior (integration)', () => {
         }
       })
 
-      // cleanTmpDir は .claude/tmp/ が存在しなくても例外を投げない
+      // cleanTmpDir does not throw an exception even if .claude/tmp/ does not exist
       await expect(runCommand(pipelinePath, { batch: true })).resolves.toBeUndefined()
     })
   })
 
   describe('child pipeline', () => {
-    it('onChildPipelineDone が呼ばれたとき fileMoveInfra.moveFile が child パスで呼ばれる', async () => {
+    it('When onChildPipelineDone is called, fileMoveInfra.moveFile is called with child path', async () => {
       const mainPipelineRaw = { tasks: [{ type: 'child', path: 'child.yaml' }] }
       const childPipelinePath = writePipelineFixture(dir, mainPipelineRaw)
       writeYamlFixture(join(dir, 'child.yaml'), CHILD_PIPELINE_RAW)
@@ -202,7 +202,7 @@ describe('runCommand post-pipeline behavior (integration)', () => {
       )
     })
 
-    it('child の moveToDone がパスを返すとき stdout に "Moved to:" が出力される', async () => {
+    it('When child\'s moveToDone returns a path, "Moved to:" is printed to stdout', async () => {
       const mainPipelineRaw = { tasks: [{ type: 'child', path: 'child.yaml' }] }
       const childPipelinePath = writePipelineFixture(dir, mainPipelineRaw)
       writeYamlFixture(join(dir, 'child.yaml'), CHILD_PIPELINE_RAW)

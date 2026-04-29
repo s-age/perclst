@@ -39,7 +39,7 @@ describe('chatCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('spawnInteractive が呼ばれる', async () => {
+    it('spawnInteractive is called', async () => {
       const stub = buildClaudeCodeStub([])
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -59,7 +59,7 @@ describe('chatCommand (integration)', () => {
       return stub
     }
 
-    it('UserCancelledError のとき process.exit(0) になる', async () => {
+    it('UserCancelledError results in process.exit(0)', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new UserCancelledError()) }
@@ -69,7 +69,7 @@ describe('chatCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(0)
     })
 
-    it('UserCancelledError のとき Cancelled. が stderr に出る', async () => {
+    it('UserCancelledError prints Cancelled. to stderr', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new UserCancelledError()) }
@@ -79,7 +79,7 @@ describe('chatCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Cancelled.')
     })
 
-    it('ValidationError のとき process.exit(1) になる', async () => {
+    it('ValidationError results in process.exit(1)', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -89,7 +89,7 @@ describe('chatCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('ValidationError のとき Invalid arguments が stderr に出る', async () => {
+    it('ValidationError prints Invalid arguments to stderr', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -99,7 +99,7 @@ describe('chatCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: bad input')
     })
 
-    it('Generic Error のとき process.exit(1) になる', async () => {
+    it('Generic Error results in process.exit(1)', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
@@ -110,7 +110,7 @@ describe('chatCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき Failed to start chat session が stderr に出る', async () => {
+    it('Generic Error prints Failed to start chat session to stderr', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),

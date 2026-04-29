@@ -27,12 +27,12 @@ describe('resumeCommand (integration)', () => {
       throw new Error('exit')
     })
 
-    // start でセッションを作成してから resume テストを行う
+    // Create a session with start before running resume test
     const startStub = buildClaudeCodeStub(makeResultLines('started'))
     setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
     await startCommand('initial task', { outputOnly: true })
 
-    // 作成された session ID を取得
+    // Get the created session ID
     const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
     sessionId = file.replace('.json', '')
   })
@@ -43,7 +43,7 @@ describe('resumeCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('resume 後も session ファイルが存在する', async () => {
+    it('Session file exists after resume', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('resumed'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -52,20 +52,20 @@ describe('resumeCommand (integration)', () => {
       expect(existsSync(join(dir, `${sessionId}.json`))).toBe(true)
     })
 
-    it('buildArgs に resume action が渡される', async () => {
+    it('resume action is passed to buildArgs', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('resumed'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
       await resumeCommand(sessionId, 'continue', { outputOnly: true })
 
-      // dispatch が resume action を正しく構築したことを buildArgs への入力で検証する
+      // Verify that dispatch correctly built the resume action via input to buildArgs
       const [action] = (stub.buildArgs as ReturnType<typeof vi.fn>).mock.calls[0] as [
         { type: string }
       ]
       expect(action.type).toBe('resume')
     })
 
-    it('instruction が prompt として渡される', async () => {
+    it('instruction is passed as prompt', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('resumed'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -79,7 +79,7 @@ describe('resumeCommand (integration)', () => {
       expect(prompt).toBe('do the next step')
     })
 
-    it('labels が指定されると session に書き込まれる', async () => {
+    it('When labels are specified, they are written to session', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('resumed'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -102,7 +102,7 @@ describe('resumeCommand (integration)', () => {
       return stub
     }
 
-    it('存在しない sessionId は process.exit(1) になる', async () => {
+    it('Non-existent sessionId results in process.exit(1)', async () => {
       const stub = buildClaudeCodeStub([])
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -112,7 +112,7 @@ describe('resumeCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき process.exit(1) と Failed to resume session が出る', async () => {
+    it('Generic Error results in process.exit(1) and Failed to resume session', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
@@ -124,7 +124,7 @@ describe('resumeCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to resume session', err)
     })
 
-    it('UserCancelledError のとき process.exit(0) と Cancelled が出る', async () => {
+    it('UserCancelledError results in process.exit(0) and Cancelled', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new UserCancelledError()) }
@@ -135,7 +135,7 @@ describe('resumeCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Cancelled.')
     })
 
-    it('ValidationError のとき process.exit(1) と Invalid arguments が出る', async () => {
+    it('ValidationError results in process.exit(1) and Invalid arguments', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -146,7 +146,7 @@ describe('resumeCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: bad input')
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('RateLimitError (with resetInfo) outputs message containing Resets', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -159,7 +159,7 @@ describe('resumeCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('RateLimitError (without resetInfo) outputs message without Resets', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }

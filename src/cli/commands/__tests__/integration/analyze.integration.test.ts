@@ -40,7 +40,7 @@ describe('analyzeCommand (integration)', () => {
       throw new Error('exit')
     })
 
-    // 前提セッションを startCommand で作成する
+    // Create prerequisite session using startCommand
     const startStub = buildClaudeCodeStub(makeResultLines('started'))
     setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
     await startCommand('initial task', { outputOnly: true })
@@ -57,7 +57,7 @@ describe('analyzeCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('デフォルト（text 形式）で printAnalyzeText が呼ばれる', async () => {
+    it('printAnalyzeText is called with default (text format)', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
@@ -68,7 +68,7 @@ describe('analyzeCommand (integration)', () => {
       expect(vi.mocked(printAnalyzeText)).toHaveBeenCalled()
     })
 
-    it('--format json で printAnalyzeJson が呼ばれる', async () => {
+    it('printAnalyzeJson is called with --format json', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
@@ -79,7 +79,7 @@ describe('analyzeCommand (integration)', () => {
       expect(vi.mocked(printAnalyzeJson)).toHaveBeenCalled()
     })
 
-    it('--printDetail で printAnalyzeDetail が呼ばれる', async () => {
+    it('printAnalyzeDetail is called with --printDetail', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
@@ -92,7 +92,7 @@ describe('analyzeCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('存在しない sessionId は process.exit(1) になる', async () => {
+    it('nonexistent sessionId causes process.exit(1)', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: buildClaudeCodeStub([]) }
@@ -102,7 +102,7 @@ describe('analyzeCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('ValidationError のとき process.exit(1) と Invalid arguments が出る', async () => {
+    it('on ValidationError, process.exit(1) and Invalid arguments are printed', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: buildClaudeCodeStub([]) }

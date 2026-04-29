@@ -29,7 +29,7 @@ describe('surveyCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('query 実行後に printResponse が呼ばれる', async () => {
+    it('printResponse is called after query execution', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('survey done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -38,7 +38,7 @@ describe('surveyCommand (integration)', () => {
       expect(vi.mocked(printResponse)).toHaveBeenCalled()
     })
 
-    it('--refresh フラグのとき buildArgs に Bash が含まれる allowedTools が渡される', async () => {
+    it('when --refresh flag is set, buildArgs receives allowedTools containing Bash', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('refreshed'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -48,7 +48,7 @@ describe('surveyCommand (integration)', () => {
       expect(action.allowedTools).toContain('Bash')
     })
 
-    it('--refresh なし（デフォルト）のとき buildArgs の allowedTools に Bash が含まれない', async () => {
+    it('when no --refresh flag (default), buildArgs allowedTools does not contain Bash', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('survey done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -71,14 +71,14 @@ describe('surveyCommand (integration)', () => {
       return stub
     }
 
-    it('query も --refresh もないとき process.exit(1) になる', async () => {
+    it('when neither query nor --refresh is provided, process.exit(1) is called', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(surveyCommand(undefined, {})).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('query も --refresh もないとき A query is required メッセージが出る', async () => {
+    it('when neither query nor --refresh is provided, "A query is required" message is displayed', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(surveyCommand(undefined, {})).rejects.toThrow('exit')
@@ -87,7 +87,7 @@ describe('surveyCommand (integration)', () => {
       )
     })
 
-    it('ValidationError のとき process.exit(1) になる', async () => {
+    it('when ValidationError is thrown, process.exit(1) is called', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -99,7 +99,7 @@ describe('surveyCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('ValidationError のとき Invalid arguments メッセージが出る', async () => {
+    it('when ValidationError is thrown, "Invalid arguments" message is displayed', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -111,7 +111,7 @@ describe('surveyCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: bad input')
     })
 
-    it('RateLimitError(resetInfo あり) のとき process.exit(1) になる', async () => {
+    it('when RateLimitError with resetInfo is thrown, process.exit(1) is called', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -123,7 +123,7 @@ describe('surveyCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('when RateLimitError with resetInfo is thrown, message containing "Resets" is displayed', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -137,7 +137,7 @@ describe('surveyCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき process.exit(1) になる', async () => {
+    it('when RateLimitError without resetInfo is thrown, process.exit(1) is called', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }
@@ -149,7 +149,7 @@ describe('surveyCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('when RateLimitError without resetInfo is thrown, message without "Resets" is displayed', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }
@@ -163,7 +163,7 @@ describe('surveyCommand (integration)', () => {
       )
     })
 
-    it('Generic Error のとき process.exit(1) になる', async () => {
+    it('when Generic Error is thrown, process.exit(1) is called', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
@@ -176,7 +176,7 @@ describe('surveyCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき Failed to run survey メッセージが出る', async () => {
+    it('when Generic Error is thrown, "Failed to run survey" message is displayed', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),

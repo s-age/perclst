@@ -6,7 +6,7 @@ import { FsInfra } from '@src/infrastructures/fs'
 import type { Infras } from '@src/core/di/setupInfrastructures'
 export { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
 
-/** 最小 JSONL fixture — RawOutput.content = text になる 2 行 */
+/** Minimal JSONL fixture — 2 lines where RawOutput.content = text */
 export function makeResultLines(text: string): string[] {
   return [
     JSON.stringify({
@@ -25,7 +25,7 @@ export function makeResultLines(text: string): string[] {
   ]
 }
 
-/** tool_use → tool_result → text → result の 4 行 fixture */
+/** 4 line fixture with tool_use → tool_result → text → result */
 export function makeToolResultLines(
   tool: { id: string; name: string; input: unknown; result: string },
   finalText: string
@@ -51,9 +51,9 @@ export function makeToolResultLines(
 }
 
 /**
- * ClaudeCodeInfra のスタブ。
- * `runClaude` だけ差し替え、残りは最小 no-op。
- * vi.fn() でラップされているため呼び出し引数を検証できる。
+ * Stub for ClaudeCodeInfra.
+ * Only replaces `runClaude`, rest are minimal no-ops.
+ * Wrapped with vi.fn() so call arguments can be verified.
  */
 export function buildClaudeCodeStub(lines: string[]): Infras['claudeCodeInfra'] {
   const runClaude = vi.fn(async function* (): AsyncGenerator<string> {
@@ -71,8 +71,8 @@ export function buildClaudeCodeStub(lines: string[]): Infras['claudeCodeInfra'] 
 }
 
 /**
- * KnowledgeReaderInfra のスタブ。
- * hasDraft=true のとき draft ディレクトリにファイルがあるように振る舞う。
+ * Stub for KnowledgeReaderInfra.
+ * When hasDraft=true, behaves as if files exist in the draft directory.
  */
 export function buildKnowledgeReaderStub(hasDraft: boolean): Infras['knowledgeReaderInfra'] {
   return {
@@ -86,10 +86,10 @@ export function buildKnowledgeReaderStub(hasDraft: boolean): Infras['knowledgeRe
 }
 
 /**
- * GitInfra のスタブ。
- * execGitSync の引数パターンに応じて返す値を切り替える。
- * GitRepository / PipelineFileDomain / PipelineFileService の実コードを通すため、
- * service レイヤーではなく infra レイヤーでスタブする。
+ * Stub for GitInfra.
+ * Switches return values based on execGitSync argument patterns.
+ * Stubbed at the infra layer (not service layer) to let real code in
+ * GitRepository / PipelineFileDomain / PipelineFileService pass through.
  */
 export function buildGitInfraStub(opts?: {
   diff?: string | null

@@ -64,7 +64,7 @@ describe('executeTsTestStrategist (integration)', () => {
   })
 
   describe('findTestFile traversal', () => {
-    it('.git ルートまで遡って __tests__ ディレクトリからテストファイルを発見する', async () => {
+    it('traverses up to .git root and finds test file from __tests__ directory', async () => {
       const srcDir = join(dir, 'src', 'lib')
       mkdirSync(srcDir, { recursive: true })
       mkdirSync(join(dir, '.git'))
@@ -89,7 +89,7 @@ describe('executeTsTestStrategist (integration)', () => {
   })
 
   describe('extractTestFunctions', () => {
-    it('隣接テストファイルがあるとき既存テスト名が strategies に反映される', async () => {
+    it('reflects existing test names in strategies when adjacent test file exists', async () => {
       const targetPath = join(dir, 'util.ts')
       const testDir = join(dir, '__tests__')
       mkdirSync(testDir, { recursive: true })
@@ -109,7 +109,7 @@ describe('executeTsTestStrategist (integration)', () => {
   })
 
   describe('readPackageDeps', () => {
-    it('package.json に vitest があるとき framework が vitest として検出される', async () => {
+    it('detects framework as vitest when vitest is in package.json', async () => {
       writeFileSync(
         join(dir, 'package.json'),
         JSON.stringify({ devDependencies: { vitest: '^1.0.0' } })
@@ -123,7 +123,7 @@ describe('executeTsTestStrategist (integration)', () => {
       expect(parsed.strategies.length).toBeGreaterThan(0)
     })
 
-    it('package.json が存在しないとき framework が jest にフォールバックする', async () => {
+    it('falls back to jest framework when package.json does not exist', async () => {
       const subDir = join(dir, 'deep', 'nested')
       mkdirSync(subDir, { recursive: true })
       const targetPath = join(subDir, 'func.ts')

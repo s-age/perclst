@@ -24,7 +24,7 @@ describe('forkCommand (integration)', () => {
       throw new Error('exit')
     })
 
-    // fork は既存セッションを必要とするため startCommand で先に作成する
+    // fork requires an existing session, so create one first with startCommand
     const startStub = buildClaudeCodeStub(makeResultLines('started'))
     setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
     await startCommand('initial task', { outputOnly: true })
@@ -39,7 +39,7 @@ describe('forkCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('フォーク後に新セッション JSON ファイルが増える（計 2 ファイル）', async () => {
+    it('creates a new session JSON file after fork (total 2 files)', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('forked'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -48,7 +48,7 @@ describe('forkCommand (integration)', () => {
       expect(readdirSync(dir).filter((f) => f.endsWith('.json'))).toHaveLength(2)
     })
 
-    it('buildArgs に fork action が渡される', async () => {
+    it('passes fork action to buildArgs', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('forked'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -60,7 +60,7 @@ describe('forkCommand (integration)', () => {
       expect(action.type).toBe('fork')
     })
 
-    it('prompt が runClaude に渡される', async () => {
+    it('passes prompt to runClaude', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('forked'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -74,7 +74,7 @@ describe('forkCommand (integration)', () => {
       expect(prompt).toBe('forked task')
     })
 
-    it('stdout.print に Session forked: が含まれる', async () => {
+    it('stdout.print contains "Session forked:"', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('forked'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -98,7 +98,7 @@ describe('forkCommand (integration)', () => {
       return stub
     }
 
-    it('ValidationError のとき process.exit(1) と Invalid arguments が出る', async () => {
+    it('on ValidationError, calls process.exit(1) and outputs "Invalid arguments"', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -109,7 +109,7 @@ describe('forkCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: bad input')
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('on RateLimitError with resetInfo, outputs message containing "Resets"', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -122,7 +122,7 @@ describe('forkCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('on RateLimitError without resetInfo, outputs message without "Resets"', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }
@@ -135,7 +135,7 @@ describe('forkCommand (integration)', () => {
       )
     })
 
-    it('Generic Error のとき process.exit(1) と Failed to fork session が出る', async () => {
+    it('on generic Error, calls process.exit(1) and outputs "Failed to fork session"', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),

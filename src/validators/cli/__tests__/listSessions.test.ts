@@ -76,7 +76,7 @@ describe('parseListSessions', () => {
   })
 
   it('accepts input objects with unicode characters', () => {
-    const unicodeLike = '测试数据🎉∑∫√'
+    const unicodeLike = 'test data 🎉∑∫√'
     const mockResult: ListSessionsInput = { like: unicodeLike }
     vi.mocked(schemaModule.safeParse).mockReturnValue(mockResult)
 

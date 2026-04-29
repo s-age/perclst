@@ -49,7 +49,7 @@ describe('executeTsChecker (integration)', () => {
     })
 
     describe('output parsing', () => {
-      it('error/warning 行がファイルパス付きで分類される', async () => {
+      it('error/warning lines are classified with file paths', async () => {
         const runner = buildCommandRunnerInfraStub({
           exitCode: 1,
           stdout: [
@@ -69,7 +69,7 @@ describe('executeTsChecker (integration)', () => {
         expect(parsed.lint.warnings[0]).toContain('/src/file.ts')
       })
 
-      it('ERROR_IGNORE_PATTERNS にマッチする行はフィルタされる', async () => {
+      it('lines matching ERROR_IGNORE_PATTERNS are filtered', async () => {
         const runner = buildCommandRunnerInfraStub({
           exitCode: 1,
           stdout: 'Error: rollup plugin failed\n  1:1  error  Real error  rule'
@@ -85,7 +85,7 @@ describe('executeTsChecker (integration)', () => {
     })
 
     describe('project_root fallback', () => {
-      it('project_root 省略時に findProjectRoot が使われる', async () => {
+      it('findProjectRoot is used when project_root is omitted', async () => {
         setupContainer({
           config: buildTestConfig(dir),
           infras: { commandRunnerInfra: commandRunner }

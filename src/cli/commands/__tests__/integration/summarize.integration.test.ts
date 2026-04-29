@@ -43,7 +43,7 @@ describe('summarizeCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('セッションなし → stdout.print("No sessions found") が呼ばれる', async () => {
+    it('No sessions: stdout.print("No sessions found") is called', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await summarizeCommand({})
@@ -51,7 +51,7 @@ describe('summarizeCommand (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('No sessions found')
     })
 
-    it('text 形式で printSummarizeTable が呼ばれる', async () => {
+    it('printSummarizeTable is called in text format', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true })
@@ -69,7 +69,7 @@ describe('summarizeCommand (integration)', () => {
       expect(vi.mocked(printSummarizeTable)).toHaveBeenCalled()
     })
 
-    it('--format json で printSummarizeJson が呼ばれる', async () => {
+    it('printSummarizeJson is called with --format json', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await summarizeCommand({ format: 'json' })
@@ -77,7 +77,7 @@ describe('summarizeCommand (integration)', () => {
       expect(vi.mocked(printSummarizeJson)).toHaveBeenCalled()
     })
 
-    it('--label フィルタで一致するセッションが printSummarizeTable に渡る', async () => {
+    it('matched sessions pass to printSummarizeTable with --label filter', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true, labels: ['keep'] })
@@ -95,7 +95,7 @@ describe('summarizeCommand (integration)', () => {
       expect(vi.mocked(printSummarizeTable)).toHaveBeenCalled()
     })
 
-    it('--like フィルタで名前一致するセッションが printSummarizeTable に渡る', async () => {
+    it('matched sessions pass to printSummarizeTable with --like filter', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true, name: 'my-special-session' })
@@ -115,7 +115,7 @@ describe('summarizeCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('ValidationError のとき process.exit(1) と Failed to summarize sessions が出る', async () => {
+    it('ValidationError: process.exit(1) and Failed to summarize sessions output', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(summarizeCommand({ format: 'invalid' })).rejects.toThrow('exit')

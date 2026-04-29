@@ -61,7 +61,7 @@ describe('executeAskPermission (integration)', () => {
   })
 
   describe('null TTY', () => {
-    it('openTty が null を返すとき deny + No terminal メッセージが返る', async () => {
+    it('returns deny + No terminal message when openTty returns null', async () => {
       const ttyStub: TtyInfra = {
         openTty: vi.fn().mockReturnValue(null),
         writeTty: vi.fn(),
@@ -90,7 +90,7 @@ describe('executeAskPermission (integration)', () => {
       rmSync(`${pipePath}.res`, { force: true })
     })
 
-    it('PERCLST_PERMISSION_PIPE 設定時に IPC 経由で応答を受け取る', async () => {
+    it('receives response via IPC when PERCLST_PERMISSION_PIPE is set', async () => {
       process.env.PERCLST_PERMISSION_PIPE = pipePath
       setupContainer({ config: buildTestConfig(dir) })
 
@@ -110,7 +110,7 @@ describe('executeAskPermission (integration)', () => {
       expect(parsed.behavior).toBe('allow')
     })
 
-    it('IPC 応答が不正 JSON のとき deny + parse error メッセージが返る', async () => {
+    it('returns deny + parse error message when IPC response is invalid JSON', async () => {
       process.env.PERCLST_PERMISSION_PIPE = pipePath
       setupContainer({ config: buildTestConfig(dir) })
 
@@ -130,7 +130,7 @@ describe('executeAskPermission (integration)', () => {
   })
 
   describe('pollRequest / respond', () => {
-    it('PERCLST_PERMISSION_PIPE 未設定のとき pollRequest は null を返す', () => {
+    it('pollRequest returns null when PERCLST_PERMISSION_PIPE is not set', () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       const service = container.resolve<PermissionPipeService>(TOKENS.PermissionPipeService)
@@ -138,7 +138,7 @@ describe('executeAskPermission (integration)', () => {
       expect(service.pollRequest()).toBeNull()
     })
 
-    it('req ファイルが存在するとき pollRequest はリクエストを返す', () => {
+    it('pollRequest returns the request when req file exists', () => {
       const pipePath = join(dir, 'perm')
       process.env.PERCLST_PERMISSION_PIPE = pipePath
       writeFileSync(`${pipePath}.req`, JSON.stringify({ tool_name: 'Bash', input: {} }))
@@ -150,7 +150,7 @@ describe('executeAskPermission (integration)', () => {
       expect(req).toEqual({ tool_name: 'Bash', input: {} })
     })
 
-    it('respond は res ファイルに結果を書き込む', () => {
+    it('respond writes result to res file', () => {
       const pipePath = join(dir, 'perm')
       process.env.PERCLST_PERMISSION_PIPE = pipePath
       setupContainer({ config: buildTestConfig(dir) })

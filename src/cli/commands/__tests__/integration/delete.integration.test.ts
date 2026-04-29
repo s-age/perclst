@@ -38,7 +38,7 @@ describe('deleteCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('session JSON ファイルが削除される', async () => {
+    it('session JSON file is deleted', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await deleteCommand(sessionId)
@@ -46,7 +46,7 @@ describe('deleteCommand (integration)', () => {
       expect(existsSync(join(dir, `${sessionId}.json`))).toBe(false)
     })
 
-    it('stdout に Session deleted: <id> が出力される', async () => {
+    it('Session deleted: <id> is printed to stdout', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await deleteCommand(sessionId)
@@ -56,7 +56,7 @@ describe('deleteCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('存在しない sessionId は process.exit(1) になる', async () => {
+    it('nonexistent sessionId results in process.exit(1)', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(deleteCommand('nonexistent-id')).rejects.toThrow('exit')

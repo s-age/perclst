@@ -56,7 +56,7 @@ describe('ClaudeSessionRepository', () => {
     const sanitized = longDir.replace(/[^a-zA-Z0-9]/g, '-')
     const prefix = sanitized.slice(0, 200)
 
-    it('sanitized path が 200 文字超のとき listDirEntries で prefix マッチを試みる', () => {
+    it('when sanitized path exceeds 200 characters, attempts prefix matching with listDirEntries', () => {
       const matchedDirName = `${prefix}-abc123`
       vi.mocked(mockFs.fileExists).mockImplementation((p: string) => {
         if (p === '/mock-home/.claude/projects') return true
@@ -70,7 +70,7 @@ describe('ClaudeSessionRepository', () => {
       expect(() => repo.validateSessionAtDir('session-1', longDir)).not.toThrow()
     })
 
-    it('prefix マッチする既存ディレクトリがないとき sanitizeProjectDir でハッシュ付き名を生成する', () => {
+    it('when no existing directory matches prefix, generates name with hash in sanitizeProjectDir', () => {
       vi.mocked(mockFs.fileExists).mockImplementation((p: string) => {
         if (p === '/mock-home/.claude/projects') return true
         return p.includes('.jsonl')
@@ -82,7 +82,7 @@ describe('ClaudeSessionRepository', () => {
       expect(() => repo.validateSessionAtDir('session-1', longDir)).not.toThrow()
     })
 
-    it('projects ディレクトリが存在しないとき sanitizeProjectDir へフォールバックする', () => {
+    it('when projects directory does not exist, falls back to sanitizeProjectDir', () => {
       vi.mocked(mockFs.fileExists).mockImplementation((p: string) => {
         if (p === '/mock-home/.claude/projects') return false
         return p.includes('.jsonl')
