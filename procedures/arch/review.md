@@ -46,10 +46,13 @@ flowchart TD
     CheckSecurity --> CheckPerformance["--- CHECK 6: Performance ---\n\nUse ts_analyze symbols[] to locate async methods and loop constructs.\nRead only files where a suspected pattern needs line numbers to confirm.\n\nN+1 — highest priority:\n  VIOLATION if: a for..of or forEach loop body contains await on a repository,\n  domain, infrastructure, or MCP tool call\n  Pattern: sequential I/O per item where Promise.all([...items.map(...)]) would suffice\n  Includes: session reads per item, ts_analyze calls in series, process spawns in a loop\n\nSync I/O on hot path:\n  VIOLATION if: readFileSync/writeFileSync/execSync appears outside src/core/\n  or module-load-time initialisation\n\nRepeated resource fetch:\n  VIOLATION if: the same repository or infrastructure call appears 2+ times\n  in the same method body without caching the result in a local variable\n\nUnbounded iteration:\n  VIOLATION if: a loop iterates a collection with no size guard, limit, or pagination"]
 
     CheckPerformance --> Tally{Any violations\nfound?}
-    Tally -- No --> ReportClean["Write the clean variant of the report\nFormat: procedures/arch/template.md"]
+    Tally -- No --> ReportClean["Write the clean variant of the report\nFormat: procedures/arch/template.md\nDo NOT write ng_output_path — clean means no file"]
     Tally -- Yes --> BuildReport["Write the violation report\nFormat: procedures/arch/template.md\nGroup by section: Architecture / Security / Performance\nInclude file_path+line, check type, description, recommendation for each"]
 
-    ReportClean --> Done([Print report to stdout and done])
+    ReportClean --> CleanupNG{ng_output_path\nprovided AND\nfile exists?}
+    CleanupNG -- Yes --> DeleteNG["rm ng_output_path\n(stale file from a previous run)"]
+    CleanupNG -- No --> Done
+    DeleteNG --> Done([Print report to stdout and done])
     BuildReport --> WriteOut{ng_output_path\nprovided?}
     WriteOut -- No --> Done
     WriteOut -- Yes --> WriteFile["mkdir -p $(dirname ng_output_path)\nWrite full violation report to ng_output_path"]

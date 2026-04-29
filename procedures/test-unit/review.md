@@ -37,8 +37,11 @@ flowchart TD
     AuditIsolation --> Summarize["Summarize findings\n\nFor each issue found, report:\n  File + line range\n  Severity: critical | major | minor\n  What is wrong\n  Concrete fix suggestion\n\nIf no issues: confirm coverage is complete"]
 
     Summarize --> HasNG{Any critical or\nmajor issues?}
-    HasNG -- No --> NoWrite["Do NOT write ng_output_path\n(even if provided)"]
-    NoWrite --> Done([Done])
+    HasNG -- No --> NoWrite["Do NOT write ng_output_path — clean means no file"]
+    NoWrite --> CleanupNG{ng_output_path\nprovided AND\nfile exists?}
+    CleanupNG -- Yes --> DeleteNG["rm ng_output_path\n(stale file from a previous run)"]
+    CleanupNG -- No --> Done
+    DeleteNG --> Done([Done])
     HasNG -- Yes --> WriteNG{ng_output_path\nprovided?}
     WriteNG -- No --> Done
     WriteNG -- Yes --> WriteFile["mkdir -p \$(dirname ng_output_path)\nWrite summary of all critical/major issues to ng_output_path\n(plain text — this becomes the implementor's retry instruction)"]
