@@ -4,7 +4,7 @@ import type { FsInfra } from '@src/infrastructures/fs'
 import type { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import type { TestFileDiscoveryInfra } from '@src/infrastructures/testFileDiscovery'
 
-type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText' | 'readJson'>
+type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText'>
 
 describe('canonicalTestFilePath', () => {
   let repo: TestStrategyRepository
@@ -12,7 +12,7 @@ describe('canonicalTestFilePath', () => {
   beforeEach(() => {
     repo = new TestStrategyRepository(
       {} as unknown as TsAnalyzer,
-      { fileExists: vi.fn(), readText: vi.fn(), readJson: vi.fn() } as unknown as TestStrategyFs,
+      { fileExists: vi.fn(), readText: vi.fn() } as unknown as TestStrategyFs,
       {} as unknown as TestFileDiscoveryInfra
     )
   })
@@ -53,8 +53,7 @@ describe('TestStrategyRepository', () => {
     vi.clearAllMocks()
     mockFs = {
       fileExists: vi.fn(),
-      readText: vi.fn(),
-      readJson: vi.fn()
+      readText: vi.fn()
     } as unknown as TestStrategyFs
     mockFileDiscovery = {
       searchDir: vi.fn()

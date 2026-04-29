@@ -20,7 +20,7 @@ vi.mock('@src/constants/config', () => ({
 function createMockFs(overrides?: Partial<Record<keyof FsInfra, unknown>>): FsInfra {
   return {
     fileExists: vi.fn().mockReturnValue(false),
-    readJson: vi.fn(),
+    readText: vi.fn(),
     homeDir: vi.fn().mockReturnValue('/home/user'),
     currentWorkingDir: vi.fn().mockReturnValue('/project'),
     ...overrides
@@ -45,7 +45,7 @@ describe('loadConfig', () => {
   it('merges global config over DEFAULT_CONFIG when only global file exists', () => {
     const fs = createMockFs({
       fileExists: vi.fn().mockImplementation((p: string) => p.startsWith('/home/user')),
-      readJson: vi.fn().mockReturnValue({ model: 'claude-opus-4-5' })
+      readText: vi.fn().mockReturnValue(JSON.stringify({ model: 'claude-opus-4-5' }))
     })
     const result = loadConfig(fs)
     expect(result.model).toBe('claude-opus-4-5')
@@ -54,7 +54,7 @@ describe('loadConfig', () => {
   it('merges local config over DEFAULT_CONFIG when only local file exists', () => {
     const fs = createMockFs({
       fileExists: vi.fn().mockImplementation((p: string) => !p.startsWith('/home/user')),
-      readJson: vi.fn().mockReturnValue({ model: 'claude-haiku-4-5' })
+      readText: vi.fn().mockReturnValue(JSON.stringify({ model: 'claude-haiku-4-5' }))
     })
     const result = loadConfig(fs)
     expect(result.model).toBe('claude-haiku-4-5')
@@ -63,10 +63,10 @@ describe('loadConfig', () => {
   it('local config takes precedence over global config when both files exist', () => {
     const fs = createMockFs({
       fileExists: vi.fn().mockReturnValue(true),
-      readJson: vi
+      readText: vi
         .fn()
-        .mockReturnValueOnce({ model: 'claude-haiku-4-5' }) // local (1st call)
-        .mockReturnValueOnce({ model: 'claude-opus-4-5' }) // global (2nd call)
+        .mockReturnValueOnce(JSON.stringify({ model: 'claude-haiku-4-5' })) // local (1st call)
+        .mockReturnValueOnce(JSON.stringify({ model: 'claude-opus-4-5' })) // global (2nd call)
     })
     const result = loadConfig(fs)
     expect(result.model).toBe('claude-haiku-4-5')
@@ -75,16 +75,16 @@ describe('loadConfig', () => {
   it('preserves DEFAULT_CONFIG fields not overridden by loaded config', () => {
     const fs = createMockFs({
       fileExists: vi.fn().mockImplementation((p: string) => !p.startsWith('/home/user')),
-      readJson: vi.fn().mockReturnValue({ model: 'claude-haiku-4-5' })
+      readText: vi.fn().mockReturnValue(JSON.stringify({ model: 'claude-haiku-4-5' }))
     })
     const result = loadConfig(fs)
     expect(result.sessions_dir).toBe(DEFAULT_CONFIG.sessions_dir)
   })
 
-  it('falls back to DEFAULT_CONFIG when local readJson throws', () => {
+  it('falls back to DEFAULT_CONFIG when readText throws', () => {
     const fs = createMockFs({
       fileExists: vi.fn().mockImplementation((p: string) => !p.startsWith('/home/user')),
-      readJson: vi.fn().mockImplementation(() => {
+      readText: vi.fn().mockImplementation(() => {
         throw new Error('parse error')
       })
     })
@@ -92,10 +92,10 @@ describe('loadConfig', () => {
     expect(result.model).toBe(DEFAULT_CONFIG.model)
   })
 
-  it('falls back to DEFAULT_CONFIG when global readJson throws', () => {
+  it('falls back to DEFAULT_CONFIG when global readText throws', () => {
     const fs = createMockFs({
       fileExists: vi.fn().mockImplementation((p: string) => p.startsWith('/home/user')),
-      readJson: vi.fn().mockImplementation(() => {
+      readText: vi.fn().mockImplementation(() => {
         throw new Error('bad json')
       })
     })
@@ -103,10 +103,10 @@ describe('loadConfig', () => {
     expect(result.model).toBe(DEFAULT_CONFIG.model)
   })
 
-  it('emits a console.warn when readJson throws', () => {
+  it('emits a console.warn when readText throws', () => {
     const fs = createMockFs({
       fileExists: vi.fn().mockImplementation((p: string) => !p.startsWith('/home/user')),
-      readJson: vi.fn().mockImplementation(() => {
+      readText: vi.fn().mockImplementation(() => {
         throw new Error('parse error')
       })
     })

@@ -6,7 +6,7 @@ import type { FsInfra } from '@src/infrastructures/fs'
 function loadFromPath(fs: FsInfra, path: string): Partial<Config> {
   if (!fs.fileExists(path)) return {}
   try {
-    return fs.readJson<Partial<Config>>(path)
+    return JSON.parse(fs.readText(path)) as Partial<Config>
   } catch (error) {
     console.warn(`Failed to load config from ${path}:`, error)
     return {}

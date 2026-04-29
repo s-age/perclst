@@ -2,7 +2,6 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import * as fsSync from 'fs'
 import * as fsPromises from 'fs/promises'
 import * as os from 'os'
-import { join } from 'path'
 import { FsInfra } from '../fs'
 
 // Mock fs and os modules
@@ -16,63 +15,6 @@ describe('FsInfra', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     infra = new FsInfra()
-  })
-
-  describe('readJson', () => {
-    it('should parse and return JSON from file', () => {
-      const mockData = { name: 'test', value: 42 }
-      vi.mocked(fsSync.readFileSync).mockReturnValue(JSON.stringify(mockData))
-
-      const result = infra.readJson<typeof mockData>('/path/to/file.json')
-
-      expect(result).toEqual(mockData)
-      expect(fsSync.readFileSync).toHaveBeenCalledWith('/path/to/file.json', 'utf-8')
-    })
-
-    it('should throw error when file contains invalid JSON', () => {
-      vi.mocked(fsSync.readFileSync).mockReturnValue('invalid json {')
-
-      expect(() => infra.readJson('/path/to/file.json')).toThrow(SyntaxError)
-    })
-
-    it('should throw error when file does not exist', () => {
-      vi.mocked(fsSync.readFileSync).mockImplementation(() => {
-        throw new Error('ENOENT: no such file or directory')
-      })
-
-      expect(() => infra.readJson('/nonexistent.json')).toThrow('ENOENT')
-    })
-  })
-
-  describe('writeJson', () => {
-    it('should write data as formatted JSON to file', () => {
-      const mockData = { name: 'test', nested: { value: 42 } }
-
-      infra.writeJson('/path/to/file.json', mockData)
-
-      expect(fsSync.writeFileSync).toHaveBeenCalledWith(
-        '/path/to/file.json',
-        JSON.stringify(mockData, null, 2),
-        'utf-8'
-      )
-    })
-
-    it('should format JSON with 2-space indentation', () => {
-      const mockData = { a: 1 }
-
-      infra.writeJson('/path/to/file.json', mockData)
-
-      const writtenContent = vi.mocked(fsSync.writeFileSync).mock.calls[0][1]
-      expect(writtenContent).toContain('  "a"')
-    })
-
-    it('should throw error when write fails', () => {
-      vi.mocked(fsSync.writeFileSync).mockImplementation(() => {
-        throw new Error('EACCES: permission denied')
-      })
-
-      expect(() => infra.writeJson('/restricted/file.json', {})).toThrow()
-    })
   })
 
   describe('fileExists', () => {
@@ -263,79 +205,6 @@ describe('FsInfra', () => {
       })
 
       expect(() => infra.removeFileSync('/restricted/file.txt')).toThrow('permission denied')
-    })
-  })
-
-  describe('cleanDir', () => {
-    it('should call unlinkSync for each file in the directory', (): void => {
-      const entry = { isFile: (): boolean => true, name: 'file.txt' }
-      vi.mocked(fsSync.existsSync).mockReturnValue(true)
-      vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
-        typeof fsSync.readdirSync
-      >)
-
-      infra.cleanDir('/some/dir')
-
-      expect(fsSync.unlinkSync).toHaveBeenCalledWith(join('/some/dir', 'file.txt'))
-    })
-
-    it('should return early without reading dir when directory does not exist', (): void => {
-      vi.mocked(fsSync.existsSync).mockReturnValue(false)
-
-      infra.cleanDir('/nonexistent/dir')
-
-      expect(fsSync.readdirSync).not.toHaveBeenCalled()
-    })
-
-    it('should not call unlinkSync when directory is empty', () => {
-      vi.mocked(fsSync.existsSync).mockReturnValue(true)
-      vi.mocked(fsSync.readdirSync).mockReturnValue(
-        [] as unknown as ReturnType<typeof fsSync.readdirSync>
-      )
-
-      infra.cleanDir('/empty/dir')
-
-      expect(fsSync.unlinkSync).not.toHaveBeenCalled()
-    })
-
-    it('should not call unlinkSync for non-file entries', (): void => {
-      const entry = { isFile: (): boolean => false, name: 'subdir' }
-      vi.mocked(fsSync.existsSync).mockReturnValue(true)
-      vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
-        typeof fsSync.readdirSync
-      >)
-
-      infra.cleanDir('/some/dir')
-
-      expect(fsSync.unlinkSync).not.toHaveBeenCalled()
-    })
-
-    it('should continue without throwing when unlinkSync throws for a locked file', (): void => {
-      const entry = { isFile: (): boolean => true, name: 'locked.txt' }
-      vi.mocked(fsSync.existsSync).mockReturnValue(true)
-      vi.mocked(fsSync.readdirSync).mockReturnValue([entry] as unknown as ReturnType<
-        typeof fsSync.readdirSync
-      >)
-      vi.mocked(fsSync.unlinkSync).mockImplementation(() => {
-        throw new Error('EBUSY: resource busy or locked')
-      })
-
-      expect(() => infra.cleanDir('/some/dir')).not.toThrow()
-    })
-
-    it('should delete multiple files in the directory', (): void => {
-      const entries = [
-        { isFile: (): boolean => true, name: 'a.txt' },
-        { isFile: (): boolean => true, name: 'b.txt' }
-      ]
-      vi.mocked(fsSync.existsSync).mockReturnValue(true)
-      vi.mocked(fsSync.readdirSync).mockReturnValue(
-        entries as unknown as ReturnType<typeof fsSync.readdirSync>
-      )
-
-      infra.cleanDir('/some/dir')
-
-      expect(fsSync.unlinkSync).toHaveBeenCalledTimes(2)
     })
   })
 

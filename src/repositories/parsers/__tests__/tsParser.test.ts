@@ -4,7 +4,7 @@ import type { FsInfra } from '@src/infrastructures/fs'
 import type { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import type { TestFileDiscoveryInfra } from '@src/infrastructures/testFileDiscovery'
 
-type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText' | 'readJson'>
+type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText'>
 
 describe('TestStrategyRepository', () => {
   let repo: TestStrategyRepository
@@ -14,8 +14,7 @@ describe('TestStrategyRepository', () => {
     vi.clearAllMocks()
     mockFs = {
       fileExists: vi.fn(),
-      readText: vi.fn(),
-      readJson: vi.fn()
+      readText: vi.fn()
     } as unknown as TestStrategyFs
     repo = new TestStrategyRepository(
       {} as unknown as TsAnalyzer,
@@ -124,24 +123,30 @@ describe('TestStrategyRepository', () => {
   describe('readPackageDeps', () => {
     it('returns merged dependencies from package.json', () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      vi.mocked(mockFs.readJson).mockReturnValue({ dependencies: { vitest: '^1.0.0' } })
+      vi.mocked(mockFs.readText).mockReturnValue(
+        JSON.stringify({ dependencies: { vitest: '^1.0.0' } })
+      )
 
       expect(repo.readPackageDeps('/project/src/file.ts')).toEqual({ vitest: '^1.0.0' })
     })
 
     it('returns devDependencies when only devDependencies present', () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      vi.mocked(mockFs.readJson).mockReturnValue({ devDependencies: { vitest: '^1.0.0' } })
+      vi.mocked(mockFs.readText).mockReturnValue(
+        JSON.stringify({ devDependencies: { vitest: '^1.0.0' } })
+      )
 
       expect(repo.readPackageDeps('/project/src/file.ts')).toEqual({ vitest: '^1.0.0' })
     })
 
     it('merges dependencies and devDependencies', () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      vi.mocked(mockFs.readJson).mockReturnValue({
-        dependencies: { react: '^18.0.0' },
-        devDependencies: { vitest: '^1.0.0', jest: '^29.0.0' }
-      })
+      vi.mocked(mockFs.readText).mockReturnValue(
+        JSON.stringify({
+          dependencies: { react: '^18.0.0' },
+          devDependencies: { vitest: '^1.0.0', jest: '^29.0.0' }
+        })
+      )
 
       expect(repo.readPackageDeps('/project/src/file.ts')).toEqual({
         react: '^18.0.0',
@@ -160,7 +165,9 @@ describe('TestStrategyRepository', () => {
       vi.mocked(mockFs.fileExists)
         .mockReturnValueOnce(false) // nested/package.json
         .mockReturnValueOnce(true) // parent/package.json
-      vi.mocked(mockFs.readJson).mockReturnValue({ devDependencies: { vitest: '^1.0.0' } })
+      vi.mocked(mockFs.readText).mockReturnValue(
+        JSON.stringify({ devDependencies: { vitest: '^1.0.0' } })
+      )
 
       expect(repo.readPackageDeps('/project/nested/file.ts')).toEqual({ vitest: '^1.0.0' })
     })
@@ -173,9 +180,9 @@ describe('TestStrategyRepository', () => {
       ).toBeNull()
     })
 
-    it('returns null when readJson throws', () => {
+    it('returns null when readText throws', () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      vi.mocked(mockFs.readJson).mockImplementation(() => {
+      vi.mocked(mockFs.readText).mockImplementation(() => {
         throw new Error('Invalid JSON')
       })
 

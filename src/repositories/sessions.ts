@@ -6,7 +6,7 @@ import { SessionNotFoundError } from '@src/errors/sessionNotFoundError'
 
 type SessionFs = Pick<
   FsInfra,
-  'ensureDir' | 'writeJson' | 'fileExists' | 'readJson' | 'removeFile' | 'listFiles'
+  'ensureDir' | 'writeText' | 'fileExists' | 'readText' | 'removeFile' | 'listFiles'
 >
 
 export class SessionRepository implements ISessionRepository {
@@ -17,13 +17,16 @@ export class SessionRepository implements ISessionRepository {
 
   save(session: Session): void {
     this.fs.ensureDir(this.sessionsDir)
-    this.fs.writeJson(join(this.sessionsDir, `${session.id}.json`), session)
+    this.fs.writeText(
+      join(this.sessionsDir, `${session.id}.json`),
+      JSON.stringify(session, null, 2)
+    )
   }
 
   load(sessionId: string): Session {
     const path = join(this.sessionsDir, `${sessionId}.json`)
     if (!this.fs.fileExists(path)) throw new SessionNotFoundError(sessionId)
-    return this.fs.readJson<Session>(path)
+    return JSON.parse(this.fs.readText(path)) as Session
   }
 
   exists(sessionId: string): boolean {
