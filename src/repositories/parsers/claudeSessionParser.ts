@@ -42,6 +42,19 @@ export type TokenTotals = {
   totalCacheCreation: number
 }
 
+export function isThinkingOnly(content: RawContentBlock[]): boolean {
+  return content.length > 0 && content.every((b) => b.type === 'thinking')
+}
+
+export function extractTextContent(content: RawContentBlock[], separator = ''): string | null {
+  const text = content
+    .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
+    .map((b) => b.text)
+    .join(separator)
+    .trim()
+  return text || null
+}
+
 function extractToolResultText(content: string | RawContentBlock[]): string | null {
   if (typeof content === 'string') return content
   if (Array.isArray(content)) {
@@ -86,7 +99,7 @@ export function processAssistantEntry(
   toolResultMap: Map<string, { text: string | null; isError: boolean }>
 ): { turn: ClaudeCodeTurn; tokenDeltas: TokenTotals } | null {
   const content = entry.message.content ?? []
-  if (content.length > 0 && content.every((b) => b.type === 'thinking')) return null
+  if (isThinkingOnly(content)) return null
 
   const thinkingBlocks: string[] = []
   const toolCalls: ToolCall[] = []

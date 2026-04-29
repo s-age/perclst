@@ -6,7 +6,7 @@ import type {
   RawEntry,
   TokenTotals
 } from './claudeSessionParser'
-import { mergeAssistantGroup } from './claudeSessionParser'
+import { mergeAssistantGroup, isThinkingOnly, extractTextContent } from './claudeSessionParser'
 import {
   createStatsScanState as _createStatsScanState,
   processStatsScanLine as _processStatsScanLine,
@@ -181,12 +181,8 @@ export function processAssistantTurnLine(state: AssistantTurnState, line: string
   if (entry.type !== 'assistant') return
   const ae = entry as RawAssistantEntry
   const content = ae.message.content ?? []
-  if (content.length > 0 && content.every((b) => b.type === 'thinking')) return
-  const text = content
-    .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-    .map((b) => b.text)
-    .join(' ')
-    .trim()
+  if (isThinkingOnly(content)) return
+  const text = extractTextContent(content, ' ')
   if (!text) return
   state.result.push({ uuid: ae.uuid, text })
 }
