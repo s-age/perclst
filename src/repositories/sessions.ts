@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { join } from '@src/utils/path'
 import type { Session } from '@src/types/session'
 import type { ISessionRepository } from '@src/repositories/ports/session'
 import type { FsInfra } from '@src/infrastructures/fs'

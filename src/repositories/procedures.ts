@@ -1,4 +1,4 @@
-import { join, dirname } from 'path'
+import { join, dirname } from '@src/utils/path'
 import { fileURLToPath } from 'url'
 import type { IProcedureRepository } from '@src/repositories/ports/agent'
 import type { FsInfra } from '@src/infrastructures/fs'

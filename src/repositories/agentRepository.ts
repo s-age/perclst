@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { join } from '@src/utils/path'
 import type { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
 import type { FsInfra } from '@src/infrastructures/fs'
 import {

@@ -7,7 +7,7 @@ import {
   parseFunctions as _parseFunctions,
   parseTestFunctionNames
 } from '@src/repositories/parsers/tsParser'
-import { dirname, join, basename, extname, resolve } from 'path'
+import { dirname, join, basename, extname, resolve } from '@src/utils/path'
 
 type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText'>
 
