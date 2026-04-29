@@ -2,10 +2,7 @@ import { writeFileSync } from 'fs'
 import { join } from 'path'
 import { vi, describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest'
 import { executeTsCallGraph } from '../../tsCallGraph'
-import { setupContainer } from '@src/core/di/setup'
-import { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
-import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
-import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
+import { makeTmpDir, setupTsAnalysisContainer } from '@src/__tests__/helpers'
 
 describe('executeTsCallGraph (integration)', () => {
   let dir: string
@@ -13,14 +10,7 @@ describe('executeTsCallGraph (integration)', () => {
 
   beforeAll(() => {
     const shared = makeTmpDir()
-    setupContainer({
-      config: buildTestConfig(shared.dir),
-      repos: {
-        tsAnalysisRepo: new TsAnalysisRepository(
-          new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
-        )
-      }
-    })
+    setupTsAnalysisContainer(shared.dir)
     shared.cleanup()
   })
 

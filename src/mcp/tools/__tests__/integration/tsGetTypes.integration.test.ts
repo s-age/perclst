@@ -2,10 +2,7 @@ import { writeFileSync } from 'fs'
 import { join } from 'path'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { executeTsGetTypes } from '../../tsGetTypes'
-import { setupContainer } from '@src/core/di/setup'
-import { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
-import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
-import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
+import { makeTmpDir, setupTsAnalysisContainer } from '@src/__tests__/helpers'
 import type { TypeDefinition } from '@src/types/tsAnalysis'
 
 describe('executeTsGetTypes (integration)', () => {
@@ -15,14 +12,7 @@ describe('executeTsGetTypes (integration)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
-    setupContainer({
-      config: buildTestConfig(dir),
-      repos: {
-        tsAnalysisRepo: new TsAnalysisRepository(
-          new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
-        )
-      }
-    })
+    setupTsAnalysisContainer(dir)
   })
 
   afterEach(() => {
