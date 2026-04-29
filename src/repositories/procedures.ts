@@ -1,5 +1,5 @@
 import { join, dirname } from '@src/utils/path'
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from '@src/utils/url'
 import type { IProcedureRepository } from '@src/repositories/ports/agent'
 import type { FsInfra } from '@src/infrastructures/fs'
 import { ProcedureNotFoundError } from '@src/errors/procedureNotFoundError'
