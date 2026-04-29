@@ -55,7 +55,7 @@ export function extractTextContent(content: RawContentBlock[], separator = ''): 
   return text || null
 }
 
-function extractToolResultText(content: string | RawContentBlock[]): string | null {
+export function extractToolResultText(content: string | RawContentBlock[]): string | null {
   if (typeof content === 'string') return content
   if (Array.isArray(content)) {
     const texts = content

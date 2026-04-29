@@ -6,11 +6,16 @@ import type {
   RawEntry,
   TokenTotals
 } from './claudeSessionParser'
-import { mergeAssistantGroup, isThinkingOnly, extractTextContent } from './claudeSessionParser'
 import {
-  createStatsScanState as _createStatsScanState,
-  processStatsScanLine as _processStatsScanLine,
-  finalizeStatsScan as _finalizeStatsScan
+  mergeAssistantGroup,
+  isThinkingOnly,
+  extractTextContent,
+  extractToolResultText
+} from './claudeSessionParser'
+import {
+  createStatsScanState,
+  processStatsScanLine,
+  finalizeStatsScan
 } from './claudeStatsScanParser'
 export type { StatsScanState } from './claudeStatsScanParser'
 export {
@@ -75,17 +80,6 @@ function finalizeAccum(a: TurnAccum): {
   const lgt = a.lastGroupTokens
   const contextWindow = lgt ? lgt.totalInput + lgt.totalCacheRead + lgt.totalCacheCreation : 0
   return { turns: a.turns, tokens: a.totals, contextWindow }
-}
-
-function extractToolResultText(content: string | RawContentBlock[]): string | null {
-  if (typeof content === 'string') return content
-  if (Array.isArray(content)) {
-    const texts = content
-      .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-      .map((b) => b.text)
-    return texts.length > 0 ? texts.join('\n') : null
-  }
-  return null
 }
 
 function collectToolResults(
@@ -287,9 +281,9 @@ export function computeBaselinesFromContent(content: string): {
 }
 
 export function scanStats(raw: string, upToMessageId?: string): SessionStats {
-  const state = _createStatsScanState(upToMessageId)
+  const state = createStatsScanState(upToMessageId)
   for (const line of raw.split('\n')) {
-    if (_processStatsScanLine(state, line)) break
+    if (processStatsScanLine(state, line)) break
   }
-  return _finalizeStatsScan(state)
+  return finalizeStatsScan(state)
 }
