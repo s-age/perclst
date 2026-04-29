@@ -57,15 +57,15 @@ describe('forgeCommand (integration)', () => {
       expect(vi.mocked(printResponse)).toHaveBeenCalled()
     })
 
-    it('when --prompt option exists, buildArgs contains the prompt', async () => {
+    it('when --prompt option exists, runClaude receives the prompt', async () => {
       const planPath = plantPlanFile()
       const stub = buildClaudeCodeStub(makeResultLines('pipeline generated'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
       await forgeCommand(planPath, { prompt: 'also do X' })
 
-      const [action] = vi.mocked(stub.buildArgs).mock.calls[0]
-      expect(action.prompt).toContain('also do X')
+      const [, prompt] = vi.mocked(stub.runClaude).mock.calls[0] as [string[], string, ...unknown[]]
+      expect(prompt).toContain('also do X')
     })
   })
 

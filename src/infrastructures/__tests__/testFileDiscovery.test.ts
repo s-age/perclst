@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import * as fs from 'fs'
 import type { Dirent } from 'fs'
-import { searchDir } from '../testFileDiscovery'
+import { TestFileDiscoveryInfra } from '../testFileDiscovery'
 
 vi.mock('fs', () => ({
   existsSync: vi.fn(),
@@ -22,9 +22,12 @@ function createMockDirent(name: string, isDir: boolean): Dirent {
   } as Dirent
 }
 
-describe('testFileDiscovery', () => {
+describe('TestFileDiscoveryInfra', () => {
+  let infra: TestFileDiscoveryInfra
+
   beforeEach(() => {
     vi.clearAllMocks()
+    infra = new TestFileDiscoveryInfra()
   })
 
   // =========================================================================
@@ -42,7 +45,7 @@ describe('testFileDiscovery', () => {
         createMockDirent('myFile.test.ts', false)
       ])
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/myFile.test.ts')
     })
 
@@ -52,7 +55,7 @@ describe('testFileDiscovery', () => {
         createMockDirent('myFile.spec.ts', false)
       ])
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/myFile.spec.ts')
     })
 
@@ -64,7 +67,7 @@ describe('testFileDiscovery', () => {
         return []
       })
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/unit/myFile.test.ts')
     })
 
@@ -77,7 +80,7 @@ describe('testFileDiscovery', () => {
         return []
       })
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/level1/level2/myFile.spec.ts')
     })
 
@@ -88,7 +91,7 @@ describe('testFileDiscovery', () => {
         createMockDirent('myFile.spec.ts', false)
       ])
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/myFile.test.ts')
     })
 
@@ -106,7 +109,7 @@ describe('testFileDiscovery', () => {
         return []
       })
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/nested/myFile.test.ts')
     })
 
@@ -117,7 +120,7 @@ describe('testFileDiscovery', () => {
         createMockDirent('other', true)
       ])
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/myFile.test.ts')
       expect(fs.readdirSync).toHaveBeenCalledTimes(1)
     })
@@ -129,7 +132,7 @@ describe('testFileDiscovery', () => {
         createMockDirent('myFile.test.ts', false)
       ])
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/myFile.test.ts')
     })
 
@@ -144,7 +147,7 @@ describe('testFileDiscovery', () => {
         return []
       })
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/dir2/myFile.test.ts')
     })
 
@@ -155,7 +158,7 @@ describe('testFileDiscovery', () => {
     it('returns null when directory does not exist', () => {
       vi.mocked(fs.existsSync).mockReturnValue(false)
 
-      const result = searchDir('/nonexistent/dir', 'myFile', '.ts')
+      const result = infra.searchDir('/nonexistent/dir', 'myFile', '.ts')
       expect(result).toBeNull()
     })
 
@@ -163,7 +166,7 @@ describe('testFileDiscovery', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true)
       ;(fs.readdirSync as ReturnType<typeof vi.fn>).mockReturnValue([])
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBeNull()
     })
 
@@ -174,7 +177,7 @@ describe('testFileDiscovery', () => {
         createMockDirent('helpers.ts', false)
       ])
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBeNull()
     })
 
@@ -186,7 +189,7 @@ describe('testFileDiscovery', () => {
         return []
       })
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBeNull()
     })
 
@@ -200,7 +203,7 @@ describe('testFileDiscovery', () => {
         throw new Error('EACCES: permission denied')
       })
 
-      const result = searchDir('/restricted', 'myFile', '.ts')
+      const result = infra.searchDir('/restricted', 'myFile', '.ts')
       expect(result).toBeNull()
     })
 
@@ -215,7 +218,7 @@ describe('testFileDiscovery', () => {
         return []
       })
 
-      const result = searchDir('/tests', 'myFile', '.ts')
+      const result = infra.searchDir('/tests', 'myFile', '.ts')
       expect(result).toBe('/tests/dir2/myFile.test.ts')
     })
   })

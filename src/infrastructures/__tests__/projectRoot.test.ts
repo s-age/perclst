@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { findProjectRoot } from '../projectRoot'
+import { ProjectRootInfra } from '../projectRoot'
 
 // Mock Node.js built-ins
 vi.mock('fs', () => ({
@@ -20,9 +20,12 @@ import type { PathLike } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
-describe('findProjectRoot', () => {
+describe('ProjectRootInfra', () => {
+  let infra: ProjectRootInfra
+
   beforeEach(() => {
     vi.clearAllMocks()
+    infra = new ProjectRootInfra()
   })
 
   it('returns the directory containing package.json when found on the first iteration', () => {
@@ -40,7 +43,7 @@ describe('findProjectRoot', () => {
       (p: PathLike) => p === '/home/user/project/src/infrastructures/package.json'
     )
 
-    const result = findProjectRoot()
+    const result = infra.findProjectRoot()
 
     expect(result).toBe('/home/user/project/src/infrastructures')
   })
@@ -58,7 +61,7 @@ describe('findProjectRoot', () => {
       (p: PathLike) => p === '/home/user/project/src/package.json'
     )
 
-    const result = findProjectRoot()
+    const result = infra.findProjectRoot()
 
     expect(result).toBe('/home/user/project/src')
   })
@@ -74,7 +77,7 @@ describe('findProjectRoot', () => {
       (p: PathLike) => p === '/home/user/project/package.json'
     )
 
-    const result = findProjectRoot()
+    const result = infra.findProjectRoot()
 
     expect(result).toBe('/home/user/project')
   })
@@ -93,7 +96,7 @@ describe('findProjectRoot', () => {
     process.cwd = vi.fn(() => '/current/working/directory')
 
     try {
-      const result = findProjectRoot()
+      const result = infra.findProjectRoot()
       expect(result).toBe('/current/working/directory')
     } finally {
       process.cwd = originalCwd
@@ -115,7 +118,7 @@ describe('findProjectRoot', () => {
     process.cwd = mockCwd
 
     try {
-      findProjectRoot()
+      infra.findProjectRoot()
       expect(mockCwd).toHaveBeenCalled()
     } finally {
       process.cwd = originalCwd
@@ -136,7 +139,7 @@ describe('findProjectRoot', () => {
     process.cwd = vi.fn(() => '/fallback/cwd')
 
     try {
-      const result = findProjectRoot()
+      const result = infra.findProjectRoot()
       expect(result).toBe('/fallback/cwd')
     } finally {
       process.cwd = originalCwd
@@ -157,7 +160,7 @@ describe('findProjectRoot', () => {
     process.cwd = vi.fn(() => '/fallback/cwd')
 
     try {
-      findProjectRoot()
+      infra.findProjectRoot()
       expect(existsSync).toHaveBeenCalledTimes(8)
     } finally {
       process.cwd = originalCwd
@@ -177,7 +180,7 @@ describe('findProjectRoot', () => {
     process.cwd = vi.fn(() => '/fallback')
 
     try {
-      const result = findProjectRoot()
+      const result = infra.findProjectRoot()
       expect(result).toBe('/fallback')
     } finally {
       process.cwd = originalCwd
@@ -197,7 +200,7 @@ describe('findProjectRoot', () => {
     process.cwd = vi.fn(() => '/fallback')
 
     try {
-      findProjectRoot()
+      infra.findProjectRoot()
       expect(existsSync).toHaveBeenCalledTimes(2)
     } finally {
       process.cwd = originalCwd

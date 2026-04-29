@@ -23,11 +23,14 @@ vi.mock('path', () => ({
   relative: mockRelative
 }))
 
-import { listFilesRecursive, readTextFile } from '../knowledgeReader'
+import { KnowledgeReaderInfra } from '../knowledgeReader'
 
-describe('knowledgeReader', () => {
+describe('KnowledgeReaderInfra', () => {
+  let infra: KnowledgeReaderInfra
+
   beforeEach(() => {
     vi.clearAllMocks()
+    infra = new KnowledgeReaderInfra()
     // Default mock implementations for all tests
     mockJoin.mockImplementation((...parts: string[]) => parts.join('/'))
     mockRelative.mockImplementation((from: string, to: string) =>
@@ -39,7 +42,7 @@ describe('knowledgeReader', () => {
     it('returns empty array when directory does not exist', () => {
       mockExistsSync.mockReturnValue(false)
 
-      const result = listFilesRecursive('/nonexistent/dir')
+      const result = infra.listFilesRecursive('/nonexistent/dir')
 
       expect(result).toEqual([])
       expect(mockExistsSync).toHaveBeenCalledWith('/nonexistent/dir')
@@ -51,7 +54,7 @@ describe('knowledgeReader', () => {
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listFilesRecursive('/empty/dir')
+      const result = infra.listFilesRecursive('/empty/dir')
 
       expect(result).toEqual([])
       expect(mockReaddirSync).toHaveBeenCalledWith('/empty/dir')
@@ -63,7 +66,7 @@ describe('knowledgeReader', () => {
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listFilesRecursive('/docs')
+      const result = infra.listFilesRecursive('/docs')
 
       expect(result).toEqual([
         { absolute: '/docs/file1.md', relative: 'file1.md' },
@@ -78,7 +81,7 @@ describe('knowledgeReader', () => {
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listFilesRecursive('/docs', '.md')
+      const result = infra.listFilesRecursive('/docs', '.md')
 
       expect(result).toEqual([
         { absolute: '/docs/file1.md', relative: 'file1.md' },
@@ -93,7 +96,7 @@ describe('knowledgeReader', () => {
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listFilesRecursive('/root', '.md')
+      const result = infra.listFilesRecursive('/root', '.md')
 
       expect(result).toEqual([
         { absolute: '/root/readme.md', relative: 'readme.md' },
@@ -123,7 +126,7 @@ describe('knowledgeReader', () => {
         } as Partial<Stats>
       })
 
-      const result = listFilesRecursive('/root', '.md')
+      const result = infra.listFilesRecursive('/root', '.md')
 
       expect(result).toEqual([
         { absolute: '/root/file1.md', relative: 'file1.md' },
@@ -139,7 +142,7 @@ describe('knowledgeReader', () => {
       const mockStats: Partial<Stats> = { isDirectory: () => false }
       mockStatSync.mockReturnValue(mockStats)
 
-      const result = listFilesRecursive('/root', '.md')
+      const result = infra.listFilesRecursive('/root', '.md')
 
       expect(result).toEqual([
         { absolute: '/root/readme.md', relative: 'readme.md' },
@@ -162,7 +165,7 @@ describe('knowledgeReader', () => {
         return { isDirectory: () => pathStr === '/root/sub' } as Partial<Stats>
       })
 
-      const result = listFilesRecursive('/root')
+      const result = infra.listFilesRecursive('/root')
 
       expect(result).toEqual([
         { absolute: '/root/notes.md', relative: 'notes.md' },
@@ -177,7 +180,7 @@ describe('knowledgeReader', () => {
       const fileContent = 'This is the file content\nWith multiple lines'
       mockReadFileSync.mockReturnValue(fileContent)
 
-      const result = readTextFile('/path/to/file.txt')
+      const result = infra.readTextFile('/path/to/file.txt')
 
       expect(result).toBe(fileContent)
       expect(mockReadFileSync).toHaveBeenCalledWith('/path/to/file.txt', 'utf-8')
@@ -186,7 +189,7 @@ describe('knowledgeReader', () => {
     it('reads empty file', () => {
       mockReadFileSync.mockReturnValue('')
 
-      const result = readTextFile('/empty/file.txt')
+      const result = infra.readTextFile('/empty/file.txt')
 
       expect(result).toBe('')
       expect(mockReadFileSync).toHaveBeenCalledWith('/empty/file.txt', 'utf-8')

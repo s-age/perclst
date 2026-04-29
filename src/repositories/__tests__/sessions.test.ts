@@ -7,7 +7,7 @@ import type { FsInfra } from '@src/infrastructures/fs'
 
 type SessionFs = Pick<
   FsInfra,
-  'ensureDir' | 'writeJson' | 'fileExists' | 'readJson' | 'removeFile' | 'listFiles'
+  'ensureDir' | 'writeText' | 'fileExists' | 'readText' | 'removeFile' | 'listFiles'
 >
 
 const SESSIONS_DIR = '/home/user/.perclst/sessions'
@@ -30,8 +30,8 @@ describe('SessionRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockFs = {
-      readJson: vi.fn(),
-      writeJson: vi.fn(),
+      readText: vi.fn(),
+      writeText: vi.fn(),
       fileExists: vi.fn(),
       removeFile: vi.fn(),
       listFiles: vi.fn(),
@@ -46,10 +46,13 @@ describe('SessionRepository', () => {
       expect(mockFs.ensureDir).toHaveBeenCalledWith(SESSIONS_DIR)
     })
 
-    it('calls writeJson with the resolved path and session data', () => {
+    it('calls writeText with the resolved path and serialized session', () => {
       const session = makeSession()
       repo.save(session)
-      expect(mockFs.writeJson).toHaveBeenCalledWith(join(SESSIONS_DIR, 'session-1.json'), session)
+      expect(mockFs.writeText).toHaveBeenCalledWith(
+        join(SESSIONS_DIR, 'session-1.json'),
+        JSON.stringify(session, null, 2)
+      )
     })
   })
 
@@ -57,7 +60,7 @@ describe('SessionRepository', () => {
     it('returns the parsed session when the file exists', () => {
       const session = makeSession()
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      vi.mocked(mockFs.readJson).mockReturnValue(session)
+      vi.mocked(mockFs.readText).mockReturnValue(JSON.stringify(session))
 
       const result = repo.load('session-1')
 
@@ -114,7 +117,9 @@ describe('SessionRepository', () => {
       const session2 = makeSession({ id: 'session-2' })
       vi.mocked(mockFs.listFiles).mockReturnValue(['session-1.json', 'session-2.json'])
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      vi.mocked(mockFs.readJson).mockReturnValueOnce(session1).mockReturnValueOnce(session2)
+      vi.mocked(mockFs.readText)
+        .mockReturnValueOnce(JSON.stringify(session1))
+        .mockReturnValueOnce(JSON.stringify(session2))
 
       expect(repo.list()).toEqual([session1, session2])
     })
@@ -123,7 +128,7 @@ describe('SessionRepository', () => {
       const session1 = makeSession({ id: 'session-1' })
       vi.mocked(mockFs.listFiles).mockReturnValue(['session-1.json', 'bad.json'])
       vi.mocked(mockFs.fileExists).mockReturnValueOnce(true).mockReturnValueOnce(false)
-      vi.mocked(mockFs.readJson).mockReturnValueOnce(session1)
+      vi.mocked(mockFs.readText).mockReturnValueOnce(JSON.stringify(session1))
 
       expect(repo.list()).toEqual([session1])
     })
@@ -140,7 +145,7 @@ describe('SessionRepository', () => {
       const session = makeSession({ name: 'search-target' })
       vi.mocked(mockFs.listFiles).mockReturnValue(['session-1.json'])
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      vi.mocked(mockFs.readJson).mockReturnValue(session)
+      vi.mocked(mockFs.readText).mockReturnValue(JSON.stringify(session))
 
       expect(repo.findByName('search-target')).toEqual(session)
     })

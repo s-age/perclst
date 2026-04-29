@@ -7,9 +7,9 @@ import {
   parseFunctions as _parseFunctions,
   parseTestFunctionNames
 } from '@src/repositories/parsers/tsParser'
-import { dirname, join, basename, extname, resolve } from 'path'
+import { dirname, join, basename, extname, resolve } from '@src/utils/path'
 
-type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText' | 'readJson'>
+type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText'>
 
 export class TestStrategyRepository implements ITestStrategyRepository {
   constructor(
@@ -74,7 +74,10 @@ export class TestStrategyRepository implements ITestStrategyRepository {
       const pkgPath = join(current, 'package.json')
       if (this.fs.fileExists(pkgPath)) {
         try {
-          const pkg = this.fs.readJson<Record<string, Record<string, string>>>(pkgPath)
+          const pkg = JSON.parse(this.fs.readText(pkgPath)) as Record<
+            string,
+            Record<string, string>
+          >
           return { ...pkg['dependencies'], ...pkg['devDependencies'] }
         } catch {
           return null

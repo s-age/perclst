@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import { resolve } from '@src/utils/path'
 import type { IRejectionFeedbackRepository } from '@src/repositories/ports/rejectionFeedback'
 import type { FsInfra } from '@src/infrastructures/fs'
 

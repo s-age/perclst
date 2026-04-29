@@ -1,6 +1,7 @@
 import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe'
 
 export type IPermissionPipeRepository = {
+  initPipePath(): void
   pollRequest(): PermissionRequest | null
   respond(result: PermissionResult): void
   askPermission(args: {

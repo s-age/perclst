@@ -2,6 +2,7 @@ import type { FileMoveInfra } from '@src/infrastructures/fileMove'
 import type { FsInfra } from '@src/infrastructures/fs'
 import type { IPipelineFileRepository } from '@src/repositories/ports/fileMove'
 import { extname } from '@src/utils/path'
+import { parseYaml, stringifyYaml } from '@src/utils/yaml'
 
 function isYaml(path: string): boolean {
   const ext = extname(path)
@@ -10,7 +11,7 @@ function isYaml(path: string): boolean {
 
 type PipelineFileFs = Pick<
   FsInfra,
-  'readJson' | 'writeJson' | 'readYaml' | 'writeYaml' | 'cleanDir'
+  'readText' | 'writeText' | 'fileExists' | 'listDirEntries' | 'removeFileSync'
 >
 
 export class PipelineFileRepository implements IPipelineFileRepository {
@@ -24,18 +25,28 @@ export class PipelineFileRepository implements IPipelineFileRepository {
   }
 
   readRaw(path: string): unknown {
-    return isYaml(path) ? this.fs.readYaml<unknown>(path) : this.fs.readJson<unknown>(path)
+    const text = this.fs.readText(path)
+    return isYaml(path) ? (parseYaml(text) as unknown) : (JSON.parse(text) as unknown)
   }
 
   write(path: string, data: unknown): void {
     if (isYaml(path)) {
-      this.fs.writeYaml(path, data)
+      this.fs.writeText(path, stringifyYaml(data))
     } else {
-      this.fs.writeJson(path, data)
+      this.fs.writeText(path, JSON.stringify(data, null, 2))
     }
   }
 
   cleanDir(dirPath: string): void {
-    this.fs.cleanDir(dirPath)
+    if (!this.fs.fileExists(dirPath)) return
+    for (const entry of this.fs.listDirEntries(dirPath)) {
+      if (entry.isFile()) {
+        try {
+          this.fs.removeFileSync(`${dirPath}/${entry.name}`)
+        } catch {
+          // ignore locked or already removed files
+        }
+      }
+    }
   }
 }

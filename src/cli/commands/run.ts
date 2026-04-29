@@ -1,5 +1,4 @@
-import { tmpdir } from 'os'
-import { resolve, join, dirname } from 'path'
+import { resolve, dirname } from '@src/utils/path'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { PipelineService } from '@src/services/pipelineService'
@@ -79,7 +78,10 @@ async function executeTUIPipeline(
   onChildPipelineDone: (absolutePath: string) => void,
   abortService: AbortService
 ): Promise<void> {
-  process.env.PERCLST_PERMISSION_PIPE = join(tmpdir(), `perclst-perm-${process.pid}`)
+  const permissionPipeService = container.resolve<PermissionPipeService>(
+    TOKENS.PermissionPipeService
+  )
+  permissionPipeService.initPipePath()
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   const pipeline = loadPipelineOrExit(pipelineFileService, absolutePath)
@@ -89,9 +91,6 @@ async function executeTUIPipeline(
     import('@src/cli/components/PipelineRunner.js')
   ])
   const pipelineService = container.resolve<PipelineService>(TOKENS.PipelineService)
-  const permissionPipeService = container.resolve<PermissionPipeService>(
-    TOKENS.PermissionPipeService
-  )
   const config = container.resolve<Config>(TOKENS.Config)
   const onTaskDone = (): void => pipelineFileService.savePipeline(absolutePath, pipeline)
   const pipelineDir = dirname(absolutePath)

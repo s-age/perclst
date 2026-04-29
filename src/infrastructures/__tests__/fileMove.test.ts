@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { mkdirSync, renameSync } from 'fs'
 import { dirname } from 'path'
-import { moveFile } from '../fileMove.js'
+import { FileMoveInfra } from '../fileMove'
 
 vi.mock('fs')
 vi.mock('path')
@@ -10,24 +10,27 @@ const mockMkdirSync = vi.mocked(mkdirSync)
 const mockRenameSync = vi.mocked(renameSync)
 const mockDirname = vi.mocked(dirname)
 
-describe('moveFile', () => {
+describe('FileMoveInfra', () => {
+  let infra: FileMoveInfra
+
   beforeEach(() => {
     vi.resetAllMocks()
     mockDirname.mockReturnValue('/dest/dir')
+    infra = new FileMoveInfra()
   })
 
   it('calls dirname with the destination path', () => {
-    moveFile('/src/file.txt', '/dest/dir/file.txt')
+    infra.moveFile('/src/file.txt', '/dest/dir/file.txt')
     expect(mockDirname).toHaveBeenCalledWith('/dest/dir/file.txt')
   })
 
   it('creates the destination directory with recursive: true', () => {
-    moveFile('/src/file.txt', '/dest/dir/file.txt')
+    infra.moveFile('/src/file.txt', '/dest/dir/file.txt')
     expect(mockMkdirSync).toHaveBeenCalledWith('/dest/dir', { recursive: true })
   })
 
   it('renames the file from src to dest', () => {
-    moveFile('/src/file.txt', '/dest/dir/file.txt')
+    infra.moveFile('/src/file.txt', '/dest/dir/file.txt')
     expect(mockRenameSync).toHaveBeenCalledWith('/src/file.txt', '/dest/dir/file.txt')
   })
 
@@ -35,7 +38,7 @@ describe('moveFile', () => {
     mockMkdirSync.mockImplementation(() => {
       throw new Error('EACCES: permission denied')
     })
-    expect(() => moveFile('/src/file.txt', '/dest/dir/file.txt')).toThrow(
+    expect(() => infra.moveFile('/src/file.txt', '/dest/dir/file.txt')).toThrow(
       'EACCES: permission denied'
     )
   })
@@ -45,7 +48,7 @@ describe('moveFile', () => {
       throw new Error('EACCES: permission denied')
     })
     try {
-      moveFile('/src/file.txt', '/dest/dir/file.txt')
+      infra.moveFile('/src/file.txt', '/dest/dir/file.txt')
     } catch {
       // expected
     }
@@ -56,7 +59,7 @@ describe('moveFile', () => {
     mockRenameSync.mockImplementation(() => {
       throw new Error('ENOENT: no such file or directory')
     })
-    expect(() => moveFile('/src/file.txt', '/dest/dir/file.txt')).toThrow(
+    expect(() => infra.moveFile('/src/file.txt', '/dest/dir/file.txt')).toThrow(
       'ENOENT: no such file or directory'
     )
   })
@@ -66,7 +69,7 @@ describe('moveFile', () => {
       throw new Error('ENOENT: no such file or directory')
     })
     try {
-      moveFile('/src/file.txt', '/dest/dir/file.txt')
+      infra.moveFile('/src/file.txt', '/dest/dir/file.txt')
     } catch {
       // expected
     }

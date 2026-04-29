@@ -38,24 +38,25 @@ describe('surveyCommand (integration)', () => {
       expect(vi.mocked(printResponse)).toHaveBeenCalled()
     })
 
-    it('when --refresh flag is set, buildArgs receives allowedTools containing Bash', async () => {
+    it('when --refresh flag is set, runClaude args contain --allowedTools with Bash', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('refreshed'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
       await surveyCommand(undefined, { refresh: true, outputOnly: true })
 
-      const [action] = vi.mocked(stub.buildArgs).mock.calls[0]
-      expect(action.allowedTools).toContain('Bash')
+      const [args] = vi.mocked(stub.runClaude).mock.calls[0] as [string[], ...unknown[]]
+      expect(args).toContain('--allowedTools')
+      expect(args).toContain('Bash')
     })
 
-    it('when no --refresh flag (default), buildArgs allowedTools does not contain Bash', async () => {
+    it('when no --refresh flag (default), runClaude args do not contain Bash', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('survey done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
       await surveyCommand('What is the architecture?', { outputOnly: true })
 
-      const [action] = vi.mocked(stub.buildArgs).mock.calls[0]
-      expect(action.allowedTools).not.toContain('Bash')
+      const [args] = vi.mocked(stub.runClaude).mock.calls[0] as [string[], ...unknown[]]
+      expect(args).not.toContain('Bash')
     })
   })
 

@@ -5,6 +5,10 @@ import type { PermissionRequest, PermissionResult } from '@src/types/permissionP
 export class PermissionPipeDomain implements IPermissionPipeDomain {
   constructor(private repo: IPermissionPipeRepository) {}
 
+  initPipePath(): void {
+    this.repo.initPipePath()
+  }
+
   pollRequest(): PermissionRequest | null {
     return this.repo.pollRequest()
   }

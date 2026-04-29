@@ -18,11 +18,14 @@ vi.mock('child_process', () => ({
   exec: vi.fn()
 }))
 
-import * as commandRunner from '../commandRunner.js'
+import { CommandRunnerInfra } from '../commandRunner'
 
-describe('runCommand', () => {
+describe('CommandRunnerInfra', () => {
+  let infra: CommandRunnerInfra
+
   beforeEach(() => {
     vi.clearAllMocks()
+    infra = new CommandRunnerInfra()
   })
 
   // ── Happy path ──────────────────────────────────────────────────────────────
@@ -30,7 +33,7 @@ describe('runCommand', () => {
   it('should return exitCode 0 on successful execution', async () => {
     mocks.execAsync.mockResolvedValueOnce({ stdout: 'Success output', stderr: '' })
 
-    const result = await commandRunner.runCommand('echo hello', '/tmp')
+    const result = await infra.runCommand('echo hello', '/tmp')
 
     expect(result.exitCode).toBe(0)
   })
@@ -38,7 +41,7 @@ describe('runCommand', () => {
   it('should return stdout from successful execution', async () => {
     mocks.execAsync.mockResolvedValueOnce({ stdout: 'Success output', stderr: '' })
 
-    const result = await commandRunner.runCommand('echo hello', '/tmp')
+    const result = await infra.runCommand('echo hello', '/tmp')
 
     expect(result.stdout).toBe('Success output')
   })
@@ -46,7 +49,7 @@ describe('runCommand', () => {
   it('should return stderr from successful execution', async () => {
     mocks.execAsync.mockResolvedValueOnce({ stdout: 'output', stderr: 'warning' })
 
-    const result = await commandRunner.runCommand('npm run build', '/home/user')
+    const result = await infra.runCommand('npm run build', '/home/user')
 
     expect(result.stderr).toBe('warning')
   })
@@ -54,7 +57,7 @@ describe('runCommand', () => {
   it('should pass command to execAsync', async () => {
     mocks.execAsync.mockResolvedValueOnce({ stdout: 'done', stderr: '' })
 
-    await commandRunner.runCommand('ls', '/home/user/project')
+    await infra.runCommand('ls', '/home/user/project')
 
     expect(mocks.execAsync).toHaveBeenCalledWith('ls', expect.any(Object))
   })
@@ -62,7 +65,7 @@ describe('runCommand', () => {
   it('should pass cwd option to execAsync', async () => {
     mocks.execAsync.mockResolvedValueOnce({ stdout: 'done', stderr: '' })
 
-    await commandRunner.runCommand('ls', '/home/user/project')
+    await infra.runCommand('ls', '/home/user/project')
 
     expect(mocks.execAsync).toHaveBeenCalledWith(expect.any(String), {
       cwd: '/home/user/project',
@@ -73,7 +76,7 @@ describe('runCommand', () => {
   it('should pass encoding utf-8 to execAsync', async () => {
     mocks.execAsync.mockResolvedValueOnce({ stdout: 'done', stderr: '' })
 
-    await commandRunner.runCommand('ls', '/tmp')
+    await infra.runCommand('ls', '/tmp')
 
     expect(mocks.execAsync).toHaveBeenCalledWith(
       expect.any(String),
@@ -90,7 +93,7 @@ describe('runCommand', () => {
       code: 127
     })
 
-    const result = await commandRunner.runCommand('invalid-command', '/tmp')
+    const result = await infra.runCommand('invalid-command', '/tmp')
 
     expect(result.stdout).toBe('partial output')
   })
@@ -102,7 +105,7 @@ describe('runCommand', () => {
       code: 127
     })
 
-    const result = await commandRunner.runCommand('invalid-command', '/tmp')
+    const result = await infra.runCommand('invalid-command', '/tmp')
 
     expect(result.stderr).toBe('error message')
   })
@@ -114,7 +117,7 @@ describe('runCommand', () => {
       code: 127
     })
 
-    const result = await commandRunner.runCommand('invalid-command', '/tmp')
+    const result = await infra.runCommand('invalid-command', '/tmp')
 
     expect(result.exitCode).toBe(127)
   })
@@ -126,7 +129,7 @@ describe('runCommand', () => {
       code: 127
     })
 
-    const result = await commandRunner.runCommand('invalid-command', '/tmp')
+    const result = await infra.runCommand('invalid-command', '/tmp')
 
     expect(result).toEqual<RawCommandOutput>({
       stdout: 'partial output',
@@ -140,7 +143,7 @@ describe('runCommand', () => {
   it('should default stdout to empty string when error object lacks stdout', async () => {
     mocks.execAsync.mockRejectedValueOnce({ stderr: 'error occurred', code: 1 })
 
-    const result = await commandRunner.runCommand('bad-command', '/tmp')
+    const result = await infra.runCommand('bad-command', '/tmp')
 
     expect(result.stdout).toBe('')
   })
@@ -150,7 +153,7 @@ describe('runCommand', () => {
   it('should default stderr to empty string when error object lacks stderr', async () => {
     mocks.execAsync.mockRejectedValueOnce({ stdout: 'some output', code: 2 })
 
-    const result = await commandRunner.runCommand('another-bad-command', '/tmp')
+    const result = await infra.runCommand('another-bad-command', '/tmp')
 
     expect(result.stderr).toBe('')
   })
@@ -160,7 +163,7 @@ describe('runCommand', () => {
   it('should default exitCode to 1 when error object lacks code', async () => {
     mocks.execAsync.mockRejectedValueOnce({ stdout: 'output', stderr: 'error' })
 
-    const result = await commandRunner.runCommand('cmd', '/tmp')
+    const result = await infra.runCommand('cmd', '/tmp')
 
     expect(result.exitCode).toBe(1)
   })
@@ -170,7 +173,7 @@ describe('runCommand', () => {
   it('should default all fields when error object is empty', async () => {
     mocks.execAsync.mockRejectedValueOnce({})
 
-    const result = await commandRunner.runCommand('test-cmd', '/tmp')
+    const result = await infra.runCommand('test-cmd', '/tmp')
 
     expect(result).toEqual<RawCommandOutput>({ stdout: '', stderr: '', exitCode: 1 })
   })
@@ -180,7 +183,7 @@ describe('runCommand', () => {
   it('should preserve exit code 2 from failed command', async () => {
     mocks.execAsync.mockRejectedValueOnce({ stdout: '', stderr: 'Command failed', code: 2 })
 
-    const result = await commandRunner.runCommand('npm test', '/tmp')
+    const result = await infra.runCommand('npm test', '/tmp')
 
     expect(result.exitCode).toBe(2)
   })

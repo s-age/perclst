@@ -140,7 +140,7 @@ describe('runCommand post-pipeline behavior (integration)', () => {
 
       await runCommand(pipelinePath, { batch: true })
 
-      expect(gitInfra.execGitSync).toHaveBeenCalledWith(expect.stringContaining('commit'))
+      expect(gitInfra.execGitSync).toHaveBeenCalledWith(expect.arrayContaining(['commit']))
     })
 
     it('When moveToDone returns null, "Moved to:" is not printed to stdout', async () => {

@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { join } from '@src/utils/path'
 import type { IKnowledgeSearchRepository } from './ports/knowledgeSearch'
 import type { KnowledgeFileEntry } from '@src/types/knowledgeSearch'
 import type { KnowledgeReaderInfra } from '@src/infrastructures/knowledgeReader'

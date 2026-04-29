@@ -61,10 +61,10 @@ describe('GitRepository', () => {
       expect(repo.getHead()).toBe('abc123def456')
     })
 
-    it('passes the correct git command', () => {
+    it('passes the correct git args', () => {
       vi.mocked(mockGit.execGitSync).mockReturnValueOnce('abc123')
       repo.getHead()
-      expect(mockGit.execGitSync).toHaveBeenCalledWith('rev-parse HEAD')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith(['rev-parse', 'HEAD'])
     })
 
     it('returns null when execGitSync throws', () => {
@@ -83,10 +83,10 @@ describe('GitRepository', () => {
       expect(repo.getDiffSummary('HEAD~1', 'HEAD')).toBe('1 file changed, 3 insertions(+)')
     })
 
-    it('uses three-dot diff syntax in the git command', () => {
+    it('uses three-dot diff syntax in the git args', () => {
       vi.mocked(mockGit.execGitSync).mockReturnValueOnce('stat output')
       repo.getDiffSummary('main', 'feature')
-      expect(mockGit.execGitSync).toHaveBeenCalledWith('diff main...feature --stat')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith(['diff', 'main...feature', '--stat'])
     })
 
     it('returns null when the stat output is an empty string', () => {
@@ -110,10 +110,10 @@ describe('GitRepository', () => {
       expect(repo.getDiff('HEAD~1', 'HEAD')).toBe('diff --git a/foo.ts b/foo.ts\n...')
     })
 
-    it('uses two-dot diff syntax in the git command', () => {
+    it('uses two separate args for diff refs', () => {
       vi.mocked(mockGit.execGitSync).mockReturnValueOnce('diff output')
       repo.getDiff('main', 'feature')
-      expect(mockGit.execGitSync).toHaveBeenCalledWith('diff main feature')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith(['diff', 'main', 'feature'])
     })
 
     it('returns null when the diff output is an empty string', () => {
@@ -132,10 +132,10 @@ describe('GitRepository', () => {
   // ─── stageUpdated ─────────────────────────────────────────────────────────
 
   describe('stageUpdated', () => {
-    it('calls execGitSync with the correct add -u command', () => {
+    it('calls execGitSync with the correct add -u args', () => {
       vi.mocked(mockGit.execGitSync).mockReturnValueOnce('')
       repo.stageUpdated('src/foo.ts')
-      expect(mockGit.execGitSync).toHaveBeenCalledWith('add -u "src/foo.ts"')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith(['add', '-u', 'src/foo.ts'])
     })
 
     it('propagates an error thrown by execGitSync', () => {
@@ -149,10 +149,10 @@ describe('GitRepository', () => {
   // ─── stageNew ─────────────────────────────────────────────────────────────
 
   describe('stageNew', () => {
-    it('calls execGitSync with the correct add command', () => {
+    it('calls execGitSync with the correct add args', () => {
       vi.mocked(mockGit.execGitSync).mockReturnValueOnce('')
       repo.stageNew('src/bar.ts')
-      expect(mockGit.execGitSync).toHaveBeenCalledWith('add "src/bar.ts"')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith(['add', 'src/bar.ts'])
     })
 
     it('propagates an error thrown by execGitSync', () => {
@@ -166,10 +166,10 @@ describe('GitRepository', () => {
   // ─── commit ───────────────────────────────────────────────────────────────
 
   describe('commit', () => {
-    it('calls execGitSync with the correct commit -m command', () => {
+    it('calls execGitSync with the correct commit args', () => {
       vi.mocked(mockGit.execGitSync).mockReturnValueOnce('')
       repo.commit('feat: add new feature')
-      expect(mockGit.execGitSync).toHaveBeenCalledWith('commit -m "feat: add new feature"')
+      expect(mockGit.execGitSync).toHaveBeenCalledWith(['commit', '-m', 'feat: add new feature'])
     })
 
     it('propagates an error thrown by execGitSync', () => {

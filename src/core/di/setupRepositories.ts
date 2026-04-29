@@ -40,7 +40,8 @@ export function setupRepositories(
   overrides?: Partial<Repos>
 ): Repos {
   const repos: Repos = {
-    claudeCodeRepo: overrides?.claudeCodeRepo ?? new ClaudeCodeRepository(infras.claudeCodeInfra),
+    claudeCodeRepo:
+      overrides?.claudeCodeRepo ?? new ClaudeCodeRepository(infras.claudeCodeInfra, infras.fsInfra),
     shellRepo: overrides?.shellRepo ?? new ShellRepository(infras.shellInfra),
     sessionRepo: overrides?.sessionRepo ?? new SessionRepository(infras.fsInfra, opts.sessionsDir),
     claudeSessionRepo: overrides?.claudeSessionRepo ?? new ClaudeSessionRepository(infras.fsInfra),

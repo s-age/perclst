@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { join } from '@src/utils/path'
 import type { AssistantTurnEntry, ClaudeSessionData, SessionStats } from '@src/types/analysis'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import type { FsInfra } from '@src/infrastructures/fs'

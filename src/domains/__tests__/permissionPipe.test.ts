@@ -9,6 +9,7 @@ describe('PermissionPipeDomain', () => {
 
   beforeEach(() => {
     mockRepo = {
+      initPipePath: vi.fn(),
       pollRequest: vi.fn(),
       respond: vi.fn(),
       askPermission: vi.fn()
