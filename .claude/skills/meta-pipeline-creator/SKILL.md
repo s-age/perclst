@@ -9,15 +9,21 @@ Write all pipeline content in **English**, regardless of the project's primary l
 
 ## Examples
 
-Three reference patterns in `examples/`:
+Four reference patterns in `examples/`:
 
 | File | When to use |
 |------|-------------|
-| `implement__feature-name.yaml` | New feature dev or unit test writing — implement → review → test gate → commit |
+| `implement__feature-name.yaml` | New implementation — implement → review → test gate → commit. Covers feature, unit-test, and integration-test sub-types; procedures differ (see below). |
 | `review-fix__layer__target.yaml` | Existing code review + fix — initial review outside loop, fix-loop pipeline, commit outside |
 | `lint-fix__layer__target.yaml` | Lint rule violations — implement + test gate only (no review agent), commit |
 
-`unit-test` pipelines share the `implement` structure; only the procedures differ.
+### `implement` procedure selection
+
+| Pattern | implementer `procedure` | reviewer `procedure` |
+|---------|------------------------|---------------------|
+| `implement-feature` | _(none — write detailed `task` instead)_ | `arch/review` |
+| `implement-unit-test` | `test-unit/implement` | `test-unit/review` |
+| `implement-integration-test` | `test-integration/implement` | `arch/review` |
 
 ## Before writing
 
