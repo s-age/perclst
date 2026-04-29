@@ -12,7 +12,7 @@ import {
 import { unlink } from 'fs/promises'
 import { createInterface } from 'readline'
 import { join } from 'path'
-import { homedir } from 'os'
+import { homedir, tmpdir } from 'os'
 import { parseYaml, stringifyYaml } from '@src/utils/yaml'
 
 export class FsInfra {
@@ -86,6 +86,10 @@ export class FsInfra {
 
   homeDir(): string {
     return homedir()
+  }
+
+  tmpDir(): string {
+    return tmpdir()
   }
 
   currentWorkingDir(): string {

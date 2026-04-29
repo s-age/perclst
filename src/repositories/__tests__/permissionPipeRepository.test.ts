@@ -8,7 +8,10 @@ vi.mock('@src/utils/formatInputSummary.js', () => ({
   formatInputSummary: vi.fn()
 }))
 
-type PermissionPipeFs = Pick<FsInfra, 'fileExists' | 'readText' | 'removeFileSync' | 'writeText'>
+type PermissionPipeFs = Pick<
+  FsInfra,
+  'fileExists' | 'readText' | 'removeFileSync' | 'writeText' | 'tmpDir'
+>
 
 describe('PermissionPipeRepository', () => {
   let repo: PermissionPipeRepository
@@ -23,7 +26,8 @@ describe('PermissionPipeRepository', () => {
       fileExists: vi.fn(),
       readText: vi.fn(),
       removeFileSync: vi.fn(),
-      writeText: vi.fn()
+      writeText: vi.fn(),
+      tmpDir: vi.fn().mockReturnValue('/tmp')
     } as unknown as PermissionPipeFs
     mockTty = {
       openTty: vi.fn(),

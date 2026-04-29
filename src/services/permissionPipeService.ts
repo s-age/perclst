@@ -4,6 +4,10 @@ import type { PermissionRequest, PermissionResult } from '@src/types/permissionP
 export class PermissionPipeService {
   constructor(private domain: IPermissionPipeDomain) {}
 
+  initPipePath(): void {
+    this.domain.initPipePath()
+  }
+
   pollRequest(): PermissionRequest | null {
     return this.domain.pollRequest()
   }

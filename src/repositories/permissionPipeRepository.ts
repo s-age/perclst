@@ -3,14 +3,22 @@ import type { PermissionRequest, PermissionResult } from '@src/types/permissionP
 import type { FsInfra } from '@src/infrastructures/fs'
 import type { TtyInfra } from '@src/infrastructures/ttyInfrastructure'
 import { formatInputSummary } from '@src/utils/formatInputSummary'
+import { join } from '@src/utils/path'
 
-type PermissionPipeFs = Pick<FsInfra, 'fileExists' | 'readText' | 'removeFileSync' | 'writeText'>
+type PermissionPipeFs = Pick<
+  FsInfra,
+  'fileExists' | 'readText' | 'removeFileSync' | 'writeText' | 'tmpDir'
+>
 
 export class PermissionPipeRepository implements IPermissionPipeRepository {
   constructor(
     private fs: PermissionPipeFs,
     private tty: TtyInfra
   ) {}
+
+  initPipePath(): void {
+    process.env.PERCLST_PERMISSION_PIPE = join(this.fs.tmpDir(), `perclst-perm-${process.pid}`)
+  }
 
   private get pipePath(): string | null {
     return process.env.PERCLST_PERMISSION_PIPE ?? null

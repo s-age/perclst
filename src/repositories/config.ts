@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { join } from '@src/utils/path'
 import type { Config } from '@src/types/config'
 import { DEFAULT_CONFIG, CONFIG_DIR_NAME } from '@src/constants/config'
 import type { FsInfra } from '@src/infrastructures/fs'
