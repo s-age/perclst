@@ -11,7 +11,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { createParseState, processLine } from '../claudeCodeParser'
-import { computeMessagesTotalFromContent } from '../claudeSessionParser'
+import { computeMessagesTotalFromContent } from '../claudeSessionScanner'
 
 function jsonl(...events: object[]): string {
   return events.map((e) => JSON.stringify(e)).join('\n')

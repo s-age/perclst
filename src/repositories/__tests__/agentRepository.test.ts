@@ -7,7 +7,7 @@ vi.mock('@src/repositories/parsers/claudeCodeParser', () => ({
   emitStreamEvents: vi.fn()
 }))
 
-vi.mock('@src/repositories/parsers/claudeSessionParser', () => ({
+vi.mock('@src/repositories/parsers/claudeSessionScanner', () => ({
   computeMessagesTotalFromContent: vi.fn().mockReturnValue(0)
 }))
 

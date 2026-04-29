@@ -3,13 +3,10 @@ import type { AssistantTurnEntry, ClaudeSessionData, SessionStats } from '@src/t
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import type { FsInfra } from '@src/infrastructures/fs'
 import {
-  parseRawEntries,
-  buildToolResultMap,
-  buildTurns,
-  filterEntriesUpTo,
-  scanStats,
-  type RawAssistantEntry
-} from '@src/repositories/parsers/claudeSessionParser'
+  readSessionFromRaw,
+  extractAssistantTurnsFromRaw,
+  scanStats
+} from '@src/repositories/parsers/claudeSessionScanner'
 
 const MAX_SANITIZED_LENGTH = 200
 
@@ -124,10 +121,10 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     if (!this.fs.fileExists(jsonlPath)) {
       throw new Error(`Claude Code session file not found: ${jsonlPath}`)
     }
-    let entries = parseRawEntries(this.fs.readText(jsonlPath))
-    if (upToMessageId) entries = filterEntriesUpTo(entries, upToMessageId)
-    const toolResultMap = buildToolResultMap(entries)
-    const { turns, tokens, contextWindow } = buildTurns(entries, toolResultMap)
+    const { turns, tokens, contextWindow } = readSessionFromRaw(
+      this.fs.readText(jsonlPath),
+      upToMessageId
+    )
     return { turns, tokens: { ...tokens, contextWindow } }
   }
 
@@ -148,21 +145,6 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     if (!this.fs.fileExists(jsonlPath)) {
       throw new Error(`Claude Code session file not found: ${jsonlPath}`)
     }
-    const entries = parseRawEntries(this.fs.readText(jsonlPath))
-    const result: AssistantTurnEntry[] = []
-    for (const entry of entries) {
-      if (entry.type !== 'assistant') continue
-      const assistantEntry = entry as RawAssistantEntry
-      const content = assistantEntry.message.content ?? []
-      if (content.length > 0 && content.every((b) => b.type === 'thinking')) continue
-      const text = content
-        .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-        .map((b) => b.text)
-        .join(' ')
-        .trim()
-      if (!text) continue
-      result.push({ uuid: assistantEntry.uuid, text })
-    }
-    return result
+    return extractAssistantTurnsFromRaw(this.fs.readText(jsonlPath))
   }
 }

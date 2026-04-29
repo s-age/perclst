@@ -5,7 +5,7 @@ import type {
   RawContentBlock,
   RawEntry
 } from '../claudeSessionParser'
-import { buildTurns } from '../claudeSessionParser'
+import { buildTurns } from '../claudeSessionScanner'
 
 describe('buildTurns', () => {
   // Complexity: 9, suggested cases: 8

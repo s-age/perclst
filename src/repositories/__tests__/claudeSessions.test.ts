@@ -1,17 +1,15 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { Dirent } from 'fs'
 
-vi.mock('@src/repositories/parsers/claudeSessionParser')
+vi.mock('@src/repositories/parsers/claudeSessionScanner')
 
 import {
-  parseRawEntries,
-  buildToolResultMap,
-  buildTurns,
-  filterEntriesUpTo,
+  readSessionFromRaw,
+  extractAssistantTurnsFromRaw,
   scanStats
-} from '@src/repositories/parsers/claudeSessionParser'
-import type { RawEntry, TokenTotals } from '@src/repositories/parsers/claudeSessionParser'
-import type { SessionStats } from '@src/types/analysis'
+} from '@src/repositories/parsers/claudeSessionScanner'
+import type { TokenTotals } from '@src/repositories/parsers/claudeSessionParser'
+import type { AssistantTurnEntry, SessionStats } from '@src/types/analysis'
 import type { ClaudeCodeTurn } from '@src/types/analysis'
 import type { FsInfra } from '@src/infrastructures/fs'
 import { ClaudeSessionRepository } from '@src/repositories/claudeSessions'
@@ -21,13 +19,9 @@ type ClaudeSessionFs = Pick<
   'homeDir' | 'fileExists' | 'listDirEntries' | 'isDirectory' | 'readText'
 >
 
-const mockParseRawEntries = vi.mocked(parseRawEntries)
-const mockBuildToolResultMap = vi.mocked(buildToolResultMap)
-const mockBuildTurns = vi.mocked(buildTurns)
-const mockFilterEntriesUpTo = vi.mocked(filterEntriesUpTo)
+const mockReadSessionFromRaw = vi.mocked(readSessionFromRaw)
+const mockExtractAssistantTurnsFromRaw = vi.mocked(extractAssistantTurnsFromRaw)
 const mockScanStats = vi.mocked(scanStats)
-
-type ToolResultMap = Map<string, { text: string | null; isError: boolean }>
 
 function makeDirEntry(name: string, dir: boolean): { name: string; isDirectory: () => boolean } {
   return { name, isDirectory: () => dir }
@@ -248,9 +242,11 @@ describe('ClaudeSessionRepository', () => {
 
     beforeEach(() => {
       vi.mocked(mockFs.readText).mockReturnValue('raw content')
-      mockParseRawEntries.mockReturnValue([])
-      mockBuildToolResultMap.mockReturnValue(new Map() as ToolResultMap)
-      mockBuildTurns.mockReturnValue({ turns: [], tokens: emptyTokens, contextWindow: 0 })
+      mockReadSessionFromRaw.mockReturnValue({
+        turns: [],
+        tokens: emptyTokens,
+        contextWindow: 0
+      })
     })
 
     it('throws when the session JSONL file does not exist', () => {
@@ -261,24 +257,23 @@ describe('ClaudeSessionRepository', () => {
       )
     })
 
-    it('calls filterEntriesUpTo when upToMessageId is provided', () => {
+    it('passes upToMessageId to readSessionFromRaw when provided', () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockFilterEntriesUpTo.mockReturnValue([])
 
       repo.readSession('session-1', '/work/dir', 'msg-42')
 
-      expect(mockFilterEntriesUpTo).toHaveBeenCalledWith(expect.anything(), 'msg-42')
+      expect(mockReadSessionFromRaw).toHaveBeenCalledWith('raw content', 'msg-42')
     })
 
-    it('does not call filterEntriesUpTo when upToMessageId is omitted', () => {
+    it('passes undefined upToMessageId to readSessionFromRaw when omitted', () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
 
       repo.readSession('session-1', '/work/dir')
 
-      expect(mockFilterEntriesUpTo).not.toHaveBeenCalled()
+      expect(mockReadSessionFromRaw).toHaveBeenCalledWith('raw content', undefined)
     })
 
-    it('returns the turns and tokens produced by buildTurns', () => {
+    it('returns the turns and tokens produced by readSessionFromRaw', () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
       const expectedTurns: ClaudeCodeTurn[] = [{ toolCalls: [], assistantText: 'hi' }]
       const expectedTokens: TokenTotals = {
@@ -287,7 +282,7 @@ describe('ClaudeSessionRepository', () => {
         totalCacheRead: 0,
         totalCacheCreation: 0
       }
-      mockBuildTurns.mockReturnValue({
+      mockReadSessionFromRaw.mockReturnValue({
         turns: expectedTurns,
         tokens: expectedTokens,
         contextWindow: 0
@@ -364,74 +359,22 @@ describe('ClaudeSessionRepository', () => {
       )
     })
 
-    it('returns an empty array when there are no assistant-type entries', () => {
+    it('returns the entries produced by extractAssistantTurnsFromRaw', () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        { type: 'user', message: { content: [{ type: 'text', text: 'hello' }] } }
-      ] as unknown as RawEntry[])
+      const expected: AssistantTurnEntry[] = [{ uuid: 'a-1', text: 'Hello world' }]
+      mockExtractAssistantTurnsFromRaw.mockReturnValue(expected)
+
+      const result = repo.getAssistantTurns('session-1', '/work/dir')
+
+      expect(mockExtractAssistantTurnsFromRaw).toHaveBeenCalledWith('raw content')
+      expect(result).toEqual(expected)
+    })
+
+    it('returns an empty array when extractAssistantTurnsFromRaw returns empty', () => {
+      vi.mocked(mockFs.fileExists).mockReturnValue(true)
+      mockExtractAssistantTurnsFromRaw.mockReturnValue([])
 
       expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([])
-    })
-
-    it('skips assistant entries whose content consists entirely of thinking blocks', () => {
-      vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        {
-          type: 'assistant',
-          uuid: 'a-1',
-          message: { content: [{ type: 'thinking', thinking: 'internal monologue' }] }
-        }
-      ] as unknown as RawEntry[])
-
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([])
-    })
-
-    it('skips assistant entries where the joined text is empty after trimming', () => {
-      vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        {
-          type: 'assistant',
-          uuid: 'a-2',
-          message: { content: [{ type: 'text', text: '   ' }] }
-        }
-      ] as unknown as RawEntry[])
-
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([])
-    })
-
-    it('returns { uuid, trimmed text } for a valid assistant entry', () => {
-      vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        {
-          type: 'assistant',
-          uuid: 'a-3',
-          message: { content: [{ type: 'text', text: '  Hello world  ' }] }
-        }
-      ] as unknown as RawEntry[])
-
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([
-        { uuid: 'a-3', text: 'Hello world' }
-      ])
-    })
-
-    it('excludes tool_use blocks from text but retains text blocks in the same entry', () => {
-      vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        {
-          type: 'assistant',
-          uuid: 'a-4',
-          message: {
-            content: [
-              { type: 'text', text: 'Here is the result' },
-              { type: 'tool_use', id: 'tid-1', name: 'Read', input: {} }
-            ]
-          }
-        }
-      ] as unknown as RawEntry[])
-
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([
-        { uuid: 'a-4', text: 'Here is the result' }
-      ])
     })
   })
 })

@@ -5,7 +5,7 @@ import {
   finalizeParseState,
   emitStreamEvents
 } from '@src/repositories/parsers/claudeCodeParser'
-import { computeMessagesTotalFromContent } from '@src/repositories/parsers/claudeSessionParser'
+import { computeMessagesTotalFromContent } from '@src/repositories/parsers/claudeSessionScanner'
 import type { IClaudeCodeRepository } from '@src/repositories/ports/agent'
 import { RawExitError } from '@src/errors/rawExitError'
 import { APIError } from '@src/errors/apiError'
