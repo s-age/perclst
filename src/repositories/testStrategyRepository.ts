@@ -11,14 +11,6 @@ import { dirname, join, basename, extname, resolve } from 'path'
 
 type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText' | 'readJson'>
 
-export function canonicalTestFilePath(targetFilePath: string): string {
-  const abs = resolve(targetFilePath)
-  const dir = dirname(abs)
-  const stem = basename(abs, extname(abs))
-  const ext = extname(abs)
-  return join(dir, '__tests__', `${stem}.test${ext}`)
-}
-
 export class TestStrategyRepository implements ITestStrategyRepository {
   constructor(
     private readonly tsAnalyzer: TsAnalyzer,
@@ -64,7 +56,11 @@ export class TestStrategyRepository implements ITestStrategyRepository {
   }
 
   canonicalTestFilePath(targetFilePath: string): string {
-    return canonicalTestFilePath(targetFilePath)
+    const abs = resolve(targetFilePath)
+    const dir = dirname(abs)
+    const stem = basename(abs, extname(abs))
+    const ext = extname(abs)
+    return join(dir, '__tests__', `${stem}.test${ext}`)
   }
 
   extractTestFunctions(testFilePath: string): string[] {

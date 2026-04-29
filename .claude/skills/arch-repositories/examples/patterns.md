@@ -1,49 +1,5 @@
 # arch-repositories: Pattern Examples
 
-## Dual export style
-
-Class wraps standalone functions; callers can use either form.
-
-```ts
-// Good — sessions.ts: class delegates to standalone functions; port imported from ports/
-import type { ISessionRepository } from '@src/repositories/ports/session'
-
-export class SessionRepository implements ISessionRepository {
-  constructor(private sessionsDir: string) {}
-  save(session: Session): void { saveSession(this.sessionsDir, session) }
-  load(sessionId: string): Session { return loadSession(this.sessionsDir, sessionId) }
-}
-
-export function saveSession(sessionsDir: string, session: Session): void {
-  ensureDir(sessionsDir)
-  writeJson(getSessionPath(sessionsDir, session.id), session)  // infrastructure adapter
-}
-
-// Bad — repository calling raw Node.js fs directly
-import { writeFileSync } from 'fs'  // NG: raw I/O belongs in infrastructures/
-export function saveSession(sessionsDir: string, session: Session): void {
-  writeFileSync(path, JSON.stringify(session))
-}
-```
-
-## Functions-only repositories
-
-No class required when there is no injected state.
-
-```ts
-// Good — config.ts: pure functions, no class
-export function loadConfig(): Config {
-  const localConfig = loadFromPath(join(`./${CONFIG_DIR_NAME}`, 'config.json'))
-  const globalConfig = loadFromPath(join(homedir(), CONFIG_DIR_NAME, 'config.json'))
-  return { ...DEFAULT_CONFIG, ...globalConfig, ...localConfig }
-}
-
-// Bad — wrapping stateless functions in a class for no reason
-export class ConfigRepository {
-  load(): Config { return loadConfig() }  // NG: unnecessary class overhead
-}
-```
-
 ## Port type placement
 
 `IXxx` types belong in `src/repositories/ports/`, never in the implementation file.
