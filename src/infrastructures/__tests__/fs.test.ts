@@ -3,31 +3,19 @@ import * as fsSync from 'fs'
 import * as fsPromises from 'fs/promises'
 import * as os from 'os'
 import { join } from 'path'
-import {
-  readJson,
-  writeJson,
-  fileExists,
-  removeFile,
-  listFiles,
-  ensureDir,
-  readText,
-  writeText,
-  removeFileSync,
-  cleanDir,
-  listDirEntries,
-  isDirectory,
-  homeDir,
-  currentWorkingDir
-} from '../fs'
+import { FsInfra } from '../fs'
 
 // Mock fs and os modules
 vi.mock('fs')
 vi.mock('fs/promises')
 vi.mock('os')
 
-describe('fs module', () => {
+describe('FsInfra', () => {
+  let infra: FsInfra
+
   beforeEach(() => {
     vi.resetAllMocks()
+    infra = new FsInfra()
   })
 
   describe('readJson', () => {
@@ -35,7 +23,7 @@ describe('fs module', () => {
       const mockData = { name: 'test', value: 42 }
       vi.mocked(fsSync.readFileSync).mockReturnValue(JSON.stringify(mockData))
 
-      const result = readJson<typeof mockData>('/path/to/file.json')
+      const result = infra.readJson<typeof mockData>('/path/to/file.json')
 
       expect(result).toEqual(mockData)
       expect(fsSync.readFileSync).toHaveBeenCalledWith('/path/to/file.json', 'utf-8')
@@ -44,7 +32,7 @@ describe('fs module', () => {
     it('should throw error when file contains invalid JSON', () => {
       vi.mocked(fsSync.readFileSync).mockReturnValue('invalid json {')
 
-      expect(() => readJson('/path/to/file.json')).toThrow(SyntaxError)
+      expect(() => infra.readJson('/path/to/file.json')).toThrow(SyntaxError)
     })
 
     it('should throw error when file does not exist', () => {
@@ -52,7 +40,7 @@ describe('fs module', () => {
         throw new Error('ENOENT: no such file or directory')
       })
 
-      expect(() => readJson('/nonexistent.json')).toThrow('ENOENT')
+      expect(() => infra.readJson('/nonexistent.json')).toThrow('ENOENT')
     })
   })
 
@@ -60,7 +48,7 @@ describe('fs module', () => {
     it('should write data as formatted JSON to file', () => {
       const mockData = { name: 'test', nested: { value: 42 } }
 
-      writeJson('/path/to/file.json', mockData)
+      infra.writeJson('/path/to/file.json', mockData)
 
       expect(fsSync.writeFileSync).toHaveBeenCalledWith(
         '/path/to/file.json',
@@ -72,7 +60,7 @@ describe('fs module', () => {
     it('should format JSON with 2-space indentation', () => {
       const mockData = { a: 1 }
 
-      writeJson('/path/to/file.json', mockData)
+      infra.writeJson('/path/to/file.json', mockData)
 
       const writtenContent = vi.mocked(fsSync.writeFileSync).mock.calls[0][1]
       expect(writtenContent).toContain('  "a"')
@@ -83,7 +71,7 @@ describe('fs module', () => {
         throw new Error('EACCES: permission denied')
       })
 
-      expect(() => writeJson('/restricted/file.json', {})).toThrow()
+      expect(() => infra.writeJson('/restricted/file.json', {})).toThrow()
     })
   })
 
@@ -91,7 +79,7 @@ describe('fs module', () => {
     it('should return true when file exists', () => {
       vi.mocked(fsSync.existsSync).mockReturnValue(true)
 
-      const result = fileExists('/path/to/file.json')
+      const result = infra.fileExists('/path/to/file.json')
 
       expect(result).toBe(true)
       expect(fsSync.existsSync).toHaveBeenCalledWith('/path/to/file.json')
@@ -100,7 +88,7 @@ describe('fs module', () => {
     it('should return false when file does not exist', () => {
       vi.mocked(fsSync.existsSync).mockReturnValue(false)
 
-      const result = fileExists('/nonexistent/file.json')
+      const result = infra.fileExists('/nonexistent/file.json')
 
       expect(result).toBe(false)
     })
@@ -110,7 +98,7 @@ describe('fs module', () => {
     it('should delete file asynchronously', async () => {
       vi.mocked(fsPromises.unlink).mockResolvedValue(undefined)
 
-      await removeFile('/path/to/file.json')
+      await infra.removeFile('/path/to/file.json')
 
       expect(fsPromises.unlink).toHaveBeenCalledWith('/path/to/file.json')
     })
@@ -118,13 +106,13 @@ describe('fs module', () => {
     it('should reject when file does not exist', async () => {
       vi.mocked(fsPromises.unlink).mockRejectedValue(new Error('ENOENT: no such file or directory'))
 
-      await expect(removeFile('/nonexistent.json')).rejects.toThrow('ENOENT')
+      await expect(infra.removeFile('/nonexistent.json')).rejects.toThrow('ENOENT')
     })
 
     it('should reject when permission denied', async () => {
       vi.mocked(fsPromises.unlink).mockRejectedValue(new Error('EACCES: permission denied'))
 
-      await expect(removeFile('/restricted/file.json')).rejects.toThrow('permission denied')
+      await expect(infra.removeFile('/restricted/file.json')).rejects.toThrow('permission denied')
     })
   })
 
@@ -138,7 +126,7 @@ describe('fs module', () => {
         'file4.json'
       ] as unknown as ReturnType<typeof fsSync.readdirSync>)
 
-      const result = listFiles('/path/to/dir', '.json')
+      const result = infra.listFiles('/path/to/dir', '.json')
 
       expect(result).toEqual(['file1.json', 'file2.json', 'file4.json'])
       expect(fsSync.existsSync).toHaveBeenCalledWith('/path/to/dir')
@@ -148,7 +136,7 @@ describe('fs module', () => {
     it('should return empty array when directory does not exist', () => {
       vi.mocked(fsSync.existsSync).mockReturnValue(false)
 
-      const result = listFiles('/nonexistent/dir', '.json')
+      const result = infra.listFiles('/nonexistent/dir', '.json')
 
       expect(result).toEqual([])
       expect(fsSync.readdirSync).not.toHaveBeenCalled()
@@ -161,7 +149,7 @@ describe('fs module', () => {
         'file2.txt'
       ] as unknown as ReturnType<typeof fsSync.readdirSync>)
 
-      const result = listFiles('/path/to/dir', '.json')
+      const result = infra.listFiles('/path/to/dir', '.json')
 
       expect(result).toEqual([])
     })
@@ -172,7 +160,7 @@ describe('fs module', () => {
         [] as unknown as ReturnType<typeof fsSync.readdirSync>
       )
 
-      const result = listFiles('/path/to/dir', '.json')
+      const result = infra.listFiles('/path/to/dir', '.json')
 
       expect(result).toEqual([])
     })
@@ -180,7 +168,7 @@ describe('fs module', () => {
 
   describe('ensureDir', () => {
     it('should create directory with recursive option', () => {
-      ensureDir('/path/to/dir')
+      infra.ensureDir('/path/to/dir')
 
       expect(fsSync.mkdirSync).toHaveBeenCalledWith('/path/to/dir', { recursive: true })
     })
@@ -191,7 +179,7 @@ describe('fs module', () => {
         return ''
       })
 
-      expect(() => ensureDir('/existing/dir')).not.toThrow()
+      expect(() => infra.ensureDir('/existing/dir')).not.toThrow()
     })
 
     it('should throw error when permission denied', () => {
@@ -199,7 +187,7 @@ describe('fs module', () => {
         throw new Error('EACCES: permission denied')
       })
 
-      expect(() => ensureDir('/restricted/dir')).toThrow('permission denied')
+      expect(() => infra.ensureDir('/restricted/dir')).toThrow('permission denied')
     })
   })
 
@@ -208,7 +196,7 @@ describe('fs module', () => {
       const mockContent = 'Hello, World!'
       vi.mocked(fsSync.readFileSync).mockReturnValue(mockContent)
 
-      const result = readText('/path/to/file.txt')
+      const result = infra.readText('/path/to/file.txt')
 
       expect(result).toBe(mockContent)
       expect(fsSync.readFileSync).toHaveBeenCalledWith('/path/to/file.txt', 'utf-8')
@@ -218,7 +206,7 @@ describe('fs module', () => {
       const mockContent = 'Line 1\nLine 2\n  indented'
       vi.mocked(fsSync.readFileSync).mockReturnValue(mockContent)
 
-      const result = readText('/path/to/file.txt')
+      const result = infra.readText('/path/to/file.txt')
 
       expect(result).toBe(mockContent)
     })
@@ -228,19 +216,19 @@ describe('fs module', () => {
         throw new Error('ENOENT: no such file or directory')
       })
 
-      expect(() => readText('/nonexistent.txt')).toThrow('ENOENT')
+      expect(() => infra.readText('/nonexistent.txt')).toThrow('ENOENT')
     })
   })
 
   describe('writeText', () => {
     it('should write content to file with utf-8 encoding', () => {
-      writeText('/path/to/file.txt', 'hello world')
+      infra.writeText('/path/to/file.txt', 'hello world')
 
       expect(fsSync.writeFileSync).toHaveBeenCalledWith('/path/to/file.txt', 'hello world', 'utf-8')
     })
 
     it('should write empty string content', () => {
-      writeText('/path/to/file.txt', '')
+      infra.writeText('/path/to/file.txt', '')
 
       expect(fsSync.writeFileSync).toHaveBeenCalledWith('/path/to/file.txt', '', 'utf-8')
     })
@@ -250,13 +238,13 @@ describe('fs module', () => {
         throw new Error('EACCES: permission denied')
       })
 
-      expect(() => writeText('/restricted/file.txt', 'content')).toThrow()
+      expect(() => infra.writeText('/restricted/file.txt', 'content')).toThrow()
     })
   })
 
   describe('removeFileSync', () => {
     it('should call unlinkSync with the given path', () => {
-      removeFileSync('/path/to/file.txt')
+      infra.removeFileSync('/path/to/file.txt')
 
       expect(fsSync.unlinkSync).toHaveBeenCalledWith('/path/to/file.txt')
     })
@@ -266,7 +254,7 @@ describe('fs module', () => {
         throw new Error('ENOENT: no such file or directory')
       })
 
-      expect(() => removeFileSync('/nonexistent.txt')).toThrow('ENOENT')
+      expect(() => infra.removeFileSync('/nonexistent.txt')).toThrow('ENOENT')
     })
 
     it('should throw when permission is denied', () => {
@@ -274,7 +262,7 @@ describe('fs module', () => {
         throw new Error('EACCES: permission denied')
       })
 
-      expect(() => removeFileSync('/restricted/file.txt')).toThrow('permission denied')
+      expect(() => infra.removeFileSync('/restricted/file.txt')).toThrow('permission denied')
     })
   })
 
@@ -286,7 +274,7 @@ describe('fs module', () => {
         typeof fsSync.readdirSync
       >)
 
-      cleanDir('/some/dir')
+      infra.cleanDir('/some/dir')
 
       expect(fsSync.unlinkSync).toHaveBeenCalledWith(join('/some/dir', 'file.txt'))
     })
@@ -294,7 +282,7 @@ describe('fs module', () => {
     it('should return early without reading dir when directory does not exist', (): void => {
       vi.mocked(fsSync.existsSync).mockReturnValue(false)
 
-      cleanDir('/nonexistent/dir')
+      infra.cleanDir('/nonexistent/dir')
 
       expect(fsSync.readdirSync).not.toHaveBeenCalled()
     })
@@ -305,7 +293,7 @@ describe('fs module', () => {
         [] as unknown as ReturnType<typeof fsSync.readdirSync>
       )
 
-      cleanDir('/empty/dir')
+      infra.cleanDir('/empty/dir')
 
       expect(fsSync.unlinkSync).not.toHaveBeenCalled()
     })
@@ -317,7 +305,7 @@ describe('fs module', () => {
         typeof fsSync.readdirSync
       >)
 
-      cleanDir('/some/dir')
+      infra.cleanDir('/some/dir')
 
       expect(fsSync.unlinkSync).not.toHaveBeenCalled()
     })
@@ -332,7 +320,7 @@ describe('fs module', () => {
         throw new Error('EBUSY: resource busy or locked')
       })
 
-      expect(() => cleanDir('/some/dir')).not.toThrow()
+      expect(() => infra.cleanDir('/some/dir')).not.toThrow()
     })
 
     it('should delete multiple files in the directory', (): void => {
@@ -345,7 +333,7 @@ describe('fs module', () => {
         entries as unknown as ReturnType<typeof fsSync.readdirSync>
       )
 
-      cleanDir('/some/dir')
+      infra.cleanDir('/some/dir')
 
       expect(fsSync.unlinkSync).toHaveBeenCalledTimes(2)
     })
@@ -358,7 +346,7 @@ describe('fs module', () => {
         typeof fsSync.readdirSync
       >)
 
-      const result = listDirEntries('/some/dir')
+      const result = infra.listDirEntries('/some/dir')
 
       expect(result).toEqual([entry])
       expect(fsSync.readdirSync).toHaveBeenCalledWith('/some/dir', { withFileTypes: true })
@@ -369,7 +357,7 @@ describe('fs module', () => {
         [] as unknown as ReturnType<typeof fsSync.readdirSync>
       )
 
-      const result = listDirEntries('/empty/dir')
+      const result = infra.listDirEntries('/empty/dir')
 
       expect(result).toEqual([])
     })
@@ -379,7 +367,7 @@ describe('fs module', () => {
         throw new Error('ENOENT: no such file or directory')
       })
 
-      expect(() => listDirEntries('/nonexistent')).toThrow('ENOENT')
+      expect(() => infra.listDirEntries('/nonexistent')).toThrow('ENOENT')
     })
   })
 
@@ -389,7 +377,7 @@ describe('fs module', () => {
         typeof fsSync.statSync
       >)
 
-      const result = isDirectory('/some/dir')
+      const result = infra.isDirectory('/some/dir')
 
       expect(result).toBe(true)
     })
@@ -399,7 +387,7 @@ describe('fs module', () => {
         typeof fsSync.statSync
       >)
 
-      const result = isDirectory('/some/file.txt')
+      const result = infra.isDirectory('/some/file.txt')
 
       expect(result).toBe(false)
     })
@@ -409,7 +397,7 @@ describe('fs module', () => {
         throw new Error('ENOENT: no such file or directory')
       })
 
-      expect(() => isDirectory('/nonexistent')).toThrow()
+      expect(() => infra.isDirectory('/nonexistent')).toThrow()
     })
   })
 
@@ -417,7 +405,7 @@ describe('fs module', () => {
     it('should return home directory path', () => {
       vi.mocked(os.homedir).mockReturnValue('/home/testuser')
 
-      const result = homeDir()
+      const result = infra.homeDir()
 
       expect(result).toBe('/home/testuser')
       expect(os.homedir).toHaveBeenCalled()
@@ -426,7 +414,7 @@ describe('fs module', () => {
     it('should call os.homedir exactly once', () => {
       vi.mocked(os.homedir).mockReturnValue('/home/testuser')
 
-      homeDir()
+      infra.homeDir()
 
       expect(os.homedir).toHaveBeenCalledTimes(1)
     })
@@ -436,7 +424,7 @@ describe('fs module', () => {
     it('should return the current working directory', () => {
       vi.spyOn(process, 'cwd').mockReturnValue('/mocked/cwd')
 
-      expect(currentWorkingDir()).toBe('/mocked/cwd')
+      expect(infra.currentWorkingDir()).toBe('/mocked/cwd')
       expect(process.cwd).toHaveBeenCalled()
     })
   })

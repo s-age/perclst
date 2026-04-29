@@ -10,8 +10,8 @@ export class GitRepository implements IGitRepository {
 
   getDiffStat(): string | null {
     try {
-      const staged = this.git.execGitSync('diff --cached --stat')
-      const unstaged = this.git.execGitSync('diff --stat')
+      const staged = this.git.execGitSync(['diff', '--cached', '--stat'])
+      const unstaged = this.git.execGitSync(['diff', '--stat'])
       const combined = [staged, unstaged].filter(Boolean).join('\n')
       return combined || null
     } catch {
@@ -21,7 +21,7 @@ export class GitRepository implements IGitRepository {
 
   getHead(): string | null {
     try {
-      return this.git.execGitSync('rev-parse HEAD')
+      return this.git.execGitSync(['rev-parse', 'HEAD'])
     } catch {
       return null
     }
@@ -29,7 +29,7 @@ export class GitRepository implements IGitRepository {
 
   getDiffSummary(from: string, to: string): string | null {
     try {
-      const stat = this.git.execGitSync(`diff ${from}...${to} --stat`)
+      const stat = this.git.execGitSync(['diff', `${from}...${to}`, '--stat'])
       return stat || null
     } catch {
       return null
@@ -38,7 +38,7 @@ export class GitRepository implements IGitRepository {
 
   getDiff(from: string, to: string): string | null {
     try {
-      const diff = this.git.execGitSync(`diff ${from} ${to}`)
+      const diff = this.git.execGitSync(['diff', from, to])
       return diff || null
     } catch {
       return null
@@ -71,14 +71,14 @@ export class GitRepository implements IGitRepository {
   }
 
   stageUpdated(path: string): void {
-    this.git.execGitSync(`add -u "${path}"`)
+    this.git.execGitSync(['add', '-u', path])
   }
 
   stageNew(path: string): void {
-    this.git.execGitSync(`add "${path}"`)
+    this.git.execGitSync(['add', path])
   }
 
   commit(message: string): void {
-    this.git.execGitSync(`commit -m "${message}"`)
+    this.git.execGitSync(['commit', '-m', message])
   }
 }

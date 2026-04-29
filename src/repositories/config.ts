@@ -1,34 +1,34 @@
 import { join } from 'path'
 import type { Config } from '@src/types/config'
 import { DEFAULT_CONFIG, CONFIG_DIR_NAME } from '@src/constants/config'
-import { readJson, fileExists, homeDir, currentWorkingDir } from '@src/infrastructures/fs'
+import type { FsInfra } from '@src/infrastructures/fs'
 
-function loadFromPath(path: string): Partial<Config> {
-  if (!fileExists(path)) return {}
+function loadFromPath(fs: FsInfra, path: string): Partial<Config> {
+  if (!fs.fileExists(path)) return {}
   try {
-    return readJson<Partial<Config>>(path)
+    return fs.readJson<Partial<Config>>(path)
   } catch (error) {
     console.warn(`Failed to load config from ${path}:`, error)
     return {}
   }
 }
 
-function resolvePath(path: string): string {
+function resolvePath(fs: FsInfra, path: string): string {
   if (path.startsWith('/')) return path
-  if (path.startsWith('~')) return path.replace('~', homeDir())
-  return join(currentWorkingDir(), path)
+  if (path.startsWith('~')) return path.replace('~', fs.homeDir())
+  return join(fs.currentWorkingDir(), path)
 }
 
-export function loadConfig(): Config {
-  const localConfig = loadFromPath(join(`./${CONFIG_DIR_NAME}`, 'config.json'))
-  const globalConfig = loadFromPath(join(homeDir(), CONFIG_DIR_NAME, 'config.json'))
+export function loadConfig(fs: FsInfra): Config {
+  const localConfig = loadFromPath(fs, join(`./${CONFIG_DIR_NAME}`, 'config.json'))
+  const globalConfig = loadFromPath(fs, join(fs.homeDir(), CONFIG_DIR_NAME, 'config.json'))
   return { ...DEFAULT_CONFIG, ...globalConfig, ...localConfig }
 }
 
-export function resolveSessionsDir(config: Config): string {
-  return resolvePath(config.sessions_dir || DEFAULT_CONFIG.sessions_dir!)
+export function resolveSessionsDir(fs: FsInfra, config: Config): string {
+  return resolvePath(fs, config.sessions_dir || DEFAULT_CONFIG.sessions_dir!)
 }
 
-export function resolveKnowledgeDir(): string {
-  return join(currentWorkingDir(), 'knowledge')
+export function resolveKnowledgeDir(fs: FsInfra): string {
+  return join(fs.currentWorkingDir(), 'knowledge')
 }

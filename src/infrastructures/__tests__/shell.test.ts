@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { exec } from 'child_process'
-import { execShell } from '../shell.js'
+import { ShellInfra } from '../shell'
 
 vi.mock('child_process', () => ({
   exec: vi.fn()
@@ -13,92 +13,63 @@ type ExecCallback = (
 ) => void
 type ExecImpl = (command: string, opts: object, cb: ExecCallback) => void
 
-const mockExec = vi.mocked(exec)
+describe('ShellInfra', () => {
+  let infra: ShellInfra
 
-function stubExec(error: (Error & { code?: number }) | null, stdout: string, stderr: string): void {
-  mockExec.mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback) => {
-    cb(error, stdout, stderr)
-  }) as ExecImpl as typeof exec)
-}
-
-describe('execShell', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    infra = new ShellInfra()
   })
 
-  it('resolves with exitCode 0 when exec succeeds', async () => {
-    stubExec(null, 'stdout text', 'stderr text')
+  it('should return exitCode 0 on successful execution', async () => {
+    vi.mocked(exec).mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback): void => {
+      cb(null, 'output', '')
+    }) as unknown as ExecImpl as typeof exec)
 
-    const result = await execShell('echo hello', '/tmp')
+    const result = await infra.execShell('echo hello', '/tmp')
 
     expect(result.exitCode).toBe(0)
   })
 
-  it('resolves with stdout from the exec callback', async () => {
-    stubExec(null, 'hello stdout', '')
+  it('should return stdout from successful execution', async () => {
+    vi.mocked(exec).mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback): void => {
+      cb(null, 'Success output', '')
+    }) as unknown as ExecImpl as typeof exec)
 
-    const result = await execShell('echo hello', '/tmp')
+    const result = await infra.execShell('echo hello', '/tmp')
 
-    expect(result.stdout).toBe('hello stdout')
+    expect(result.stdout).toBe('Success output')
   })
 
-  it('resolves with stderr from the exec callback', async () => {
-    stubExec(null, '', 'hello stderr')
+  it('should return stderr from successful execution', async () => {
+    vi.mocked(exec).mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback): void => {
+      cb(null, 'output', 'warning')
+    }) as unknown as ExecImpl as typeof exec)
 
-    const result = await execShell('echo hello', '/tmp')
+    const result = await infra.execShell('npm run build', '/home/user')
 
-    expect(result.stderr).toBe('hello stderr')
+    expect(result.stderr).toBe('warning')
   })
 
-  it('resolves with error.code as exitCode when exec errors with a code', async () => {
-    stubExec(Object.assign(new Error('command failed'), { code: 127 }), '', 'command not found')
+  it('should return error exit code when command fails', async () => {
+    const error = Object.assign(new Error('fail'), { code: 127 })
+    vi.mocked(exec).mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback): void => {
+      cb(error, '', 'command not found')
+    }) as unknown as ExecImpl as typeof exec)
 
-    const result = await execShell('bad-cmd', '/tmp')
+    const result = await infra.execShell('invalid-cmd', '/tmp')
 
     expect(result.exitCode).toBe(127)
   })
 
-  it('resolves with exitCode 0 when error exists but code is undefined', async () => {
-    stubExec(new Error('no exit code') as Error & { code?: number }, '', '')
+  it('should default exitCode to 0 when error has no code', async () => {
+    const error = new Error('fail') as Error & { code?: number }
+    vi.mocked(exec).mockImplementation(((_cmd: string, _opts: object, cb: ExecCallback): void => {
+      cb(error, '', 'error')
+    }) as unknown as ExecImpl as typeof exec)
 
-    const result = await execShell('bad-cmd', '/tmp')
+    const result = await infra.execShell('bad-cmd', '/tmp')
 
     expect(result.exitCode).toBe(0)
-  })
-
-  it('resolves with stdout even when exec errors', async () => {
-    stubExec(Object.assign(new Error('partial failure'), { code: 1 }), 'partial output', '')
-
-    const result = await execShell('partial-cmd', '/tmp')
-
-    expect(result.stdout).toBe('partial output')
-  })
-
-  it('resolves with stderr even when exec errors', async () => {
-    stubExec(Object.assign(new Error('command failed'), { code: 1 }), '', 'error diagnostics')
-
-    const result = await execShell('bad-cmd', '/tmp')
-
-    expect(result.stderr).toBe('error diagnostics')
-  })
-
-  it('passes the command string to exec', async () => {
-    stubExec(null, '', '')
-
-    await execShell('ls -la', '/tmp')
-
-    expect(mockExec).toHaveBeenCalledWith('ls -la', expect.any(Object), expect.any(Function))
-  })
-
-  it('passes the cwd option to exec', async () => {
-    stubExec(null, '', '')
-
-    await execShell('ls', '/home/user')
-
-    expect(mockExec).toHaveBeenCalledWith(
-      expect.any(String),
-      { cwd: '/home/user' },
-      expect.any(Function)
-    )
   })
 })

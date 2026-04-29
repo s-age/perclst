@@ -101,15 +101,16 @@ export function buildGitInfraStub(opts?: {
   const headValues = Array.isArray(opts?.head) ? opts.head : [opts?.head ?? null]
 
   return {
-    execGitSync: vi.fn((args: string) => {
-      if (args.startsWith('diff --cached --stat') || args.startsWith('diff --stat')) {
+    execGitSync: vi.fn((args: string[]) => {
+      const sub = args[0]
+      if (sub === 'diff' && args.includes('--stat') && !args.some((a) => a.includes('...'))) {
         return opts?.diffStat ?? ''
       }
-      if (args.startsWith('rev-parse HEAD')) {
+      if (sub === 'rev-parse') {
         return headValues[headCallCount++ % headValues.length] ?? ''
       }
-      if (args.includes('--stat')) return opts?.diffSummary ?? ''
-      if (args.startsWith('diff ')) return opts?.diff ?? ''
+      if (sub === 'diff' && args.includes('--stat')) return opts?.diffSummary ?? ''
+      if (sub === 'diff') return opts?.diff ?? ''
       return ''
     }),
     spawnGitSync: vi.fn(() => '')
