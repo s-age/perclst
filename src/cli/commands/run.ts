@@ -3,7 +3,6 @@ import { resolve, join, dirname } from 'path'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { PipelineService } from '@src/services/pipelineService'
-import type { PipelineTaskResult } from '@src/services/pipelineService'
 import type { PermissionPipeService } from '@src/services/permissionPipeService'
 import type { AbortService } from '@src/services/abortService'
 import { ValidationError } from '@src/errors/validationError'
@@ -12,7 +11,8 @@ import { APIError } from '@src/errors/apiError'
 import { PipelineMaxRetriesError } from '@src/errors/pipelineMaxRetriesError'
 import { stdout, stderr } from '@src/utils/output'
 import { confirm } from '@src/cli/prompt'
-import { printResponse, printStreamEvent } from '@src/cli/view/display'
+import { printStreamEvent } from '@src/cli/view/display'
+import { printTaskResult, printGitDiffSummary } from '@src/cli/view/runDisplay'
 import { parseRunOptions, parsePipeline } from '@src/validators/cli/runPipeline'
 import type { RunPipelineInput } from '@src/validators/cli/runPipeline'
 import type { Config } from '@src/types/config'
@@ -26,57 +26,6 @@ type RawRunOptions = {
   batch?: boolean
   yes?: boolean
   format?: string
-}
-
-function taskLabel(taskPath: number[], taskIndex: number): string {
-  const prefix = taskPath.length > 0 ? taskPath.map((p) => p + 1).join('.') + '.' : ''
-  return `${prefix}${taskIndex + 1}`
-}
-
-function printTaskResult(
-  result: PipelineTaskResult,
-  input: RunPipelineInput,
-  config: Config,
-  streaming: boolean
-): void {
-  if (result.kind === 'retry' || result.kind === 'pipeline_end') {
-    return
-  }
-  if (result.kind === 'task_start') {
-    if (result.taskType === 'child') {
-      const num = taskLabel(result.taskPath, result.taskIndex)
-      const label = result.name
-        ? `${result.name} (${result.childPath ?? ''})`
-        : (result.childPath ?? '[child]')
-      stdout.print(`\nTask ${num} [child]: ${label}`)
-    }
-    return
-  }
-  if (result.kind === 'script') {
-    const status = result.result.exitCode === 0 ? 'ok' : `exit ${result.result.exitCode}`
-    stdout.print(
-      `\nTask ${taskLabel(result.taskPath, result.taskIndex)} [script] ${status}: ${result.command}`
-    )
-    if (result.result.stdout) stdout.print(result.result.stdout.trimEnd())
-    if (result.result.stderr) stdout.print(result.result.stderr.trimEnd())
-  } else {
-    const num = taskLabel(result.taskPath, result.taskIndex)
-    const label = result.name
-      ? `Task ${num}: ${result.name} [${result.action}]`
-      : `Task ${num} [${result.action}]`
-    stdout.print(`\n${label} — session: ${result.sessionId}`)
-    printResponse(
-      result.response,
-      {
-        outputOnly: input.outputOnly,
-        format: input.format,
-        silentThoughts: streaming,
-        silentToolResponse: streaming
-      },
-      config.display,
-      { sessionId: result.sessionId }
-    )
-  }
 }
 
 async function checkUncommittedChanges(pipelineFileService: PipelineFileService): Promise<void> {
@@ -122,20 +71,6 @@ function handleRunCommandError(error: unknown, abortService: AbortService): neve
     stderr.print('Pipeline failed', error as Error)
   }
   process.exit(1)
-}
-
-function printGitDiffSummary(
-  pipelineFileService: PipelineFileService,
-  fromHash: string,
-  toHash: string
-): void {
-  const stat = pipelineFileService.getDiffSummary(fromHash, toHash)
-  if (!stat) return
-  stdout.print(
-    `\nChanges committed during pipeline (${fromHash.slice(0, 7)}...${toHash.slice(0, 7)}):`
-  )
-  stdout.print(stat)
-  stdout.print(`\nTo inspect: git diff ${fromHash}...${toHash}`)
 }
 
 async function executeTUIPipeline(
