@@ -62,7 +62,7 @@ describe('PipelineService', () => {
       const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'sub.json' }] }
       await expect(async () => {
         const events: PipelineTaskResult[] = []
-        for await (const e of service.run(pipeline)) events.push(e)
+        for await (const e of service.run(pipeline, { pipelineDir: '/base' })) events.push(e)
       }).rejects.toThrow('File not found')
     })
 
@@ -119,14 +119,14 @@ describe('PipelineService', () => {
       expect(onChildPipelineDone).toHaveBeenCalledWith('/absolute/sub.json')
     })
 
-    it('should use process.cwd() as base when pipelineDir is not specified', async () => {
+    it('should throw when pipelineDir is not specified', async () => {
       vi.mocked(mockLoaderDomain.load).mockReturnValue(rawChildPipeline)
 
-      const pipeline: Pipeline = { tasks: [{ type: 'child', path: '/absolute/sub.json' }] }
+      const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'relative/sub.json' }] }
       const events: PipelineTaskResult[] = []
-      for await (const e of service.run(pipeline)) events.push(e)
-
-      expect(mockLoaderDomain.load).toHaveBeenCalledWith('/absolute/sub.json')
+      await expect(async () => {
+        for await (const e of service.run(pipeline)) events.push(e)
+      }).rejects.toThrow('pipelineDir is required for child pipeline resolution')
     })
   })
 })
