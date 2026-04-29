@@ -3,7 +3,13 @@ import { readdirSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { startCommand } from '../../start'
 import { setupContainer } from '@src/core/di/setup'
-import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeResultLines,
+  makeToolResultLines,
+  buildClaudeCodeStub,
+  makeTmpDir,
+  buildTestConfig
+} from './helpers'
 import { stderr } from '@src/utils/output'
 import { printResponse, printStreamEvent } from '@src/cli/view/display'
 import { confirmIfDuplicateName } from '@src/cli/prompt'
@@ -35,7 +41,7 @@ describe('startCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('session JSON が tmpdir に作成される', async () => {
+    it('session JSON is created in tmpdir', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -45,7 +51,7 @@ describe('startCommand (integration)', () => {
       expect(files).toHaveLength(1)
     })
 
-    it('session の status が completed になる', async () => {
+    it('session status becomes completed', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -56,7 +62,7 @@ describe('startCommand (integration)', () => {
       expect(session.metadata.status).toBe('completed')
     })
 
-    it('runClaude に task が prompt として渡される', async () => {
+    it('task is passed to runClaude as prompt', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -70,7 +76,7 @@ describe('startCommand (integration)', () => {
       expect(prompt).toBe('my task text')
     })
 
-    it('procedure オプションが session に保存される', async () => {
+    it('procedure option is saved in session', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -83,7 +89,7 @@ describe('startCommand (integration)', () => {
       expect(session.procedure).toBe('meta-librarian/curate')
     })
 
-    it('streaming モードで printStreamEvent が呼ばれ printResponse に silentThoughts が渡る', async () => {
+    it('in streaming mode, printStreamEvent is called and silentThoughts is passed to printResponse', async () => {
       const thinkingLine = JSON.stringify({
         type: 'assistant',
         message: {
@@ -106,9 +112,47 @@ describe('startCommand (integration)', () => {
       )
     })
 
-    it('name 指定 + outputOnly: false で confirmIfDuplicateName が呼ばれる', async () => {
+    it("tool_use → tool_result is included in printResponse's response", async () => {
+      const lines = makeToolResultLines(
+        { id: 'tu-1', name: 'Bash', input: { command: 'ls' }, result: 'file.txt' },
+        'done'
+      )
+      const stub = buildClaudeCodeStub(lines)
+      setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
+
+      await startCommand('task', { outputOnly: true })
+
+      const response = vi.mocked(printResponse).mock.calls[0][0]
+      expect(response.tool_history).toEqual([
+        expect.objectContaining({ id: 'tu-1', name: 'Bash', result: 'file.txt' })
+      ])
+    })
+
+    it('in streaming mode, printStreamEvent is called for tool_use/tool_result', async () => {
+      const lines = makeToolResultLines(
+        { id: 'tu-2', name: 'Read', input: { file_path: '/tmp/x' }, result: 'content' },
+        'done'
+      )
+      const stub = buildClaudeCodeStub(lines)
+      setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
+
+      await startCommand('task', { outputOnly: false })
+
+      const calls = vi.mocked(printStreamEvent).mock.calls.map(([e]) => e)
+      expect(calls).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'tool_use', name: 'Read' }),
+          expect.objectContaining({ type: 'tool_result', toolName: 'Read' })
+        ])
+      )
+    })
+
+    it('with name specified + outputOnly: false, confirmIfDuplicateName executes findByName callback', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
+      vi.mocked(confirmIfDuplicateName).mockImplementation(async (_name, findByName) => {
+        await findByName(_name)
+      })
 
       await startCommand('test task', { outputOnly: false, name: 'my-session' })
 
@@ -133,7 +177,7 @@ describe('startCommand (integration)', () => {
       return stub
     }
 
-    it('Generic Error のとき process.exit(1) と Failed to start session が出る', async () => {
+    it('Generic Error results in process.exit(1) and Failed to start session', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
@@ -145,7 +189,7 @@ describe('startCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to start session', err)
     })
 
-    it('UserCancelledError のとき process.exit(0) と Cancelled が出る', async () => {
+    it('UserCancelledError results in process.exit(0) and Cancelled', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new UserCancelledError()) }
@@ -156,7 +200,7 @@ describe('startCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Cancelled.')
     })
 
-    it('ValidationError のとき process.exit(1) と Invalid arguments が出る', async () => {
+    it('ValidationError results in process.exit(1) and Invalid arguments', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -167,7 +211,7 @@ describe('startCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: bad input')
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('RateLimitError(with resetInfo) shows message containing Resets', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -180,7 +224,7 @@ describe('startCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('RateLimitError(without resetInfo) shows message without Resets', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }

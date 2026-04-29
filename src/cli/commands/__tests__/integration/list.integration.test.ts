@@ -31,7 +31,7 @@ describe('listCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('セッションなしのとき stdout に "No sessions found" が出力される', async () => {
+    it('when there are no sessions, stdout outputs "No sessions found"', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await listCommand({})
@@ -39,7 +39,7 @@ describe('listCommand (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('No sessions found')
     })
 
-    it('セッションがあるとき printSessionsTable が呼ばれる', async () => {
+    it('when there are sessions, printSessionsTable is called', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
       await startCommand('initial task', { outputOnly: true })
@@ -50,7 +50,7 @@ describe('listCommand (integration)', () => {
       expect(vi.mocked(printSessionsTable)).toHaveBeenCalled()
     })
 
-    it('--label フィルタを指定するとラベルが一致するセッションのみ printSessionsTable に渡される', async () => {
+    it('when --label filter is specified, only sessions matching the label are passed to printSessionsTable', async () => {
       // Create session 1 and tag it with 'alpha'
       const stub1 = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub1 } })
@@ -74,7 +74,7 @@ describe('listCommand (integration)', () => {
       expect(sessions).toHaveLength(1)
     })
 
-    it('--like フィルタを指定すると名前が部分一致するセッションのみ printSessionsTable に渡される', async () => {
+    it('when --like filter is specified, only sessions with names matching partially are passed to printSessionsTable', async () => {
       // Create session 1 with a recognisable name
       const stub1 = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub1 } })
@@ -95,7 +95,7 @@ describe('listCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('ValidationError のとき process.exit(1) になる', async () => {
+    it('when ValidationError occurs, process.exit(1) is called', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(listCommand({ label: 123 as unknown as string })).rejects.toThrow('exit')

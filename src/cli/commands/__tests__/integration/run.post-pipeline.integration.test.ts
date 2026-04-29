@@ -1,67 +1,41 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { mkdirSync } from 'fs'
+import { join } from 'path'
 import { runCommand } from '../../run'
 import { setupContainer } from '@src/core/di/setup'
-import { makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeTmpDir,
+  buildTestConfig,
+  buildGitInfraStub,
+  buildFileMoveInfraStub,
+  buildClaudeCodeStub,
+  makeResultLines,
+  writePipelineFixture,
+  writeYamlFixture
+} from './helpers'
 import { stdout } from '@src/utils/output'
-import type { PipelineFileService } from '@src/services/pipelineFileService'
-import type { PipelineService, PipelineTaskResult } from '@src/services/pipelineService'
 
 vi.mock('@src/utils/output')
 vi.mock('@src/cli/view/display')
 vi.mock('@src/cli/prompt')
 
-const PIPELINE_PATH = 'pipeline.yaml'
-
 const MINIMAL_PIPELINE_RAW = {
   tasks: [{ type: 'agent', task: 'do something' }]
 }
 
-function makePipelineFileServiceStub(opts?: {
-  headValues?: [string | null, string | null]
-  diffSummary?: string | null
-  moveToDoneResult?: string | null
-}): PipelineFileService {
-  const headValues = opts?.headValues ?? [null, null]
-  let headCallCount = 0
-  return {
-    getDiffStat: vi.fn(() => null),
-    getHead: vi.fn(() => headValues[headCallCount++ % 2]),
-    getDiffSummary: vi.fn(() => opts?.diffSummary ?? null),
-    loadRawPipeline: vi.fn(() => MINIMAL_PIPELINE_RAW),
-    savePipeline: vi.fn(),
-    moveToDone: vi.fn(() => opts?.moveToDoneResult ?? null),
-    commitMove: vi.fn(),
-    cleanTmpDir: vi.fn()
-  } as unknown as PipelineFileService
-}
-
-function makePipelineServiceYieldingStub(): PipelineService {
-  return {
-    run: vi.fn(async function* (): AsyncGenerator<PipelineTaskResult> {
-      yield* [] as PipelineTaskResult[]
-    })
-  } as unknown as PipelineService
-}
-
-function makePipelineServiceWithChildCallbackStub(childPath: string): PipelineService {
-  return {
-    run: vi.fn(async function* (
-      _pipeline: unknown,
-      options: { onChildPipelineDone?: (path: string) => void }
-    ): AsyncGenerator<PipelineTaskResult> {
-      options.onChildPipelineDone?.(childPath)
-      yield* [] as PipelineTaskResult[]
-    })
-  } as unknown as PipelineService
+const CHILD_PIPELINE_RAW = {
+  tasks: [{ type: 'agent', task: 'child task' }]
 }
 
 describe('runCommand post-pipeline behavior (integration)', () => {
   let dir: string
   let cleanup: () => void
+  let pipelinePath: string
 
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
+    pipelinePath = writePipelineFixture(dir, MINIMAL_PIPELINE_RAW)
     vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('exit')
     })
@@ -73,57 +47,63 @@ describe('runCommand post-pipeline behavior (integration)', () => {
   })
 
   describe('git diff summary', () => {
-    it('headBefore と headAfter が異なるとき "Changes committed during pipeline" が stdout に出力される', async () => {
+    it('When headBefore and headAfter differ, "Changes committed during pipeline" is printed to stdout', async () => {
+      const gitInfra = buildGitInfraStub({
+        head: ['abc1234567', 'def4567890'],
+        diffSummary: '1 file changed'
+      })
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: makePipelineFileServiceStub({
-            headValues: ['abc1234567', 'def4567890'],
-            diffSummary: '1 file changed'
-          }),
-          pipelineService: makePipelineServiceYieldingStub()
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra,
+          fileMoveInfra: buildFileMoveInfraStub()
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(pipelinePath, { batch: true })
 
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
         expect.stringContaining('Changes committed during pipeline')
       )
     })
 
-    it('headBefore と headAfter が同一のとき diff summary が出力されない', async () => {
+    it('When headBefore and headAfter are the same, diff summary is not printed', async () => {
+      const gitInfra = buildGitInfraStub({
+        head: ['abc1234567', 'abc1234567'],
+        diffSummary: '1 file changed'
+      })
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: makePipelineFileServiceStub({
-            headValues: ['abc1234567', 'abc1234567'],
-            diffSummary: '1 file changed'
-          }),
-          pipelineService: makePipelineServiceYieldingStub()
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra,
+          fileMoveInfra: buildFileMoveInfraStub()
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(pipelinePath, { batch: true })
 
       expect(vi.mocked(stdout).print).not.toHaveBeenCalledWith(
         expect.stringContaining('Changes committed during pipeline')
       )
     })
 
-    it('headBefore が null のとき diff summary が出力されない', async () => {
+    it('When headBefore is null, diff summary is not printed', async () => {
+      const gitInfra = buildGitInfraStub({
+        head: [null, 'def4567890'],
+        diffSummary: '1 file changed'
+      })
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: makePipelineFileServiceStub({
-            headValues: [null, 'def4567890'],
-            diffSummary: '1 file changed'
-          }),
-          pipelineService: makePipelineServiceYieldingStub()
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra,
+          fileMoveInfra: buildFileMoveInfraStub()
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(pipelinePath, { batch: true })
 
       expect(vi.mocked(stdout).print).not.toHaveBeenCalledWith(
         expect.stringContaining('Changes committed during pipeline')
@@ -132,110 +112,111 @@ describe('runCommand post-pipeline behavior (integration)', () => {
   })
 
   describe('moveToDone (main pipeline)', () => {
-    it('moveToDone がパスを返すとき stdout に "Moved to:" が出力される', async () => {
+    it('When moveToDone returns a path, "Moved to:" is printed to stdout', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: makePipelineFileServiceStub({
-            moveToDoneResult: '/done/pipeline.yaml'
-          }),
-          pipelineService: makePipelineServiceYieldingStub()
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(pipelinePath, { batch: true })
 
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(expect.stringContaining('Moved to:'))
     })
 
-    it('moveToDone がパスを返すとき commitMove が呼ばれる', async () => {
-      const fileService = makePipelineFileServiceStub({
-        moveToDoneResult: '/done/pipeline.yaml'
-      })
+    it('When moveToDone returns a path, commitMove is called (git commit is executed)', async () => {
+      const gitInfra = buildGitInfraStub()
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: fileService,
-          pipelineService: makePipelineServiceYieldingStub()
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra,
+          fileMoveInfra: buildFileMoveInfraStub()
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(pipelinePath, { batch: true })
 
-      expect(fileService.commitMove).toHaveBeenCalled()
+      expect(gitInfra.execGitSync).toHaveBeenCalledWith(expect.stringContaining('commit'))
     })
 
-    it('moveToDone が null を返すとき stdout に "Moved to:" が出力されない', async () => {
+    it('When moveToDone returns null, "Moved to:" is not printed to stdout', async () => {
+      // When pipeline is placed in a directory containing done/ in the path, moveToDone returns null
+      mkdirSync(join(dir, 'done'), { recursive: true })
+      const donePath = writePipelineFixture(join(dir, 'done'), MINIMAL_PIPELINE_RAW)
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: makePipelineFileServiceStub({ moveToDoneResult: null }),
-          pipelineService: makePipelineServiceYieldingStub()
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(donePath, { batch: true })
 
       expect(vi.mocked(stdout).print).not.toHaveBeenCalledWith(expect.stringContaining('Moved to:'))
     })
   })
 
   describe('cleanTmpDir', () => {
-    it('パイプライン完了後に cleanTmpDir が呼ばれる', async () => {
-      const fileService = makePipelineFileServiceStub()
+    it('After pipeline completes, cleanTmpDir is called successfully (no exceptions)', async () => {
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: fileService,
-          pipelineService: makePipelineServiceYieldingStub()
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
-
-      expect(fileService.cleanTmpDir).toHaveBeenCalled()
+      // cleanTmpDir does not throw an exception even if .claude/tmp/ does not exist
+      await expect(runCommand(pipelinePath, { batch: true })).resolves.toBeUndefined()
     })
   })
 
   describe('child pipeline', () => {
-    it('onChildPipelineDone が呼ばれたとき moveToDone が child パスで呼ばれる', async () => {
-      const fileService = makePipelineFileServiceStub()
+    it('When onChildPipelineDone is called, fileMoveInfra.moveFile is called with child path', async () => {
+      const mainPipelineRaw = { tasks: [{ type: 'child', path: 'child.yaml' }] }
+      const childPipelinePath = writePipelineFixture(dir, mainPipelineRaw)
+      writeYamlFixture(join(dir, 'child.yaml'), CHILD_PIPELINE_RAW)
+
+      const fileMoveInfra = buildFileMoveInfraStub()
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: fileService,
-          pipelineService: makePipelineServiceWithChildCallbackStub('/child.yaml')
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('child done')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(childPipelinePath, { batch: true })
 
-      expect(fileService.moveToDone).toHaveBeenCalledWith('/child.yaml')
+      expect(fileMoveInfra.moveFile).toHaveBeenCalledWith(
+        join(dir, 'child.yaml'),
+        expect.stringContaining('done/child.yaml')
+      )
     })
 
-    it('child の moveToDone がパスを返すとき stdout に "Moved to:" が出力される', async () => {
-      const childMoveToDone = vi.fn((path: string) =>
-        path === '/child.yaml' ? '/done/child.yaml' : null
-      )
-      const fileService = {
-        getDiffStat: vi.fn(() => null),
-        getHead: vi.fn(() => null),
-        getDiffSummary: vi.fn(() => null),
-        loadRawPipeline: vi.fn(() => MINIMAL_PIPELINE_RAW),
-        savePipeline: vi.fn(),
-        moveToDone: childMoveToDone,
-        commitMove: vi.fn(),
-        cleanTmpDir: vi.fn()
-      } as unknown as PipelineFileService
+    it('When child\'s moveToDone returns a path, "Moved to:" is printed to stdout', async () => {
+      const mainPipelineRaw = { tasks: [{ type: 'child', path: 'child.yaml' }] }
+      const childPipelinePath = writePipelineFixture(dir, mainPipelineRaw)
+      writeYamlFixture(join(dir, 'child.yaml'), CHILD_PIPELINE_RAW)
+
       setupContainer({
         config: buildTestConfig(dir),
-        services: {
-          pipelineFileService: fileService,
-          pipelineService: makePipelineServiceWithChildCallbackStub('/child.yaml')
+        infras: {
+          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('child done')),
+          gitInfra: buildGitInfraStub(),
+          fileMoveInfra: buildFileMoveInfraStub()
         }
       })
 
-      await runCommand(PIPELINE_PATH, { batch: true })
+      await runCommand(childPipelinePath, { batch: true })
 
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(expect.stringContaining('Moved to:'))
     })

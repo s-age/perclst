@@ -1,45 +1,36 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { mkdtempSync, readdirSync, rmSync } from 'fs'
+import { join } from 'path'
+import { tmpdir } from 'os'
 import { startCommand } from '../../start'
 import { summarizeCommand } from '../../summarize'
 import { setupContainer } from '@src/core/di/setup'
-import { makeResultLines, buildClaudeCodeStub, makeTmpDir, buildTestConfig } from './helpers'
+import {
+  makeResultLines,
+  buildClaudeCodeStub,
+  makeTmpDir,
+  buildTestConfig,
+  buildFsInfraWithHome,
+  makeClaudeSessionJsonl,
+  setupClaudeSessionFixture
+} from './helpers'
 import { stdout, stderr } from '@src/utils/output'
 import { printSummarizeTable, printSummarizeJson } from '@src/cli/view/summarizeDisplay'
-import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 
 vi.mock('@src/utils/output')
 vi.mock('@src/cli/view/display')
 vi.mock('@src/cli/prompt')
 vi.mock('@src/cli/view/summarizeDisplay')
 
-function buildClaudeSessionRepoMock(): IClaudeSessionRepository {
-  return {
-    readSession: vi.fn(),
-    findEncodedDirBySessionId: vi.fn(() => ''),
-    decodeWorkingDir: vi.fn(() => ({ path: null, ambiguous: false })),
-    validateSessionAtDir: vi.fn(),
-    scanSessionStats: vi.fn(() => ({
-      apiCalls: 0,
-      toolCalls: 0,
-      tokens: {
-        totalInput: 0,
-        totalOutput: 0,
-        totalCacheRead: 0,
-        totalCacheCreation: 0,
-        contextWindow: 0
-      }
-    })),
-    getAssistantTurns: vi.fn(() => [])
-  } as unknown as IClaudeSessionRepository
-}
-
 describe('summarizeCommand (integration)', () => {
   let dir: string
   let cleanup: () => void
+  let fakeHome: string
 
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
+    fakeHome = mkdtempSync(join(tmpdir(), 'fake-home-'))
     vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('exit')
     })
@@ -47,11 +38,12 @@ describe('summarizeCommand (integration)', () => {
 
   afterEach(() => {
     cleanup()
+    rmSync(fakeHome, { recursive: true, force: true })
     vi.restoreAllMocks()
   })
 
   describe('happy path', () => {
-    it('セッションなし → stdout.print("No sessions found") が呼ばれる', async () => {
+    it('No sessions: stdout.print("No sessions found") is called', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await summarizeCommand({})
@@ -59,20 +51,25 @@ describe('summarizeCommand (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith('No sessions found')
     })
 
-    it('text 形式で printSummarizeTable が呼ばれる', async () => {
+    it('printSummarizeTable is called in text format', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true })
 
-      const claudeSessionRepo = buildClaudeSessionRepoMock()
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
+      const sessionId = file.replace('.json', '')
+      setupClaudeSessionFixture(fakeHome, sessionId, process.cwd(), makeClaudeSessionJsonl())
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await summarizeCommand({})
 
       expect(vi.mocked(printSummarizeTable)).toHaveBeenCalled()
     })
 
-    it('--format json で printSummarizeJson が呼ばれる', async () => {
+    it('printSummarizeJson is called with --format json', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await summarizeCommand({ format: 'json' })
@@ -80,26 +77,36 @@ describe('summarizeCommand (integration)', () => {
       expect(vi.mocked(printSummarizeJson)).toHaveBeenCalled()
     })
 
-    it('--label フィルタで一致するセッションが printSummarizeTable に渡る', async () => {
+    it('matched sessions pass to printSummarizeTable with --label filter', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true, labels: ['keep'] })
 
-      const claudeSessionRepo = buildClaudeSessionRepoMock()
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
+      const sessionId = file.replace('.json', '')
+      setupClaudeSessionFixture(fakeHome, sessionId, process.cwd(), makeClaudeSessionJsonl())
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await summarizeCommand({ label: 'keep' })
 
       expect(vi.mocked(printSummarizeTable)).toHaveBeenCalled()
     })
 
-    it('--like フィルタで名前一致するセッションが printSummarizeTable に渡る', async () => {
+    it('matched sessions pass to printSummarizeTable with --like filter', async () => {
       const startStub = buildClaudeCodeStub(makeResultLines('started'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: startStub } })
       await startCommand('initial task', { outputOnly: true, name: 'my-special-session' })
 
-      const claudeSessionRepo = buildClaudeSessionRepoMock()
-      setupContainer({ config: buildTestConfig(dir), repos: { claudeSessionRepo } })
+      const [file] = readdirSync(dir).filter((f) => f.endsWith('.json'))
+      const sessionId = file.replace('.json', '')
+      setupClaudeSessionFixture(fakeHome, sessionId, process.cwd(), makeClaudeSessionJsonl())
+      setupContainer({
+        config: buildTestConfig(dir),
+        infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
 
       await summarizeCommand({ like: 'my-special' })
 
@@ -108,7 +115,7 @@ describe('summarizeCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('ValidationError のとき process.exit(1) と Failed to summarize sessions が出る', async () => {
+    it('ValidationError: process.exit(1) and Failed to summarize sessions output', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(summarizeCommand({ format: 'invalid' })).rejects.toThrow('exit')

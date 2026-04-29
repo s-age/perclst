@@ -47,7 +47,7 @@ describe('forgeCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('plan ファイルあり → printResponse が呼ばれる', async () => {
+    it('plan file exists → printResponse is called', async () => {
       const planPath = plantPlanFile()
       const stub = buildClaudeCodeStub(makeResultLines('pipeline generated'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
@@ -57,7 +57,7 @@ describe('forgeCommand (integration)', () => {
       expect(vi.mocked(printResponse)).toHaveBeenCalled()
     })
 
-    it('--prompt オプションがあるとき buildArgs にプロンプトが含まれる', async () => {
+    it('when --prompt option exists, buildArgs contains the prompt', async () => {
       const planPath = plantPlanFile()
       const stub = buildClaudeCodeStub(makeResultLines('pipeline generated'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
@@ -81,14 +81,14 @@ describe('forgeCommand (integration)', () => {
       return stub
     }
 
-    it('plan ファイルなし → process.exit(1) になる', async () => {
+    it('plan file missing → process.exit(1)', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(forgeCommand('plans/nonexistent.md', {})).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('plan ファイルなし → stderr に Plan file not found が出る', async () => {
+    it('plan file missing → stderr prints Plan file not found', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(forgeCommand('plans/nonexistent.md', {})).rejects.toThrow('exit')
@@ -97,14 +97,14 @@ describe('forgeCommand (integration)', () => {
       )
     })
 
-    it('ValidationError のとき process.exit(1) になる', async () => {
+    it('ValidationError → process.exit(1)', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(forgeCommand('not-a-plans-path.txt', {})).rejects.toThrow('exit')
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('ValidationError のとき Invalid arguments が stderr に出る', async () => {
+    it('ValidationError → stderr prints Invalid arguments', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(forgeCommand('not-a-plans-path.txt', {})).rejects.toThrow('exit')
@@ -113,7 +113,7 @@ describe('forgeCommand (integration)', () => {
       )
     })
 
-    it('Generic Error のとき process.exit(1) になる', async () => {
+    it('Generic Error → process.exit(1)', async () => {
       const planPath = plantPlanFile()
       setupContainer({
         config: buildTestConfig(dir),
@@ -124,7 +124,7 @@ describe('forgeCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき stderr に Failed to forge pipeline が出る', async () => {
+    it('Generic Error → stderr prints Failed to forge pipeline', async () => {
       const planPath = plantPlanFile()
       const err = new Error('spawn failed')
       setupContainer({
@@ -136,7 +136,7 @@ describe('forgeCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to forge pipeline', err)
     })
 
-    it('UserCancelledError のとき process.exit(0) になる', async () => {
+    it('UserCancelledError → process.exit(0)', async () => {
       const planPath = plantPlanFile()
       setupContainer({
         config: buildTestConfig(dir),
@@ -147,7 +147,7 @@ describe('forgeCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(0)
     })
 
-    it('UserCancelledError のとき stderr に Cancelled が出る', async () => {
+    it('UserCancelledError → stderr prints Cancelled', async () => {
       const planPath = plantPlanFile()
       setupContainer({
         config: buildTestConfig(dir),
@@ -158,7 +158,7 @@ describe('forgeCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Cancelled.')
     })
 
-    it('RateLimitError(resetInfo あり) のとき process.exit(1) になる', async () => {
+    it('RateLimitError(with resetInfo) → process.exit(1)', async () => {
       const planPath = plantPlanFile()
       setupContainer({
         config: buildTestConfig(dir),
@@ -169,7 +169,7 @@ describe('forgeCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('RateLimitError(with resetInfo) → stderr prints message with Resets', async () => {
       const planPath = plantPlanFile()
       setupContainer({
         config: buildTestConfig(dir),
@@ -182,7 +182,7 @@ describe('forgeCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき process.exit(1) になる', async () => {
+    it('RateLimitError(without resetInfo) → process.exit(1)', async () => {
       const planPath = plantPlanFile()
       setupContainer({
         config: buildTestConfig(dir),
@@ -193,7 +193,7 @@ describe('forgeCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('RateLimitError(without resetInfo) → stderr prints message without Resets', async () => {
       const planPath = plantPlanFile()
       setupContainer({
         config: buildTestConfig(dir),

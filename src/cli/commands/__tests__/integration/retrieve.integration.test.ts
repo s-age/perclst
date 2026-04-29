@@ -29,7 +29,7 @@ describe('retrieveCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('keywords が task 文字列として runClaude の prompt 引数に含まれる', async () => {
+    it('keywords are included in runClaude prompt argument as task string', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('found results'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -43,7 +43,7 @@ describe('retrieveCommand (integration)', () => {
       expect(prompt).toContain('typescript')
     })
 
-    it('printResponse が呼ばれる', async () => {
+    it('printResponse is called', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('found results'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
@@ -65,7 +65,7 @@ describe('retrieveCommand (integration)', () => {
       return stub
     }
 
-    it('Generic Error のとき process.exit が 1 で呼ばれる', async () => {
+    it('when Generic Error, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new Error('spawn failed')) }
@@ -75,7 +75,7 @@ describe('retrieveCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('Generic Error のとき stderr に Failed to retrieve knowledge が出る', async () => {
+    it('when Generic Error, stderr outputs Failed to retrieve knowledge', async () => {
       const err = new Error('spawn failed')
       setupContainer({
         config: buildTestConfig(dir),
@@ -86,7 +86,7 @@ describe('retrieveCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Failed to retrieve knowledge', err)
     })
 
-    it('ValidationError のとき process.exit が 1 で呼ばれる', async () => {
+    it('when ValidationError, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -96,7 +96,7 @@ describe('retrieveCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('ValidationError のとき stderr に Invalid arguments が出る', async () => {
+    it('when ValidationError, stderr outputs Invalid arguments', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new ValidationError('bad input')) }
@@ -106,7 +106,7 @@ describe('retrieveCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Invalid arguments: bad input')
     })
 
-    it('RateLimitError(resetInfo あり) のとき process.exit が 1 で呼ばれる', async () => {
+    it('when RateLimitError with resetInfo, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -116,7 +116,7 @@ describe('retrieveCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo あり) のとき Resets が含まれるメッセージが出る', async () => {
+    it('when RateLimitError with resetInfo, message includes Resets', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError('2026-12-31')) }
@@ -128,7 +128,7 @@ describe('retrieveCommand (integration)', () => {
       )
     })
 
-    it('RateLimitError(resetInfo なし) のとき process.exit が 1 で呼ばれる', async () => {
+    it('when RateLimitError without resetInfo, process.exit is called with 1', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }
@@ -138,7 +138,7 @@ describe('retrieveCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it('RateLimitError(resetInfo なし) のとき Resets なしのメッセージが出る', async () => {
+    it('when RateLimitError without resetInfo, message without Resets is output', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { claudeCodeInfra: makeThrowingStub(new RateLimitError()) }

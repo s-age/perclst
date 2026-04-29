@@ -41,7 +41,7 @@ describe('renameCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('名前が session.name に保存される', async () => {
+    it('name is saved to session.name', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await renameCommand(sessionId, 'new name', {})
@@ -50,7 +50,7 @@ describe('renameCommand (integration)', () => {
       expect(session.name).toBe('new name')
     })
 
-    it('--labels と同時指定すると metadata.labels も更新される', async () => {
+    it('metadata.labels is also updated when --labels is specified together', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await renameCommand(sessionId, 'labelled name', { labels: ['x', 'y'] })
@@ -59,17 +59,20 @@ describe('renameCommand (integration)', () => {
       expect(session.metadata.labels).toEqual(['x', 'y'])
     })
 
-    it('confirmIfDuplicateName が呼ばれる', async () => {
+    it('confirmIfDuplicateName executes the findByName callback', async () => {
       setupContainer({ config: buildTestConfig(dir) })
+      vi.mocked(confirmIfDuplicateName).mockImplementation(async (_name, findByName) => {
+        await findByName(_name)
+      })
 
-      await renameCommand(sessionId, 'any name', {})
+      await renameCommand(sessionId, 'new name', {})
 
       expect(vi.mocked(confirmIfDuplicateName)).toHaveBeenCalled()
     })
   })
 
   describe('error path', () => {
-    it('confirmIfDuplicateName が UserCancelledError を throw したとき process.exit(0) になる', async () => {
+    it('process.exit(0) is called when confirmIfDuplicateName throws UserCancelledError', async () => {
       setupContainer({ config: buildTestConfig(dir) })
       vi.mocked(confirmIfDuplicateName).mockRejectedValue(new UserCancelledError())
 
@@ -78,7 +81,7 @@ describe('renameCommand (integration)', () => {
       expect(process.exit).toHaveBeenCalledWith(0)
     })
 
-    it('confirmIfDuplicateName が UserCancelledError を throw したとき Cancelled. が出る', async () => {
+    it('Cancelled. is printed when confirmIfDuplicateName throws UserCancelledError', async () => {
       setupContainer({ config: buildTestConfig(dir) })
       vi.mocked(confirmIfDuplicateName).mockRejectedValue(new UserCancelledError())
 
@@ -87,7 +90,7 @@ describe('renameCommand (integration)', () => {
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith('Cancelled.')
     })
 
-    it('存在しない sessionId は process.exit(1) になる', async () => {
+    it('process.exit(1) is called for nonexistent sessionId', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(renameCommand('nonexistent-id', 'any name', {})).rejects.toThrow('exit')

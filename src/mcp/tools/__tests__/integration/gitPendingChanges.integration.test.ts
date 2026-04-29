@@ -13,7 +13,7 @@ describe('executeGitPendingChanges (integration)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
-    execSync('git init', { cwd: dir })
+    execSync('git init -b main', { cwd: dir })
     execSync('git config user.email "test@test.com"', { cwd: dir })
     execSync('git config user.name "Test"', { cwd: dir })
     setupContainer({ config: buildTestConfig(dir) })

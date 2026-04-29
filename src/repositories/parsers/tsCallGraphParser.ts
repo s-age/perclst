@@ -63,7 +63,8 @@ function resolveTypeName(decl: Node): string | undefined {
 }
 
 type ImplCache = Map<string, Callee[]>
-const projectImplCache = new WeakMap<Project, ImplCache>()
+type ImplCacheEntry = { cache: ImplCache; fileCount: number }
+const projectImplCache = new WeakMap<Project, ImplCacheEntry>()
 
 function buildImplCache(project: Project): ImplCache {
   const cache: ImplCache = new Map()
@@ -103,13 +104,15 @@ function findConcreteImplementations(
   if (!typeName) return []
 
   const project = sourceFile.getProject()
-  let cache = projectImplCache.get(project)
-  if (!cache) {
-    cache = buildImplCache(project)
-    projectImplCache.set(project, cache)
+  const fileCount = project.getSourceFiles().length
+  const entry = projectImplCache.get(project)
+  if (!entry || entry.fileCount !== fileCount) {
+    const cache = buildImplCache(project)
+    projectImplCache.set(project, { cache, fileCount })
+    return cache.get(`${typeName}.${methodName}`) ?? []
   }
 
-  return cache.get(`${typeName}.${methodName}`) ?? []
+  return entry.cache.get(`${typeName}.${methodName}`) ?? []
 }
 
 function resolvePropertyAccessCall(

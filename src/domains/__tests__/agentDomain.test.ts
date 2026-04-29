@@ -36,8 +36,7 @@ describe('AgentDomain', () => {
     }
 
     procedureRepo = {
-      load: vi.fn(),
-      exists: vi.fn()
+      load: vi.fn()
     }
 
     domain = new AgentDomain(DEFAULT_MODEL, claudeCodeRepo, procedureRepo)

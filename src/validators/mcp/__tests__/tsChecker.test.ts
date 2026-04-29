@@ -85,7 +85,7 @@ describe('tsCheckerParams schema', () => {
 
     it('accepts unicode paths', () => {
       const schema = z.object({ project_root: tsCheckerParams.project_root })
-      const result = schema.safeParse({ project_root: '/路径/项目' })
+      const result = schema.safeParse({ project_root: '/path/proj-🚀' })
       expect(result.success).toBe(true)
     })
   })

@@ -39,7 +39,7 @@ describe('tagCommand (integration)', () => {
   })
 
   describe('happy path', () => {
-    it('単一ラベルが session.metadata.labels に保存される', async () => {
+    it('single label is saved to session.metadata.labels', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await tagCommand(sessionId, ['myLabel'])
@@ -48,7 +48,7 @@ describe('tagCommand (integration)', () => {
       expect(session.metadata.labels).toEqual(['myLabel'])
     })
 
-    it('複数ラベルが正しく保存される', async () => {
+    it('multiple labels are saved correctly', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await tagCommand(sessionId, ['a', 'b'])
@@ -57,7 +57,7 @@ describe('tagCommand (integration)', () => {
       expect(session.metadata.labels).toEqual(['a', 'b'])
     })
 
-    it('stdout に Labels set: <id> が出力される', async () => {
+    it('Labels set: <id> is printed to stdout', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await tagCommand(sessionId, ['hello'])
@@ -67,7 +67,7 @@ describe('tagCommand (integration)', () => {
   })
 
   describe('error path', () => {
-    it('存在しない sessionId は process.exit(1) になる', async () => {
+    it('nonexistent sessionId calls process.exit(1)', async () => {
       setupContainer({ config: buildTestConfig(dir) })
 
       await expect(tagCommand('nonexistent-id', ['label'])).rejects.toThrow('exit')

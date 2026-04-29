@@ -186,11 +186,11 @@ describe('knowledgeSearchParams schema', () => {
     })
 
     it('accepts unicode characters in query', () => {
-      const input = { query: 'fork 会话 🚀' }
+      const input = { query: 'fork session 🚀' }
       const result = schema.safeParse(input)
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data.query).toBe('fork 会话 🚀')
+        expect(result.data.query).toBe('fork session 🚀')
       }
     })
 

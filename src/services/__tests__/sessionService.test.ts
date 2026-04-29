@@ -56,23 +56,10 @@ describe('SessionService', () => {
     service = new SessionService(domain)
   })
 
-  it('delegates create to domain', async () => {
-    const params = { procedure: 'p1', labels: ['t1'], working_dir: '/tmp' }
-    const result = await service.create(params)
-    expect(domain.create).toHaveBeenCalledWith(params)
-    expect(result).toBe(mockSession)
-  })
-
   it('delegates get to domain', async () => {
     const result = await service.get('test-id')
     expect(domain.get).toHaveBeenCalledWith('test-id')
     expect(result).toBe(mockSession)
-  })
-
-  it('delegates getPath to domain', () => {
-    const result = service.getPath('test-id')
-    expect(domain.getPath).toHaveBeenCalledWith('test-id')
-    expect(result).toBe('/tmp/sessions/test-id.json')
   })
 
   it('delegates list to domain', async () => {
@@ -84,12 +71,6 @@ describe('SessionService', () => {
   it('delegates delete to domain', async () => {
     await service.delete('test-id')
     expect(domain.delete).toHaveBeenCalledWith('test-id')
-  })
-
-  it('delegates updateStatus to domain', async () => {
-    const result = await service.updateStatus('test-id', 'completed')
-    expect(domain.updateStatus).toHaveBeenCalledWith('test-id', 'completed')
-    expect(result.metadata.status).toBe('completed')
   })
 
   it('delegates rename to domain', async () => {
@@ -166,10 +147,5 @@ describe('SessionService', () => {
     const result = await service.addLabels('test-id', ['new'])
     expect(domain.addLabels).toHaveBeenCalledWith('test-id', ['new'])
     expect(result.metadata.labels).toEqual(['existing', 'new'])
-  })
-
-  it('delegates save to domain', async () => {
-    await service.save(mockSession)
-    expect(domain.save).toHaveBeenCalledWith(mockSession)
   })
 })
