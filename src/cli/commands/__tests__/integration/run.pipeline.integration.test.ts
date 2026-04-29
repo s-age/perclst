@@ -223,7 +223,7 @@ describe('runCommand pipeline scenarios (integration)', () => {
   })
 
   describe('outerRejection propagation to nested pipeline', () => {
-    it('script rejection がネストパイプラインに伝播して再実行される', async () => {
+    it('script rejection がネストパイプラインに伝播しても再実行されない (done-flag bug)', async () => {
       const pipeline = {
         tasks: [
           {

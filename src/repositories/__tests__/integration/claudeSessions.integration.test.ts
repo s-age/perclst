@@ -50,7 +50,7 @@ describe('ClaudeSessionRepository (integration)', () => {
     rmSync(fakeHome, { recursive: true, force: true })
   })
 
-  // ─── resolveProjectDir (long path) ───────────���──────────────────────────
+  // ─── resolveProjectDir (long path) ─────────────────────────────────────
 
   describe('resolveProjectDir (long path via readSession)', () => {
     const longDir = '/' + 'a'.repeat(250)
@@ -77,7 +77,7 @@ describe('ClaudeSessionRepository (integration)', () => {
     })
   })
 
-  // ─── findEncodedDirBySessionId ─────────────────────────────────────���────
+  // ─── findEncodedDirBySessionId ──────────────────────────────────────────
 
   describe('findEncodedDirBySessionId', () => {
     it('projects ディレクトリが存在しないとき throw する', () => {
@@ -86,7 +86,7 @@ describe('ClaudeSessionRepository (integration)', () => {
       )
     })
 
-    it('同一セッション ID が複数ディレクトリに存在するとき throw す��', () => {
+    it('同一セッション ID が複数ディレクトリに存在するとき throw する', () => {
       const projectsDir = join(fakeHome, '.claude', 'projects')
       mkdirSync(join(projectsDir, 'project-a'), { recursive: true })
       mkdirSync(join(projectsDir, 'project-b'), { recursive: true })
@@ -97,7 +97,7 @@ describe('ClaudeSessionRepository (integration)', () => {
     })
   })
 
-  // ─── decodeWorkingDir ──────────────��───────────────────────���────────────
+  // ─── decodeWorkingDir ──────────────────────────────────────────────────
 
   describe('decodeWorkingDir', () => {
     let ambigBase: string | undefined
@@ -131,7 +131,7 @@ describe('ClaudeSessionRepository (integration)', () => {
     })
   })
 
-  // ─── readSession ──────────────────────────────────────���─────────────────
+  // ─── readSession ───────────────────────────────────────────────────────
 
   describe('readSession', () => {
     it('JSONL ファイルが存在しないとき throw する', () => {
