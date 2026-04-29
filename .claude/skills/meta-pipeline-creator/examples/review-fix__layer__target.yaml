@@ -1,12 +1,12 @@
 tasks:
   - type: script
-    command: rm -f .claude/tmp/arch-refactoring-foo
+    command: rm -f .claude/tmp/review-fix-layer-target-reviewer
 
   - type: agent
-    name: arch-refactoring-foo-reviewer
+    name: review-fix-layer-target-reviewer
     task: |
-      target_path: src/foo
-      ng_output_path: .claude/tmp/arch-refactoring-foo
+      target_path: src/layer/target.ts
+      ng_output_path: .claude/tmp/review-fix-layer-target-reviewer
     procedure: arch/review
     model: sonnet
     allowed_tools:
@@ -17,14 +17,15 @@ tasks:
       - mcp__perclst__ts_get_types
 
   - type: pipeline
-    name: arch-refactoring-foo-fix-loop
+    name: review-fix-layer-target-fix-loop
     tasks:
       - type: agent
-        name: arch-refactoring-foo-implementer
+        name: review-fix-layer-target-implementer
         task: |
-          violations_path: .claude/tmp/arch-refactoring-foo
+          target_path: src/layer/target.ts
+          ng_output_path: .claude/tmp/review-fix-layer-target-reviewer
 
-          If violations_path does not exist, there are no issues to fix — exit immediately.
+          If ng_output_path does not exist, there are no issues to fix — exit immediately.
         procedure: arch/refactor
         model: sonnet
         allowed_tools:
@@ -37,11 +38,11 @@ tasks:
           - mcp__perclst__ts_checker
 
       - type: agent
-        name: arch-refactoring-foo-reviewer
+        name: review-fix-layer-target-reviewer
         task: |
-          Re-review src/foo for remaining violations.
-          ng_output_path: .claude/tmp/arch-refactoring-foo
-          If the architecture is now clean, exit without writing to ng_output_path.
+          Re-review src/layer/target.ts for remaining violations.
+          ng_output_path: .claude/tmp/review-fix-layer-target-reviewer
+          If the code is now clean, exit without writing to ng_output_path.
         model: sonnet
         allowed_tools:
           - Read
@@ -50,18 +51,18 @@ tasks:
           - mcp__perclst__ts_get_references
           - mcp__perclst__ts_get_types
         rejected:
-          to: arch-refactoring-foo-implementer
+          to: review-fix-layer-target-implementer
           max_retries: 3
 
       - type: script
         command: npm run build && npm run test:unit
         rejected:
-          to: arch-refactoring-foo-implementer
+          to: review-fix-layer-target-implementer
           max_retries: 3
 
   - type: agent
-    name: arch-refactoring-foo-implementer
-    task: Architecture is clean and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(layer): ...).
+    name: review-fix-layer-target-implementer
+    task: Code is clean and tests pass. Commit the changes with an appropriate conventional commit message (e.g. refactor(layer): ...).
     model: haiku
     allowed_tools:
       - Read
