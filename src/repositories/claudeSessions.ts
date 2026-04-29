@@ -3,16 +3,22 @@ import type { AssistantTurnEntry, ClaudeSessionData, SessionStats } from '@src/t
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import type { FsInfra } from '@src/infrastructures/fs'
 import {
-  readSessionFromRaw,
-  extractAssistantTurnsFromRaw,
-  scanStats
+  createSessionReadState,
+  processSessionReadLine,
+  finalizeSessionRead,
+  createStatsScanState,
+  processStatsScanLine,
+  finalizeStatsScan,
+  createAssistantTurnState,
+  processAssistantTurnLine,
+  finalizeAssistantTurns
 } from '@src/repositories/parsers/claudeSessionScanner'
 
 const MAX_SANITIZED_LENGTH = 200
 
 type ClaudeSessionFs = Pick<
   FsInfra,
-  'homeDir' | 'fileExists' | 'listDirEntries' | 'isDirectory' | 'readText'
+  'homeDir' | 'fileExists' | 'listDirEntries' | 'isDirectory' | 'readLines'
 >
 
 function djb2Hash(str: string): number {
@@ -112,39 +118,51 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     }
   }
 
-  readSession(
+  async readSession(
     claudeSessionId: string,
     workingDir: string,
     upToMessageId?: string
-  ): ClaudeSessionData {
+  ): Promise<ClaudeSessionData> {
     const jsonlPath = this.resolveJsonlPath(claudeSessionId, workingDir)
     if (!this.fs.fileExists(jsonlPath)) {
       throw new Error(`Claude Code session file not found: ${jsonlPath}`)
     }
-    const { turns, tokens, contextWindow } = readSessionFromRaw(
-      this.fs.readText(jsonlPath),
-      upToMessageId
-    )
+    const state = createSessionReadState(upToMessageId)
+    for await (const line of this.fs.readLines(jsonlPath)) {
+      if (processSessionReadLine(state, line)) break
+    }
+    const { turns, tokens, contextWindow } = finalizeSessionRead(state)
     return { turns, tokens: { ...tokens, contextWindow } }
   }
 
-  scanSessionStats(
+  async scanSessionStats(
     claudeSessionId: string,
     workingDir: string,
     upToMessageId?: string
-  ): SessionStats {
+  ): Promise<SessionStats> {
     const jsonlPath = this.resolveJsonlPath(claudeSessionId, workingDir)
     if (!this.fs.fileExists(jsonlPath)) {
       throw new Error(`Claude Code session file not found: ${jsonlPath}`)
     }
-    return scanStats(this.fs.readText(jsonlPath), upToMessageId)
+    const state = createStatsScanState(upToMessageId)
+    for await (const line of this.fs.readLines(jsonlPath)) {
+      if (processStatsScanLine(state, line)) break
+    }
+    return finalizeStatsScan(state)
   }
 
-  getAssistantTurns(claudeSessionId: string, workingDir: string): AssistantTurnEntry[] {
+  async getAssistantTurns(
+    claudeSessionId: string,
+    workingDir: string
+  ): Promise<AssistantTurnEntry[]> {
     const jsonlPath = this.resolveJsonlPath(claudeSessionId, workingDir)
     if (!this.fs.fileExists(jsonlPath)) {
       throw new Error(`Claude Code session file not found: ${jsonlPath}`)
     }
-    return extractAssistantTurnsFromRaw(this.fs.readText(jsonlPath))
+    const state = createAssistantTurnState()
+    for await (const line of this.fs.readLines(jsonlPath)) {
+      processAssistantTurnLine(state, line)
+    }
+    return finalizeAssistantTurns(state)
   }
 }

@@ -57,21 +57,21 @@ describe('ClaudeSessionRepository (integration)', () => {
     const sanitized = longDir.replace(/[^a-zA-Z0-9]/g, '-')
     const prefix = sanitized.slice(0, MAX_SANITIZED_LENGTH)
 
-    it('readSession succeeds when a matching existing directory with prefix exists', () => {
+    it('readSession succeeds when a matching existing directory with prefix exists', async () => {
       const matchedDirName = `${prefix}-somehash`
       const projectDir = join(fakeHome, '.claude', 'projects', matchedDirName)
       mkdirSync(projectDir, { recursive: true })
       writeFileSync(join(projectDir, 'sess-1.jsonl'), makeMinimalJsonl(), 'utf-8')
 
-      const result = repo.readSession('sess-1', longDir)
+      const result = await repo.readSession('sess-1', longDir)
 
       expect(result.turns).toBeDefined()
     })
 
-    it('goes through sanitizeProjectDir fallback when no prefix match', () => {
+    it('goes through sanitizeProjectDir fallback when no prefix match', async () => {
       mkdirSync(join(fakeHome, '.claude', 'projects', 'unrelated'), { recursive: true })
 
-      expect(() => repo.readSession('sess-1', longDir)).toThrow(
+      await expect(repo.readSession('sess-1', longDir)).rejects.toThrow(
         'Claude Code session file not found'
       )
     })
@@ -134,8 +134,8 @@ describe('ClaudeSessionRepository (integration)', () => {
   // ─── readSession ───────────────────────────────────────────────────────
 
   describe('readSession', () => {
-    it('throws when JSONL file does not exist', () => {
-      expect(() => repo.readSession('nonexistent', '/work')).toThrow(
+    it('throws when JSONL file does not exist', async () => {
+      await expect(repo.readSession('nonexistent', '/work')).rejects.toThrow(
         'Claude Code session file not found'
       )
     })
@@ -144,16 +144,16 @@ describe('ClaudeSessionRepository (integration)', () => {
   // ─── scanSessionStats ─────────────────────────────────────────────────
 
   describe('scanSessionStats', () => {
-    it('throws when JSONL file does not exist', () => {
-      expect(() => repo.scanSessionStats('nonexistent', '/work')).toThrow(
+    it('throws when JSONL file does not exist', async () => {
+      await expect(repo.scanSessionStats('nonexistent', '/work')).rejects.toThrow(
         'Claude Code session file not found'
       )
     })
 
-    it('returns stats from valid JSONL', () => {
+    it('returns stats from valid JSONL', async () => {
       setupJsonlFixture(fakeHome, 'sess-1', '/work', makeMinimalJsonl())
 
-      const stats = repo.scanSessionStats('sess-1', '/work')
+      const stats = await repo.scanSessionStats('sess-1', '/work')
 
       expect(stats.apiCalls).toBe(1)
       expect(stats.tokens.totalInput).toBe(10)
@@ -164,16 +164,16 @@ describe('ClaudeSessionRepository (integration)', () => {
   // ─── getAssistantTurns ─────────────────────────────────────────────────
 
   describe('getAssistantTurns', () => {
-    it('throws when JSONL file does not exist', () => {
-      expect(() => repo.getAssistantTurns('nonexistent', '/work')).toThrow(
+    it('throws when JSONL file does not exist', async () => {
+      await expect(repo.getAssistantTurns('nonexistent', '/work')).rejects.toThrow(
         'Claude Code session file not found'
       )
     })
 
-    it('extracts and returns text from assistant entries', () => {
+    it('extracts and returns text from assistant entries', async () => {
       setupJsonlFixture(fakeHome, 'sess-1', '/work', makeMinimalJsonl())
 
-      const turns = repo.getAssistantTurns('sess-1', '/work')
+      const turns = await repo.getAssistantTurns('sess-1', '/work')
 
       expect(turns).toEqual([{ uuid: 'test-uuid', text: 'hello' }])
     })

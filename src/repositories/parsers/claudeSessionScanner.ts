@@ -7,6 +7,19 @@ import type {
   TokenTotals
 } from './claudeSessionParser'
 import { mergeAssistantGroup } from './claudeSessionParser'
+import {
+  createStatsScanState as _createStatsScanState,
+  processStatsScanLine as _processStatsScanLine,
+  finalizeStatsScan as _finalizeStatsScan
+} from './claudeStatsScanParser'
+export type { StatsScanState } from './claudeStatsScanParser'
+export {
+  createStatsScanState,
+  processStatsScanLine,
+  finalizeStatsScan
+} from './claudeStatsScanParser'
+
+// ─── Shared helpers ──────────────────────────────────────────────────────────
 
 type TurnAccum = {
   turns: ClaudeCodeTurn[]
@@ -64,22 +77,6 @@ function finalizeAccum(a: TurnAccum): {
   return { turns: a.turns, tokens: a.totals, contextWindow }
 }
 
-export function buildTurns(
-  entries: RawEntry[],
-  toolResultMap: Map<string, { text: string | null; isError: boolean }>
-): { turns: ClaudeCodeTurn[]; tokens: TokenTotals; contextWindow: number } {
-  const a = newTurnAccum(toolResultMap)
-  for (const entry of entries) {
-    if (entry.type === 'user') {
-      flushPending(a)
-      pushUserTurn((entry as RawUserEntry).message.content, a.turns)
-    } else if (entry.type === 'assistant') {
-      a.pending.push(entry as RawAssistantEntry)
-    }
-  }
-  return finalizeAccum(a)
-}
-
 function extractToolResultText(content: string | RawContentBlock[]): string | null {
   if (typeof content === 'string') return content
   if (Array.isArray(content)) {
@@ -107,179 +104,182 @@ function collectToolResults(
   }
 }
 
-export function readSessionFromRaw(
-  raw: string,
-  upToMessageId?: string
+// ─── buildTurns (pre-parsed RawEntry[]) ──────────────────────────────────────
+
+export function buildTurns(
+  entries: RawEntry[],
+  toolResultMap: Map<string, { text: string | null; isError: boolean }>
 ): { turns: ClaudeCodeTurn[]; tokens: TokenTotals; contextWindow: number } {
-  const a = newTurnAccum(new Map())
-  let cutoffReached = false
-
-  for (const line of raw.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    const entry = JSON.parse(trimmed) as RawEntry
-
+  const a = newTurnAccum(toolResultMap)
+  for (const entry of entries) {
     if (entry.type === 'user') {
-      collectToolResults(entry as RawUserEntry, a.toolResultMap)
       flushPending(a)
-      if (cutoffReached) break
       pushUserTurn((entry as RawUserEntry).message.content, a.turns)
     } else if (entry.type === 'assistant') {
-      if (cutoffReached) continue
-      const ae = entry as RawAssistantEntry
-      a.pending.push(ae)
-      if (upToMessageId && ae.uuid === upToMessageId) cutoffReached = true
+      a.pending.push(entry as RawAssistantEntry)
     }
   }
   return finalizeAccum(a)
 }
 
-export function extractAssistantTurnsFromRaw(raw: string): AssistantTurnEntry[] {
-  const result: AssistantTurnEntry[] = []
-  for (const line of raw.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    const entry = JSON.parse(trimmed) as RawEntry
-    if (entry.type !== 'assistant') continue
-    const ae = entry as RawAssistantEntry
-    const content = ae.message.content ?? []
-    if (content.length > 0 && content.every((b) => b.type === 'thinking')) continue
-    const text = content
-      .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-      .map((b) => b.text)
-      .join(' ')
-      .trim()
-    if (!text) continue
-    result.push({ uuid: ae.uuid, text })
+// ─── Session read state machine ──────────────────────────────────────────────
+
+export type SessionReadState = TurnAccum & {
+  upToMessageId: string | undefined
+  cutoffReached: boolean
+}
+
+export function createSessionReadState(upToMessageId?: string): SessionReadState {
+  return {
+    ...newTurnAccum(new Map()),
+    upToMessageId,
+    cutoffReached: false
   }
-  return result
+}
+
+export function processSessionReadLine(state: SessionReadState, line: string): boolean {
+  const trimmed = line.trim()
+  if (!trimmed) return false
+  const entry = JSON.parse(trimmed) as RawEntry
+
+  if (entry.type === 'user') {
+    collectToolResults(entry as RawUserEntry, state.toolResultMap)
+    flushPending(state)
+    if (state.cutoffReached) return true
+    pushUserTurn((entry as RawUserEntry).message.content, state.turns)
+  } else if (entry.type === 'assistant') {
+    if (state.cutoffReached) return false
+    const ae = entry as RawAssistantEntry
+    state.pending.push(ae)
+    if (state.upToMessageId && ae.uuid === state.upToMessageId) state.cutoffReached = true
+  }
+  return false
+}
+
+export function finalizeSessionRead(state: SessionReadState): {
+  turns: ClaudeCodeTurn[]
+  tokens: TokenTotals
+  contextWindow: number
+} {
+  return finalizeAccum(state)
+}
+
+// ─── Assistant turn scan state machine ───────────────────────────────────────
+
+export type AssistantTurnState = {
+  result: AssistantTurnEntry[]
+}
+
+export function createAssistantTurnState(): AssistantTurnState {
+  return { result: [] }
+}
+
+export function processAssistantTurnLine(state: AssistantTurnState, line: string): void {
+  const trimmed = line.trim()
+  if (!trimmed) return
+  const entry = JSON.parse(trimmed) as RawEntry
+  if (entry.type !== 'assistant') return
+  const ae = entry as RawAssistantEntry
+  const content = ae.message.content ?? []
+  if (content.length > 0 && content.every((b) => b.type === 'thinking')) return
+  const text = content
+    .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
+    .map((b) => b.text)
+    .join(' ')
+    .trim()
+  if (!text) return
+  state.result.push({ uuid: ae.uuid, text })
+}
+
+export function finalizeAssistantTurns(state: AssistantTurnState): AssistantTurnEntry[] {
+  return state.result
+}
+
+// ─── Message count state machine ─────────────────────────────────────────────
+
+export type MessageCountState = {
+  total: number
+  groupActive: boolean
+  groupHasContent: boolean
+  groupToolCount: number
+}
+
+export function createMessageCountState(): MessageCountState {
+  return { total: 0, groupActive: false, groupHasContent: false, groupToolCount: 0 }
+}
+
+function flushMessageGroup(s: MessageCountState): void {
+  if (s.groupActive && s.groupHasContent) {
+    s.total++
+    s.total += s.groupToolCount * 2
+  }
+  s.groupActive = false
+  s.groupHasContent = false
+  s.groupToolCount = 0
+}
+
+export function processMessageCountLine(state: MessageCountState, line: string): void {
+  const trimmed = line.trim()
+  if (!trimmed) return
+  const entry = JSON.parse(trimmed) as RawEntry
+  if (entry.type === 'user') {
+    flushMessageGroup(state)
+    const userContent = (entry as RawUserEntry).message.content
+    if (typeof userContent === 'string') {
+      state.total++
+    } else if (Array.isArray(userContent) && !userContent.some((b) => b.type === 'tool_result')) {
+      if (userContent.some((b) => b.type === 'text')) state.total++
+    }
+  } else if (entry.type === 'assistant') {
+    if (!state.groupActive) {
+      state.groupActive = true
+      state.groupHasContent = false
+      state.groupToolCount = 0
+    }
+    for (const block of (entry as RawAssistantEntry).message.content ?? []) {
+      if (block.type === 'text' || block.type === 'tool_use') {
+        state.groupHasContent = true
+        if (block.type === 'tool_use') state.groupToolCount++
+      }
+    }
+  }
+}
+
+export function finalizeMessageCount(state: MessageCountState): number {
+  flushMessageGroup(state)
+  return state.total
+}
+
+// ─── Legacy wrappers (used by tests and agentRepository) ─────────────────────
+
+export function readSessionFromRaw(
+  raw: string,
+  upToMessageId?: string
+): { turns: ClaudeCodeTurn[]; tokens: TokenTotals; contextWindow: number } {
+  const state = createSessionReadState(upToMessageId)
+  for (const line of raw.split('\n')) {
+    if (processSessionReadLine(state, line)) break
+  }
+  return finalizeSessionRead(state)
+}
+
+export function extractAssistantTurnsFromRaw(raw: string): AssistantTurnEntry[] {
+  const state = createAssistantTurnState()
+  for (const line of raw.split('\n')) processAssistantTurnLine(state, line)
+  return finalizeAssistantTurns(state)
 }
 
 export function computeMessagesTotalFromContent(content: string): number {
   if (!content.trim()) return 0
-
-  let total = 0
-  let groupActive = false
-  let groupHasContent = false
-  let groupToolCount = 0
-
-  const flushGroup = (): void => {
-    if (groupActive && groupHasContent) {
-      total++ // assistant turn
-      total += groupToolCount * 2 // tool_use + tool_result pairs
-    }
-    groupActive = false
-    groupHasContent = false
-    groupToolCount = 0
-  }
-
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    const entry = JSON.parse(trimmed) as RawEntry
-    if (entry.type === 'user') {
-      flushGroup()
-      const userContent = (entry as RawUserEntry).message.content
-      if (typeof userContent === 'string') {
-        total++
-      } else if (Array.isArray(userContent) && !userContent.some((b) => b.type === 'tool_result')) {
-        if (userContent.some((b) => b.type === 'text')) total++
-      }
-    } else if (entry.type === 'assistant') {
-      if (!groupActive) {
-        groupActive = true
-        groupHasContent = false
-        groupToolCount = 0
-      }
-      for (const block of (entry as RawAssistantEntry).message.content ?? []) {
-        if (block.type === 'text' || block.type === 'tool_use') {
-          groupHasContent = true
-          if (block.type === 'tool_use') groupToolCount++
-        }
-      }
-    }
-  }
-  flushGroup()
-  return total
-}
-
-type ScanGroup = { active: boolean; hasContent: boolean; toolCount: number; tokens: TokenTotals }
-type ScanAccum = { apiCalls: number; toolCalls: number; tokens: TokenTotals; contextWindow: number }
-
-const zeroTokens = (): TokenTotals => ({
-  totalInput: 0,
-  totalOutput: 0,
-  totalCacheRead: 0,
-  totalCacheCreation: 0
-})
-
-function flushScanGroup(g: ScanGroup, a: ScanAccum): void {
-  if (!g.active) return
-  if (g.hasContent) {
-    a.apiCalls++
-    a.toolCalls += g.toolCount
-    a.tokens.totalInput += g.tokens.totalInput
-    a.tokens.totalOutput += g.tokens.totalOutput
-    a.tokens.totalCacheRead += g.tokens.totalCacheRead
-    a.tokens.totalCacheCreation += g.tokens.totalCacheCreation
-    a.contextWindow = g.tokens.totalInput + g.tokens.totalCacheRead + g.tokens.totalCacheCreation
-  }
-  g.active = false
-  g.hasContent = false
-  g.toolCount = 0
-  g.tokens = zeroTokens()
-}
-
-function processScanAssistant(ae: RawAssistantEntry, g: ScanGroup): void {
-  if (!g.active) {
-    g.active = true
-    g.hasContent = false
-    g.toolCount = 0
-    g.tokens = zeroTokens()
-  }
-  for (const block of ae.message.content ?? []) {
-    if (block.type === 'text' || block.type === 'tool_use') {
-      g.hasContent = true
-      if (block.type === 'tool_use') g.toolCount++
-    }
-  }
-  // Overwrite rather than accumulate — same deduplication as mergeAssistantGroup
-  const u = ae.message.usage
-  if (u) {
-    g.tokens = {
-      totalInput: u.input_tokens ?? 0,
-      totalOutput: u.output_tokens ?? 0,
-      totalCacheRead: u.cache_read_input_tokens ?? 0,
-      totalCacheCreation: u.cache_creation_input_tokens ?? 0
-    }
-  }
+  const state = createMessageCountState()
+  for (const line of content.split('\n')) processMessageCountLine(state, line)
+  return finalizeMessageCount(state)
 }
 
 export function scanStats(raw: string, upToMessageId?: string): SessionStats {
-  const a: ScanAccum = { apiCalls: 0, toolCalls: 0, tokens: zeroTokens(), contextWindow: 0 }
-  const g: ScanGroup = { active: false, hasContent: false, toolCount: 0, tokens: zeroTokens() }
-  let cutoffReached = false
-
+  const state = _createStatsScanState(upToMessageId)
   for (const line of raw.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    const entry = JSON.parse(trimmed) as RawEntry
-
-    if (entry.type === 'user') {
-      flushScanGroup(g, a)
-      if (cutoffReached) break
-    } else if (entry.type === 'assistant') {
-      if (cutoffReached) continue
-      const ae = entry as RawAssistantEntry
-      processScanAssistant(ae, g)
-      if (upToMessageId && ae.uuid === upToMessageId) cutoffReached = true
-    }
+    if (_processStatsScanLine(state, line)) break
   }
-  flushScanGroup(g, a)
-
-  return {
-    apiCalls: a.apiCalls,
-    toolCalls: a.toolCalls,
-    tokens: { ...a.tokens, contextWindow: a.contextWindow }
-  }
+  return _finalizeStatsScan(state)
 }

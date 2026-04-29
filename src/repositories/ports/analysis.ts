@@ -8,11 +8,11 @@ export type IClaudeSessionRepository = {
     claudeSessionId: string,
     workingDir: string,
     upToMessageId?: string
-  ): ClaudeSessionData
+  ): Promise<ClaudeSessionData>
   scanSessionStats(
     claudeSessionId: string,
     workingDir: string,
     upToMessageId?: string
-  ): SessionStats
-  getAssistantTurns(claudeSessionId: string, workingDir: string): AssistantTurnEntry[]
+  ): Promise<SessionStats>
+  getAssistantTurns(claudeSessionId: string, workingDir: string): Promise<AssistantTurnEntry[]>
 }

@@ -6,9 +6,11 @@ import {
   readdirSync,
   mkdirSync,
   statSync,
+  createReadStream,
   type Dirent
 } from 'fs'
 import { unlink } from 'fs/promises'
+import { createInterface } from 'readline'
 import { join } from 'path'
 import { homedir } from 'os'
 import { parseYaml, stringifyYaml } from '@src/utils/yaml'
@@ -56,6 +58,16 @@ export function writeText(path: string, content: string): void {
 
 export function removeFileSync(path: string): void {
   unlinkSync(path)
+}
+
+export async function* readLines(path: string): AsyncGenerator<string> {
+  const rl = createInterface({
+    input: createReadStream(path, 'utf-8'),
+    crlfDelay: Infinity
+  })
+  for await (const line of rl) {
+    yield line
+  }
 }
 
 export function cleanDir(dirPath: string): void {
@@ -120,6 +132,9 @@ export class FsInfra {
   }
   removeFileSync(path: string): void {
     removeFileSync(path)
+  }
+  readLines(path: string): AsyncGenerator<string> {
+    return readLines(path)
   }
   cleanDir(dirPath: string): void {
     cleanDir(dirPath)
