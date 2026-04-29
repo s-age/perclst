@@ -2,8 +2,8 @@ import { vi, describe, it, expect, beforeEach, afterEach, type Mock } from 'vite
 import { useState, useEffect, type Dispatch } from 'react'
 import { useInput } from 'ink'
 import { usePermission } from '../usePermission.js'
-import type { PermissionRequest } from '@src/types/permissionPipe.js'
-import type { PermissionPipeService } from '@src/services/permissionPipeService.js'
+import type { PermissionRequest } from '@src/types/permissionPipe'
+import type { PermissionPipeService } from '@src/services/permissionPipeService'
 
 vi.mock('react', () => ({
   useState: vi.fn(),

@@ -1,5 +1,5 @@
-import type { AgentStreamEvent } from '@src/types/agent.js'
-import type { Pipeline } from '@src/types/pipeline.js'
+import type { AgentStreamEvent } from '@src/types/agent'
+import type { Pipeline } from '@src/types/pipeline'
 import type { TaskState } from './types.js'
 
 export const SPINNER_INTERVAL_MS = 300

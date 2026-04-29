@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Text } from 'ink'
-import { TaskRow } from '@src/cli/components/TaskRow.js'
+import { TaskRow } from '@src/cli/components/TaskRow'
 import type { TaskState } from './types.js'
 
 type Props = {

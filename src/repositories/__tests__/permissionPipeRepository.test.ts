@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PermissionPipeRepository } from '../permissionPipeRepository.js'
 import type { FsInfra } from '@src/infrastructures/fs'
 import type { TtyInfra } from '@src/infrastructures/ttyInfrastructure'
-import { formatInputSummary } from '@src/utils/formatInputSummary.js'
+import { formatInputSummary } from '@src/utils/formatInputSummary'
 
 vi.mock('@src/utils/formatInputSummary.js', () => ({
   formatInputSummary: vi.fn()
