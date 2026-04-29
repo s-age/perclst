@@ -6,6 +6,8 @@ import { setupContainer } from '@src/core/di/setup'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
+import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
+import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
 import type { TsAnalysisService } from '@src/services/tsAnalysisService'
 import type { RecursiveReferenceInfo } from '@src/types/tsAnalysis'
 
@@ -16,7 +18,14 @@ describe('executeTsGetReferences (integration)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
-    setupContainer({ config: buildTestConfig(dir) })
+    setupContainer({
+      config: buildTestConfig(dir),
+      repos: {
+        tsAnalysisRepo: new TsAnalysisRepository(
+          new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
+        )
+      }
+    })
   })
 
   afterEach(() => {

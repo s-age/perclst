@@ -11,40 +11,58 @@ import type {
   ReferenceInfo
 } from '@src/types/tsAnalysis'
 
-function resolveSymbol(sourceFile: SourceFile, symbolName: string): Node | undefined {
+function resolveSymbols(sourceFile: SourceFile, symbolName: string): Node[] {
   if (symbolName.includes('.')) {
     const [className, methodName] = symbolName.split('.', 2)
-    return sourceFile.getClass(className)?.getMethod(methodName) ?? undefined
+    const method = sourceFile.getClass(className)?.getMethod(methodName)
+    return method ? [method] : []
   }
-  return (
+
+  const nodes: Node[] = []
+  const topLevel =
     sourceFile.getFunction(symbolName) ??
     sourceFile.getClass(symbolName) ??
     sourceFile.getVariableDeclaration(symbolName) ??
     sourceFile.getInterface(symbolName) ??
-    sourceFile.getTypeAlias(symbolName) ??
-    undefined
-  )
+    sourceFile.getTypeAlias(symbolName)
+  if (topLevel) nodes.push(topLevel)
+
+  for (const cls of sourceFile.getClasses()) {
+    const method = cls.getMethod(symbolName)
+    if (method) nodes.push(method)
+  }
+  return nodes
 }
 
-export function findReferenceFindableSymbol(
+export function findReferenceFindableSymbols(
   sourceFile: SourceFile,
   symbolName: string
-): (Node & ReferenceFindableNode) | undefined {
-  const symbol = resolveSymbol(sourceFile, symbolName)
-  if (!symbol || !Node.isReferenceFindable(symbol)) return undefined
-  return symbol
+): (Node & ReferenceFindableNode)[] {
+  return resolveSymbols(sourceFile, symbolName).filter(Node.isReferenceFindable)
 }
 
 export function extractReferences(
   referencedSymbols: ReferencedSymbol[],
   options?: { includeTest?: boolean }
 ): ReferenceInfo[] {
+  const definitionPositions = new Set<string>()
+  for (const rs of referencedSymbols) {
+    for (const ref of rs.getReferences()) {
+      if (ref.isDefinition()) {
+        const n = ref.getNode()
+        definitionPositions.add(`${n.getSourceFile().getFilePath()}:${n.getStart()}`)
+      }
+    }
+  }
+
   const results: ReferenceInfo[] = []
   for (const rs of referencedSymbols) {
     for (const ref of rs.getReferences()) {
+      if (ref.isDefinition()) continue
       const node = ref.getNode()
       const sf = node.getSourceFile()
       const refFilePath = sf.getFilePath()
+      if (definitionPositions.has(`${refFilePath}:${node.getStart()}`)) continue
       if (!options?.includeTest && refFilePath.includes('__tests__')) continue
       const pos = sf.getLineAndColumnAtPos(node.getStart())
       results.push({

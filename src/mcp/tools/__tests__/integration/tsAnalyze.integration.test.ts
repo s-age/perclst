@@ -4,6 +4,8 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { executeTsAnalyze } from '../../tsAnalyze'
 import { setupContainer } from '@src/core/di/setup'
 import { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
+import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
+import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
 import type { TypeScriptAnalysis } from '@src/types/tsAnalysis'
 
 describe('executeTsAnalyze (integration)', () => {
@@ -13,7 +15,14 @@ describe('executeTsAnalyze (integration)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ;({ dir, cleanup } = makeTmpDir())
-    setupContainer({ config: buildTestConfig(dir) })
+    setupContainer({
+      config: buildTestConfig(dir),
+      repos: {
+        tsAnalysisRepo: new TsAnalysisRepository(
+          new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
+        )
+      }
+    })
   })
 
   afterEach(() => {

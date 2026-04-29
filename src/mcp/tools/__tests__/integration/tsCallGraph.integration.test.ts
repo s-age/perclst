@@ -4,6 +4,8 @@ import { vi, describe, it, expect, beforeAll, beforeEach, afterEach } from 'vite
 import { executeTsCallGraph } from '../../tsCallGraph'
 import { setupContainer } from '@src/core/di/setup'
 import { makeTmpDir, buildTestConfig } from '@src/__tests__/helpers'
+import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
+import { TsAnalysisRepository } from '@src/repositories/tsAnalysisRepository'
 
 describe('executeTsCallGraph (integration)', () => {
   let dir: string
@@ -11,7 +13,14 @@ describe('executeTsCallGraph (integration)', () => {
 
   beforeAll(() => {
     const shared = makeTmpDir()
-    setupContainer({ config: buildTestConfig(shared.dir) })
+    setupContainer({
+      config: buildTestConfig(shared.dir),
+      repos: {
+        tsAnalysisRepo: new TsAnalysisRepository(
+          new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
+        )
+      }
+    })
     shared.cleanup()
   })
 
