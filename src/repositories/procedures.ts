@@ -22,12 +22,4 @@ export class ProcedureRepository implements IProcedureRepository {
     if (!this.fs.fileExists(packagePath)) throw new ProcedureNotFoundError(name)
     return this.fs.readText(packagePath)
   }
-
-  exists(name: string, workingDir?: string): boolean {
-    if (workingDir) {
-      const localPath = join(workingDir, 'procedures', `${name}.md`)
-      if (this.fs.fileExists(localPath)) return true
-    }
-    return this.fs.fileExists(join(PACKAGE_PROCEDURES_DIR, `${name}.md`))
-  }
 }
