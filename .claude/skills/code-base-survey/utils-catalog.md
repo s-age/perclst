@@ -43,7 +43,16 @@ Use `toISO` for session file storage; use `toLocaleString` for display output.
 
 ## `src/utils/path.ts` — path re-exports
 
-Re-exports `resolve`, `dirname`, `basename`, `join` from Node `path`. Use this instead of importing `path` directly in `src/`.
+| Export | Signature | Returns |
+|---|---|---|
+| `resolve` | (re-export) | Node `path.resolve` |
+| `dirname` | (re-export) | Node `path.dirname` |
+| `basename` | (re-export) | Node `path.basename` |
+| `extname` | (re-export) | Node `path.extname` |
+| `join` | (re-export) | Node `path.join` |
+| `cwdPath` | `(...parts: string[])` | `string` — joins parts relative to `process.cwd()` |
+
+Use this instead of importing `path` directly in `src/`.
 
 ---
 
@@ -63,6 +72,22 @@ Pure helpers extracted from `TestStrategyDomain`. Consumed by `src/domains/testS
 
 ---
 
+## `src/utils/token.ts`
+
+| Function | Signature | Returns |
+|---|---|---|
+| `formatKilo` | `(n: number)` | `string` — formats token count as k-unit string with one decimal place (e.g. 56337 → "56.3k") |
+
+Used for token count display in output formatting.
+
+---
+
+## `src/utils/url.ts` — url re-exports
+
+Re-exports `fileURLToPath` from Node `url`. Use this instead of importing `url` directly in `src/`.
+
+---
+
 ## `src/utils/uuid.ts`
 
 | Function | Signature | Returns |
@@ -70,3 +95,14 @@ Pure helpers extracted from `TestStrategyDomain`. Consumed by `src/domains/testS
 | `generateId` | `()` | `string` — UUID v4 via `crypto.randomUUID` |
 
 Used for session ID generation in `SessionDomain.create`.
+
+---
+
+## `src/utils/yaml.ts` — yaml wrapper
+
+| Function | Signature | Returns |
+|---|---|---|
+| `parseYaml<T>` | `(text: string)` | `T` — parses YAML text into typed value |
+| `stringifyYaml` | `(data: unknown)` | `string` — serialises value to YAML text |
+
+Wraps the `yaml` library. Used for pipeline file loading (`.yaml`/`.yml`).

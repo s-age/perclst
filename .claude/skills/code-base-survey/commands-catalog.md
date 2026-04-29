@@ -16,7 +16,7 @@ All `perclst` subcommands. Source of truth: `docs/USAGE.md`.
 | `fork <session> "<instruction>"` | Branch a session into a new independent session |
 | `rewind <session> <index>` | Fork from a past turn (index 0 = current tip) |
 
-Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--label`, `--allowed-tools`, `--disallowed-tools`, `--max-turns`, `--max-context-tokens`, `--output-only`
+Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--label`, `--allowed-tools`, `--disallowed-tools`, `--max-messages`, `--max-context-tokens`, `--output-only`
 
 `--label` on `start`/`fork` sets initial labels. `--label` on `resume` **appends** to existing labels (does not replace).
 
@@ -47,6 +47,7 @@ Common flags on `start`/`resume`/`fork`: `--model`, `--procedure`, `--name`, `--
 | Command | Purpose |
 |---|---|
 | `analyze <session>` | Turn breakdown, tool usage, token stats (`--print-detail`, `--format json`) |
+| `summarize` | Aggregate stats across multiple sessions — one row per session (`--label`, `--like`, `--format json`) |
 
 ---
 
@@ -74,12 +75,18 @@ Flags: `--output-only` (suppress agent thoughts/tool details)
 
 | Command | Purpose |
 |---|---|
-| `inspect <old> <new>` | Pre-push diff review — code quality, sensitive data, artifacts |
-| `run <pipeline.json>` | Execute a pipeline of agent+script tasks (`--output-only`, `--batch`) |
+| `inspect <old> <new>` | Pre-push diff review — code quality, sensitive data, artifacts (`-p/--prompt` for extra instruction) |
+| `forge <plan-file>` | Generate an implementation pipeline from a plan file (`-p/--prompt` for extra instruction) |
+| `review [target-path]` | Architectural/security/performance review of a path or pending git changes (`--output <ng_output_path>`, `-p/--prompt`) |
+| `run <pipeline.json\|yaml>` | Execute a pipeline of agent+script tasks (`--output-only`, `--batch`) |
+
+`forge` uses the `meta-pipeline-creator/create` procedure; sessions are labeled `forge`. If `target-path` is omitted from `review`, it reviews all pending git changes; sessions are labeled `review`.
+
+`run` accepts `.json`, `.yaml`, or `.yml` files. Opens an interactive TUI by default; `--batch` disables it.
 
 ---
 
-## Pipeline task types (inside pipeline JSON)
+## Pipeline task types (inside pipeline JSON/YAML)
 
 | Type | Purpose |
 |---|---|
