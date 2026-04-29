@@ -1,9 +1,9 @@
-import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService.js'
-import type { PermissionPipeService } from '@src/services/permissionPipeService.js'
-import type { Pipeline } from '@src/types/pipeline.js'
-import type { Config } from '@src/types/config.js'
+import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService'
+import type { PermissionPipeService } from '@src/services/permissionPipeService'
+import type { Pipeline } from '@src/types/pipeline'
+import type { Config } from '@src/types/config'
 
-export type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe.js'
+export type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe'
 
 export type TaskState = {
   name?: string

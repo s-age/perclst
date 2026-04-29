@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService.js'
-import type { Pipeline } from '@src/types/pipeline.js'
-import type { AgentStreamEvent } from '@src/types/agent.js'
+import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService'
+import type { Pipeline } from '@src/types/pipeline'
+import type { AgentStreamEvent } from '@src/types/agent'
 import { initTasks, formatStreamLines, appendCappedLines, MAX_ALL_LINES } from './utils.js'
 import type { TaskState } from './types.js'
 

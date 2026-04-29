@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import type { IPermissionPipeDomain } from '@src/domains/ports/permissionPipe.js'
-import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe.js'
+import type { IPermissionPipeDomain } from '@src/domains/ports/permissionPipe'
+import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe'
 import { PermissionPipeService } from '../permissionPipeService.js'
 
 describe('PermissionPipeService', () => {

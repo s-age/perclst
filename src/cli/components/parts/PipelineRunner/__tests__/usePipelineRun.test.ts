@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { Mock } from 'vitest'
 import { useState, useEffect } from 'react'
-import type { PipelineTaskResult } from '@src/services/pipelineService.js'
+import type { PipelineTaskResult } from '@src/services/pipelineService'
 import type { TaskState } from '../types.js'
 import {
   taskSep,

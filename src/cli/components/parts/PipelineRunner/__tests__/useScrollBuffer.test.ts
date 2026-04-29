@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useInput } from 'ink'
 import { computeScrollView, computeNextScrollOffset } from '../scrollBuffer'
 import { useScrollBuffer } from '../useScrollBuffer'
-import type { PermissionRequest } from '@src/types/permissionPipe.js'
+import type { PermissionRequest } from '@src/types/permissionPipe'
 
 vi.mock('react', () => ({
   useState: vi.fn()

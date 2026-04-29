@@ -1,4 +1,4 @@
-import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe.js'
+import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe'
 
 export type IPermissionPipeDomain = {
   pollRequest(): PermissionRequest | null

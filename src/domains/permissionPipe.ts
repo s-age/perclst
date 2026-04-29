@@ -1,6 +1,6 @@
-import type { IPermissionPipeDomain } from '@src/domains/ports/permissionPipe.js'
-import type { IPermissionPipeRepository } from '@src/repositories/ports/permissionPipe.js'
-import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe.js'
+import type { IPermissionPipeDomain } from '@src/domains/ports/permissionPipe'
+import type { IPermissionPipeRepository } from '@src/repositories/ports/permissionPipe'
+import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe'
 
 export class PermissionPipeDomain implements IPermissionPipeDomain {
   constructor(private repo: IPermissionPipeRepository) {}

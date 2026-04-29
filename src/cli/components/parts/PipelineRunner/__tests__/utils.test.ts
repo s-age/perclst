@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { Pipeline } from '@src/types/pipeline.js'
-import type { AgentStreamEvent } from '@src/types/agent.js'
+import type { Pipeline } from '@src/types/pipeline'
+import type { AgentStreamEvent } from '@src/types/agent'
 import {
   initTasks,
   splitToLines,

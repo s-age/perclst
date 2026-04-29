@@ -1,8 +1,8 @@
-import type { IPermissionPipeRepository } from '@src/repositories/ports/permissionPipe.js'
-import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe.js'
+import type { IPermissionPipeRepository } from '@src/repositories/ports/permissionPipe'
+import type { PermissionRequest, PermissionResult } from '@src/types/permissionPipe'
 import type { FsInfra } from '@src/infrastructures/fs'
-import type { TtyInfra } from '@src/infrastructures/ttyInfrastructure.js'
-import { formatInputSummary } from '@src/utils/formatInputSummary.js'
+import type { TtyInfra } from '@src/infrastructures/ttyInfrastructure'
+import { formatInputSummary } from '@src/utils/formatInputSummary'
 
 type PermissionPipeFs = Pick<FsInfra, 'fileExists' | 'readText' | 'removeFileSync' | 'writeText'>
 

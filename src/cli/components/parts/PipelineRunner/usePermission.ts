@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useInput } from 'ink'
-import type { PermissionPipeService } from '@src/services/permissionPipeService.js'
-import type { PermissionRequest } from '@src/types/permissionPipe.js'
+import type { PermissionPipeService } from '@src/services/permissionPipeService'
+import type { PermissionRequest } from '@src/types/permissionPipe'
 
 function buildPermissionResponse(
   input: string,
