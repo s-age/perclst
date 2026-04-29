@@ -153,7 +153,9 @@ export class PipelineService {
     options: PipelineRunOptions,
     rejection: RejectedContext | undefined
   ): AsyncGenerator<PipelineTaskResult> {
-    const baseDir = options.pipelineDir ?? process.cwd()
+    if (!options.pipelineDir)
+      throw new Error('pipelineDir is required for child pipeline resolution')
+    const baseDir = options.pipelineDir
     const absolutePath = resolve(baseDir, task.path)
     const childDir = dirname(absolutePath)
     const childPipeline = this.loadChildPipeline(absolutePath)

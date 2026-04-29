@@ -189,7 +189,7 @@ describe('PipelineService', () => {
       const pipeline: Pipeline = { tasks: [{ type: 'child', path: 'sub.json' }] }
       await expect(async () => {
         const events: PipelineTaskResult[] = []
-        for await (const e of service.run(pipeline)) events.push(e)
+        for await (const e of service.run(pipeline, { pipelineDir: '/base' })) events.push(e)
       }).rejects.toThrow('Failed to load child pipeline')
     })
   })
