@@ -1,6 +1,8 @@
 import { mkdtempSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { setupContainer } from '@src/core/di/setup'
+import { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import type { Config } from '@src/types/config'
 
 /** Creates and returns a tmpdir. Delete with cleanup(). */
@@ -16,4 +18,14 @@ export function buildTestConfig(sessionsDir: string, overrides?: Partial<Config>
     sessions_dir: sessionsDir,
     ...overrides
   }
+}
+
+/** Setup DI container with a TsAnalyzer that skips tsconfig file discovery */
+export function setupTsAnalysisContainer(dir: string): void {
+  setupContainer({
+    config: buildTestConfig(dir),
+    infras: {
+      tsAnalyzer: new TsAnalyzer({ skipAddingFilesFromTsConfig: true })
+    }
+  })
 }

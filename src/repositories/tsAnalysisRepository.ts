@@ -4,7 +4,7 @@ import {
   extractImports,
   extractExports,
   extractTypeDefinition,
-  findReferenceFindableSymbol,
+  findReferenceFindableSymbols,
   extractReferences
 } from '@src/repositories/parsers/tsAnalysisParser'
 import { findContainingSymbol } from '@src/repositories/parsers/tsAstParser'
@@ -32,9 +32,10 @@ export class TsAnalysisRepository implements ITsAnalysisRepository {
     options?: { includeTest?: boolean }
   ): ReferenceInfo[] {
     const sf = this.infra.getSourceFile(filePath)
-    const symbol = findReferenceFindableSymbol(sf, symbolName)
-    if (!symbol) return []
-    return extractReferences(symbol.findReferences(), options)
+    const symbols = findReferenceFindableSymbols(sf, symbolName)
+    if (symbols.length === 0) return []
+    const allRefs = symbols.flatMap((s) => s.findReferences())
+    return extractReferences(allRefs, options)
   }
 
   findContainingSymbol(

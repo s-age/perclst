@@ -42,6 +42,12 @@ describe('TsAnalysisRepository', () => {
       expect(refs.some((r) => r.snippet === 'getRewindTurns')).toBe(true)
     })
 
+    it('should find references to a method by plain name without class prefix', () => {
+      const withPrefix = repo.getReferences('src/domains/analyze.ts', 'AnalyzeDomain.analyze')
+      const withoutPrefix = repo.getReferences('src/domains/analyze.ts', 'analyze')
+      expect(withoutPrefix.length).toBe(withPrefix.length)
+    })
+
     it('should return empty array for a non-existent method', () => {
       const refs = repo.getReferences('src/domains/analyze.ts', 'AnalyzeDomain.nonExistent')
       expect(refs).toEqual([])
@@ -87,6 +93,33 @@ describe('TsAnalysisRepository', () => {
         includeTest: false
       })
       expect(refsDefault.length).toBe(refsExplicitFalse.length)
+    })
+
+    it('should exclude the definition line for a top-level exported function', () => {
+      const refs = repo.getReferences('src/infrastructures/fileMove.ts', 'moveFile', {
+        includeTest: true
+      })
+      const defLine = refs.find(
+        (r) =>
+          r.file_path.includes('fileMove.ts') && !r.file_path.includes('__tests__') && r.line === 4
+      )
+      expect(defLine).toBeUndefined()
+    })
+
+    it('should find class method references when a standalone function has the same name', () => {
+      const refs = repo.getReferences('src/infrastructures/fileMove.ts', 'moveFile')
+      expect(refs.some((r) => r.file_path.includes('fileMoveRepository.ts'))).toBe(true)
+    })
+
+    it('should exclude the definition line for a class method', () => {
+      const refs = repo.getReferences('src/infrastructures/fileMove.ts', 'FileMoveInfra.moveFile', {
+        includeTest: true
+      })
+      const defLine = refs.find(
+        (r) =>
+          r.file_path.includes('fileMove.ts') && !r.file_path.includes('__tests__') && r.line === 10
+      )
+      expect(defLine).toBeUndefined()
     })
   })
 })
