@@ -131,7 +131,7 @@ program
   .option('--like <pattern>', 'Filter sessions by name substring')
   .option('-l, --label <value>', 'Filter sessions by label')
   .option('-f, --format <fmt>', 'Output format: text (default) or json')
-  .action((options) => summarizeCommand(options))
+  .action(summarizeCommand)
 
 // Show command
 program
@@ -166,7 +166,7 @@ program
   .command('chat')
   .description('Resume a session interactively in Claude Code')
   .argument('<session>', 'Session ID or name')
-  .action((session: string) => chatCommand(session))
+  .action(chatCommand)
 
 // Rename command
 program
