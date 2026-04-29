@@ -13,6 +13,7 @@ vi.mock('@src/repositories/parsers/claudeSessionScanner', () => ({
 
 import { ClaudeCodeRepository } from '../agentRepository'
 import type { ClaudeCodeInfra } from '@src/infrastructures/claudeCode'
+import type { FsInfra } from '@src/infrastructures/fs'
 import {
   createParseState,
   processLine,
@@ -80,22 +81,22 @@ const mockParseState = {}
 describe('ClaudeCodeRepository', () => {
   let repo: ClaudeCodeRepository
   let mockInfra: ClaudeCodeInfra
+  let mockFs: Pick<FsInfra, 'homeDir'>
 
   beforeEach(() => {
     vi.clearAllMocks()
     mockInfra = {
-      buildArgs: vi.fn().mockReturnValue(['-p', '--output-format', 'stream-json']),
-      resolveJsonlPath: vi.fn().mockReturnValue('/path/to/session.jsonl'),
       readJsonlContent: vi.fn().mockReturnValue(''),
       runClaude: vi.fn().mockReturnValue(yieldLines()),
       writeStderr: vi.fn(),
       spawnInteractive: vi.fn()
     } as unknown as ClaudeCodeInfra
+    mockFs = { homeDir: vi.fn().mockReturnValue('/home/test') }
     vi.mocked(createParseState).mockReturnValue(
       mockParseState as ReturnType<typeof createParseState>
     )
     vi.mocked(finalizeParseState).mockReturnValue(stubRawOutput)
-    repo = new ClaudeCodeRepository(mockInfra)
+    repo = new ClaudeCodeRepository(mockInfra, mockFs)
   })
 
   describe('dispatch', () => {
@@ -121,16 +122,20 @@ describe('ClaudeCodeRepository', () => {
       expect(vi.mocked(finalizeParseState)).toHaveBeenCalledWith(mockParseState, 5)
     })
 
-    it('resolves the jsonl baseline using sessionId and workingDir for a start action', async () => {
+    it('reads the jsonl baseline from the resolved path for a start action', async () => {
       await repo.dispatch(startAction)
 
-      expect(mockInfra.resolveJsonlPath).toHaveBeenCalledWith('sess-abc', '/work')
+      expect(mockInfra.readJsonlContent).toHaveBeenCalledWith(
+        '/home/test/.claude/projects/-work/sess-abc.jsonl'
+      )
     })
 
-    it('resolves the jsonl baseline using originalClaudeSessionId and originalWorkingDir for a fork action', async () => {
+    it('reads the jsonl baseline using originalClaudeSessionId and originalWorkingDir for a fork action', async () => {
       await repo.dispatch(forkAction)
 
-      expect(mockInfra.resolveJsonlPath).toHaveBeenCalledWith('orig-claude-sess', '/orig-work')
+      expect(mockInfra.readJsonlContent).toHaveBeenCalledWith(
+        '/home/test/.claude/projects/-orig-work/orig-claude-sess.jsonl'
+      )
     })
 
     it('calls emitStreamEvents for each yielded line when onStreamEvent is provided', async () => {

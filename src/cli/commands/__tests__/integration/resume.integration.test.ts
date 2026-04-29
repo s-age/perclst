@@ -52,17 +52,17 @@ describe('resumeCommand (integration)', () => {
       expect(existsSync(join(dir, `${sessionId}.json`))).toBe(true)
     })
 
-    it('resume action is passed to buildArgs', async () => {
+    it('resume args are passed to runClaude', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('resumed'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
       await resumeCommand(sessionId, 'continue', { outputOnly: true })
 
-      // Verify that dispatch correctly built the resume action via input to buildArgs
-      const [action] = (stub.buildArgs as ReturnType<typeof vi.fn>).mock.calls[0] as [
-        { type: string }
+      const [args] = (stub.runClaude as ReturnType<typeof vi.fn>).mock.calls[0] as [
+        string[],
+        ...unknown[]
       ]
-      expect(action.type).toBe('resume')
+      expect(args).toContain('--resume')
     })
 
     it('instruction is passed as prompt', async () => {

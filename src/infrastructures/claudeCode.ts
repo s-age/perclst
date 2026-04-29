@@ -1,10 +1,9 @@
 import { spawn, spawnSync } from 'child_process'
 import type { ChildProcess } from 'child_process'
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
-import { homedir, tmpdir } from 'os'
+import { tmpdir } from 'os'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { ClaudeAction } from '@src/types/claudeCode'
 import { APIError } from '@src/errors/apiError'
 import { RawExitError } from '@src/errors/rawExitError'
 import { APP_NAME, MCP_SERVER_NAME } from '@src/constants/config'
@@ -13,35 +12,10 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const MCP_SERVER_PATH = resolve(__dirname, '../mcp/server.js')
 
-// Internal infrastructure adapter — consumed exclusively by ClaudeCodeRepository in agentRepository.ts
 export class ClaudeCodeInfra {
-  resolveJsonlPath(sessionId: string, workingDir: string): string {
-    const encoded = workingDir.replace(/\//g, '-')
-    return join(homedir(), '.claude', 'projects', encoded, `${sessionId}.jsonl`)
-  }
-
   readJsonlContent(path: string): string {
     if (!existsSync(path)) return ''
     return readFileSync(path, 'utf-8')
-  }
-
-  buildArgs(action: ClaudeAction): string[] {
-    const args: string[] = ['-p', '--output-format', 'stream-json', '--verbose']
-    if (action.model) args.push('--model', action.model)
-    if (action.type === 'resume') {
-      args.push('--resume', action.sessionId)
-    } else if (action.type === 'fork') {
-      args.push('--resume', action.originalClaudeSessionId)
-      args.push('--fork-session')
-      args.push('--session-id', action.sessionId)
-      if (action.resumeSessionAt) args.push('--resume-session-at', action.resumeSessionAt)
-    } else {
-      args.push('--session-id', action.sessionId)
-      if (action.system) args.push('--system-prompt', action.system)
-    }
-    if (action.allowedTools?.length) args.push('--allowedTools', ...action.allowedTools)
-    if (action.disallowedTools?.length) args.push('--disallowedTools', ...action.disallowedTools)
-    return args
   }
 
   private writeMcpConfig(): string {

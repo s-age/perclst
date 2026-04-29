@@ -1,11 +1,9 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { join } from 'path'
 
 const { mocks } = vi.hoisted(() => ({
   mocks: {
     existsSync: vi.fn(),
     readFileSync: vi.fn(),
-    homedir: vi.fn(),
     tmpdir: vi.fn()
   }
 }))
@@ -16,7 +14,6 @@ vi.mock('fs', () => ({
 }))
 
 vi.mock('os', () => ({
-  homedir: mocks.homedir,
   tmpdir: mocks.tmpdir
 }))
 
@@ -29,23 +26,6 @@ describe('ClaudeCodeInfra', () => {
     vi.clearAllMocks()
     mocks.tmpdir.mockReturnValue('/tmp')
     infra = new ClaudeCodeInfra()
-  })
-
-  describe('resolveJsonlPath', () => {
-    it('should build the correct JSONL path by encoding forward-slashes in workingDir', () => {
-      mocks.homedir.mockReturnValue('/home/testuser')
-
-      const result = infra.resolveJsonlPath('abc123', '/work/my-project')
-
-      const expected = join(
-        '/home/testuser',
-        '.claude',
-        'projects',
-        '-work-my-project',
-        'abc123.jsonl'
-      )
-      expect(result).toBe(expected)
-    })
   })
 
   describe('writeStderr', () => {

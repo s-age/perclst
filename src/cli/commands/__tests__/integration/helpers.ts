@@ -61,9 +61,7 @@ export function buildClaudeCodeStub(lines: string[]): Infras['claudeCodeInfra'] 
   })
 
   return {
-    resolveJsonlPath: vi.fn(() => '/dev/null'),
     readJsonlContent: vi.fn(() => ''),
-    buildArgs: vi.fn(() => ['-p']),
     runClaude,
     spawnInteractive: vi.fn(),
     writeStderr: vi.fn()

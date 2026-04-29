@@ -48,16 +48,17 @@ describe('forkCommand (integration)', () => {
       expect(readdirSync(dir).filter((f) => f.endsWith('.json'))).toHaveLength(2)
     })
 
-    it('passes fork action to buildArgs', async () => {
+    it('passes fork args to runClaude', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('forked'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
 
       await forkCommand(sessionId, 'forked task', { outputOnly: true })
 
-      const [action] = (stub.buildArgs as ReturnType<typeof vi.fn>).mock.calls[0] as [
-        { type: string }
+      const [args] = (stub.runClaude as ReturnType<typeof vi.fn>).mock.calls[0] as [
+        string[],
+        ...unknown[]
       ]
-      expect(action.type).toBe('fork')
+      expect(args).toContain('--fork-session')
     })
 
     it('passes prompt to runClaude', async () => {
