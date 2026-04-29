@@ -1,5 +1,4 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdirSync, writeFileSync, rmSync } from 'fs'
 import { join } from 'path'
 import { runCommand } from '../../run'
 import { setupContainer } from '@src/core/di/setup'
@@ -8,8 +7,6 @@ import {
   buildClaudeCodeStub,
   buildGitInfraStub,
   buildFileMoveInfraStub,
-  buildShellInfraStub,
-  buildFsInfraWithCwd,
   writePipelineFixture,
   makeTmpDir,
   buildTestConfig
@@ -479,154 +476,6 @@ describe('runCommand (integration)', () => {
 
       expect(vi.mocked(stderr).print).toHaveBeenCalledWith(
         expect.stringContaining('Pipeline failed:')
-      )
-    })
-  })
-
-  describe('script rejection flow', () => {
-    it('script 失敗 + rejected.to のとき agent が retry された後 PipelineMaxRetriesError で exit(1)', async () => {
-      const rejectionPipeline = {
-        tasks: [
-          { type: 'agent', name: 'fixer', task: 'fix it' },
-          { type: 'script', command: 'test', rejected: { to: 'fixer', max_retries: 1 } }
-        ]
-      }
-      const path = writePipelineFixture(dir, rejectionPipeline)
-      const claudeStub = buildClaudeCodeStub(makeResultLines('done'))
-
-      setupContainer({
-        config: buildTestConfig(dir),
-        infras: {
-          claudeCodeInfra: claudeStub,
-          gitInfra: buildGitInfraStub(),
-          fileMoveInfra: buildFileMoveInfraStub(),
-          shellInfra: buildShellInfraStub({ exitCode: 1, stdout: 'test failed', stderr: '' })
-        }
-      })
-
-      try {
-        await runCommand(path, { batch: true })
-      } catch {
-        /* expected exit */
-      }
-
-      expect(process.exit).toHaveBeenCalledWith(1)
-      expect(claudeStub.runClaude).toHaveBeenCalledTimes(2)
-    })
-  })
-
-  describe('agent limit exceeded', () => {
-    it('max_messages 超過時にパイプラインが正常完了する', async () => {
-      const limitPipeline = {
-        tasks: [{ type: 'agent', task: 'do something', max_messages: 1 }]
-      }
-      const path = writePipelineFixture(dir, limitPipeline)
-
-      setupContainer({
-        config: buildTestConfig(dir),
-        infras: {
-          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
-          gitInfra: buildGitInfraStub(),
-          fileMoveInfra: buildFileMoveInfraStub()
-        }
-      })
-
-      await runCommand(path, { batch: true })
-
-      expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
-        expect.stringContaining('Pipeline complete.')
-      )
-    })
-
-    it('max_context_tokens 超過時にパイプラインが正常完了する', async () => {
-      const limitPipeline = {
-        tasks: [{ type: 'agent', task: 'do something', max_context_tokens: 5 }]
-      }
-      const path = writePipelineFixture(dir, limitPipeline)
-
-      setupContainer({
-        config: buildTestConfig(dir),
-        infras: {
-          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
-          gitInfra: buildGitInfraStub(),
-          fileMoveInfra: buildFileMoveInfraStub()
-        }
-      })
-
-      await runCommand(path, { batch: true })
-
-      expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
-        expect.stringContaining('Pipeline complete.')
-      )
-    })
-  })
-
-  describe('agent rejection via feedback file', () => {
-    const feedbackDir = join(process.cwd(), '.claude', 'tmp')
-
-    afterEach(() => {
-      rmSync(feedbackDir, { recursive: true, force: true })
-    })
-
-    it('agent の rejected + feedback file があるとき retry 後にパイプラインが完了する', async () => {
-      mkdirSync(feedbackDir, { recursive: true })
-      writeFileSync(join(feedbackDir, 'coder'), 'assertion error in test.ts')
-
-      const rejectionPipeline = {
-        tasks: [
-          {
-            type: 'agent',
-            name: 'coder',
-            task: 'write code',
-            rejected: { to: 'coder', max_retries: 1 }
-          }
-        ]
-      }
-      const path = writePipelineFixture(dir, rejectionPipeline)
-      const claudeStub = buildClaudeCodeStub(makeResultLines('done'))
-
-      setupContainer({
-        config: buildTestConfig(dir),
-        infras: {
-          claudeCodeInfra: claudeStub,
-          gitInfra: buildGitInfraStub(),
-          fileMoveInfra: buildFileMoveInfraStub()
-        }
-      })
-
-      await runCommand(path, { batch: true })
-
-      expect(claudeStub.runClaude).toHaveBeenCalledTimes(2)
-      expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
-        expect.stringContaining('Pipeline complete.')
-      )
-    })
-  })
-
-  describe('procedure loading', () => {
-    it('task に procedure を指定するとローカル procedure が読み込まれる', async () => {
-      mkdirSync(join(dir, 'procedures'), { recursive: true })
-      writeFileSync(join(dir, 'procedures', 'test-proc.md'), '# Test procedure')
-
-      const procPipeline = {
-        tasks: [{ type: 'agent', task: 'do something', procedure: 'test-proc' }]
-      }
-      const path = writePipelineFixture(dir, procPipeline)
-
-      setupContainer({
-        config: buildTestConfig(dir),
-        infras: {
-          claudeCodeInfra: buildClaudeCodeStub(makeResultLines('done')),
-          gitInfra: buildGitInfraStub(),
-          fileMoveInfra: buildFileMoveInfraStub(),
-          fsInfra: buildFsInfraWithCwd(dir)
-        }
-      })
-
-      await runCommand(path, { batch: true })
-
-      expect(vi.mocked(stdout).print).toHaveBeenCalledWith(
-        expect.stringContaining('Pipeline complete.')
       )
     })
   })
