@@ -7,7 +7,7 @@ paths:
 
 The lowest layer — the only place that may import Node.js I/O built-ins (`fs`, `fs/promises`, `child_process`, `os`, `path`). Adapters here are raw and generic; repositories compose them into atomic operations. No business logic, no data shaping.
 
-> **`utils` vs `infrastructures`**: Non-I/O built-ins used as pure functions (e.g. `crypto.randomUUID`) belong in `utils`, not here.
+> **`utils` vs `infrastructures`**: Non-I/O built-ins used as pure functions (e.g. `crypto.randomUUID`) belong in `utils`, not here. Pure-function re-export wrappers (`src/utils/path`, `src/utils/url`) also live in `utils` — they import the Node.js built-in so that upper layers don't have to.
 
 ## Adapters
 
