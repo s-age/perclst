@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
-import { ImportDomain } from '../import'
+import { ImportDomain } from '../sessionImport'
 
 vi.mock('@src/utils/uuid', () => ({ generateId: vi.fn() }))
 vi.mock('@src/utils/date', () => ({ toISO: vi.fn() }))
