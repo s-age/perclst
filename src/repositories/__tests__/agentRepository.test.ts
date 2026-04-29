@@ -8,7 +8,7 @@ vi.mock('@src/repositories/parsers/claudeCodeParser', () => ({
 }))
 
 vi.mock('@src/repositories/parsers/claudeSessionScanner', () => ({
-  computeMessagesTotalFromContent: vi.fn().mockReturnValue(0)
+  computeBaselinesFromContent: vi.fn().mockReturnValue({ lineCount: 0, messagesTotal: 0 })
 }))
 
 import { ClaudeCodeRepository } from '../agentRepository'
@@ -19,6 +19,7 @@ import {
   finalizeParseState,
   emitStreamEvents
 } from '@src/repositories/parsers/claudeCodeParser'
+import { computeBaselinesFromContent } from '@src/repositories/parsers/claudeSessionScanner'
 import { RawExitError } from '@src/errors/rawExitError'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { APIError } from '@src/errors/apiError'
@@ -111,6 +112,7 @@ describe('ClaudeCodeRepository', () => {
     it('calls processLine for each yielded line and finalizeParseState with the jsonl baseline', async () => {
       mockInfra.runClaude = vi.fn().mockReturnValue(yieldLines('line1', 'line2'))
       mockInfra.readJsonlContent = vi.fn().mockReturnValue('a\nb\nc\nd\ne')
+      vi.mocked(computeBaselinesFromContent).mockReturnValueOnce({ lineCount: 5, messagesTotal: 0 })
 
       await repo.dispatch(startAction)
 

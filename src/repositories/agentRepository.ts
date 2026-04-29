@@ -5,7 +5,7 @@ import {
   finalizeParseState,
   emitStreamEvents
 } from '@src/repositories/parsers/claudeCodeParser'
-import { computeMessagesTotalFromContent } from '@src/repositories/parsers/claudeSessionScanner'
+import { computeBaselinesFromContent } from '@src/repositories/parsers/claudeSessionScanner'
 import type { IClaudeCodeRepository } from '@src/repositories/ports/agent'
 import { RawExitError } from '@src/errors/rawExitError'
 import { APIError } from '@src/errors/apiError'
@@ -21,10 +21,8 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
     baselineMessagesTotal: number
   } {
     const jsonlContent = this.infra.readJsonlContent(jsonlPath)
-    return {
-      jsonlBaseline: jsonlContent.split('\n').filter((l) => l.trim()).length,
-      baselineMessagesTotal: computeMessagesTotalFromContent(jsonlContent)
-    }
+    const { lineCount, messagesTotal } = computeBaselinesFromContent(jsonlContent)
+    return { jsonlBaseline: lineCount, baselineMessagesTotal: messagesTotal }
   }
 
   private classifyExitError(err: RawExitError): never {

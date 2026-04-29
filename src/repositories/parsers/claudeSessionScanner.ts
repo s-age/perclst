@@ -272,6 +272,20 @@ export function computeMessagesTotalFromContent(content: string): number {
   return finalizeMessageCount(state)
 }
 
+export function computeBaselinesFromContent(content: string): {
+  lineCount: number
+  messagesTotal: number
+} {
+  if (!content.trim()) return { lineCount: 0, messagesTotal: 0 }
+  const state = createMessageCountState()
+  let lineCount = 0
+  for (const line of content.split('\n')) {
+    if (line.trim()) lineCount++
+    processMessageCountLine(state, line)
+  }
+  return { lineCount, messagesTotal: finalizeMessageCount(state) }
+}
+
 export function scanStats(raw: string, upToMessageId?: string): SessionStats {
   const state = _createStatsScanState(upToMessageId)
   for (const line of raw.split('\n')) {
