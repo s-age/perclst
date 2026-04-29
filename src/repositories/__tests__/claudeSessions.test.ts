@@ -1,36 +1,46 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { Dirent } from 'fs'
 
-vi.mock('@src/repositories/parsers/claudeSessionParser')
+vi.mock('@src/repositories/parsers/claudeSessionScanner')
 
 import {
-  parseRawEntries,
-  buildToolResultMap,
-  buildTurns,
-  filterEntriesUpTo,
-  scanStats
-} from '@src/repositories/parsers/claudeSessionParser'
-import type { RawEntry, TokenTotals } from '@src/repositories/parsers/claudeSessionParser'
-import type { SessionStats } from '@src/types/analysis'
+  createSessionReadState,
+  processSessionReadLine,
+  finalizeSessionRead,
+  createStatsScanState,
+  processStatsScanLine,
+  finalizeStatsScan,
+  createAssistantTurnState,
+  processAssistantTurnLine,
+  finalizeAssistantTurns
+} from '@src/repositories/parsers/claudeSessionScanner'
+import type { TokenTotals } from '@src/repositories/parsers/claudeSessionParser'
+import type { AssistantTurnEntry, SessionStats } from '@src/types/analysis'
 import type { ClaudeCodeTurn } from '@src/types/analysis'
 import type { FsInfra } from '@src/infrastructures/fs'
 import { ClaudeSessionRepository } from '@src/repositories/claudeSessions'
 
 type ClaudeSessionFs = Pick<
   FsInfra,
-  'homeDir' | 'fileExists' | 'listDirEntries' | 'isDirectory' | 'readText'
+  'homeDir' | 'fileExists' | 'listDirEntries' | 'isDirectory' | 'readLines'
 >
 
-const mockParseRawEntries = vi.mocked(parseRawEntries)
-const mockBuildToolResultMap = vi.mocked(buildToolResultMap)
-const mockBuildTurns = vi.mocked(buildTurns)
-const mockFilterEntriesUpTo = vi.mocked(filterEntriesUpTo)
-const mockScanStats = vi.mocked(scanStats)
-
-type ToolResultMap = Map<string, { text: string | null; isError: boolean }>
+const mockCreateSessionReadState = vi.mocked(createSessionReadState)
+const mockProcessSessionReadLine = vi.mocked(processSessionReadLine)
+const mockFinalizeSessionRead = vi.mocked(finalizeSessionRead)
+const mockCreateStatsScanState = vi.mocked(createStatsScanState)
+const mockProcessStatsScanLine = vi.mocked(processStatsScanLine)
+const mockFinalizeStatsScan = vi.mocked(finalizeStatsScan)
+const mockCreateAssistantTurnState = vi.mocked(createAssistantTurnState)
+const mockProcessAssistantTurnLine = vi.mocked(processAssistantTurnLine)
+const mockFinalizeAssistantTurns = vi.mocked(finalizeAssistantTurns)
 
 function makeDirEntry(name: string, dir: boolean): { name: string; isDirectory: () => boolean } {
   return { name, isDirectory: () => dir }
+}
+
+async function* mockLines(...lines: string[]): AsyncGenerator<string> {
+  for (const line of lines) yield line
 }
 
 describe('ClaudeSessionRepository', () => {
@@ -44,7 +54,7 @@ describe('ClaudeSessionRepository', () => {
       fileExists: vi.fn(),
       listDirEntries: vi.fn(),
       isDirectory: vi.fn(),
-      readText: vi.fn()
+      readLines: vi.fn().mockReturnValue(mockLines())
     } as unknown as ClaudeSessionFs
     repo = new ClaudeSessionRepository(mockFs)
   })
@@ -245,41 +255,45 @@ describe('ClaudeSessionRepository', () => {
       totalCacheRead: 0,
       totalCacheCreation: 0
     }
+    const stubState = {} as ReturnType<typeof createSessionReadState>
 
     beforeEach(() => {
-      vi.mocked(mockFs.readText).mockReturnValue('raw content')
-      mockParseRawEntries.mockReturnValue([])
-      mockBuildToolResultMap.mockReturnValue(new Map() as ToolResultMap)
-      mockBuildTurns.mockReturnValue({ turns: [], tokens: emptyTokens, contextWindow: 0 })
+      mockCreateSessionReadState.mockReturnValue(stubState)
+      mockProcessSessionReadLine.mockReturnValue(false)
+      mockFinalizeSessionRead.mockReturnValue({
+        turns: [],
+        tokens: emptyTokens,
+        contextWindow: 0
+      })
     })
 
-    it('throws when the session JSONL file does not exist', () => {
+    it('throws when the session JSONL file does not exist', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(false)
 
-      expect(() => repo.readSession('session-1', '/work/dir')).toThrow(
+      await expect(repo.readSession('session-1', '/work/dir')).rejects.toThrow(
         'Claude Code session file not found'
       )
     })
 
-    it('calls filterEntriesUpTo when upToMessageId is provided', () => {
+    it('passes upToMessageId to createSessionReadState when provided', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockFilterEntriesUpTo.mockReturnValue([])
 
-      repo.readSession('session-1', '/work/dir', 'msg-42')
+      await repo.readSession('session-1', '/work/dir', 'msg-42')
 
-      expect(mockFilterEntriesUpTo).toHaveBeenCalledWith(expect.anything(), 'msg-42')
+      expect(mockCreateSessionReadState).toHaveBeenCalledWith('msg-42')
     })
 
-    it('does not call filterEntriesUpTo when upToMessageId is omitted', () => {
+    it('passes undefined upToMessageId to createSessionReadState when omitted', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
 
-      repo.readSession('session-1', '/work/dir')
+      await repo.readSession('session-1', '/work/dir')
 
-      expect(mockFilterEntriesUpTo).not.toHaveBeenCalled()
+      expect(mockCreateSessionReadState).toHaveBeenCalledWith(undefined)
     })
 
-    it('returns the turns and tokens produced by buildTurns', () => {
+    it('streams lines through the state machine and returns finalized result', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
+      vi.mocked(mockFs.readLines).mockReturnValue(mockLines('line1', 'line2'))
       const expectedTurns: ClaudeCodeTurn[] = [{ toolCalls: [], assistantText: 'hi' }]
       const expectedTokens: TokenTotals = {
         totalInput: 100,
@@ -287,18 +301,32 @@ describe('ClaudeSessionRepository', () => {
         totalCacheRead: 0,
         totalCacheCreation: 0
       }
-      mockBuildTurns.mockReturnValue({
+      mockFinalizeSessionRead.mockReturnValue({
         turns: expectedTurns,
         tokens: expectedTokens,
         contextWindow: 0
       })
 
-      const result = repo.readSession('session-1', '/work/dir')
+      const result = await repo.readSession('session-1', '/work/dir')
 
+      expect(mockProcessSessionReadLine).toHaveBeenCalledTimes(2)
+      expect(mockProcessSessionReadLine).toHaveBeenCalledWith(stubState, 'line1')
+      expect(mockProcessSessionReadLine).toHaveBeenCalledWith(stubState, 'line2')
+      expect(mockFinalizeSessionRead).toHaveBeenCalledWith(stubState)
       expect(result).toEqual({
         turns: expectedTurns,
         tokens: { ...expectedTokens, contextWindow: 0 }
       })
+    })
+
+    it('stops streaming when processSessionReadLine returns true', async () => {
+      vi.mocked(mockFs.fileExists).mockReturnValue(true)
+      vi.mocked(mockFs.readLines).mockReturnValue(mockLines('line1', 'line2', 'line3'))
+      mockProcessSessionReadLine.mockReturnValueOnce(false).mockReturnValueOnce(true)
+
+      await repo.readSession('session-1', '/work/dir')
+
+      expect(mockProcessSessionReadLine).toHaveBeenCalledTimes(2)
     })
   })
 
@@ -316,122 +344,85 @@ describe('ClaudeSessionRepository', () => {
         contextWindow: 0
       }
     })
+    const stubState = {} as ReturnType<typeof createStatsScanState>
 
     beforeEach(() => {
-      vi.mocked(mockFs.readText).mockReturnValue('raw content')
+      mockCreateStatsScanState.mockReturnValue(stubState)
+      mockProcessStatsScanLine.mockReturnValue(false)
+      mockFinalizeStatsScan.mockReturnValue(makeStats())
     })
 
-    it('throws when the session JSONL file does not exist', () => {
+    it('throws when the session JSONL file does not exist', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(false)
 
-      expect(() => repo.scanSessionStats('session-1', '/work/dir')).toThrow(
+      await expect(repo.scanSessionStats('session-1', '/work/dir')).rejects.toThrow(
         'Claude Code session file not found'
       )
     })
 
-    it('returns the stats produced by scanStats', () => {
+    it('returns the stats produced by finalizeStatsScan', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockScanStats.mockReturnValue(makeStats())
 
-      const result = repo.scanSessionStats('session-1', '/work/dir')
+      const result = await repo.scanSessionStats('session-1', '/work/dir')
 
-      expect(mockScanStats).toHaveBeenCalledWith('raw content', undefined)
+      expect(mockCreateStatsScanState).toHaveBeenCalledWith(undefined)
       expect(result).toEqual(makeStats())
     })
 
-    it('passes upToMessageId to scanStats when provided', () => {
+    it('passes upToMessageId to createStatsScanState when provided', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockScanStats.mockReturnValue(makeStats())
 
-      repo.scanSessionStats('session-1', '/work/dir', 'msg-42')
+      await repo.scanSessionStats('session-1', '/work/dir', 'msg-42')
 
-      expect(mockScanStats).toHaveBeenCalledWith('raw content', 'msg-42')
+      expect(mockCreateStatsScanState).toHaveBeenCalledWith('msg-42')
+    })
+
+    it('stops streaming when processStatsScanLine returns true', async () => {
+      vi.mocked(mockFs.fileExists).mockReturnValue(true)
+      vi.mocked(mockFs.readLines).mockReturnValue(mockLines('line1', 'line2', 'line3'))
+      mockProcessStatsScanLine.mockReturnValueOnce(false).mockReturnValueOnce(true)
+
+      await repo.scanSessionStats('session-1', '/work/dir')
+
+      expect(mockProcessStatsScanLine).toHaveBeenCalledTimes(2)
     })
   })
 
   // ─── getAssistantTurns ──────────────────────────────────────────────────
 
   describe('getAssistantTurns', () => {
+    const stubState = {} as ReturnType<typeof createAssistantTurnState>
+
     beforeEach(() => {
-      vi.mocked(mockFs.readText).mockReturnValue('raw content')
+      mockCreateAssistantTurnState.mockReturnValue(stubState)
+      mockFinalizeAssistantTurns.mockReturnValue([])
     })
 
-    it('throws when the session JSONL file does not exist', () => {
+    it('throws when the session JSONL file does not exist', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(false)
 
-      expect(() => repo.getAssistantTurns('session-1', '/work/dir')).toThrow(
+      await expect(repo.getAssistantTurns('session-1', '/work/dir')).rejects.toThrow(
         'Claude Code session file not found'
       )
     })
 
-    it('returns an empty array when there are no assistant-type entries', () => {
+    it('returns the entries produced by finalizeAssistantTurns', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        { type: 'user', message: { content: [{ type: 'text', text: 'hello' }] } }
-      ] as unknown as RawEntry[])
+      vi.mocked(mockFs.readLines).mockReturnValue(mockLines('line1'))
+      const expected: AssistantTurnEntry[] = [{ uuid: 'a-1', text: 'Hello world' }]
+      mockFinalizeAssistantTurns.mockReturnValue(expected)
 
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([])
+      const result = await repo.getAssistantTurns('session-1', '/work/dir')
+
+      expect(mockProcessAssistantTurnLine).toHaveBeenCalledWith(stubState, 'line1')
+      expect(mockFinalizeAssistantTurns).toHaveBeenCalledWith(stubState)
+      expect(result).toEqual(expected)
     })
 
-    it('skips assistant entries whose content consists entirely of thinking blocks', () => {
+    it('returns an empty array when finalizeAssistantTurns returns empty', async () => {
       vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        {
-          type: 'assistant',
-          uuid: 'a-1',
-          message: { content: [{ type: 'thinking', thinking: 'internal monologue' }] }
-        }
-      ] as unknown as RawEntry[])
 
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([])
-    })
-
-    it('skips assistant entries where the joined text is empty after trimming', () => {
-      vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        {
-          type: 'assistant',
-          uuid: 'a-2',
-          message: { content: [{ type: 'text', text: '   ' }] }
-        }
-      ] as unknown as RawEntry[])
-
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([])
-    })
-
-    it('returns { uuid, trimmed text } for a valid assistant entry', () => {
-      vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        {
-          type: 'assistant',
-          uuid: 'a-3',
-          message: { content: [{ type: 'text', text: '  Hello world  ' }] }
-        }
-      ] as unknown as RawEntry[])
-
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([
-        { uuid: 'a-3', text: 'Hello world' }
-      ])
-    })
-
-    it('excludes tool_use blocks from text but retains text blocks in the same entry', () => {
-      vi.mocked(mockFs.fileExists).mockReturnValue(true)
-      mockParseRawEntries.mockReturnValue([
-        {
-          type: 'assistant',
-          uuid: 'a-4',
-          message: {
-            content: [
-              { type: 'text', text: 'Here is the result' },
-              { type: 'tool_use', id: 'tid-1', name: 'Read', input: {} }
-            ]
-          }
-        }
-      ] as unknown as RawEntry[])
-
-      expect(repo.getAssistantTurns('session-1', '/work/dir')).toEqual([
-        { uuid: 'a-4', text: 'Here is the result' }
-      ])
+      expect(await repo.getAssistantTurns('session-1', '/work/dir')).toEqual([])
     })
   })
 })

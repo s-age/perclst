@@ -55,7 +55,7 @@ export class AnalyzeDomain implements IAnalyzeDomain {
     const session = await this.sessionDomain.get(sessionId)
     const effectiveClaudeSessionId =
       session.rewind_source_claude_session_id ?? session.claude_session_id
-    const { turns, tokens } = this.claudeSessionRepo.readSession(
+    const { turns, tokens } = await this.claudeSessionRepo.readSession(
       effectiveClaudeSessionId,
       session.working_dir,
       session.rewind_to_message_id
@@ -76,7 +76,7 @@ export class AnalyzeDomain implements IAnalyzeDomain {
     for (const session of sessions) {
       try {
         const effectiveId = session.rewind_source_claude_session_id ?? session.claude_session_id
-        const stats = this.claudeSessionRepo.scanSessionStats(
+        const stats = await this.claudeSessionRepo.scanSessionStats(
           effectiveId,
           session.working_dir,
           session.rewind_to_message_id
@@ -100,7 +100,7 @@ export class AnalyzeDomain implements IAnalyzeDomain {
     const session = await this.sessionDomain.get(sessionId)
     const effectiveClaudeSessionId =
       session.rewind_source_claude_session_id ?? session.claude_session_id
-    let turns = this.claudeSessionRepo.getAssistantTurns(
+    let turns = await this.claudeSessionRepo.getAssistantTurns(
       effectiveClaudeSessionId,
       session.working_dir
     )

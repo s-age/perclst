@@ -3,19 +3,22 @@ import type { AssistantTurnEntry, ClaudeSessionData, SessionStats } from '@src/t
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import type { FsInfra } from '@src/infrastructures/fs'
 import {
-  parseRawEntries,
-  buildToolResultMap,
-  buildTurns,
-  filterEntriesUpTo,
-  scanStats,
-  type RawAssistantEntry
-} from '@src/repositories/parsers/claudeSessionParser'
+  createSessionReadState,
+  processSessionReadLine,
+  finalizeSessionRead,
+  createStatsScanState,
+  processStatsScanLine,
+  finalizeStatsScan,
+  createAssistantTurnState,
+  processAssistantTurnLine,
+  finalizeAssistantTurns
+} from '@src/repositories/parsers/claudeSessionScanner'
 
 const MAX_SANITIZED_LENGTH = 200
 
 type ClaudeSessionFs = Pick<
   FsInfra,
-  'homeDir' | 'fileExists' | 'listDirEntries' | 'isDirectory' | 'readText'
+  'homeDir' | 'fileExists' | 'listDirEntries' | 'isDirectory' | 'readLines'
 >
 
 function djb2Hash(str: string): number {
@@ -115,54 +118,51 @@ export class ClaudeSessionRepository implements IClaudeSessionRepository {
     }
   }
 
-  readSession(
+  async readSession(
     claudeSessionId: string,
     workingDir: string,
     upToMessageId?: string
-  ): ClaudeSessionData {
+  ): Promise<ClaudeSessionData> {
     const jsonlPath = this.resolveJsonlPath(claudeSessionId, workingDir)
     if (!this.fs.fileExists(jsonlPath)) {
       throw new Error(`Claude Code session file not found: ${jsonlPath}`)
     }
-    let entries = parseRawEntries(this.fs.readText(jsonlPath))
-    if (upToMessageId) entries = filterEntriesUpTo(entries, upToMessageId)
-    const toolResultMap = buildToolResultMap(entries)
-    const { turns, tokens, contextWindow } = buildTurns(entries, toolResultMap)
+    const state = createSessionReadState(upToMessageId)
+    for await (const line of this.fs.readLines(jsonlPath)) {
+      if (processSessionReadLine(state, line)) break
+    }
+    const { turns, tokens, contextWindow } = finalizeSessionRead(state)
     return { turns, tokens: { ...tokens, contextWindow } }
   }
 
-  scanSessionStats(
+  async scanSessionStats(
     claudeSessionId: string,
     workingDir: string,
     upToMessageId?: string
-  ): SessionStats {
+  ): Promise<SessionStats> {
     const jsonlPath = this.resolveJsonlPath(claudeSessionId, workingDir)
     if (!this.fs.fileExists(jsonlPath)) {
       throw new Error(`Claude Code session file not found: ${jsonlPath}`)
     }
-    return scanStats(this.fs.readText(jsonlPath), upToMessageId)
+    const state = createStatsScanState(upToMessageId)
+    for await (const line of this.fs.readLines(jsonlPath)) {
+      if (processStatsScanLine(state, line)) break
+    }
+    return finalizeStatsScan(state)
   }
 
-  getAssistantTurns(claudeSessionId: string, workingDir: string): AssistantTurnEntry[] {
+  async getAssistantTurns(
+    claudeSessionId: string,
+    workingDir: string
+  ): Promise<AssistantTurnEntry[]> {
     const jsonlPath = this.resolveJsonlPath(claudeSessionId, workingDir)
     if (!this.fs.fileExists(jsonlPath)) {
       throw new Error(`Claude Code session file not found: ${jsonlPath}`)
     }
-    const entries = parseRawEntries(this.fs.readText(jsonlPath))
-    const result: AssistantTurnEntry[] = []
-    for (const entry of entries) {
-      if (entry.type !== 'assistant') continue
-      const assistantEntry = entry as RawAssistantEntry
-      const content = assistantEntry.message.content ?? []
-      if (content.length > 0 && content.every((b) => b.type === 'thinking')) continue
-      const text = content
-        .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-        .map((b) => b.text)
-        .join(' ')
-        .trim()
-      if (!text) continue
-      result.push({ uuid: assistantEntry.uuid, text })
+    const state = createAssistantTurnState()
+    for await (const line of this.fs.readLines(jsonlPath)) {
+      processAssistantTurnLine(state, line)
     }
-    return result
+    return finalizeAssistantTurns(state)
   }
 }

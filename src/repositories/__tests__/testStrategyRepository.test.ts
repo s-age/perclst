@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { canonicalTestFilePath, TestStrategyRepository } from '../testStrategyRepository'
+import { TestStrategyRepository } from '../testStrategyRepository'
 import type { FsInfra } from '@src/infrastructures/fs'
 import type { TsAnalyzer } from '@src/infrastructures/tsAnalyzer'
 import type { TestFileDiscoveryInfra } from '@src/infrastructures/testFileDiscovery'
@@ -7,26 +7,38 @@ import type { TestFileDiscoveryInfra } from '@src/infrastructures/testFileDiscov
 type TestStrategyFs = Pick<FsInfra, 'fileExists' | 'readText' | 'readJson'>
 
 describe('canonicalTestFilePath', () => {
+  let repo: TestStrategyRepository
+
+  beforeEach(() => {
+    repo = new TestStrategyRepository(
+      {} as unknown as TsAnalyzer,
+      { fileExists: vi.fn(), readText: vi.fn(), readJson: vi.fn() } as unknown as TestStrategyFs,
+      {} as unknown as TestFileDiscoveryInfra
+    )
+  })
+
   it('transforms .ts file to __tests__/filename.test.ts', () => {
-    expect(canonicalTestFilePath('/path/to/myFile.ts')).toBe('/path/to/__tests__/myFile.test.ts')
+    expect(repo.canonicalTestFilePath('/path/to/myFile.ts')).toBe(
+      '/path/to/__tests__/myFile.test.ts'
+    )
   })
 
   it('transforms .tsx file to __tests__/filename.test.tsx', () => {
-    expect(canonicalTestFilePath('/src/components/Button.tsx')).toBe(
+    expect(repo.canonicalTestFilePath('/src/components/Button.tsx')).toBe(
       '/src/components/__tests__/Button.test.tsx'
     )
   })
 
   it('transforms .js file to __tests__/filename.test.js', () => {
-    expect(canonicalTestFilePath('/lib/utils.js')).toBe('/lib/__tests__/utils.test.js')
+    expect(repo.canonicalTestFilePath('/lib/utils.js')).toBe('/lib/__tests__/utils.test.js')
   })
 
   it('handles relative paths by resolving to absolute', () => {
-    expect(canonicalTestFilePath('./myFile.ts')).toMatch(/__tests__\/myFile\.test\.ts$/)
+    expect(repo.canonicalTestFilePath('./myFile.ts')).toMatch(/__tests__\/myFile\.test\.ts$/)
   })
 
   it('handles file names with multiple dots', () => {
-    expect(canonicalTestFilePath('/path/my.file.name.ts')).toBe(
+    expect(repo.canonicalTestFilePath('/path/my.file.name.ts')).toBe(
       '/path/__tests__/my.file.name.test.ts'
     )
   })

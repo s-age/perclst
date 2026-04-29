@@ -8,7 +8,7 @@ Architecture skills (`arch-*`) typically contain both code examples (Good/Bad) a
 
 ## What happened / What is true
 
-In `arch-repositories/SKILL.md`, the "Dual export style" pattern's **Good** code example showed:
+In `arch-repositories/SKILL.md`, the now-removed "Dual export style" pattern's **Good** code example showed:
 
 ```ts
 // Good — sessions.ts: class delegates to the same standalone functions

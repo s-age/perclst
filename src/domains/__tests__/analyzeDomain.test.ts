@@ -82,7 +82,7 @@ describe('AnalyzeDomain', () => {
       const session = makeSession()
       const sessionData = makeSessionData()
       vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
-      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(sessionData)
+      vi.mocked(mockClaudeSessionRepo.readSession).mockResolvedValue(sessionData)
 
       const result = await domain.analyze('session-1')
 
@@ -119,7 +119,7 @@ describe('AnalyzeDomain', () => {
         rewind_to_message_id: 'msg-5'
       })
       vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
-      vi.mocked(mockClaudeSessionRepo.readSession).mockReturnValue(makeSessionData())
+      vi.mocked(mockClaudeSessionRepo.readSession).mockResolvedValue(makeSessionData())
 
       await domain.analyze('session-1')
 
@@ -140,7 +140,7 @@ describe('AnalyzeDomain', () => {
         { uuid: 'u3', text: 'third' }
       ]
       vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
-      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockReturnValue(turns)
+      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockResolvedValue(turns)
 
       const result = await domain.getRewindTurns('session-1')
 
@@ -159,7 +159,7 @@ describe('AnalyzeDomain', () => {
       const session = makeSession({ rewind_source_claude_session_id: 'claude-source-xyz' })
       const turns: AssistantTurnEntry[] = [{ uuid: 'u1', text: 'only' }]
       vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
-      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockReturnValue(turns)
+      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockResolvedValue(turns)
 
       await domain.getRewindTurns('session-1')
 
@@ -177,7 +177,7 @@ describe('AnalyzeDomain', () => {
         { uuid: 'u3', text: 'third' }
       ]
       vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
-      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockReturnValue(turns)
+      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockResolvedValue(turns)
 
       const result = await domain.getRewindTurns('session-1')
 
@@ -194,7 +194,7 @@ describe('AnalyzeDomain', () => {
         { uuid: 'u2', text: 'second' }
       ]
       vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
-      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockReturnValue(turns)
+      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockResolvedValue(turns)
 
       const result = await domain.getRewindTurns('session-1')
 
@@ -207,7 +207,7 @@ describe('AnalyzeDomain', () => {
     it('should return an empty array when there are no assistant turns', async () => {
       const session = makeSession()
       vi.mocked(mockSessionDomain.get).mockResolvedValue(session)
-      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockReturnValue([])
+      vi.mocked(mockClaudeSessionRepo.getAssistantTurns).mockResolvedValue([])
 
       const result = await domain.getRewindTurns('session-1')
 
@@ -256,7 +256,7 @@ describe('AnalyzeDomain', () => {
     it('should build a summary row for each session', async () => {
       const session = makeSession()
       vi.mocked(mockSessionDomain.list).mockResolvedValue([session])
-      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockReturnValue(makeSessionStats())
+      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockResolvedValue(makeSessionStats())
 
       const result = await domain.summarize({})
 
@@ -268,7 +268,7 @@ describe('AnalyzeDomain', () => {
       const withName = makeSession({ name: 'My Session' })
       const withoutName = makeSession({ id: 'session-2' })
       vi.mocked(mockSessionDomain.list).mockResolvedValue([withName, withoutName])
-      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockReturnValue(makeSessionStats())
+      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockResolvedValue(makeSessionStats())
 
       const result = await domain.summarize({})
 
@@ -279,7 +279,7 @@ describe('AnalyzeDomain', () => {
     it('should read from rewind_source_claude_session_id when set', async () => {
       const session = makeSession({ rewind_source_claude_session_id: 'source-abc' })
       vi.mocked(mockSessionDomain.list).mockResolvedValue([session])
-      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockReturnValue(makeSessionStats())
+      vi.mocked(mockClaudeSessionRepo.scanSessionStats).mockResolvedValue(makeSessionStats())
 
       await domain.summarize({})
 
@@ -295,10 +295,8 @@ describe('AnalyzeDomain', () => {
       const bad = makeSession({ id: 'bad-session' })
       vi.mocked(mockSessionDomain.list).mockResolvedValue([ok, bad])
       vi.mocked(mockClaudeSessionRepo.scanSessionStats)
-        .mockReturnValueOnce(makeSessionStats())
-        .mockImplementationOnce(() => {
-          throw new Error('ENOENT')
-        })
+        .mockResolvedValueOnce(makeSessionStats())
+        .mockRejectedValueOnce(new Error('ENOENT'))
 
       const result = await domain.summarize({})
 

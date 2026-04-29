@@ -1,6 +1,6 @@
 ---
 name: arch-repositories
-description: "Required for any work in src/repositories/. Covers dual export, port type placement, atomic operations, and stream-parse patterns."
+description: "Required for any work in src/repositories/. Covers port type placement, atomic operations, and stream-parse patterns."
 paths:
   - 'src/repositories/**/*.ts'
 ---
@@ -11,7 +11,7 @@ Wraps infrastructure adapters into atomic, domain-meaningful operations. Never e
 
 ```
 repositories/
-├── *.ts           # Implementations — class (+ optional standalone functions) per domain area
+├── *.ts           # Implementations — class or standalone functions per domain area
 ├── ports/         # IXxx port contracts consumed by domains/; never defined elsewhere
 └── parsers/       # Pure format-specific parsing helpers; no I/O allowed
 ```
@@ -23,8 +23,6 @@ repositories/
 | `repositories/ports` (intra), `repositories/parsers` (intra), `infrastructures`, `types`, `errors`, `utils`, `constants` | `cli`, `services`, `domains` |
 
 ## Patterns
-
-**Dual export** — class wraps standalone functions so callers can use either form; the standalone function is the unit of logic, the class a thin adapter. When there is no injected state (e.g. `config.ts`), export standalone functions only — no class.
 
 **Port type placement** — every `IXxx` interface lives in `src/repositories/ports/`, never in the implementation file. Import it with `import type { IXxx } from '@src/repositories/ports/...'`.
 
