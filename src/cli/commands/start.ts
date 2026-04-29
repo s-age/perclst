@@ -2,10 +2,8 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { AgentService } from '@src/services/agentService'
 import type { SessionService } from '@src/services/sessionService'
-import { stdout, stderr, debug } from '@src/utils/output'
-import { RateLimitError } from '@src/errors/rateLimitError'
-import { ValidationError } from '@src/errors/validationError'
-import { UserCancelledError } from '@src/errors/userCancelledError'
+import { stdout, debug } from '@src/utils/output'
+import { handleCommandError } from '@src/cli/handleCommandError'
 import { printResponse, printStreamEvent } from '@src/cli/view/display'
 import { confirmIfDuplicateName } from '@src/cli/prompt'
 import type { Config } from '@src/types/config'
@@ -26,22 +24,6 @@ type RawStartOptions = {
   silentUsage?: boolean
   outputOnly?: boolean
   format?: string
-}
-
-function handleStartError(error: unknown): never {
-  if (error instanceof UserCancelledError) {
-    stderr.print('Cancelled.')
-    process.exit(0)
-  }
-  if (error instanceof ValidationError) {
-    stderr.print(`Invalid arguments: ${error.message}`)
-  } else if (error instanceof RateLimitError) {
-    const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
-    stderr.print(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
-  } else {
-    stderr.print('Failed to start session', error as Error)
-  }
-  process.exit(1)
 }
 
 export async function startCommand(task: string, options: RawStartOptions): Promise<void> {
@@ -93,6 +75,6 @@ export async function startCommand(task: string, options: RawStartOptions): Prom
     )
     stdout.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
   } catch (error) {
-    handleStartError(error)
+    handleCommandError(error, 'Failed to start session')
   }
 }
