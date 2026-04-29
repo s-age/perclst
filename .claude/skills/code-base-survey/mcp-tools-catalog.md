@@ -37,6 +37,16 @@ Use these when working in `src/` — they reduce round-trips vs. manual file rea
 
 ---
 
+## `ts_call_graph` — downstream call tree
+
+**Source**: `src/mcp/tools/tsCallGraph.ts` → `executeTsCallGraph`
+**Input**: `file_path: string`, `symbol_name: string`
+**Output**: Tree-formatted call graph showing all functions called by the named symbol (depth-first).
+
+**When to use**: Understanding what a function does internally — trace the full execution path downward from an entry point. Complements `ts_get_references` (which goes upward).
+
+---
+
 ## `ts_checker` — lint + build + test in one shot
 
 **Source**: `src/mcp/tools/tsChecker.ts` → `executeTsChecker`
@@ -68,6 +78,16 @@ Runs `npm run lint:fix` → `npm run build` → `npm run test:unit`.
 Query syntax: spaces = AND, `|` = OR. Example: `"session resume | session fork"`
 
 **When to use**: Before starting any non-trivial task — check if a prior problem, gotcha, or decision is documented.
+
+---
+
+## `git_pending_changes` — uncommitted diff
+
+**Source**: `src/mcp/tools/gitPendingChanges.ts` → `executeGitPendingChanges`
+**Input**: `repo_path: string`, `extensions: string[]`
+**Output**: Unified diff of uncommitted changes filtered to the given file extensions, or empty string if clean.
+
+**When to use**: Pre-push review, checking what has changed before running `ts_checker`, or feeding diff context to an agent.
 
 ---
 

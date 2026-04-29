@@ -24,21 +24,24 @@ Key methods: `create`, `get`, `list`, `delete`, `save`, `rename`, `setLabels`, `
 
 ## AgentDomain — `agent.ts`
 
-**Responsibility**: Runs `claude -p` for start, resume, and fork operations. Enforces turn/token limits.
+**Responsibility**: Runs `claude -p` for start, resume, fork, and interactive chat operations. Enforces turn/token limits.
 
-Key methods: `run`, `resume`, `fork`, `isLimitExceeded`
+Key methods: `run`, `resume`, `fork`, `isLimitExceeded`, `chat`, `buildChatArgs`
 
 `run(session, instruction, isResume, options)` is the unified entry point; `resume` and `fork` are convenience wrappers.
+`chat(session)` hands off to `claude --resume` for interactive use; `buildChatArgs(session)` builds the args array.
+`HEADLESS_SKILL_NOTE` is an exported string constant — appended to prompts when running in headless mode.
 Depends on `IClaudeCodeRepository` (spawns process) and `IProcedureRepository` (loads procedure prompts).
 
 ---
 
 ## AnalyzeDomain — `analyze.ts`
 
-**Responsibility**: Reads Claude Code JSONL session files and produces analysis stats.
+**Responsibility**: Reads Claude Code JSONL session files and produces analysis stats and per-session summaries.
 
-Key methods: `analyze(sessionId)` → `AnalyzeResult` (turn breakdown, tool usage, token stats), `formatTurns(turns, filter)` → `TurnRow[]`, `getRewindTurns(sessionId)` → `RewindTurn[]`
+Key methods: `analyze(sessionId)` → `AnalyzeResult` (turn breakdown, tool usage, token stats), `formatTurns(turns, filter)` → `TurnRow[]`, `getRewindTurns(sessionId)` → `RewindTurn[]`, `summarize(filter)` → `Promise<SessionSummaryRow[]>`
 
+`summarize` aggregates stats across all matching sessions — backs the `summarize` CLI command.
 `buildSummaryStats` is an exported pure function used internally.
 
 ---
@@ -53,11 +56,23 @@ Thin orchestrator; actual command execution is in `commandRunner.ts` via `ICheck
 
 ---
 
-## ImportDomain — `import.ts`
+## GitPendingChangesDomain — `gitPendingChanges.ts`
 
-**Responsibility**: Validates a Claude Code session ID for import and resolves its working directory.
+**Responsibility**: Retrieves the pending (uncommitted) diff for a git repository, filtered by file extension.
 
-Key methods: `resolveWorkingDir(claudeSessionId)`, `validateSession(claudeSessionId, workingDir)`
+Key methods: `getPendingDiff(repoPath: string, extensions: string[])` → `string | null`
+
+Returns `null` when the repo is clean or on error (error swallowing — non-git dirs appear as clean). Backs the `git_pending_changes` MCP tool.
+
+---
+
+## ImportDomain — `sessionImport.ts`
+
+**Responsibility**: Validates a Claude Code session ID for import, resolves its working directory, and builds a perclst session record.
+
+Key methods: `resolveWorkingDir(claudeSessionId)`, `validateSession(claudeSessionId, workingDir)`, `buildSession(claudeSessionId, workingDir, options)` → `Session`
+
+`buildSession` constructs a full `Session` object ready to be persisted — added after initial import support.
 
 ---
 
@@ -74,11 +89,21 @@ Query syntax: space = AND, `|` = OR.
 
 ---
 
+## PermissionPipeDomain — `permissionPipe.ts`
+
+**Responsibility**: Inter-process permission request/response channel between the MCP `ask_permission` tool and the TUI.
+
+Key methods: `askPermission`, `pollRequest`, `respond`
+
+The MCP tool writes a permission request; the TUI polls via `pollRequest` and calls `respond`.
+
+---
+
 ## PipelineDomain — `pipeline.ts`
 
 **Responsibility**: Pipeline execution engine — runs agent/script tasks in sequence, handles retry/rejection loops.
 
-Key methods: `runAgentTask`, `runWithLimit`, `resolveRejection`, `resolveScriptRejection`, `buildExecuteOptions`, `buildRejectedInstruction`, `getRejectionFeedback`, `getWorkingDirectory`, `findOuterRejectionTarget`
+Key methods: `runAgentTask`, `resolveRejection`, `resolveScriptRejection`, `buildExecuteOptions`, `buildRejectedInstruction`, `getRejectionFeedback`, `getWorkingDirectory`, `findOuterRejectionTarget`
 
 `GRACEFUL_TERMINATION_PROMPT` is an exported constant — the prompt sent when turn/token limits are hit.
 Rejection feedback from review agents is stored via `IRejectionFeedbackRepository` (file-based temp storage).
@@ -87,21 +112,42 @@ Rejection feedback from review agents is stored via `IRejectionFeedbackRepositor
 
 ## PipelineFileDomain — `pipelineFile.ts`
 
-**Responsibility**: Pipeline JSON file management and git integration for `run` command.
+**Responsibility**: Pipeline JSON/YAML file management and git integration for `run` command.
 
 Key methods: `loadRawPipeline`, `savePipeline`, `moveToDone`, `commitMove`, `cleanTmpDir`, `getDiff`, `getDiffStat`, `getDiffSummary`, `getHead`
 
+`loadRawPipeline` returns `unknown` — callers are responsible for validation/parsing.
 Manages the `.claude/tmp/` directory for rejection feedback files.
 
 ---
 
-## PermissionPipeDomain — `permissionPipe.ts`
+## PipelineLoaderDomain — `pipelineLoader.ts`
 
-**Responsibility**: Inter-process permission request/response channel between the MCP `ask_permission` tool and the TUI.
+**Responsibility**: Loads and validates a pipeline definition file (JSON or YAML) into a typed `Pipeline` object.
 
-Key methods: `askPermission`, `pollRequest`, `respond`
+Key methods: `load(absolutePath: string)` → `Pipeline`
 
-The MCP tool writes a permission request; the TUI polls via `pollRequest` and calls `respond`.
+Separated from `PipelineFileDomain` to isolate parsing/validation logic. Depends on `IPipelineFileRepository`.
+
+---
+
+## PipelineTaskDomain — `pipelineTask.ts`
+
+**Responsibility**: Mutates pipeline task state — marks tasks as done during pipeline execution.
+
+Key methods: `markTaskDone(pipeline: Pipeline, taskPath: number[], taskIndex: number)` → `void`
+
+`taskPath` is a breadcrumb of nested-pipeline indices; `taskIndex` is the current task's position.
+
+---
+
+## PlanFileDomain — `planFile.ts`
+
+**Responsibility**: Checks for the existence of a plan file at a given path.
+
+Key methods: `exists(absolutePath: string)` → `boolean`
+
+Thin domain wrapping `IPlanFileRepository`. Used to gate plan-based workflows.
 
 ---
 
