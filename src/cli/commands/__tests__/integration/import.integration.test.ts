@@ -64,10 +64,13 @@ describe('importCommand (integration)', () => {
       expect(vi.mocked(stdout).print).toHaveBeenCalledWith(`  Claude session: ${CLAUDE_SESSION_ID}`)
     })
 
-    it('--name 指定のとき confirmIfDuplicateName が呼ばれる', async () => {
+    it('--name 指定のとき confirmIfDuplicateName が findByName コールバックを実行する', async () => {
       setupContainer({
         config: buildTestConfig(dir),
         infras: { fsInfra: buildFsInfraWithHome(fakeHome) }
+      })
+      vi.mocked(confirmIfDuplicateName).mockImplementation(async (_name, findByName) => {
+        await findByName(_name)
       })
 
       await importCommand(CLAUDE_SESSION_ID, { name: 'my-session' })

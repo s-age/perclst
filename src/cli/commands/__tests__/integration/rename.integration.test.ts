@@ -59,10 +59,13 @@ describe('renameCommand (integration)', () => {
       expect(session.metadata.labels).toEqual(['x', 'y'])
     })
 
-    it('confirmIfDuplicateName が呼ばれる', async () => {
+    it('confirmIfDuplicateName が findByName コールバックを実行する', async () => {
       setupContainer({ config: buildTestConfig(dir) })
+      vi.mocked(confirmIfDuplicateName).mockImplementation(async (_name, findByName) => {
+        await findByName(_name)
+      })
 
-      await renameCommand(sessionId, 'any name', {})
+      await renameCommand(sessionId, 'new name', {})
 
       expect(vi.mocked(confirmIfDuplicateName)).toHaveBeenCalled()
     })

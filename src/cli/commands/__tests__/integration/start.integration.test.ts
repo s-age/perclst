@@ -147,9 +147,12 @@ describe('startCommand (integration)', () => {
       )
     })
 
-    it('name 指定 + outputOnly: false で confirmIfDuplicateName が呼ばれる', async () => {
+    it('name 指定 + outputOnly: false で confirmIfDuplicateName が findByName コールバックを実行する', async () => {
       const stub = buildClaudeCodeStub(makeResultLines('done'))
       setupContainer({ config: buildTestConfig(dir), infras: { claudeCodeInfra: stub } })
+      vi.mocked(confirmIfDuplicateName).mockImplementation(async (_name, findByName) => {
+        await findByName(_name)
+      })
 
       await startCommand('test task', { outputOnly: false, name: 'my-session' })
 
