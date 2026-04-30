@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Session } from '@src/types/session'
-import type { ISessionDomain, ISessionImportDomain } from '@src/domains/ports/session'
+import type { ISessionDomain } from '@src/domains/ports/session'
+import type { ISessionImportDomain } from '@src/domains/ports/import'
 import { ImportService } from '../importService'
 
 vi.mock('@src/utils/output', () => ({

@@ -84,14 +84,11 @@ export class PipelineDomain implements IPipelineDomain {
     }
   ): Promise<AgentResponse> {
     const response = await this.agentDomain.run(session, instruction, isResume, config.execOpts)
-    if (
-      this.agentDomain.isLimitExceeded(response, {
-        maxMessages: config.limits.maxMessages,
-        maxContextTokens: config.limits.maxContextTokens
-      })
-    ) {
-      config.onLimitExceeded?.()
-    }
+    this.agentDomain.checkAndNotifyLimit(response, {
+      maxMessages: config.limits.maxMessages,
+      maxContextTokens: config.limits.maxContextTokens,
+      onLimitExceeded: config.onLimitExceeded
+    })
     return response
   }
 

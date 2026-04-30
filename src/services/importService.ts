@@ -1,5 +1,6 @@
 import type { Session } from '@src/types/session'
-import type { ISessionDomain, ISessionImportDomain } from '@src/domains/ports/session'
+import type { ISessionDomain } from '@src/domains/ports/session'
+import type { ISessionImportDomain } from '@src/domains/ports/import'
 import { debug } from '@src/utils/output'
 
 export type ImportOptions = {

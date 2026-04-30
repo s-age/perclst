@@ -1,4 +1,4 @@
-import type { ISessionImportDomain, ImportSessionOptions } from '@src/domains/ports/session'
+import type { ISessionImportDomain, ImportSessionOptions } from '@src/domains/ports/import'
 import type { Session } from '@src/types/session'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import { generateId } from '@src/utils/uuid'

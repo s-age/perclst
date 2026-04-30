@@ -16,6 +16,7 @@ export type IAgentDomain = {
   ): Promise<AgentResponse>
   resume(session: Session, instruction: string, options?: ExecuteOptions): Promise<AgentResponse>
   isLimitExceeded(response: AgentResponse, options: AgentRunOptions): boolean
+  checkAndNotifyLimit(response: AgentResponse, options: AgentRunOptions): void
   buildChatArgs(session: Session): string[]
   chat(session: Session): void
 }
