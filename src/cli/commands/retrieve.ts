@@ -2,13 +2,23 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { AgentService } from '@src/services/agentService'
 import type { Config } from '@src/types/config'
+import type { AgentStreamEvent } from '@src/types/agent'
 import { stderr } from '@src/utils/output'
 import { RateLimitError } from '@src/errors/rateLimitError'
 import { ValidationError } from '@src/errors/validationError'
 import { parseStartSession } from '@src/validators/cli/startSession'
-import { printResponse } from '@src/cli/view/display'
+import { printResponse, printStreamEvent } from '@src/cli/view/display'
 
-export async function retrieveCommand(keywords: string[]): Promise<void> {
+type RetrieveOptions = {
+  outputOnly?: boolean
+  model?: string
+  effort?: string
+}
+
+export async function retrieveCommand(
+  keywords: string[],
+  options: RetrieveOptions = {}
+): Promise<void> {
   try {
     const keywordList = keywords.join(', ')
     const task = `Search the knowledge base for the following keywords and return a structured summary of findings: ${keywordList}`
@@ -19,8 +29,15 @@ export async function retrieveCommand(keywords: string[]): Promise<void> {
       task,
       procedure: 'meta-knowledge-concierge/retrieve',
       labels: ['retrieve'],
-      outputOnly: true
+      model: options.model,
+      effort: options.effort,
+      outputOnly: options.outputOnly
     })
+
+    const streaming = !input.outputOnly
+    const onStreamEvent = streaming
+      ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
+      : undefined
 
     const { sessionId, response } = await agentService.start(
       input.task,
@@ -28,11 +45,18 @@ export async function retrieveCommand(keywords: string[]): Promise<void> {
       {
         allowedTools: input.allowedTools,
         disallowedTools: input.disallowedTools,
-        model: input.model
+        model: input.model,
+        effort: input.effort,
+        onStreamEvent
       }
     )
 
-    printResponse(response, input, config.display, { sessionId })
+    printResponse(
+      response,
+      { ...input, silentThoughts: streaming, silentToolResponse: streaming },
+      config.display,
+      { sessionId }
+    )
   } catch (error) {
     if (error instanceof ValidationError) {
       stderr.print(`Invalid arguments: ${error.message}`)

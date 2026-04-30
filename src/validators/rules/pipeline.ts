@@ -11,6 +11,7 @@ const agentTaskSchema = z.object({
   task: z.string().min(1),
   procedure: z.string().optional(),
   model: z.string().optional(),
+  effort: z.string().optional(),
   labels: z.array(z.string()).optional(),
   allowed_tools: z.array(z.string()).optional(),
   disallowed_tools: z.array(z.string()).optional(),

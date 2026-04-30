@@ -26,6 +26,8 @@ const REFRESH_TOOLS = ['Skill', 'Read', 'Glob', 'Grep', 'Bash', 'Write', 'mcp__p
 type SurveyOptions = {
   refresh?: boolean
   outputOnly?: boolean
+  model?: string
+  effort?: string
 }
 
 async function runSurveyAgent(
@@ -34,6 +36,7 @@ async function runSurveyAgent(
     procedure: string
     labels: string[]
     model?: string
+    effort?: string
     allowedTools: string[]
     outputOnly?: boolean
   }
@@ -45,6 +48,7 @@ async function runSurveyAgent(
     procedure: opts.procedure,
     labels: opts.labels,
     model: opts.model,
+    effort: opts.effort,
     allowedTools: opts.allowedTools,
     outputOnly: opts.outputOnly
   })
@@ -89,7 +93,8 @@ export async function surveyCommand(
         {
           procedure: 'code-base-survey/refresh',
           labels: ['survey'],
-          model: 'sonnet',
+          model: options.model ?? 'sonnet',
+          effort: options.effort,
           allowedTools: REFRESH_TOOLS,
           outputOnly: options.outputOnly
         }
@@ -100,7 +105,8 @@ export async function surveyCommand(
     await runSurveyAgent(query!, {
       procedure: 'code-base-survey/survey',
       labels: ['survey'],
-      model: 'sonnet',
+      model: options.model ?? 'sonnet',
+      effort: options.effort,
       allowedTools: SURVEY_TOOLS,
       outputOnly: options.outputOnly
     })

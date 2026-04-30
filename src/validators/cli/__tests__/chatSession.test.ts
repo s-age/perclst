@@ -9,7 +9,7 @@ vi.mock('../../schema', () => ({
 
 // Mock the string rule module
 vi.mock('../../rules/string', () => ({
-  stringRule: vi.fn()
+  stringRule: vi.fn(() => ({ optional: vi.fn() }))
 }))
 
 import { safeParse } from '../../schema'

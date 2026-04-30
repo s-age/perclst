@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { useInput } from 'ink'
 import { computeScrollView, computeNextScrollOffset } from '../scrollBuffer'
 import { useScrollBuffer } from '../useScrollBuffer'
-import type { PermissionRequest } from '@src/types/permissionPipe'
 
 vi.mock('react', () => ({
   useState: vi.fn()
@@ -200,55 +199,54 @@ describe('useScrollBuffer', () => {
 
     it('returns scrollMode=false on initial render', () => {
       expect(
-        useScrollBuffer({ allLines: ['a'], streamCapacity: 10, permRequest: null }).scrollMode
+        useScrollBuffer({ allLines: ['a'], streamCapacity: 10, isPrompting: false }).scrollMode
       ).toBe(false)
     })
 
     it('returns visibleLines derived from allLines', () => {
       expect(
-        useScrollBuffer({ allLines: ['a', 'b'], streamCapacity: 10, permRequest: null })
+        useScrollBuffer({ allLines: ['a', 'b'], streamCapacity: 10, isPrompting: false })
           .visibleLines
       ).toEqual(['a', 'b'])
     })
 
     it('returns lineOffset=0 when allLines length does not exceed streamCapacity', () => {
       expect(
-        useScrollBuffer({ allLines: ['a', 'b'], streamCapacity: 10, permRequest: null }).lineOffset
+        useScrollBuffer({ allLines: ['a', 'b'], streamCapacity: 10, isPrompting: false }).lineOffset
       ).toBe(0)
     })
 
-    it('registers useInput with isActive: true when permRequest is null', () => {
-      useScrollBuffer({ allLines: [], streamCapacity: 10, permRequest: null })
+    it('registers useInput with isActive: true when isPrompting is false', () => {
+      useScrollBuffer({ allLines: [], streamCapacity: 10, isPrompting: false })
       expect(mockUseInput).toHaveBeenCalledWith(expect.any(Function), { isActive: true })
     })
 
-    it('registers useInput with isActive: false when permRequest is set', () => {
-      const permRequest: PermissionRequest = { tool_name: 'bash', input: {} }
-      useScrollBuffer({ allLines: [], streamCapacity: 10, permRequest })
+    it('registers useInput with isActive: false when isPrompting is true', () => {
+      useScrollBuffer({ allLines: [], streamCapacity: 10, isPrompting: true })
       expect(mockUseInput).toHaveBeenCalledWith(expect.any(Function), { isActive: false })
     })
 
     it('calls setFrozenLines with a snapshot of allLines when ctrl+o is pressed', () => {
       const allLines = ['line1', 'line2']
-      useScrollBuffer({ allLines, streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines, streamCapacity: 10, isPrompting: false })
       capturedHandler()('o', makeKey({ ctrl: true }))
       expect(mockSetFrozenLines).toHaveBeenCalledWith(['line1', 'line2'])
     })
 
     it('calls setScrollOffset(0) when ctrl+o is pressed', () => {
-      useScrollBuffer({ allLines: ['x'], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: ['x'], streamCapacity: 10, isPrompting: false })
       capturedHandler()('o', makeKey({ ctrl: true }))
       expect(mockSetScrollOffset).toHaveBeenCalledWith(0)
     })
 
     it('calls setScrollMode(true) when ctrl+o is pressed', () => {
-      useScrollBuffer({ allLines: [], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: [], streamCapacity: 10, isPrompting: false })
       capturedHandler()('o', makeKey({ ctrl: true }))
       expect(mockSetScrollMode).toHaveBeenCalledWith(true)
     })
 
     it('does not call setScrollOffset when upArrow is pressed in live mode', () => {
-      useScrollBuffer({ allLines: ['a'], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: ['a'], streamCapacity: 10, isPrompting: false })
       capturedHandler()('', makeKey({ upArrow: true }))
       expect(mockSetScrollOffset).not.toHaveBeenCalled()
     })
@@ -267,53 +265,53 @@ describe('useScrollBuffer', () => {
     })
 
     it('calls setScrollMode(false) when ctrl+o is pressed', () => {
-      useScrollBuffer({ allLines: ['live'], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: ['live'], streamCapacity: 10, isPrompting: false })
       capturedHandler()('o', makeKey({ ctrl: true }))
       expect(mockSetScrollMode).toHaveBeenCalledWith(false)
     })
 
     it('calls setScrollOffset(0) when ctrl+o is pressed', () => {
-      useScrollBuffer({ allLines: ['live'], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: ['live'], streamCapacity: 10, isPrompting: false })
       capturedHandler()('o', makeKey({ ctrl: true }))
       expect(mockSetScrollOffset).toHaveBeenCalledWith(0)
     })
 
     it('does not call setFrozenLines when ctrl+o is pressed', () => {
-      useScrollBuffer({ allLines: ['live'], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: ['live'], streamCapacity: 10, isPrompting: false })
       capturedHandler()('o', makeKey({ ctrl: true }))
       expect(mockSetFrozenLines).not.toHaveBeenCalled()
     })
 
     it('calls setScrollOffset updater for upArrow that increments offset', () => {
-      useScrollBuffer({ allLines: [], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: [], streamCapacity: 10, isPrompting: false })
       capturedHandler()('', makeKey({ upArrow: true }))
       const updater = vi.mocked(mockSetScrollOffset).mock.calls[0][0] as (prev: number) => number
       expect(updater(2)).toBe(computeNextScrollOffset('up', 2, frozenLines.length, 10))
     })
 
     it('calls setScrollOffset updater for downArrow that decrements offset', () => {
-      useScrollBuffer({ allLines: [], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: [], streamCapacity: 10, isPrompting: false })
       capturedHandler()('', makeKey({ downArrow: true }))
       const updater = vi.mocked(mockSetScrollOffset).mock.calls[0][0] as (prev: number) => number
       expect(updater(3)).toBe(computeNextScrollOffset('down', 3, frozenLines.length, 10))
     })
 
     it('calls setScrollOffset updater for pageUp that advances by half capacity', () => {
-      useScrollBuffer({ allLines: [], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: [], streamCapacity: 10, isPrompting: false })
       capturedHandler()('', makeKey({ pageUp: true }))
       const updater = vi.mocked(mockSetScrollOffset).mock.calls[0][0] as (prev: number) => number
       expect(updater(1)).toBe(computeNextScrollOffset('pageUp', 1, frozenLines.length, 10))
     })
 
     it('calls setScrollOffset updater for pageDown that retreats by half capacity', () => {
-      useScrollBuffer({ allLines: [], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: [], streamCapacity: 10, isPrompting: false })
       capturedHandler()('', makeKey({ pageDown: true }))
       const updater = vi.mocked(mockSetScrollOffset).mock.calls[0][0] as (prev: number) => number
       expect(updater(4)).toBe(computeNextScrollOffset('pageDown', 4, frozenLines.length, 10))
     })
 
     it('does not call setScrollOffset when no recognized key is pressed', () => {
-      useScrollBuffer({ allLines: [], streamCapacity: 10, permRequest: null })
+      useScrollBuffer({ allLines: [], streamCapacity: 10, isPrompting: false })
       capturedHandler()('x', makeKey())
       expect(mockSetScrollOffset).not.toHaveBeenCalled()
     })
@@ -321,7 +319,7 @@ describe('useScrollBuffer', () => {
     it('returns visibleLines from frozenLines when in scroll mode', () => {
       // scrollMode=true, frozenLines=5 lines, scrollOffset=2, streamCapacity=10
       // computeScrollView: viewEnd=max(0,5-2)=3, lineOffset=max(0,3-10)=0, slice(0,3)
-      const result = useScrollBuffer({ allLines: ['live'], streamCapacity: 10, permRequest: null })
+      const result = useScrollBuffer({ allLines: ['live'], streamCapacity: 10, isPrompting: false })
       expect(result.visibleLines).toEqual(['f1', 'f2', 'f3'])
     })
   })

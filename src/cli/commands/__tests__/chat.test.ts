@@ -32,20 +32,27 @@ describe('chatCommand', () => {
     mockSessionService.resolveId.mockResolvedValue('resolved-id')
     mockSessionService.get.mockResolvedValue({ working_dir: process.cwd() })
     mockAgentService.chat.mockResolvedValue(undefined)
-    vi.mocked(parseChatSession).mockReturnValue({ sessionId: 'test-session' })
+    vi.mocked(parseChatSession).mockReturnValue({
+      sessionId: 'test-session',
+      model: undefined,
+      effort: undefined
+    })
     vi.mocked(handleWorkingDirMismatch).mockResolvedValue(undefined)
   })
 
   it('resolves the session ID and delegates to agentService.chat', async () => {
     const sessionId = 'test-session-123'
     const resolvedId = 'resolved-id-456'
-    vi.mocked(parseChatSession).mockReturnValue({ sessionId })
+    vi.mocked(parseChatSession).mockReturnValue({ sessionId, model: undefined, effort: undefined })
     mockSessionService.resolveId.mockResolvedValue(resolvedId)
 
     await chatCommand(sessionId)
 
     expect(mockSessionService.resolveId).toHaveBeenCalledWith(sessionId)
-    expect(mockAgentService.chat).toHaveBeenCalledWith(resolvedId)
+    expect(mockAgentService.chat).toHaveBeenCalledWith(resolvedId, {
+      model: undefined,
+      effort: undefined
+    })
   })
 
   it('resolves TOKENS.SessionService from container', async () => {

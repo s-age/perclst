@@ -9,6 +9,7 @@ import type { Pipeline } from '@src/types/pipeline'
 const runOptionsSchema = schema({
   pipelinePath: pipelinePathRule(),
   model: stringRule().optional(),
+  effort: stringRule().optional(),
   outputOnly: booleanRule().optional(),
   batch: booleanRule().optional(),
   yes: booleanRule().optional(),

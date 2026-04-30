@@ -2,6 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { AgentService } from '@src/services/agentService'
 import type { SessionService } from '@src/services/sessionService'
+import type { QuestionPipeService } from '@src/services/questionPipeService'
 import { stdout, debug } from '@src/utils/output'
 import { handleCommandError } from '@src/cli/handleCommandError'
 import { printResponse, printStreamEvent } from '@src/cli/view/display'
@@ -15,6 +16,7 @@ type RawResumeOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
+  effort?: string
   maxMessages?: string
   maxContextTokens?: string
   silentThoughts?: boolean
@@ -34,6 +36,7 @@ export async function resumeCommand(
 
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
+    const questionPipeService = container.resolve<QuestionPipeService>(TOKENS.QuestionPipeService)
     const config = container.resolve<Config>(TOKENS.Config)
 
     const input = parseResumeSession({ sessionId, instruction, ...options })
@@ -50,6 +53,7 @@ export async function resumeCommand(
       allowedTools: input.allowedTools,
       disallowedTools: input.disallowedTools,
       model: input.model,
+      effort: input.effort,
       maxMessages: input.maxMessages,
       maxContextTokens: input.maxContextTokens,
       onStreamEvent
@@ -66,7 +70,11 @@ export async function resumeCommand(
       { sessionId: resolvedId }
     )
 
-    stdout.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)
+    if (questionPipeService.consumeChatSignal(resolvedId)) {
+      await agentService.chat(resolvedId)
+    } else {
+      stdout.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)
+    }
   } catch (error) {
     handleCommandError(error, 'Failed to resume session')
   }

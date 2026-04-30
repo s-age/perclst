@@ -2,6 +2,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { AgentService } from '@src/services/agentService'
 import type { SessionService } from '@src/services/sessionService'
+import type { QuestionPipeService } from '@src/services/questionPipeService'
 import { stdout, debug } from '@src/utils/output'
 import { handleCommandError } from '@src/cli/handleCommandError'
 import { printResponse, printStreamEvent } from '@src/cli/view/display'
@@ -17,6 +18,7 @@ type RawStartOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
+  effort?: string
   maxMessages?: string
   maxContextTokens?: string
   silentThoughts?: boolean
@@ -26,23 +28,26 @@ type RawStartOptions = {
   format?: string
 }
 
+async function checkDuplicateName(name: string): Promise<void> {
+  const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
+  await confirmIfDuplicateName(
+    name,
+    (n) => sessionService.findByName(n),
+    undefined,
+    !!process.stdin.isTTY
+  )
+}
+
 export async function startCommand(task: string, options: RawStartOptions): Promise<void> {
   try {
     debug.print('Starting new agent session')
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
+    const questionPipeService = container.resolve<QuestionPipeService>(TOKENS.QuestionPipeService)
     const config = container.resolve<Config>(TOKENS.Config)
 
     const input = parseStartSession({ task, ...options })
 
-    if (input.name && !input.outputOnly) {
-      const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
-      await confirmIfDuplicateName(
-        input.name,
-        (n) => sessionService.findByName(n),
-        undefined,
-        !!process.stdin.isTTY
-      )
-    }
+    if (input.name && !input.outputOnly) await checkDuplicateName(input.name)
     const streaming = !input.outputOnly && input.format !== 'json'
     const onStreamEvent = streaming
       ? (event: AgentStreamEvent): void => printStreamEvent(event, config.display)
@@ -60,6 +65,7 @@ export async function startCommand(task: string, options: RawStartOptions): Prom
         allowedTools: input.allowedTools,
         disallowedTools: input.disallowedTools,
         model: input.model,
+        effort: input.effort,
         maxMessages: input.maxMessages,
         maxContextTokens: input.maxContextTokens,
         onStreamEvent
@@ -73,7 +79,12 @@ export async function startCommand(task: string, options: RawStartOptions): Prom
       config.display,
       { sessionId }
     )
-    stdout.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
+
+    if (questionPipeService.consumeChatSignal(sessionId)) {
+      await agentService.chat(sessionId)
+    } else {
+      stdout.print(`\nTo resume: perclst resume ${sessionId} "<instruction>"`)
+    }
   } catch (error) {
     handleCommandError(error, 'Failed to start session')
   }

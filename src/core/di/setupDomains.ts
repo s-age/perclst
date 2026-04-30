@@ -15,6 +15,7 @@ import { PipelineFileDomain } from '@src/domains/pipelineFile'
 import { PipelineTaskDomain } from '@src/domains/pipelineTask'
 import { PipelineLoaderDomain } from '@src/domains/pipelineLoader'
 import { PermissionPipeDomain } from '@src/domains/permissionPipe'
+import { QuestionPipeDomain } from '@src/domains/questionPipe'
 import { GitPendingChangesDomain } from '@src/domains/gitPendingChanges'
 import { PlanFileDomain } from '@src/domains/planFile'
 
@@ -33,14 +34,21 @@ export type Domains = {
   pipelineTaskDomain: PipelineTaskDomain
   pipelineLoaderDomain: PipelineLoaderDomain
   permissionPipeDomain: PermissionPipeDomain
+  questionPipeDomain: QuestionPipeDomain
   gitPendingChangesDomain: GitPendingChangesDomain
   planFileDomain: PlanFileDomain
 }
 
-export function setupDomains(model: string, repos: Repos, overrides?: Partial<Domains>): Domains {
+export function setupDomains(
+  model: string,
+  effort: string,
+  repos: Repos,
+  overrides?: Partial<Domains>
+): Domains {
   const sessionDomain = overrides?.sessionDomain ?? new SessionDomain(repos.sessionRepo)
   const agentDomain =
-    overrides?.agentDomain ?? new AgentDomain(model, repos.claudeCodeRepo, repos.procedureRepo)
+    overrides?.agentDomain ??
+    new AgentDomain(model, effort, repos.claudeCodeRepo, repos.procedureRepo)
 
   const domains: Domains = {
     sessionDomain,
@@ -65,27 +73,33 @@ export function setupDomains(model: string, repos: Repos, overrides?: Partial<Do
       overrides?.pipelineLoaderDomain ?? new PipelineLoaderDomain(repos.fileMoveRepo),
     permissionPipeDomain:
       overrides?.permissionPipeDomain ?? new PermissionPipeDomain(repos.permissionPipeRepo),
+    questionPipeDomain:
+      overrides?.questionPipeDomain ?? new QuestionPipeDomain(repos.questionPipeRepo),
     gitPendingChangesDomain:
       overrides?.gitPendingChangesDomain ?? new GitPendingChangesDomain(repos.gitRepo),
     planFileDomain: overrides?.planFileDomain ?? new PlanFileDomain(repos.planFileRepo)
   }
 
-  container.register(TOKENS.SessionDomain, domains.sessionDomain)
-  container.register(TOKENS.AgentDomain, domains.agentDomain)
-  container.register(TOKENS.PipelineDomain, domains.pipelineDomain)
-  container.register(TOKENS.AnalyzeDomain, domains.analyzeDomain)
-  container.register(TOKENS.ImportDomain, domains.importDomain)
-  container.register(TOKENS.CheckerDomain, domains.checkerDomain)
-  container.register(TOKENS.TestStrategyDomain, domains.testStrategyDomain)
-  container.register(TOKENS.ScriptDomain, domains.scriptDomain)
-  container.register(TOKENS.KnowledgeSearchDomain, domains.knowledgeSearchDomain)
-  container.register(TOKENS.TsAnalysisDomain, domains.tsAnalysisDomain)
-  container.register(TOKENS.PipelineFileDomain, domains.pipelineFileDomain)
-  container.register(TOKENS.PipelineTaskDomain, domains.pipelineTaskDomain)
-  container.register(TOKENS.PipelineLoaderDomain, domains.pipelineLoaderDomain)
-  container.register(TOKENS.PermissionPipeDomain, domains.permissionPipeDomain)
-  container.register(TOKENS.GitPendingChangesDomain, domains.gitPendingChangesDomain)
-  container.register(TOKENS.PlanFileDomain, domains.planFileDomain)
-
+  registerAll(domains)
   return domains
+}
+
+function registerAll(d: Domains): void {
+  container.register(TOKENS.SessionDomain, d.sessionDomain)
+  container.register(TOKENS.AgentDomain, d.agentDomain)
+  container.register(TOKENS.PipelineDomain, d.pipelineDomain)
+  container.register(TOKENS.AnalyzeDomain, d.analyzeDomain)
+  container.register(TOKENS.ImportDomain, d.importDomain)
+  container.register(TOKENS.CheckerDomain, d.checkerDomain)
+  container.register(TOKENS.TestStrategyDomain, d.testStrategyDomain)
+  container.register(TOKENS.ScriptDomain, d.scriptDomain)
+  container.register(TOKENS.KnowledgeSearchDomain, d.knowledgeSearchDomain)
+  container.register(TOKENS.TsAnalysisDomain, d.tsAnalysisDomain)
+  container.register(TOKENS.PipelineFileDomain, d.pipelineFileDomain)
+  container.register(TOKENS.PipelineTaskDomain, d.pipelineTaskDomain)
+  container.register(TOKENS.PipelineLoaderDomain, d.pipelineLoaderDomain)
+  container.register(TOKENS.PermissionPipeDomain, d.permissionPipeDomain)
+  container.register(TOKENS.QuestionPipeDomain, d.questionPipeDomain)
+  container.register(TOKENS.GitPendingChangesDomain, d.gitPendingChangesDomain)
+  container.register(TOKENS.PlanFileDomain, d.planFileDomain)
 }

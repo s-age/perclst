@@ -1,5 +1,6 @@
 import type { PipelineService, PipelineRunOptions } from '@src/services/pipelineService'
 import type { PermissionPipeService } from '@src/services/permissionPipeService'
+import type { QuestionPipeService } from '@src/services/questionPipeService'
 import type { Pipeline } from '@src/types/pipeline'
 import type { Config } from '@src/types/config'
 
@@ -20,6 +21,7 @@ export type PipelineRunnerProps = {
   options: PipelineRunOptions
   pipelineService: PipelineService
   permissionPipeService: PermissionPipeService | null
+  questionPipeService: QuestionPipeService | null
   config: Config
   signal: AbortSignal
   onAbort: () => void

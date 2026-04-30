@@ -1,28 +1,35 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { IClaudeCodeRepository, IProcedureRepository } from '@src/repositories/ports/agent'
 import type { AgentResponse } from '@src/types/agent'
+import type { Session } from '@src/types/session'
 import { AgentDomain, HEADLESS_SKILL_NOTE } from '../agent'
 import { APIError } from '@src/errors/apiError'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
+const DEFAULT_EFFORT = 'high'
 
-describe('AgentDomain', () => {
-  let domain: AgentDomain
-  let claudeCodeRepo: IClaudeCodeRepository
-  let procedureRepo: IProcedureRepository
-
-  const session = {
+function makeSession(overrides: Partial<Session> = {}): Session {
+  return {
     id: 'test-session',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     procedure: 'conductor',
     claude_session_id: 'claude-id',
     working_dir: '/tmp',
-    metadata: { status: 'active' as const, labels: [] }
+    metadata: { status: 'active' as const, labels: [] },
+    ...overrides
   }
+}
+
+describe('AgentDomain', () => {
+  let domain: AgentDomain
+  let claudeCodeRepo: IClaudeCodeRepository
+  let procedureRepo: IProcedureRepository
+  let session: Session
 
   beforeEach(() => {
     vi.clearAllMocks()
+    session = makeSession()
 
     claudeCodeRepo = {
       dispatch: vi.fn().mockResolvedValue({
@@ -39,7 +46,7 @@ describe('AgentDomain', () => {
       load: vi.fn()
     }
 
-    domain = new AgentDomain(DEFAULT_MODEL, claudeCodeRepo, procedureRepo)
+    domain = new AgentDomain(DEFAULT_MODEL, DEFAULT_EFFORT, claudeCodeRepo, procedureRepo)
   })
 
   it('should run a task with the procedure system prompt', async () => {
@@ -99,6 +106,72 @@ describe('AgentDomain', () => {
       undefined,
       undefined
     )
+    expect(session.model).toBe('claude-opus-4-6')
+  })
+
+  it('should use session.model when no options.model is provided', async () => {
+    const sessionWithModel = { ...session, model: 'claude-opus-4-6' }
+    await domain.run(sessionWithModel, 'Hello', false)
+
+    expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'claude-opus-4-6'
+      }),
+      undefined,
+      undefined
+    )
+  })
+
+  it('should fall back to default model when neither options nor session has model', async () => {
+    await domain.run(session, 'Hello', false)
+
+    expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: DEFAULT_MODEL
+      }),
+      undefined,
+      undefined
+    )
+    expect(session.model).toBe(DEFAULT_MODEL)
+  })
+
+  it('should prefer options.model over session.model', async () => {
+    const sessionWithModel = { ...session, model: 'claude-haiku-4-5' }
+    await domain.run(sessionWithModel, 'Hello', false, { model: 'claude-opus-4-6' })
+
+    expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'claude-opus-4-6'
+      }),
+      undefined,
+      undefined
+    )
+    expect(sessionWithModel.model).toBe('claude-opus-4-6')
+  })
+
+  it('should resolve effort from options, session, then default', async () => {
+    await domain.run(session, 'Hello', false, { effort: 'low' })
+    expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({ effort: 'low' }),
+      undefined,
+      undefined
+    )
+    expect(session.effort).toBe('low')
+  })
+
+  it('should use session.effort when no options.effort is provided', async () => {
+    const s = makeSession({ effort: 'max' })
+    await domain.run(s, 'Hello', false)
+    expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({ effort: 'max' }),
+      undefined,
+      undefined
+    )
+  })
+
+  it('should fall back to default effort when neither options nor session has effort', async () => {
+    await domain.run(session, 'Hello', false)
+    expect(session.effort).toBe(DEFAULT_EFFORT)
   })
 
   it('should throw APIError when run response content is empty', async () => {
@@ -244,23 +317,17 @@ describe('AgentDomain', () => {
   })
 
   describe('fork', () => {
-    const originalSession = {
+    const originalSession = makeSession({
       id: 'original',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       claude_session_id: 'original-claude-id',
-      working_dir: '/original',
-      metadata: { status: 'active' as const, labels: [] }
-    }
+      working_dir: '/original'
+    })
 
-    const newSession = {
+    const newSession = makeSession({
       id: 'new-fork',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       claude_session_id: 'new-claude-id',
-      working_dir: '/fork',
-      metadata: { status: 'active' as const, labels: [] }
-    }
+      working_dir: '/fork'
+    })
 
     it('should dispatch a fork action with the original and new session identifiers', async () => {
       const response = await domain.fork(originalSession, newSession, 'Fork instruction')
@@ -287,6 +354,68 @@ describe('AgentDomain', () => {
       })
 
       await expect(domain.fork(originalSession, newSession, 'Fork')).rejects.toThrow(APIError)
+    })
+  })
+
+  describe('buildChatArgs', () => {
+    it('should include --model when session has model', () => {
+      const s = { ...session, model: 'claude-opus-4-6' }
+      const args = domain.buildChatArgs(s)
+
+      expect(args).toEqual(['--resume', 'claude-id', '--model', 'claude-opus-4-6'])
+    })
+
+    it('should omit --model when session has no model', () => {
+      const s = makeSession()
+      const args = domain.buildChatArgs(s)
+
+      expect(args).toEqual(['--resume', 'claude-id'])
+    })
+
+    it('should include --effort when session has effort', () => {
+      const s = makeSession({ effort: 'low' })
+      const args = domain.buildChatArgs(s)
+
+      expect(args).toEqual(['--resume', 'claude-id', '--effort', 'low'])
+    })
+
+    it('should include both --model and --effort', () => {
+      const s = makeSession({ model: 'claude-opus-4-6', effort: 'max' })
+      const args = domain.buildChatArgs(s)
+
+      expect(args).toEqual([
+        '--resume',
+        'claude-id',
+        '--model',
+        'claude-opus-4-6',
+        '--effort',
+        'max'
+      ])
+    })
+
+    it('should include --model and --effort in rewind args', () => {
+      const s = {
+        ...session,
+        model: 'claude-opus-4-6',
+        effort: 'low',
+        rewind_source_claude_session_id: 'source-id',
+        rewind_to_message_id: 'msg-3'
+      }
+      const args = domain.buildChatArgs(s)
+
+      expect(args).toEqual([
+        '--resume',
+        'source-id',
+        '--fork-session',
+        '--session-id',
+        'claude-id',
+        '--model',
+        'claude-opus-4-6',
+        '--effort',
+        'low',
+        '--resume-session-at',
+        'msg-3'
+      ])
     })
   })
 })

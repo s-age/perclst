@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useInput } from 'ink'
-import type { PermissionRequest } from './types.js'
 import { computeScrollView, computeNextScrollOffset, type ScrollDirection } from './scrollBuffer.js'
 
 type UseScrollBufferOptions = {
   allLines: string[]
   streamCapacity: number
-  permRequest: PermissionRequest | null
+  isPrompting: boolean
 }
 
 type UseScrollBufferResult = {
@@ -18,7 +17,7 @@ type UseScrollBufferResult = {
 export function useScrollBuffer({
   allLines,
   streamCapacity,
-  permRequest
+  isPrompting
 }: UseScrollBufferOptions): UseScrollBufferResult {
   const [scrollMode, setScrollMode] = useState(false)
   const [scrollOffset, setScrollOffset] = useState(0)
@@ -53,7 +52,7 @@ export function useScrollBuffer({
         )
       }
     },
-    { isActive: !permRequest }
+    { isActive: !isPrompting }
   )
 
   const { visibleLines, lineOffset } = computeScrollView({

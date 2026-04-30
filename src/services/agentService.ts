@@ -42,6 +42,7 @@ export class AgentService {
 
     try {
       const response = await this.agentDomain.run(session, task, false, executeOptions)
+      await this.sessionDomain.save(session)
 
       if (this.agentDomain.isLimitExceeded(response, resolved)) {
         resolved.onLimitExceeded?.()
@@ -55,8 +56,10 @@ export class AgentService {
     }
   }
 
-  async chat(sessionId: string): Promise<void> {
+  async chat(sessionId: string, options: { model?: string; effort?: string } = {}): Promise<void> {
     const session = await this.sessionDomain.get(sessionId)
+    if (options.model) session.model = options.model
+    if (options.effort) session.effort = options.effort
     this.agentDomain.chat(session)
     await this.sessionDomain.save(session)
   }
@@ -75,13 +78,13 @@ export class AgentService {
 
     try {
       const response = await this.agentDomain.resume(session, instruction, executeOptions)
+      await this.sessionDomain.save(session)
 
       if (this.agentDomain.isLimitExceeded(response, resolved)) {
         resolved.onLimitExceeded?.()
       }
 
       await this.sessionDomain.updateStatus(session.id, 'completed')
-      await this.sessionDomain.save(session)
       return response
     } catch (error) {
       await this.sessionDomain.updateStatus(session.id, 'failed').catch(() => {})

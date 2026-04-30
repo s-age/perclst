@@ -3,6 +3,7 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { PipelineService } from '@src/services/pipelineService'
 import type { PermissionPipeService } from '@src/services/permissionPipeService'
+import type { QuestionPipeService } from '@src/services/questionPipeService'
 import type { AbortService } from '@src/services/abortService'
 import { ValidationError } from '@src/errors/validationError'
 import { RateLimitError } from '@src/errors/rateLimitError'
@@ -21,6 +22,7 @@ import type { PipelineFileService } from '@src/services/pipelineFileService'
 
 type RawRunOptions = {
   model?: string
+  effort?: string
   outputOnly?: boolean
   batch?: boolean
   yes?: boolean
@@ -72,16 +74,27 @@ function handleRunCommandError(error: unknown, abortService: AbortService): neve
   process.exit(1)
 }
 
+function resolvePipeServices(): {
+  permissionPipeService: PermissionPipeService
+  questionPipeService: QuestionPipeService
+} {
+  const permissionPipeService = container.resolve<PermissionPipeService>(
+    TOKENS.PermissionPipeService
+  )
+  permissionPipeService.initPipePath()
+  return {
+    permissionPipeService,
+    questionPipeService: container.resolve<QuestionPipeService>(TOKENS.QuestionPipeService)
+  }
+}
+
 async function executeTUIPipeline(
   input: RunPipelineInput,
   pipelineFileService: PipelineFileService,
   onChildPipelineDone: (absolutePath: string) => void,
   abortService: AbortService
 ): Promise<void> {
-  const permissionPipeService = container.resolve<PermissionPipeService>(
-    TOKENS.PermissionPipeService
-  )
-  permissionPipeService.initPipePath()
+  const { permissionPipeService, questionPipeService } = resolvePipeServices()
   if (input.yes) process.env.PERCLST_PERMISSION_AUTO_YES = '1'
   const absolutePath = resolve(input.pipelinePath)
   const pipeline = loadPipelineOrExit(pipelineFileService, absolutePath)
@@ -100,12 +113,14 @@ async function executeTUIPipeline(
         pipeline,
         options: {
           model: input.model,
+          effort: input.effort,
           onTaskDone,
           pipelineDir,
           onChildPipelineDone
         },
         pipelineService,
         permissionPipeService,
+        questionPipeService,
         config,
         signal: abortService.signal,
         onAbort: () => abortService.abort(),
@@ -154,6 +169,7 @@ async function executePipeline(
   let count = 0
   for await (const result of pipelineService.run(pipeline, {
     model: input.model,
+    effort: input.effort,
     onStreamEvent,
     onTaskDone,
     pipelineDir,

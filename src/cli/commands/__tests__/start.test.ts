@@ -36,6 +36,7 @@ type MockConfig = {
 describe('startCommand', () => {
   let mockAgentService: MockAgentService
   let mockSessionService: MockSessionService
+  let mockQuestionPipeService: { consumeChatSignal: ReturnType<typeof vi.fn> }
   let mockConfig: MockConfig
   let mockParseStartSessionFn: ReturnType<typeof vi.fn>
   let exitSpy: MockInstance
@@ -51,6 +52,10 @@ describe('startCommand', () => {
       findByName: vi.fn().mockResolvedValue(null)
     }
 
+    mockQuestionPipeService = {
+      consumeChatSignal: vi.fn().mockReturnValue(false)
+    }
+
     // Setup mock Config
     mockConfig = {
       display: {
@@ -64,6 +69,7 @@ describe('startCommand', () => {
       if (token === TOKENS.AgentService) return mockAgentService
       if (token === TOKENS.Config) return mockConfig
       if (token === TOKENS.SessionService) return mockSessionService
+      if (token === TOKENS.QuestionPipeService) return mockQuestionPipeService
       return undefined
     }) as never
 
