@@ -12,12 +12,17 @@ Before any layer or import decision, read `.claude/skills/arch/SKILL.md`.
 flowchart TD
     Start([Start]) --> Check{feature_description\nprovided?}
     Check -- No --> Abort([Abort: ask for feature description])
-    Check -- Yes --> Step1
+    Check -- Yes --> CheckPattern
+
+    CheckPattern{"pipeline_pattern specified?\n(implement-feature / implement-unit-test /\nimplement-integration-test / review-fix / lint-fix /\noptimize-skills / optimize-knowledge)"}
+    CheckPattern -- No --> AskPattern["Ask user which pattern to use:\n\nimplement-feature        — new feature from plan\nimplement-unit-test      — unit test writing\nimplement-integration-test — integration test writing\nreview-fix               — existing code review + fix loop\nlint-fix                 — lint rule violation fixes\noptimize-skills          — improve skill documentation files\noptimize-knowledge       — audit/reorganize knowledge files\n\nWait for response, then continue."]
+    AskPattern --> Step1
+    CheckPattern -- Yes --> Step1
 
     Step1["STEP 1 — Derive plan name\nDerive kebab-case slug from feature_description\n'add chat command'     → 'chat-command'\n'pipeline force stop'  → 'pipeline-force-stop'\n\nPlan dir: plans/<slug>/"]
     Step1 --> Step2
 
-    Step2["STEP 2 — Write brief.md\nWrite plans/<slug>/brief.md\n\n# Goal\nOne paragraph: what pain it solves and what the feature does.\n\n# Key Design Decisions\nBullet list of non-obvious choices:\n- Existing patterns/symbols to reuse and why\n- Error handling strategy\n- Layer-rule exceptions with justification\n- ID / type mapping decisions"]
+    Step2["STEP 2 — Write brief.md\nWrite plans/<slug>/brief.md\n\n# Pipeline Pattern\n<pipeline_pattern>\n\n# Goal\nOne paragraph: what pain it solves and what the feature does.\n\n# Key Design Decisions\nBullet list of non-obvious choices:\n- Existing patterns/symbols to reuse and why\n- Error handling strategy\n- Layer-rule exceptions with justification\n- ID / type mapping decisions"]
     Step2 --> Step3
 
     Step3["STEP 3 — Write layers.md\nWrite plans/<slug>/layers.md\n\nThis is the routing manifest for meta-pipeline-creator.\nOnly include layers that actually change.\nOrder follows arch implementation sequence:\n  errors → types → infrastructures → repositories → domains → services → validators → cli\n\nFormat:\n  # Layer Manifest\n  plan: <slug>\n\n  | Order | Layer | Spec | Summary |\n  |-------|-------|------|---------|\n  | 1 | errors | errors.md | 1 new |\n  | 2 | domains | domains.md | 1 modify |\n  | 3 | cli | cli.md | 1 new, 1 modify |"]
@@ -32,5 +37,5 @@ flowchart TD
     Fix --> Step5
     Valid -- Yes --> Done
 
-    Done(["Done: print summary\n  Plan dir : plans/<slug>/\n  Files    : brief.md  layers.md  <layer>.md ...\n  Next     : code-base-survey verifies and adds gotchas.md"])
+    Done(["Done: print summary\n  Plan dir : plans/<slug>/\n  Pattern  : <pipeline_pattern>\n  Files    : brief.md  layers.md  <layer>.md ...\n  Next     : code-base-survey verifies and adds gotchas.md\n  Pipeline : perclst start 'create pipeline' --procedure meta-pipeline-creator/create\n             (pass: plan=plans/<slug>/  pattern=<pipeline_pattern>)"])
 ```
