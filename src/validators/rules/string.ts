@@ -6,7 +6,7 @@ type StringRuleOpts = {
   max?: number
 }
 
-export function stringRule(opts: StringRuleOpts = {}): z.ZodString {
+export function stringRule(opts: StringRuleOpts = {}) {
   let s = z.string()
   if (opts.required) s = s.min(1)
   if (opts.min !== undefined) s = s.min(opts.min)

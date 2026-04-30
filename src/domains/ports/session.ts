@@ -26,7 +26,7 @@ export type ImportSessionOptions = {
   labels?: string[]
 }
 
-export type IImportDomain = {
+export type ISessionImportDomain = {
   resolveWorkingDir(claudeSessionId: string): string
   validateSession(claudeSessionId: string, workingDir: string): void
   buildSession(claudeSessionId: string, workingDir: string, options: ImportSessionOptions): Session

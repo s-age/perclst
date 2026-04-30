@@ -1,10 +1,10 @@
-import type { IImportDomain, ImportSessionOptions } from '@src/domains/ports/session'
+import type { ISessionImportDomain, ImportSessionOptions } from '@src/domains/ports/session'
 import type { Session } from '@src/types/session'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
 import { generateId } from '@src/utils/uuid'
 import { toISO } from '@src/utils/date'
 
-export class ImportDomain implements IImportDomain {
+export class SessionImportDomain implements ISessionImportDomain {
   constructor(private claudeSessionRepo: IClaudeSessionRepository) {}
 
   resolveWorkingDir(claudeSessionId: string): string {

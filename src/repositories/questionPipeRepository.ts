@@ -1,10 +1,12 @@
-import { tmpdir } from 'os'
 import type { IQuestionPipeRepository } from '@src/repositories/ports/questionPipe'
 import type { ChoiceRequest, ChoiceResult } from '@src/types/questionPipe'
 import type { FsInfra } from '@src/infrastructures/fs'
 import type { TtyInfra } from '@src/infrastructures/ttyInfrastructure'
 
-type QuestionPipeFs = Pick<FsInfra, 'fileExists' | 'readText' | 'removeFileSync' | 'writeText'>
+type QuestionPipeFs = Pick<
+  FsInfra,
+  'fileExists' | 'readText' | 'removeFileSync' | 'writeText' | 'tmpDir'
+>
 
 export class QuestionPipeRepository implements IQuestionPipeRepository {
   constructor(
@@ -104,7 +106,7 @@ export class QuestionPipeRepository implements IQuestionPipeRepository {
   }
 
   consumeChatSignal(sessionId: string): boolean {
-    const p = `${tmpdir()}/perclst-chat-${sessionId}`
+    const p = `${this.fs.tmpDir()}/perclst-chat-${sessionId}`
     try {
       if (this.fs.fileExists(p)) {
         this.fs.removeFileSync(p)
@@ -118,7 +120,7 @@ export class QuestionPipeRepository implements IQuestionPipeRepository {
 
   private writeChatSignal(sessionId: string): void {
     try {
-      this.fs.writeText(`${tmpdir()}/perclst-chat-${sessionId}`, '')
+      this.fs.writeText(`${this.fs.tmpDir()}/perclst-chat-${sessionId}`, '')
     } catch {
       /* ignore */
     }

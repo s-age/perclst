@@ -2,11 +2,9 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { AgentService } from '@src/services/agentService'
 import type { SessionService } from '@src/services/sessionService'
-import { ValidationError } from '@src/errors/validationError'
-import { stderr } from '@src/utils/output'
+import { handleCommandError } from '@src/cli/handleCommandError'
 import { parseChatSession } from '@src/validators/cli/chatSession'
 import { handleWorkingDirMismatch } from '@src/cli/prompt'
-import { UserCancelledError } from '@src/errors/userCancelledError'
 
 type ChatOptions = {
   model?: string
@@ -23,14 +21,6 @@ export async function chatCommand(sessionId: string, options: ChatOptions = {}):
     await handleWorkingDirMismatch(session.working_dir)
     await agentService.chat(resolvedId, { model: input.model, effort: input.effort })
   } catch (error) {
-    if (error instanceof UserCancelledError) {
-      stderr.print('Cancelled.')
-      process.exit(0)
-    } else if (error instanceof ValidationError) {
-      stderr.print(`Invalid arguments: ${error.message}`)
-    } else {
-      stderr.print('Failed to start chat session', error as Error)
-    }
-    process.exit(1)
+    handleCommandError(error, 'Failed to start chat session')
   }
 }

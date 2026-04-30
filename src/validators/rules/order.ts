@@ -1,5 +1,5 @@
 import { z } from 'zod'
 
-export function orderRule(): z.ZodDefault<z.ZodEnum<{ asc: 'asc'; desc: 'desc' }>> {
+export function orderRule() {
   return z.enum(['asc', 'desc'] as const).default('asc')
 }

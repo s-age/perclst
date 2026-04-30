@@ -1,5 +1,5 @@
 import type { Session } from '@src/types/session'
-import type { ISessionDomain, IImportDomain } from '@src/domains/ports/session'
+import type { ISessionDomain, ISessionImportDomain } from '@src/domains/ports/session'
 import { debug } from '@src/utils/output'
 
 export type ImportOptions = {
@@ -11,7 +11,7 @@ export type ImportOptions = {
 export class ImportService {
   constructor(
     private sessionDomain: ISessionDomain,
-    private importDomain: IImportDomain
+    private importDomain: ISessionImportDomain
   ) {}
 
   async import(claudeSessionId: string, options: ImportOptions = {}): Promise<Session> {

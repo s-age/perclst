@@ -70,6 +70,13 @@ export default tseslint.config(
     }
   },
   {
+    // Validator rule functions rely on Zod's type inference — explicit return types break it
+    files: ['src/validators/rules/**/*.ts'],
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off'
+    }
+  },
+  {
     // Test files: suites naturally grow long, raise limits
     files: ['**/__tests__/**', '**/*.test.ts'],
     rules: {
