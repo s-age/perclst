@@ -9,13 +9,15 @@ Write all pipeline content in **English**, regardless of the project's primary l
 
 ## Examples
 
-Four reference patterns in `examples/`:
+Six reference patterns in `examples/`:
 
 | File | When to use |
 |------|-------------|
 | `implement__feature-name.yaml` | New implementation — implement → review → test gate → commit. Covers feature, unit-test, and integration-test sub-types; procedures differ (see below). |
 | `review-fix__layer__target.yaml` | Existing code review + fix — initial review outside loop, fix-loop pipeline, commit outside |
 | `lint-fix__layer__target.yaml` | Lint rule violations — implement + test gate only (no review agent), commit |
+| `optimize__skills__target.yaml` | Skill documentation improvement — implement → review → custom validate gate → commit per target. Same structure as implement-feature but with domain-specific procedures and a custom script gate. |
+| `optimize__knowledge__target.yaml` | Knowledge file audit — parallel agents per domain (no reviewer, no nested pipeline), commit at end. Commit agent is generic (does not resume an implementer session). |
 
 ### `implement` procedure selection
 
