@@ -87,6 +87,17 @@ export default tseslint.config(
     }
   },
   {
+    files: ['src/services/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['warn', {
+        paths: [
+          { name: 'fs', message: 'Service layer must not call fs operations directly. Add a repository method instead.' },
+          { name: 'path', message: 'Service layer must not import path directly. Use @src/utils/path instead.' }
+        ]
+      }]
+    }
+  },
+  {
     ignores: ['dist/**', 'node_modules/**', 'eslint-rules/**']
   }
 )
