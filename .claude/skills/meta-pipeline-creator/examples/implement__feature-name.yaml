@@ -1,0 +1,53 @@
+tasks:
+  - type: script
+    command: rm -f .claude/tmp/implement-feature-name-reviewer
+
+  - type: pipeline
+    name: implement-feature-name
+    tasks:
+      - type: agent
+        name: implement-feature-name-implementer
+        task: |
+          target_file_path: src/layer/featureName.ts
+
+          <Describe what to build — reference the plan layer spec>
+        model: sonnet
+        allowed_tools:
+          - Read
+          - Write
+          - Edit
+          - Bash
+          - mcp__perclst__ts_analyze
+          - mcp__perclst__ts_get_references
+          - mcp__perclst__ts_checker
+
+      - type: agent
+        name: implement-feature-name-reviewer
+        task: |
+          target_file_path: src/layer/featureName.ts
+          ng_output_path: .claude/tmp/implement-feature-name-reviewer
+        procedure: arch/review
+        model: sonnet
+        allowed_tools:
+          - Read
+          - Bash
+          - mcp__perclst__ts_analyze
+          - mcp__perclst__ts_get_references
+          - mcp__perclst__ts_get_types
+        rejected:
+          to: implement-feature-name-implementer
+          max_retries: 3
+
+      - type: script
+        command: npm run format --fix && npm run lint:fix && npm run build && npm run test:unit
+        rejected:
+          to: implement-feature-name-implementer
+          max_retries: 3
+
+  - type: agent
+    name: implement-feature-name-implementer
+    task: Implementation complete and tests pass. Commit the changes with an appropriate conventional commit message (e.g. feat(layer): ...).
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash

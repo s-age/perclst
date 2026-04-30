@@ -1,0 +1,34 @@
+tasks:
+  - type: pipeline
+    name: lint-fix-layer-target
+    tasks:
+      - type: agent
+        name: implement-lint-fix-layer-target
+        task: |
+          Fix all <rule-name> violations in:
+          - src/layer/target.ts
+
+          Use mcp__perclst__ts_analyze to inspect each file.
+          After editing, run `./node_modules/.bin/eslint <files>` to verify no violations remain.
+        model: haiku
+        allowed_tools:
+          - Read
+          - Edit
+          - Bash
+          - mcp__perclst__ts_analyze
+          - mcp__perclst__ts_get_types
+          - mcp__perclst__ts_checker
+
+      - type: script
+        command: npm run build && npm run test:unit
+        rejected:
+          to: implement-lint-fix-layer-target
+          max_retries: 3
+
+  - type: agent
+    name: implement-lint-fix-layer-target
+    task: Lint violations fixed and build/tests passing. Commit the changes with an appropriate conventional commit message (e.g. fix(lint): ...).
+    model: haiku
+    allowed_tools:
+      - Read
+      - Bash
