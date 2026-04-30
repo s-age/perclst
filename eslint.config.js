@@ -106,8 +106,18 @@ export default tseslint.config(
   },
   {
     files: ['src/repositories/**/*.ts'],
+    ignores: ['**/__tests__/**', '**/*.test.ts'],
     rules: {
-      'local/repository-fs-vs-shell': 'warn'
+      'local/repository-fs-vs-shell': 'error',
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'os', message: 'Repositories must not use Node.js built-ins directly. Use FsInfra instead.' },
+          { name: 'fs', message: 'Repositories must not use Node.js built-ins directly. Use FsInfra instead.' },
+          { name: 'path', message: 'Repositories must not import path directly. Use @src/utils/path instead.' },
+          { name: 'child_process', message: 'Repositories must not use Node.js built-ins directly. Use ShellInfra instead.' },
+          { name: 'net', message: 'Repositories must not use Node.js built-ins directly.' }
+        ]
+      }]
     }
   },
   {
