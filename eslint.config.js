@@ -5,13 +5,18 @@ import prettier from 'eslint-plugin-prettier/recommended'
 
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
 
+import importPlugin from 'eslint-plugin-import-x'
 import maxParamsRule from './eslint-rules/max-params.js'
 import noAnyRule from './eslint-rules/no-any.js'
+import repositoryFsVsShellRule from './eslint-rules/repository-fs-vs-shell.js'
+import importViaPortRule from './eslint-rules/import-via-port.js'
 
 const localPlugin = {
   rules: {
     'max-params': maxParamsRule,
-    'no-any': noAnyRule
+    'no-any': noAnyRule,
+    'repository-fs-vs-shell': repositoryFsVsShellRule,
+    'import-via-port': importViaPortRule
   }
 }
 
@@ -84,6 +89,59 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
+    }
+  },
+  {
+    plugins: { import: importPlugin },
+    rules: {
+      'import/no-cycle': ['error', { maxDepth: 10, ignoreExternal: true }]
+    }
+  },
+  {
+    files: ['src/repositories/**/*.ts'],
+    rules: {
+      'local/repository-fs-vs-shell': 'warn'
+    }
+  },
+  {
+    files: ['src/domains/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'fs', message: 'Domains must not perform I/O. Add a repository method instead.' },
+          { name: 'path', message: 'Domains must not import path directly. Use @src/utils/path instead.' }
+        ]
+      }]
+    }
+  },
+  {
+    files: ['src/utils/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'fs', message: 'Utils layer: I/O modules are forbidden. Move I/O logic to src/infrastructures/ or src/cli/.' },
+          { name: 'readline', message: 'Utils layer: I/O modules are forbidden. Move CLI prompts to src/cli/.' },
+          { name: 'net', message: 'Utils layer: I/O modules are forbidden.' },
+          { name: 'child_process', message: 'Utils layer: I/O modules are forbidden.' }
+        ]
+      }]
+    }
+  },
+  {
+    files: ['src/services/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'fs', message: 'Service layer must not call fs operations directly. Add a repository method instead.' },
+          { name: 'path', message: 'Service layer must not import path directly. Use @src/utils/path instead.' }
+        ]
+      }]
+    }
+  },
+  {
+    files: ['src/**/*.ts'],
+    rules: {
+      'local/import-via-port': 'error'
     }
   },
   {
