@@ -5,6 +5,7 @@ import prettier from 'eslint-plugin-prettier/recommended'
 
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
 
+import importPlugin from 'eslint-plugin-import-x'
 import maxParamsRule from './eslint-rules/max-params.js'
 import noAnyRule from './eslint-rules/no-any.js'
 import repositoryFsVsShellRule from './eslint-rules/repository-fs-vs-shell.js'
@@ -86,6 +87,12 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
+    }
+  },
+  {
+    plugins: { import: importPlugin },
+    rules: {
+      'import/no-cycle': ['error', { maxDepth: 10, ignoreExternal: true }]
     }
   },
   {
