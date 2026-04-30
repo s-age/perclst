@@ -8,7 +8,9 @@ export default {
     messages: {
       usePort:
         "Cross-layer import '{{source}}' must go through a port type (e.g. '{{portsPath}}'). " +
-        'Import the interface from ports/, not the concrete implementation.'
+        'Import the interface from ports/, not the concrete implementation.',
+      forbiddenLayer:
+        "Importing from '{{importLayer}}' is forbidden in '{{fileLayer}}' files. {{suggestion}}"
     }
   },
   create(context) {
@@ -25,6 +27,9 @@ export default {
     }
 
     function getLayer(path) {
+      if (path.includes('/src/cli/')) return 'cli'
+      if (path.includes('/src/mcp/')) return 'mcp'
+      if (path.includes('/src/validators/')) return 'validators'
       if (path.includes('/src/services/')) return 'services'
       if (path.includes('/src/domains/')) return 'domains'
       if (path.includes('/src/repositories/')) return 'repositories'
@@ -32,18 +37,40 @@ export default {
       return null
     }
 
-    const fileLayer = getLayer(filepath)
-    if (!fileLayer) return {}
-
-    // Layer order (lower index = higher in the stack)
-    const layerOrder = ['services', 'domains', 'repositories', 'infrastructures']
-
-    function isLowerLayer(fileL, importL) {
-      return layerOrder.indexOf(importL) > layerOrder.indexOf(fileL)
+    // Absolute prohibitions derived from layers.md allowlists.
+    // Ports do not help — the import itself is the violation.
+    const forbidden = {
+      cli: {
+        repositories: 'Route through services instead.',
+        infrastructures: 'Route through services instead.',
+      },
+      mcp: {
+        cli: 'Route through services instead.',
+        domains: 'Route through services instead.',
+        repositories: 'Route through services instead.',
+        infrastructures: 'Route through services instead.',
+      },
+      validators: {
+        services: 'validators may only import from errors, types, and constants.',
+        domains: 'validators may only import from errors, types, and constants.',
+        repositories: 'validators may only import from errors, types, and constants.',
+        infrastructures: 'validators may only import from errors, types, and constants.',
+      },
+      services: {
+        // repositories is forbidden even via ports/ — must go through domains
+        repositories: 'Route through domains instead.',
+        infrastructures: 'Route through domains instead.',
+      },
     }
 
-    // Layers that expose a ports/ subdirectory
-    const portsLayers = new Set(['domains', 'repositories'])
+    // Cross-layer imports that are allowed only when going through ports/
+    const portRequired = {
+      services: new Set(['domains']),
+      domains: new Set(['repositories']),
+    }
+
+    const fileLayer = getLayer(filepath)
+    if (!fileLayer) return {}
 
     return {
       ImportDeclaration(node) {
@@ -52,13 +79,17 @@ export default {
 
         const importLayer = getLayer(source.replace('@src/', '/src/'))
         if (!importLayer) return
-        if (!isLowerLayer(fileLayer, importLayer)) return
+        if (importLayer === fileLayer) return // intra-layer: always OK
 
-        // repositories → infrastructures: no ports convention, allow direct import
-        if (fileLayer === 'repositories' && importLayer === 'infrastructures') return
+        // Check absolute prohibition first
+        const suggestion = forbidden[fileLayer]?.[importLayer]
+        if (suggestion) {
+          context.report({ node, messageId: 'forbiddenLayer', data: { importLayer, fileLayer, suggestion } })
+          return
+        }
 
-        // Lower layer has no ports/ convention (infrastructures)
-        if (!portsLayers.has(importLayer)) return
+        // Check port requirement
+        if (!portRequired[fileLayer]?.has(importLayer)) return
 
         // Already importing via ports/
         if (source.includes(`/${importLayer}/ports/`)) return
