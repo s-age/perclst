@@ -1,4 +1,4 @@
-import { resolve, dirname } from 'path'
+import { resolve, dirname } from '@src/utils/path'
 import type {
   Pipeline,
   AgentPipelineTask,
