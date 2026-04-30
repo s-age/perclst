@@ -15,4 +15,8 @@ export class QuestionPipeService {
   async askChoice(args: ChoiceRequest): Promise<ChoiceResult> {
     return this.domain.askChoice(args)
   }
+
+  consumeChatSignal(sessionId: string): boolean {
+    return this.domain.consumeChatSignal(sessionId)
+  }
 }

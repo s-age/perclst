@@ -103,6 +103,19 @@ export class QuestionPipeRepository implements IQuestionPipeRepository {
     return this.chatNeeded(args.session_id)
   }
 
+  consumeChatSignal(sessionId: string): boolean {
+    const p = `${tmpdir()}/perclst-chat-${sessionId}`
+    try {
+      if (this.fs.fileExists(p)) {
+        this.fs.removeFileSync(p)
+        return true
+      }
+    } catch {
+      /* ignore */
+    }
+    return false
+  }
+
   private writeChatSignal(sessionId: string): void {
     try {
       this.fs.writeText(`${tmpdir()}/perclst-chat-${sessionId}`, '')

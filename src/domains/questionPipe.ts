@@ -16,4 +16,8 @@ export class QuestionPipeDomain implements IQuestionPipeDomain {
   async askChoice(args: ChoiceRequest): Promise<ChoiceResult> {
     return this.repo.askChoice(args)
   }
+
+  consumeChatSignal(sessionId: string): boolean {
+    return this.repo.consumeChatSignal(sessionId)
+  }
 }

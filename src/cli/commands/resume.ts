@@ -1,9 +1,8 @@
-import { existsSync, unlinkSync } from 'fs'
-import { tmpdir } from 'os'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { AgentService } from '@src/services/agentService'
 import type { SessionService } from '@src/services/sessionService'
+import type { QuestionPipeService } from '@src/services/questionPipeService'
 import { stdout, debug } from '@src/utils/output'
 import { handleCommandError } from '@src/cli/handleCommandError'
 import { printResponse, printStreamEvent } from '@src/cli/view/display'
@@ -27,19 +26,6 @@ type RawResumeOptions = {
   format?: string
 }
 
-function consumeChatSignal(sessionId: string): boolean {
-  const p = `${tmpdir()}/perclst-chat-${sessionId}`
-  try {
-    if (existsSync(p)) {
-      unlinkSync(p)
-      return true
-    }
-  } catch {
-    /* ignore */
-  }
-  return false
-}
-
 export async function resumeCommand(
   sessionId: string,
   instruction: string,
@@ -50,6 +36,7 @@ export async function resumeCommand(
 
     const sessionService = container.resolve<SessionService>(TOKENS.SessionService)
     const agentService = container.resolve<AgentService>(TOKENS.AgentService)
+    const questionPipeService = container.resolve<QuestionPipeService>(TOKENS.QuestionPipeService)
     const config = container.resolve<Config>(TOKENS.Config)
 
     const input = parseResumeSession({ sessionId, instruction, ...options })
@@ -83,7 +70,7 @@ export async function resumeCommand(
       { sessionId: resolvedId }
     )
 
-    if (consumeChatSignal(resolvedId)) {
+    if (questionPipeService.consumeChatSignal(resolvedId)) {
       await agentService.chat(resolvedId)
     } else {
       stdout.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)

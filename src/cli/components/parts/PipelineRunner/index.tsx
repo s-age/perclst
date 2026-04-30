@@ -52,7 +52,7 @@ export function PipelineRunner({
   const { scrollMode, visibleLines, lineOffset } = useScrollBuffer({
     allLines,
     streamCapacity,
-    permRequest
+    isPrompting
   })
   useAbort({ onAbort, isActive: !isPrompting })
 

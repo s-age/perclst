@@ -28,6 +28,9 @@ describe('resumeCommand', () => {
   const mockAgentService = {
     resume: vi.fn()
   }
+  const mockQuestionPipeService = {
+    consumeChatSignal: vi.fn().mockReturnValue(false)
+  }
   const mockConfig = {
     display: {
       header_color: '#D97757',
@@ -42,6 +45,7 @@ describe('resumeCommand', () => {
     vi.mocked(container.resolve).mockImplementation((token: unknown) => {
       if (token === TOKENS.SessionService) return mockSessionService as unknown
       if (token === TOKENS.AgentService) return mockAgentService as unknown
+      if (token === TOKENS.QuestionPipeService) return mockQuestionPipeService as unknown
       if (token === TOKENS.Config) return mockConfig as unknown
       throw new Error(`Unknown token: ${String(token)}`)
     }) as unknown as typeof container.resolve
