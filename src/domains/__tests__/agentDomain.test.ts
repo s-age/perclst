@@ -6,6 +6,7 @@ import { AgentDomain, HEADLESS_SKILL_NOTE } from '../agent'
 import { APIError } from '@src/errors/apiError'
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
+const DEFAULT_EFFORT = 'high'
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
@@ -45,7 +46,7 @@ describe('AgentDomain', () => {
       load: vi.fn()
     }
 
-    domain = new AgentDomain(DEFAULT_MODEL, claudeCodeRepo, procedureRepo)
+    domain = new AgentDomain(DEFAULT_MODEL, DEFAULT_EFFORT, claudeCodeRepo, procedureRepo)
   })
 
   it('should run a task with the procedure system prompt', async () => {
@@ -146,6 +147,31 @@ describe('AgentDomain', () => {
       undefined
     )
     expect(sessionWithModel.model).toBe('claude-opus-4-6')
+  })
+
+  it('should resolve effort from options, session, then default', async () => {
+    await domain.run(session, 'Hello', false, { effort: 'low' })
+    expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({ effort: 'low' }),
+      undefined,
+      undefined
+    )
+    expect(session.effort).toBe('low')
+  })
+
+  it('should use session.effort when no options.effort is provided', async () => {
+    const s = makeSession({ effort: 'max' })
+    await domain.run(s, 'Hello', false)
+    expect(vi.mocked(claudeCodeRepo.dispatch)).toHaveBeenCalledWith(
+      expect.objectContaining({ effort: 'max' }),
+      undefined,
+      undefined
+    )
+  })
+
+  it('should fall back to default effort when neither options nor session has effort', async () => {
+    await domain.run(session, 'Hello', false)
+    expect(session.effort).toBe(DEFAULT_EFFORT)
   })
 
   it('should throw APIError when run response content is empty', async () => {
@@ -346,10 +372,32 @@ describe('AgentDomain', () => {
       expect(args).toEqual(['--resume', 'claude-id'])
     })
 
-    it('should include --model in rewind args', () => {
+    it('should include --effort when session has effort', () => {
+      const s = makeSession({ effort: 'low' })
+      const args = domain.buildChatArgs(s)
+
+      expect(args).toEqual(['--resume', 'claude-id', '--effort', 'low'])
+    })
+
+    it('should include both --model and --effort', () => {
+      const s = makeSession({ model: 'claude-opus-4-6', effort: 'max' })
+      const args = domain.buildChatArgs(s)
+
+      expect(args).toEqual([
+        '--resume',
+        'claude-id',
+        '--model',
+        'claude-opus-4-6',
+        '--effort',
+        'max'
+      ])
+    })
+
+    it('should include --model and --effort in rewind args', () => {
       const s = {
         ...session,
         model: 'claude-opus-4-6',
+        effort: 'low',
         rewind_source_claude_session_id: 'source-id',
         rewind_to_message_id: 'msg-3'
       }
@@ -363,6 +411,8 @@ describe('AgentDomain', () => {
         'claude-id',
         '--model',
         'claude-opus-4-6',
+        '--effort',
+        'low',
         '--resume-session-at',
         'msg-3'
       ])

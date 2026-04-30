@@ -30,6 +30,7 @@ export type ExecuteOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
+  effort?: string
   sessionFilePath?: string
   resumeSessionAt?: string
   onStreamEvent?: (event: AgentStreamEvent) => void
@@ -40,6 +41,7 @@ export type AgentRunOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
+  effort?: string
   maxMessages?: number
   maxContextTokens?: number
   onStreamEvent?: (event: AgentStreamEvent) => void

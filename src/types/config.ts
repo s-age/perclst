@@ -16,6 +16,7 @@ export type Config = {
   sessions_dir?: string
   logs_dir?: string
   model?: string
+  effort?: string
   api_key_env?: string
   /** Default list of tools to allow without prompting (overridable per-invocation) */
   allowed_tools?: string[]

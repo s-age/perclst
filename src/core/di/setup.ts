@@ -6,7 +6,7 @@ import { setupDomains, type Domains } from './setupDomains'
 import { setupServices, type Services } from './setupServices'
 import { loadConfig, resolveSessionsDir, resolveKnowledgeDir } from '@src/repositories/config'
 import { FsInfra } from '@src/infrastructures/fs'
-import { DEFAULT_MODEL } from '@src/constants/config'
+import { DEFAULT_MODEL, DEFAULT_EFFORT } from '@src/constants/config'
 import type { Config } from '@src/types/config'
 
 export type { Infras, Repos, Domains, Services }
@@ -25,11 +25,12 @@ export function setupContainer(overrides?: ContainerOverrides): void {
   const sessionsDir = resolveSessionsDir(bootstrapFs, config)
   const knowledgeDir = resolveKnowledgeDir(bootstrapFs)
   const model = config.model ?? DEFAULT_MODEL
+  const effort = config.effort ?? DEFAULT_EFFORT
 
   container.register(TOKENS.Config, config)
 
   const infras = setupInfrastructures(overrides?.infras)
   const repos = setupRepositories(infras, { sessionsDir, knowledgeDir }, overrides?.repos)
-  const domains = setupDomains(model, repos, overrides?.domains)
+  const domains = setupDomains(model, effort, repos, overrides?.domains)
   setupServices(config, domains, repos, overrides?.services)
 }

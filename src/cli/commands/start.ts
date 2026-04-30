@@ -19,6 +19,7 @@ type RawStartOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
+  effort?: string
   maxMessages?: string
   maxContextTokens?: string
   silentThoughts?: boolean
@@ -77,6 +78,7 @@ export async function startCommand(task: string, options: RawStartOptions): Prom
         allowedTools: input.allowedTools,
         disallowedTools: input.disallowedTools,
         model: input.model,
+        effort: input.effort,
         maxMessages: input.maxMessages,
         maxContextTokens: input.maxContextTokens,
         onStreamEvent

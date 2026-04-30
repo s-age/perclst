@@ -22,6 +22,7 @@ import type { PipelineFileService } from '@src/services/pipelineFileService'
 
 type RawRunOptions = {
   model?: string
+  effort?: string
   outputOnly?: boolean
   batch?: boolean
   yes?: boolean
@@ -112,6 +113,7 @@ async function executeTUIPipeline(
         pipeline,
         options: {
           model: input.model,
+          effort: input.effort,
           onTaskDone,
           pipelineDir,
           onChildPipelineDone
@@ -167,6 +169,7 @@ async function executePipeline(
   let count = 0
   for await (const result of pipelineService.run(pipeline, {
     model: input.model,
+    effort: input.effort,
     onStreamEvent,
     onTaskDone,
     pipelineDir,

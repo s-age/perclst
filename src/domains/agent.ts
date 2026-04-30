@@ -13,6 +13,7 @@ export const HEADLESS_SKILL_NOTE = [
 export class AgentDomain implements IAgentDomain {
   constructor(
     private model: string,
+    private effort: string,
     private claudeCodeRepo: IClaudeCodeRepository,
     private procedureRepo: IProcedureRepository
   ) {}
@@ -31,12 +32,15 @@ export class AgentDomain implements IAgentDomain {
     }
 
     const resolvedModel = options.model ?? session.model ?? this.model
+    const resolvedEffort = options.effort ?? session.effort ?? this.effort
     session.model = resolvedModel
+    session.effort = resolvedEffort
 
     const baseArgs = {
       sessionId: session.claude_session_id,
       prompt: instruction,
       model: resolvedModel,
+      effort: resolvedEffort,
       allowedTools: options.allowedTools,
       disallowedTools: options.disallowedTools,
       workingDir: session.working_dir,
@@ -97,6 +101,7 @@ export class AgentDomain implements IAgentDomain {
 
   buildChatArgs(session: Session): string[] {
     const modelArgs = session.model ? ['--model', session.model] : []
+    const effortArgs = session.effort ? ['--effort', session.effort] : []
 
     if (session.rewind_source_claude_session_id) {
       return [
@@ -106,12 +111,13 @@ export class AgentDomain implements IAgentDomain {
         '--session-id',
         session.claude_session_id,
         ...modelArgs,
+        ...effortArgs,
         ...(session.rewind_to_message_id
           ? ['--resume-session-at', session.rewind_to_message_id]
           : [])
       ]
     }
-    return ['--resume', session.claude_session_id, ...modelArgs]
+    return ['--resume', session.claude_session_id, ...modelArgs, ...effortArgs]
   }
 
   chat(session: Session): void {
@@ -152,7 +158,9 @@ export class AgentDomain implements IAgentDomain {
     options: ExecuteOptions = {}
   ): Promise<AgentResponse> {
     const resolvedModel = options.model ?? newSession.model ?? this.model
+    const resolvedEffort = options.effort ?? newSession.effort ?? this.effort
     newSession.model = resolvedModel
+    newSession.effort = resolvedEffort
 
     const raw = await this.claudeCodeRepo.dispatch(
       {
@@ -163,6 +171,7 @@ export class AgentDomain implements IAgentDomain {
         prompt: instruction,
         resumeSessionAt: options.resumeSessionAt,
         model: resolvedModel,
+        effort: resolvedEffort,
         allowedTools: options.allowedTools,
         disallowedTools: options.disallowedTools,
         workingDir: newSession.working_dir,

@@ -48,6 +48,7 @@ program
     'Claude Code built-in tools to deny (e.g. Bash Edit Write)'
   )
   .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
+  .option('--effort <level>', 'Effort level (low, medium, high, xhigh, max)')
   .option('--silent-thoughts', 'Hide thinking blocks from output')
   .option('--silent-tool-response', 'Hide tool call details from output')
   .option('--silent-usage', 'Hide token usage from output')
@@ -76,6 +77,7 @@ program
     'Claude Code built-in tools to deny (e.g. Bash Edit Write)'
   )
   .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
+  .option('--effort <level>', 'Effort level (low, medium, high, xhigh, max)')
   .option('--silent-thoughts', 'Hide thinking blocks from output')
   .option('--silent-tool-response', 'Hide tool call details from output')
   .option('--silent-usage', 'Hide token usage from output')
@@ -104,6 +106,7 @@ program
     'Claude Code built-in tools to deny (e.g. Bash Edit Write)'
   )
   .option('--model <model>', 'Model to use (e.g. sonnet, opus, haiku, claude-haiku-4-5)')
+  .option('--effort <level>', 'Effort level (low, medium, high, xhigh, max)')
   .option('--silent-thoughts', 'Hide thinking blocks from output')
   .option('--silent-tool-response', 'Hide tool call details from output')
   .option('--silent-usage', 'Hide token usage from output')
@@ -274,6 +277,10 @@ program
   .description('Execute a pipeline of agent tasks from a JSON or YAML file')
   .argument('<pipeline-path>', 'Path to the pipeline file (.json, .yaml, or .yml)')
   .option('--model <model>', 'Default model for all agent tasks (e.g. sonnet, opus, haiku)')
+  .option(
+    '--effort <level>',
+    'Default effort level for all agent tasks (low, medium, high, xhigh, max)'
+  )
   .option('--output-only', 'Show only the model response (implies all --silent-* flags)')
   .option('--batch', 'Disable TUI and use plain output')
   .option('--yes', 'Auto-approve all permission prompts without asking')

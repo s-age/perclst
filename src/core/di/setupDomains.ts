@@ -39,10 +39,16 @@ export type Domains = {
   planFileDomain: PlanFileDomain
 }
 
-export function setupDomains(model: string, repos: Repos, overrides?: Partial<Domains>): Domains {
+export function setupDomains(
+  model: string,
+  effort: string,
+  repos: Repos,
+  overrides?: Partial<Domains>
+): Domains {
   const sessionDomain = overrides?.sessionDomain ?? new SessionDomain(repos.sessionRepo)
   const agentDomain =
-    overrides?.agentDomain ?? new AgentDomain(model, repos.claudeCodeRepo, repos.procedureRepo)
+    overrides?.agentDomain ??
+    new AgentDomain(model, effort, repos.claudeCodeRepo, repos.procedureRepo)
 
   const domains: Domains = {
     sessionDomain,

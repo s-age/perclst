@@ -6,6 +6,7 @@ export type StartAction = {
   prompt: string
   system?: string
   model?: string
+  effort?: string
   allowedTools?: string[]
   disallowedTools?: string[]
   workingDir: string
@@ -17,6 +18,7 @@ export type ResumeAction = {
   sessionId: string
   prompt: string
   model?: string
+  effort?: string
   allowedTools?: string[]
   disallowedTools?: string[]
   workingDir: string
@@ -31,6 +33,7 @@ export type ForkAction = {
   prompt: string
   resumeSessionAt?: string
   model?: string
+  effort?: string
   allowedTools?: string[]
   disallowedTools?: string[]
   workingDir: string

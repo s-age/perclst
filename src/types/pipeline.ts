@@ -4,6 +4,7 @@ export type PipelineRunOptions = {
   allowedTools?: string[]
   disallowedTools?: string[]
   model?: string
+  effort?: string
   maxMessages?: number
   maxContextTokens?: number
   onStreamEvent?: (event: AgentStreamEvent) => void
@@ -26,6 +27,7 @@ export type AgentPipelineTask = {
   task: string
   procedure?: string
   model?: string
+  effort?: string
   labels?: string[]
   allowed_tools?: string[]
   disallowed_tools?: string[]

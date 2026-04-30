@@ -20,6 +20,7 @@ type AgentRepoFs = Pick<FsInfra, 'homeDir'>
 export function buildArgs(action: ClaudeAction): string[] {
   const args: string[] = ['-p', '--output-format', 'stream-json', '--verbose']
   if (action.model) args.push('--model', action.model)
+  if (action.effort) args.push('--effort', action.effort)
   if (action.type === 'resume') {
     args.push('--resume', action.sessionId)
   } else if (action.type === 'fork') {

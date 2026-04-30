@@ -11,6 +11,7 @@ export const MCP_SERVER_NAME = 'perclst'
 // --- Default config values ---
 
 export const DEFAULT_MODEL = 'claude-sonnet-4-6'
+export const DEFAULT_EFFORT = 'high'
 export const DEFAULT_SESSIONS_DIR = '~/.perclst/sessions'
 export const DEFAULT_LOGS_DIR = '~/.perclst/logs'
 export const DEFAULT_HEADER_COLOR = '#D97757'
@@ -25,6 +26,7 @@ export const DEFAULT_CONFIG: Config = {
   sessions_dir: DEFAULT_SESSIONS_DIR,
   logs_dir: DEFAULT_LOGS_DIR,
   model: DEFAULT_MODEL,
+  effort: DEFAULT_EFFORT,
   api_key_env: DEFAULT_API_KEY_ENV,
   allowed_tools: DEFAULT_ALLOWED_TOOLS,
   disallowed_tools: DEFAULT_DISALLOWED_TOOLS,

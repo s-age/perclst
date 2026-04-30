@@ -69,6 +69,29 @@ describe('buildArgs', () => {
     expect(result[idx + 1]).toBe('claude-opus')
   })
 
+  it('should include --effort when effort is provided', () => {
+    const result = buildArgs({
+      type: 'start',
+      sessionId: 's1',
+      prompt: 'p',
+      workingDir: '/w',
+      effort: 'low'
+    })
+
+    const idx = result.indexOf('--effort')
+    expect(result[idx + 1]).toBe('low')
+  })
+
+  it('should not include --effort when effort is not provided', () => {
+    const result = buildArgs({
+      type: 'start',
+      sessionId: 's1',
+      prompt: 'p',
+      workingDir: '/w'
+    })
+    expect(result).not.toContain('--effort')
+  })
+
   it('should include --system-prompt when system is set on a start action', () => {
     const result = buildArgs({
       type: 'start',

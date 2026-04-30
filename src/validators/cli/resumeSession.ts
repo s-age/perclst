@@ -12,6 +12,7 @@ const resumeSchema = schema({
   allowedTools: stringArrayRule().optional(),
   disallowedTools: stringArrayRule().optional(),
   model: stringRule().optional(),
+  effort: stringRule().optional(),
   maxMessages: intRule().optional(),
   maxContextTokens: intRule().optional(),
   format: formatRule(),
