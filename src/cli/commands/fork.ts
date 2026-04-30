@@ -2,9 +2,8 @@ import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { AgentService } from '@src/services/agentService'
 import type { SessionService } from '@src/services/sessionService'
-import { stdout, stderr, debug } from '@src/utils/output'
-import { RateLimitError } from '@src/errors/rateLimitError'
-import { ValidationError } from '@src/errors/validationError'
+import { stdout, debug } from '@src/utils/output'
+import { handleCommandError } from '@src/cli/handleCommandError'
 import { printResponse } from '@src/cli/view/display'
 import type { Config } from '@src/types/config'
 import { parseForkSession } from '@src/validators/cli/forkSession'
@@ -56,14 +55,6 @@ export async function forkCommand(
 
     stdout.print(`\nTo resume: perclst resume ${newSession.id} "<instruction>"`)
   } catch (error) {
-    if (error instanceof ValidationError) {
-      stderr.print(`Invalid arguments: ${error.message}`)
-    } else if (error instanceof RateLimitError) {
-      const resetMsg = error.resetInfo ? ` Resets: ${error.resetInfo}` : ''
-      stderr.print(`Claude usage limit reached.${resetMsg} Please wait and try again.`)
-    } else {
-      stderr.print('Failed to fork session', error as Error)
-    }
-    process.exit(1)
+    handleCommandError(error, 'Failed to fork session')
   }
 }

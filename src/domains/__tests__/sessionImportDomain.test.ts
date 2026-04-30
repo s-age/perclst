@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { IClaudeSessionRepository } from '@src/repositories/ports/analysis'
-import { ImportDomain } from '../sessionImport'
+import { SessionImportDomain } from '../sessionImport'
 
 vi.mock('@src/utils/uuid', () => ({ generateId: vi.fn() }))
 vi.mock('@src/utils/date', () => ({ toISO: vi.fn() }))
@@ -17,12 +17,12 @@ const mockClaudeSessionRepo: IClaudeSessionRepository = {
   getAssistantTurns: vi.fn()
 }
 
-describe('ImportDomain', () => {
-  let domain: ImportDomain
+describe('SessionImportDomain', () => {
+  let domain: SessionImportDomain
 
   beforeEach(() => {
     vi.clearAllMocks()
-    domain = new ImportDomain(mockClaudeSessionRepo)
+    domain = new SessionImportDomain(mockClaudeSessionRepo)
   })
 
   describe('resolveWorkingDir', () => {

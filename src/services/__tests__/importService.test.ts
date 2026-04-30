@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Session } from '@src/types/session'
-import type { ISessionDomain, IImportDomain } from '@src/domains/ports/session'
+import type { ISessionDomain } from '@src/domains/ports/session'
+import type { ISessionImportDomain } from '@src/domains/ports/import'
 import { ImportService } from '../importService'
 
 vi.mock('@src/utils/output', () => ({
@@ -24,7 +25,7 @@ const stubSession = (overrides: Partial<Session> = {}): Session => ({
 describe('ImportService', () => {
   let importService: ImportService
   let mockSessionDomain: ISessionDomain
-  let mockImportDomain: IImportDomain
+  let mockImportDomain: ISessionImportDomain
   let mockBuiltSession: Session
 
   beforeEach(() => {
@@ -44,7 +45,7 @@ describe('ImportService', () => {
       resolveWorkingDir: vi.fn().mockReturnValue('/default/working/dir'),
       validateSession: vi.fn(),
       buildSession: vi.fn().mockReturnValue(mockBuiltSession)
-    } as unknown as IImportDomain
+    } as unknown as ISessionImportDomain
 
     importService = new ImportService(mockSessionDomain, mockImportDomain)
   })

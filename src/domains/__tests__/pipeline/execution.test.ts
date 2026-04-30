@@ -18,7 +18,8 @@ describe('PipelineDomain - execution', () => {
 
     agentDomain = {
       run: vi.fn(),
-      isLimitExceeded: vi.fn().mockReturnValue(false)
+      isLimitExceeded: vi.fn().mockReturnValue(false),
+      checkAndNotifyLimit: vi.fn()
     } as unknown as IAgentDomain
 
     sessionDomain = {
@@ -198,7 +199,9 @@ describe('PipelineDomain - execution', () => {
       vi.mocked(sessionDomain.create).mockResolvedValue(session)
       vi.mocked(sessionDomain.getPath).mockReturnValue('/path/to/session')
       vi.mocked(agentDomain.run).mockResolvedValueOnce(firstResponse)
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValueOnce(true)
+      vi.mocked(agentDomain.checkAndNotifyLimit).mockImplementationOnce((_response, opts) => {
+        opts.onLimitExceeded?.()
+      })
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',
@@ -227,7 +230,9 @@ describe('PipelineDomain - execution', () => {
       vi.mocked(sessionDomain.create).mockResolvedValue(session)
       vi.mocked(sessionDomain.getPath).mockReturnValue('/path/to/session')
       vi.mocked(agentDomain.run).mockResolvedValueOnce(firstResponse)
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValueOnce(true)
+      vi.mocked(agentDomain.checkAndNotifyLimit).mockImplementationOnce((_response, opts) => {
+        opts.onLimitExceeded?.()
+      })
 
       const options: PipelineRunOptions = {
         model: 'claude-opus',

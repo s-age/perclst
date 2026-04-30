@@ -53,6 +53,7 @@ describe('AgentService', () => {
       run: vi.fn().mockResolvedValue(mockResponse),
       resume: vi.fn().mockResolvedValue(mockResponse),
       isLimitExceeded: vi.fn().mockReturnValue(false),
+      checkAndNotifyLimit: vi.fn(),
       fork: vi.fn(),
       buildChatArgs: vi.fn(),
       chat: vi.fn()
@@ -286,7 +287,7 @@ describe('AgentService', () => {
         maxContextTokens: -1,
         sessionFilePath: SESSION_FILE_PATH
       })
-      expect(agentDomain.isLimitExceeded).toHaveBeenCalledWith(mockResponse, {
+      expect(agentDomain.checkAndNotifyLimit).toHaveBeenCalledWith(mockResponse, {
         model: 'claude-opus-4-6',
         maxMessages: -1,
         maxContextTokens: -1
@@ -318,7 +319,9 @@ describe('AgentService', () => {
     })
 
     it('should call onLimitExceeded when limit is exceeded', async () => {
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
+      vi.mocked(agentDomain.checkAndNotifyLimit).mockImplementationOnce((_response, opts) => {
+        opts.onLimitExceeded?.()
+      })
       const onLimitExceeded = vi.fn()
 
       const result = await service.start('Do a task', { working_dir: '/tmp' }, { onLimitExceeded })
@@ -329,7 +332,6 @@ describe('AgentService', () => {
     })
 
     it('should not call onLimitExceeded when limit is not exceeded', async () => {
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(false)
       const onLimitExceeded = vi.fn()
 
       await service.start('Do a task', { working_dir: '/tmp' }, { onLimitExceeded })
@@ -338,7 +340,9 @@ describe('AgentService', () => {
     })
 
     it('should call updateStatus with completed after limit check', async () => {
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
+      vi.mocked(agentDomain.checkAndNotifyLimit).mockImplementationOnce((_response, opts) => {
+        opts.onLimitExceeded?.()
+      })
 
       await service.start('Do a task', { working_dir: '/tmp' })
 
@@ -371,7 +375,7 @@ describe('AgentService', () => {
         sessionFilePath: SESSION_FILE_PATH
       })
       expect(sessionDomain.save).toHaveBeenCalledWith(mockSession)
-      expect(agentDomain.isLimitExceeded).toHaveBeenCalledWith(mockResponse, {
+      expect(agentDomain.checkAndNotifyLimit).toHaveBeenCalledWith(mockResponse, {
         model: 'claude-sonnet-4-6',
         maxMessages: -1,
         maxContextTokens: -1
@@ -401,7 +405,9 @@ describe('AgentService', () => {
     })
 
     it('should call onLimitExceeded when limit is exceeded', async () => {
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(true)
+      vi.mocked(agentDomain.checkAndNotifyLimit).mockImplementationOnce((_response, opts) => {
+        opts.onLimitExceeded?.()
+      })
       const onLimitExceeded = vi.fn()
 
       const result = await service.resume(mockSession.id, 'Continue', { onLimitExceeded })
@@ -413,7 +419,6 @@ describe('AgentService', () => {
     })
 
     it('should not call onLimitExceeded when limit is not exceeded', async () => {
-      vi.mocked(agentDomain.isLimitExceeded).mockReturnValue(false)
       const onLimitExceeded = vi.fn()
 
       await service.resume(mockSession.id, 'Continue', { onLimitExceeded })

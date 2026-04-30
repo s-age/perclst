@@ -14,11 +14,14 @@ Pure functions and library wrappers — no I/O to external resources (stdout/std
 | File | Role |
 |------|------|
 | `date.ts` | dayjs wrapper — `now()`, `toISO()`, `toLocaleString()`, `toTimestamp()`; hides `dayjs` |
-| `uuid.ts` | ID generation — wraps `crypto.randomUUID()`; treated as pure |
+| `formatInputSummary.ts` | Formats a tool-input record into a short display string (used by tool history) |
 | `output.ts` | Output helpers — `stdout.print()`, `stderr.print()`, `debug.print()`; log level via `setLogLevel(LogLevel)` |
 | `path.ts` | Path helpers — re-exports Node `path` builtins + `cwdPath(...parts)` for CWD-relative paths |
-| `formatInputSummary.ts` | Formats a tool-input record into a short display string (used by tool history) |
 | `testStrategyHelpers.ts` | Pure computation helpers for the MCP test strategist — complexity scoring, strategy building |
+| `token.ts` | Token count formatting — `formatKilo(n)` formats a number as a `k`-unit string (e.g. `56337 → "56.3k"`) |
+| `url.ts` | URL built-in re-export — re-exports `fileURLToPath` from Node's `url` module |
+| `uuid.ts` | ID generation — wraps `crypto.randomUUID()`; treated as pure |
+| `yaml.ts` | YAML wrapper — `parseYaml<T>(text)` and `stringifyYaml(data)`; hides the `yaml` library |
 
 ## Import Rules
 

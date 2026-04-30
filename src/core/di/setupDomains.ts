@@ -5,7 +5,7 @@ import { SessionDomain } from '@src/domains/session'
 import { AgentDomain } from '@src/domains/agent'
 import { PipelineDomain } from '@src/domains/pipeline'
 import { AnalyzeDomain } from '@src/domains/analyze'
-import { ImportDomain } from '@src/domains/sessionImport'
+import { SessionImportDomain } from '@src/domains/sessionImport'
 import { CheckerDomain } from '@src/domains/checker'
 import { TestStrategyDomain } from '@src/domains/testStrategy'
 import { ScriptDomain } from '@src/domains/script'
@@ -24,7 +24,7 @@ export type Domains = {
   agentDomain: AgentDomain
   pipelineDomain: PipelineDomain
   analyzeDomain: AnalyzeDomain
-  importDomain: ImportDomain
+  importDomain: SessionImportDomain
   checkerDomain: CheckerDomain
   testStrategyDomain: TestStrategyDomain
   scriptDomain: ScriptDomain
@@ -58,7 +58,7 @@ export function setupDomains(
       new PipelineDomain(agentDomain, sessionDomain, repos.rejectionFeedbackRepo),
     analyzeDomain:
       overrides?.analyzeDomain ?? new AnalyzeDomain(sessionDomain, repos.claudeSessionRepo),
-    importDomain: overrides?.importDomain ?? new ImportDomain(repos.claudeSessionRepo),
+    importDomain: overrides?.importDomain ?? new SessionImportDomain(repos.claudeSessionRepo),
     checkerDomain: overrides?.checkerDomain ?? new CheckerDomain(repos.checkerRepo),
     testStrategyDomain:
       overrides?.testStrategyDomain ?? new TestStrategyDomain(repos.testStrategyRepo),

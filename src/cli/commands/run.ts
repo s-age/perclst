@@ -189,13 +189,14 @@ export async function runCommand(pipelinePath: string, options: RawRunOptions): 
   try {
     const pipelineFileService = container.resolve<PipelineFileService>(TOKENS.PipelineFileService)
 
+    const input = parseRunOptions({ pipelinePath, ...options })
+
     await checkUncommittedChanges(pipelineFileService)
 
     const onSigint = (): void => abortService.abort()
     process.once('SIGINT', onSigint)
 
     try {
-      const input = parseRunOptions({ pipelinePath, ...options })
       const headBefore = pipelineFileService.getHead()
 
       const completedChildPaths: string[] = []

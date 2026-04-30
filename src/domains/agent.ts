@@ -99,6 +99,12 @@ export class AgentDomain implements IAgentDomain {
     return false
   }
 
+  checkAndNotifyLimit(response: AgentResponse, options: AgentRunOptions): void {
+    if (this.isLimitExceeded(response, options)) {
+      options.onLimitExceeded?.()
+    }
+  }
+
   buildChatArgs(session: Session): string[] {
     const modelArgs = session.model ? ['--model', session.model] : []
     const effortArgs = session.effort ? ['--effort', session.effort] : []

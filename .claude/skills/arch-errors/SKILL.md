@@ -22,6 +22,7 @@ Defines typed error classes that are thrown across all layers. Each file exports
 | `pipelineMaxRetriesError.ts` | `PipelineMaxRetriesError` | Max retries exceeded for a pipeline task; carries `taskIndex` and `maxRetries` |
 | `rawExitError.ts` | `RawExitError` | `claude` process exits unexpectedly; carries `code` (exit code) and `stderr` |
 | `pipelineAbortedError.ts` | `PipelineAbortedError` | User aborts a pipeline run; no-argument constructor |
+| `userCancelledError.ts` | `UserCancelledError` | User cancels an interactive prompt; no-argument constructor |
 
 ## Import Rules
 

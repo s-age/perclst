@@ -44,9 +44,7 @@ export class AgentService {
       const response = await this.agentDomain.run(session, task, false, executeOptions)
       await this.sessionDomain.save(session)
 
-      if (this.agentDomain.isLimitExceeded(response, resolved)) {
-        resolved.onLimitExceeded?.()
-      }
+      this.agentDomain.checkAndNotifyLimit(response, resolved)
 
       await this.sessionDomain.updateStatus(session.id, 'completed')
       return { sessionId: session.id, response }
@@ -80,9 +78,7 @@ export class AgentService {
       const response = await this.agentDomain.resume(session, instruction, executeOptions)
       await this.sessionDomain.save(session)
 
-      if (this.agentDomain.isLimitExceeded(response, resolved)) {
-        resolved.onLimitExceeded?.()
-      }
+      this.agentDomain.checkAndNotifyLimit(response, resolved)
 
       await this.sessionDomain.updateStatus(session.id, 'completed')
       return response
