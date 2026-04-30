@@ -87,6 +87,19 @@ export default tseslint.config(
     }
   },
   {
+    files: ['src/utils/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'fs', message: 'Utils layer: I/O modules are forbidden. Move I/O logic to src/infrastructures/ or src/cli/.' },
+          { name: 'readline', message: 'Utils layer: I/O modules are forbidden. Move CLI prompts to src/cli/.' },
+          { name: 'net', message: 'Utils layer: I/O modules are forbidden.' },
+          { name: 'child_process', message: 'Utils layer: I/O modules are forbidden.' }
+        ]
+      }]
+    }
+  },
+  {
     files: ['src/services/**/*.ts'],
     rules: {
       'no-restricted-imports': ['warn', {
