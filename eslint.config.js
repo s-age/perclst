@@ -9,12 +9,14 @@ import importPlugin from 'eslint-plugin-import-x'
 import maxParamsRule from './eslint-rules/max-params.js'
 import noAnyRule from './eslint-rules/no-any.js'
 import repositoryFsVsShellRule from './eslint-rules/repository-fs-vs-shell.js'
+import importViaPortRule from './eslint-rules/import-via-port.js'
 
 const localPlugin = {
   rules: {
     'max-params': maxParamsRule,
     'no-any': noAnyRule,
-    'repository-fs-vs-shell': repositoryFsVsShellRule
+    'repository-fs-vs-shell': repositoryFsVsShellRule,
+    'import-via-port': importViaPortRule
   }
 }
 
@@ -134,6 +136,12 @@ export default tseslint.config(
           { name: 'path', message: 'Service layer must not import path directly. Use @src/utils/path instead.' }
         ]
       }]
+    }
+  },
+  {
+    files: ['src/**/*.ts'],
+    rules: {
+      'local/import-via-port': 'error'
     }
   },
   {
