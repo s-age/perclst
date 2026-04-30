@@ -1,3 +1,5 @@
+import { existsSync, unlinkSync } from 'fs'
+import { tmpdir } from 'os'
 import { container } from '@src/core/di/container'
 import { TOKENS } from '@src/core/di/identifiers'
 import type { AgentService } from '@src/services/agentService'
@@ -22,6 +24,19 @@ type RawResumeOptions = {
   silentUsage?: boolean
   outputOnly?: boolean
   format?: string
+}
+
+function consumeChatSignal(sessionId: string): boolean {
+  const p = `${tmpdir()}/perclst-chat-${sessionId}`
+  try {
+    if (existsSync(p)) {
+      unlinkSync(p)
+      return true
+    }
+  } catch {
+    /* ignore */
+  }
+  return false
 }
 
 export async function resumeCommand(
@@ -66,7 +81,11 @@ export async function resumeCommand(
       { sessionId: resolvedId }
     )
 
-    stdout.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)
+    if (consumeChatSignal(resolvedId)) {
+      await agentService.chat(resolvedId)
+    } else {
+      stdout.print(`\nTo resume: perclst resume ${resolvedId} "<instruction>"`)
+    }
   } catch (error) {
     handleCommandError(error, 'Failed to resume session')
   }

@@ -3,8 +3,10 @@ import { Box, useStdout } from 'ink'
 import { WorkflowPanel } from './WorkflowPanel.js'
 import { OutputPanel } from './OutputPanel.js'
 import { PermissionPanel } from './PermissionPanel.js'
+import { ChoicePanel } from './ChoicePanel.js'
 import { usePipelineRun } from './usePipelineRun.js'
 import { usePermission } from './usePermission.js'
+import { useChoice } from './useChoice.js'
 import { useScrollBuffer } from './useScrollBuffer.js'
 import { useAbort } from './useAbort.js'
 import { SPINNER_INTERVAL_MS, PERM_PANEL_ROWS, STREAM_HEADER_ROWS } from './utils.js'
@@ -15,6 +17,7 @@ export function PipelineRunner({
   options,
   pipelineService,
   permissionPipeService,
+  questionPipeService,
   signal,
   onAbort,
   onDone,
@@ -41,15 +44,17 @@ export function PipelineRunner({
     onError
   })
   const { permRequest } = usePermission(permissionPipeService)
+  const { choiceRequest, isTextMode, textInput } = useChoice(questionPipeService)
 
   const runningIndex = tasks.findIndex((t) => t.status === 'running' || t.status === 'retrying')
   const streamCapacity = Math.max(1, mainRows - STREAM_HEADER_ROWS)
+  const isPrompting = !!permRequest || !!choiceRequest
   const { scrollMode, visibleLines, lineOffset } = useScrollBuffer({
     allLines,
     streamCapacity,
     permRequest
   })
-  useAbort({ onAbort, isActive: !permRequest })
+  useAbort({ onAbort, isActive: !isPrompting })
 
   return (
     <Box flexDirection="column" height={termRows}>
@@ -65,7 +70,11 @@ export function PipelineRunner({
           scrollMode={scrollMode}
         />
       </Box>
-      <PermissionPanel permRequest={permRequest} />
+      {choiceRequest ? (
+        <ChoicePanel choiceRequest={choiceRequest} isTextMode={isTextMode} textInput={textInput} />
+      ) : (
+        <PermissionPanel permRequest={permRequest} />
+      )}
     </Box>
   )
 }

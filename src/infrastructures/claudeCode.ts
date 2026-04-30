@@ -35,7 +35,7 @@ export class ClaudeCodeInfra {
     args: string[],
     prompt: string,
     workingDir: string,
-    sessionFilePath?: string,
+    opts?: { sessionFilePath?: string; sessionId?: string },
     signal?: AbortSignal
   ): AsyncGenerator<string> {
     const mcpConfigPath = this.writeMcpConfig()
@@ -48,7 +48,8 @@ export class ClaudeCodeInfra {
     ]
 
     const env: NodeJS.ProcessEnv = { ...process.env }
-    if (sessionFilePath) env.PERCLST_SESSION_FILE = sessionFilePath
+    if (opts?.sessionFilePath) env.PERCLST_SESSION_FILE = opts.sessionFilePath
+    if (opts?.sessionId) env.PERCLST_SESSION_ID = opts.sessionId
     const child = spawn('claude', fullArgs, {
       env,
       cwd: workingDir,

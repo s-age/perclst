@@ -99,7 +99,7 @@ export class ClaudeCodeRepository implements IClaudeCodeRepository {
         args,
         action.prompt,
         action.workingDir,
-        action.sessionFilePath,
+        { sessionFilePath: action.sessionFilePath, sessionId: action.sessionId },
         signal
       )) {
         processLine(state, line)

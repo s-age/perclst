@@ -215,7 +215,9 @@ describe('ClaudeCodeInfra', () => {
       const child = makeChild()
       mocks.spawn.mockReturnValue(child)
 
-      await collectAll(infra.runClaude(['-p'], 'prompt', '/work', '/sessions/sess.json'))
+      await collectAll(
+        infra.runClaude(['-p'], 'prompt', '/work', { sessionFilePath: '/sessions/sess.json' })
+      )
 
       const spawnEnv = mocks.spawn.mock.calls[0][2].env as NodeJS.ProcessEnv
       expect(spawnEnv['PERCLST_SESSION_FILE']).toBe('/sessions/sess.json')

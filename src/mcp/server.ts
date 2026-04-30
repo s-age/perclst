@@ -16,6 +16,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { askPermissionParams } from '@src/validators/mcp/askPermission'
+import { askChoiceParams } from '@src/validators/mcp/askChoice'
 import { tsAnalyzeParams } from '@src/validators/mcp/tsAnalyze'
 import { tsGetReferencesParams } from '@src/validators/mcp/tsGetReferences'
 import { tsGetTypesParams } from '@src/validators/mcp/tsGetTypes'
@@ -31,6 +32,7 @@ import { executeTsChecker } from './tools/tsChecker'
 import { executeTsTestStrategist } from './tools/tsTestStrategist'
 import { executeKnowledgeSearch } from './tools/knowledgeSearch'
 import { executeAskPermission } from './tools/askPermission'
+import { executeAskChoice } from './tools/askChoice'
 import { executeGitPendingChanges } from './tools/gitPendingChanges'
 import { executeTsCallGraph } from './tools/tsCallGraph'
 import { setupContainer } from '@src/core/di/setup'
@@ -49,6 +51,17 @@ server.tool(
     'Called by Claude Code when it needs permission to use a built-in tool in headless (-p) mode.',
   askPermissionParams,
   ({ tool_name, input, tool_use_id }) => executeAskPermission({ tool_name, input, tool_use_id })
+)
+
+server.tool(
+  'ask_choice',
+  'Presents a question with multiple choices to the user and waits for a selection. ' +
+    'Returns { type: "choice", selected, index } when the user picks an option, ' +
+    'or { type: "other", message } for free-text input (TUI mode), ' +
+    'or { type: "chat_needed", session_id } when no auto-launch was possible — output "Run: claude --resume <session_id>" and stop. ' +
+    'Note: in TTY mode with a valid session_id, the tool automatically launches an interactive claude session and then terminates the MCP server — the agent will never receive a response in that path.',
+  askChoiceParams,
+  ({ question, choices }) => executeAskChoice({ question, choices })
 )
 
 server.tool(
