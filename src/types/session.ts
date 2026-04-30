@@ -4,6 +4,7 @@ export type Session = {
   created_at: string
   updated_at: string
   procedure?: string
+  model?: string
   claude_session_id: string
   working_dir: string
   rewind_source_claude_session_id?: string

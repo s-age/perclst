@@ -30,10 +30,13 @@ export class AgentDomain implements IAgentDomain {
       debug.print('Loaded procedure', { procedure: session.procedure })
     }
 
+    const resolvedModel = options.model ?? session.model ?? this.model
+    session.model = resolvedModel
+
     const baseArgs = {
       sessionId: session.claude_session_id,
       prompt: instruction,
-      model: options.model ?? this.model,
+      model: resolvedModel,
       allowedTools: options.allowedTools,
       disallowedTools: options.disallowedTools,
       workingDir: session.working_dir,
@@ -93,6 +96,8 @@ export class AgentDomain implements IAgentDomain {
   }
 
   buildChatArgs(session: Session): string[] {
+    const modelArgs = session.model ? ['--model', session.model] : []
+
     if (session.rewind_source_claude_session_id) {
       return [
         '--resume',
@@ -100,12 +105,13 @@ export class AgentDomain implements IAgentDomain {
         '--fork-session',
         '--session-id',
         session.claude_session_id,
+        ...modelArgs,
         ...(session.rewind_to_message_id
           ? ['--resume-session-at', session.rewind_to_message_id]
           : [])
       ]
     }
-    return ['--resume', session.claude_session_id]
+    return ['--resume', session.claude_session_id, ...modelArgs]
   }
 
   chat(session: Session): void {
@@ -145,6 +151,9 @@ export class AgentDomain implements IAgentDomain {
     instruction: string,
     options: ExecuteOptions = {}
   ): Promise<AgentResponse> {
+    const resolvedModel = options.model ?? newSession.model ?? this.model
+    newSession.model = resolvedModel
+
     const raw = await this.claudeCodeRepo.dispatch(
       {
         type: 'fork',
@@ -153,7 +162,7 @@ export class AgentDomain implements IAgentDomain {
         sessionId: newSession.claude_session_id,
         prompt: instruction,
         resumeSessionAt: options.resumeSessionAt,
-        model: options.model ?? this.model,
+        model: resolvedModel,
         allowedTools: options.allowedTools,
         disallowedTools: options.disallowedTools,
         workingDir: newSession.working_dir,

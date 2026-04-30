@@ -291,10 +291,20 @@ describe('AgentService', () => {
         maxMessages: -1,
         maxContextTokens: -1
       })
+      expect(sessionDomain.save).toHaveBeenCalledWith(mockSession)
       expect(sessionDomain.updateStatus).toHaveBeenNthCalledWith(1, mockSession.id, 'active')
       expect(sessionDomain.updateStatus).toHaveBeenNthCalledWith(2, mockSession.id, 'completed')
       expect(result.sessionId).toBe(mockSession.id)
       expect(result.response).toBe(mockResponse)
+    })
+
+    it('should save session before completed status update', async () => {
+      await service.start('Do a task', { working_dir: '/tmp' })
+
+      const saveCallIndex = vi.mocked(sessionDomain.save).mock.invocationCallOrder[0]
+      const completedCallIndex = vi.mocked(sessionDomain.updateStatus).mock.invocationCallOrder[1]
+
+      expect(saveCallIndex).toBeLessThan(completedCallIndex)
     })
 
     it('should work with default empty options', async () => {
@@ -381,13 +391,13 @@ describe('AgentService', () => {
       })
     })
 
-    it('should save session after completed status update', async () => {
+    it('should save session before completed status update', async () => {
       await service.resume(mockSession.id, 'Continue')
 
-      const completedCallIndex = vi.mocked(sessionDomain.updateStatus).mock.invocationCallOrder[1]
       const saveCallIndex = vi.mocked(sessionDomain.save).mock.invocationCallOrder[0]
+      const completedCallIndex = vi.mocked(sessionDomain.updateStatus).mock.invocationCallOrder[1]
 
-      expect(completedCallIndex).toBeLessThan(saveCallIndex)
+      expect(saveCallIndex).toBeLessThan(completedCallIndex)
     })
 
     it('should call onLimitExceeded when limit is exceeded', async () => {
