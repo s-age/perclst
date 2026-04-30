@@ -7,11 +7,13 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks'
 
 import maxParamsRule from './eslint-rules/max-params.js'
 import noAnyRule from './eslint-rules/no-any.js'
+import repositoryFsVsShellRule from './eslint-rules/repository-fs-vs-shell.js'
 
 const localPlugin = {
   rules: {
     'max-params': maxParamsRule,
-    'no-any': noAnyRule
+    'no-any': noAnyRule,
+    'repository-fs-vs-shell': repositoryFsVsShellRule
   }
 }
 
@@ -84,6 +86,12 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
+    }
+  },
+  {
+    files: ['src/repositories/**/*.ts'],
+    rules: {
+      'local/repository-fs-vs-shell': 'warn'
     }
   },
   {
