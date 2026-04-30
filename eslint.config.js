@@ -87,6 +87,17 @@ export default tseslint.config(
     }
   },
   {
+    files: ['src/domains/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'fs', message: 'Domains must not perform I/O. Add a repository method instead.' },
+          { name: 'path', message: 'Domains must not import path directly. Use @src/utils/path instead.' }
+        ]
+      }]
+    }
+  },
+  {
     files: ['src/utils/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', {
