@@ -2,7 +2,9 @@ import { schema, safeParse } from '../schema'
 import { stringRule } from '../rules/string'
 
 const chatSchema = schema({
-  sessionId: stringRule({ required: true })
+  sessionId: stringRule({ required: true }),
+  model: stringRule().optional(),
+  effort: stringRule().optional()
 })
 
 export type ChatSessionInput = typeof chatSchema._output

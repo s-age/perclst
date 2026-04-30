@@ -13,6 +13,7 @@ Spawn a Claude agent — incur API usage and network time.
 - [`curate`](#curate)
 - [`survey`](#survey)
 - [`retrieve`](#retrieve)
+- [`forge`](#forge)
 - [`run`](#run) — depends on pipeline contents
 
 ### Session Management
@@ -83,9 +84,16 @@ Resume a session interactively in Claude Code.
 
 ```bash
 perclst chat <session>
+perclst chat <session> --model opus
+perclst chat <session> --effort high
 ```
 
 Hands off the terminal to `claude --resume <session-id>`. Useful when you know the session name but not the UUID.
+
+| Option | Description |
+|--------|-------------|
+| `--model <model>` | Model to use for this interactive session |
+| `--effort <level>` | Effort level (`low`, `medium`, `high`, `xhigh`, `max`) |
 
 If the session's working directory differs from the current directory, you will be prompted to switch before handing off.
 
@@ -297,11 +305,16 @@ perclst inspect main HEAD
 perclst inspect abc1234 def5678
 perclst inspect main HEAD -p "日本語で答えて"
 perclst inspect main HEAD --prompt "be brief, summary only"
+perclst inspect main HEAD --model opus --effort high
+perclst inspect main HEAD --output-only
 ```
 
 | Option | Description |
 |--------|-------------|
 | `-p, --prompt <prompt>` | Additional instruction appended to the inspection prompt |
+| `--model <model>` | Model to use (default: `sonnet`) |
+| `--effort <level>` | Effort level (`low`, `medium`, `high`, `xhigh`, `max`) |
+| `--output-only` | Show only the final response (no streaming) |
 
 Sessions created by this command are automatically labeled `inspect`.
 
@@ -333,7 +346,15 @@ Promote all `knowledge/draft/` entries into structured `knowledge/` files. Short
 
 ```bash
 perclst curate
+perclst curate --model opus
+perclst curate --output-only
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--model <model>` | Model to use |
+| `--effort <level>` | Effort level (`low`, `medium`, `high`, `xhigh`, `max`) |
+| `--output-only` | Show only the final response (no streaming) |
 
 Sessions created by this command are automatically labeled `curate`.
 
@@ -362,9 +383,19 @@ perclst survey "pipeline rejection の仕組みを教えて"
 # Show only the final report
 perclst survey "AuthService 周りの実装" --output-only
 
+# Override model or effort
+perclst survey "認証周り" --model opus --effort high
+
 # Refresh codebase catalogs (re-scans utils, infra, domains, MCP tools, commands)
 perclst survey --refresh
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--refresh` | Refresh codebase catalogs from current source |
+| `--model <model>` | Model to use (default: `sonnet`) |
+| `--effort <level>` | Effort level (`low`, `medium`, `high`, `xhigh`, `max`) |
+| `--output-only` | Show only the final response (no streaming) |
 
 The agent returns a structured report with two sections:
 - **Where** — layer, file, and symbol where relevant code lives
@@ -383,9 +414,15 @@ Sessions created by this command are automatically labeled `retrieve`.
 ```bash
 perclst retrieve "keyword"
 perclst retrieve "keyword1" "keyword2" "keyword3"
+perclst retrieve "ask_choice" --output-only
+perclst retrieve "pipeline" --model haiku
 ```
 
-Use this before starting a design or implementation task to surface prior decisions, gotchas, and patterns recorded in `knowledge/`.
+| Option | Description |
+|--------|-------------|
+| `--model <model>` | Model to use |
+| `--effort <level>` | Effort level (`low`, `medium`, `high`, `xhigh`, `max`) |
+| `--output-only` | Show only the final response (no streaming) |
 
 Equivalent to:
 
@@ -395,7 +432,31 @@ perclst start "Search the knowledge base for the following keywords and return a
   --output-only
 ```
 
-> `--output-only` is not a CLI flag on `retrieve` — it is applied internally. `perclst retrieve "kw" --output-only` will error.
+Use this before starting a design or implementation task to surface prior decisions, gotchas, and patterns recorded in `knowledge/`.
+
+## `forge`
+
+*Agent command — spawns Claude.*
+
+Generate an implementation pipeline from a plan file. Reads a `plans/<slug>/plan.md` file and produces a JSON pipeline file ready for `perclst run`.
+
+```bash
+perclst forge plans/my-feature/plan.md
+perclst forge plans/my-feature/plan.md -p "prefer haiku for implementation tasks"
+perclst forge plans/my-feature/plan.md --model opus --effort high
+perclst forge plans/my-feature/plan.md --output-only
+```
+
+| Option | Description |
+|--------|-------------|
+| `-p, --prompt <prompt>` | Additional instruction appended to the generation prompt |
+| `--model <model>` | Model to use |
+| `--effort <level>` | Effort level (`low`, `medium`, `high`, `xhigh`, `max`) |
+| `--output-only` | Show only the final response (no streaming) |
+
+Sessions created by this command are automatically labeled `forge`.
+
+---
 
 ## `run`
 
@@ -410,7 +471,17 @@ perclst run pipeline.json
 perclst run pipeline.yaml          # YAML is also supported
 perclst run pipeline.json --output-only
 perclst run pipeline.json --batch   # disable TUI (plain text output)
+perclst run pipeline.json --model haiku
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--model <model>` | Default model for all agent tasks |
+| `--effort <level>` | Default effort level for all agent tasks (`low`, `medium`, `high`, `xhigh`, `max`) |
+| `--output-only` | Show only the model response (implies all --silent-* flags) |
+| `--batch` | Disable TUI and use plain output |
+| `--yes` | Auto-approve all permission prompts without asking |
+| `-f, --format <fmt>` | Output format: `text` (default) or `json` |
 
 By default, `run` opens an interactive TUI: the left pane tracks task progress, the right pane streams each task's output, and permission requests appear in the bottom pane. The TUI is automatically disabled when `--batch` is specified or when stdout is not a TTY (e.g. CI, piped output).
 
