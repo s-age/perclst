@@ -1,3 +1,6 @@
+# Pipeline Pattern
+implement-feature
+
 # Goal
 
 `perclst chat <session>` looks up a session by name or ID and hands the terminal off to
